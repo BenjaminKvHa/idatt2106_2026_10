@@ -45,6 +45,39 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+		<!-- Spring Security -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+
+		<!-- JJWT (io.jsonwebtoken) -->
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-api</artifactId>
+			<version>0.12.6</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-impl</artifactId>
+			<version>0.12.6</version>
+			<scope>runtime</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-jackson</artifactId>
+			<version>0.12.6</version>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- Security test utilities (optional) -->
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -53,7 +86,48 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+
+			<!--Jacoco configured as plugin in the plugin classpath, checking and reporting test coverage at build time, verifying if coverage > 50% -->
+			<plugin>
+					<groupId>org.jacoco</groupId>
+					<artifactId>jacoco-maven-plugin</artifactId>
+					<version>0.8.14</version>
+					<executions>
+							<execution>
+									<goals>
+											<goal>prepare-agent</goal>
+									</goals>
+							</execution>
+							<execution>
+									<id>report</id>
+									<phase>test</phase>
+									<goals>
+											<goal>report</goal>
+									</goals>
+							</execution>
+							<execution>
+									<id>check</id>
+									<phase>verify</phase>
+									<goals>
+											<goal>check</goal>
+									</goals>
+									<configuration>
+											<rules>
+													<rule>
+															<element>BUNDLE</element>
+															<limits>
+																	<limit>
+																			<counter>LINE</counter>
+																			<value>COVEREDRATIO</value>
+																			<minimum>0.50</minimum>
+																	</limit>
+															</limits>
+													</rule>
+											</rules>
+									</configuration>
+							</execution>
+					</executions>
+			</plugin>
 		</plugins>
 	</build>
-
 </project>

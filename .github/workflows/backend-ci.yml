@@ -1,7 +1,7 @@
 name: CI/CD backend pipeline
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
     branches: [main, dev]
     paths:

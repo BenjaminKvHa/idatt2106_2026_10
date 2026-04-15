@@ -78,6 +78,7 @@ CREATE TABLE task (
     id BIGSERIAL PRIMARY KEY,
     difficulty task_difficulty_enum NOT NULL,
     chapter_id BIGINT NOT NULL REFERENCES chapter(id) ON DELETE CASCADE,
+    classroom_code VARCHAR(6) REFERENCES classroom(classroom_code) ON DELETE CASCADE, -- If null, then its a task for everyone
     task_json JSONB NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

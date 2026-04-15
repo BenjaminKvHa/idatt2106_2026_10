@@ -1,61 +1,71 @@
-/* color palette from <https://github.com/vuejs/theme> */
 :root {
-  --vt-c-white: #ffffff;
-  --vt-c-white-soft: #f8f8f8;
-  --vt-c-white-mute: #f2f2f2;
+  --color-text: #000;
 
-  --vt-c-black: #181818;
-  --vt-c-black-soft: #222222;
-  --vt-c-black-mute: #282828;
+  --green-confirm-100: rgb(130 223 48 / 100%);
+  --green-confirm-80: rgb(130 223 48 / 80%);
+  --green-confirm-60: rgb(130 223 48 / 60%);
+  --green-confirm-40: rgb(130 223 48 / 40%);
+  --green-confirm-20: rgb(130 223 48 / 20%);
+  --green-confirm-10: rgb(130 223 48 / 10%);
+  --green-confirm: var(--green-confirm-100);
 
-  --vt-c-indigo: #2c3e50;
+  --red-danger-100: rgb(223 48 48 / 100%);
+  --red-danger-80: rgb(223 48 48 / 80%);
+  --red-danger-60: rgb(223 48 48 / 60%);
+  --red-danger-40: rgb(223 48 48 / 40%);
+  --red-danger-20: rgb(223 48 48 / 20%);
+  --red-danger-10: rgb(223 48 48 / 10%);
+  --red-danger: var(--red-danger-100);
 
-  --vt-c-divider-light-1: rgba(60, 60, 60, 0.29);
-  --vt-c-divider-light-2: rgba(60, 60, 60, 0.12);
-  --vt-c-divider-dark-1: rgba(84, 84, 84, 0.65);
-  --vt-c-divider-dark-2: rgba(84, 84, 84, 0.48);
+  --beige-light-100: rgb(245 227 203 / 100%);
+  --beige-light-80: rgb(245 227 203 / 80%);
+  --beige-light-60: rgb(245 227 203 / 60%);
+  --beige-light-40: rgb(245 227 203 / 40%);
+  --beige-light-20: rgb(245 227 203 / 20%);
+  --beige-light-10: rgb(245 227 203 / 10%);
+  --beige-light: var(--beige-light-100);
 
-  --vt-c-text-light-1: var(--vt-c-indigo);
-  --vt-c-text-light-2: rgba(60, 60, 60, 0.66);
-  --vt-c-text-dark-1: var(--vt-c-white);
-  --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
-}
+  --beige-medium-100: rgb(239 211 175 / 100%);
+  --beige-medium-80: rgb(239 211 175 / 80%);
+  --beige-medium-60: rgb(239 211 175 / 60%);
+  --beige-medium-40: rgb(239 211 175 / 40%);
+  --beige-medium-20: rgb(239 211 175 / 20%);
+  --beige-medium-10: rgb(239 211 175 / 10%);
+  --beige-medium: var(--beige-medium-100);
 
-/* semantic color variables for this project */
-:root {
-  --color-background: var(--vt-c-white);
-  --color-background-soft: var(--vt-c-white-soft);
-  --color-background-mute: var(--vt-c-white-mute);
+  --orange-medium-100: rgb(239 147 71 / 100%);
+  --orange-medium-80: rgb(239 147 71 / 80%);
+  --orange-medium-60: rgb(239 147 71 / 60%);
+  --orange-medium-40: rgb(239 147 71 / 40%);
+  --orange-medium-20: rgb(239 147 71 / 20%);
+  --orange-medium-10: rgb(239 147 71 / 10%);
+  --orange-medium: var(--orange-medium-100);
 
-  --color-border: var(--vt-c-divider-light-2);
-  --color-border-hover: var(--vt-c-divider-light-1);
+  --brown-medium-100: rgb(163 104 52 / 100%);
+  --brown-medium-80: rgb(163 104 52 / 80%);
+  --brown-medium-60: rgb(163 104 52 / 60%);
+  --brown-medium-40: rgb(163 104 52 / 40%);
+  --brown-medium-20: rgb(163 104 52 / 20%);
+  --brown-medium-10: rgb(163 104 52 / 10%);
+  --brown-medium: var(--brown-medium-100);
 
-  --color-heading: var(--vt-c-text-light-1);
-  --color-text: var(--vt-c-text-light-1);
+  --brown-dark-100: rgb(90 62 43 / 100%);
+  --brown-dark-80: rgb(90 62 43 / 80%);
+  --brown-dark-60: rgb(90 62 43 / 60%);
+  --brown-dark-40: rgb(90 62 43 / 40%);
+  --brown-dark-20: rgb(90 62 43 / 20%);
+  --brown-dark-10: rgb(90 62 43 / 10%);
+  --brown-dark: var(--brown-dark-100);
 
-  --section-gap: 160px;
-}
+  --yellow-award-100: rgb(251 198 10 / 100%);
+  --yellow-award-80: rgb(251 198 10 / 80%);
+  --yellow-award-60: rgb(251 198 10 / 60%);
+  --yellow-award-40: rgb(251 198 10 / 40%);
+  --yellow-award-20: rgb(251 198 10 / 20%);
+  --yellow-award-10: rgb(251 198 10 / 10%);
+  --yellow-award: var(--yellow-award-100);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-background: var(--vt-c-black);
-    --color-background-soft: var(--vt-c-black-soft);
-    --color-background-mute: var(--vt-c-black-mute);
-
-    --color-border: var(--vt-c-divider-dark-2);
-    --color-border-hover: var(--vt-c-divider-dark-1);
-
-    --color-heading: var(--vt-c-text-dark-1);
-    --color-text: var(--vt-c-text-dark-2);
-  }
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  font-weight: normal;
+  
 }
 
 body {

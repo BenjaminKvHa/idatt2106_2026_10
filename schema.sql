@@ -57,6 +57,7 @@ CREATE TABLE pupil_classroom_membership (
     classroom_code VARCHAR(6) REFERENCES classroom(classroom_code) ON DELETE CASCADE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     username VARCHAR(255),
+    membership_confirmed_by_teacher BOOLEAN NOT NULL DEFAULT FALSE, -- if false, then waiting else its confirmed and a part of classroom
     avatar_file_object_id BIGINT REFERENCES file_object(id) ON DELETE SET NULL
 );
 

@@ -83,7 +83,7 @@ CREATE TABLE task (
 );
 
 CREATE TABLE pupil_chapter_bridge_progression (
-    email VARCHAR(255) NOT NULL REFERENCES account(email) ON DELETE CASCADE,
+    email VARCHAR(255) NOT NULL REFERENCES pupil_classroom_membership(email) ON DELETE CASCADE,
     chapter_id BIGINT NOT NULL REFERENCES chapter(id) ON DELETE CASCADE,
     successful_runs INT NOT NULL DEFAULT 0,
     highscore INT NOT NULL DEFAULT 0,

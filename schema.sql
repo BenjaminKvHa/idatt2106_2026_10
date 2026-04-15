@@ -57,6 +57,7 @@ CREATE TABLE pupil_classroom_membership (
     classroom_code VARCHAR(6) REFERENCES classroom(classroom_code) ON DELETE CASCADE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     username VARCHAR(255),
+    membership_confirmed_by_teacher BOOLEAN NOT NULL DEFAULT FALSE, -- if false, then waiting else its confirmed and a part of classroom
     avatar_file_object_id BIGINT REFERENCES file_object(id) ON DELETE SET NULL
 );
 
@@ -78,12 +79,13 @@ CREATE TABLE task (
     id BIGSERIAL PRIMARY KEY,
     difficulty task_difficulty_enum NOT NULL,
     chapter_id BIGINT NOT NULL REFERENCES chapter(id) ON DELETE CASCADE,
+    classroom_code VARCHAR(6) REFERENCES classroom(classroom_code) ON DELETE CASCADE, -- If null, then its a task for everyone
     task_json JSONB NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE pupil_chapter_bridge_progression (
-    email VARCHAR(255) NOT NULL REFERENCES pupil_classroom_membership(email) ON DELETE CASCADE,
+    email VARCHAR(255) NOT NULL REFERENCES pupil_classroom_membership(account_email) ON DELETE CASCADE,
     chapter_id BIGINT NOT NULL REFERENCES chapter(id) ON DELETE CASCADE,
     successful_runs INT NOT NULL DEFAULT 0,
     highscore INT NOT NULL DEFAULT 0,

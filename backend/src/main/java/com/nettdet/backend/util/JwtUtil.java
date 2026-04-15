@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.nettdet.backend.domain.Account;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -42,14 +44,14 @@ public class JwtUtil {
         this.key = getKey();
     }
 
-    public String generateToken(String email) {
+    public String generateToken(Account account) {
         Date expiration = new Date(System.currentTimeMillis() + 15 * 60 * 1000);
 
         try {
             String jwt = Jwts.builder()
-                        .subject(email)
-                        .claim("role", "a user role")
-                        .claim("legalName", "a users legal name")
+                        .subject(account.getEmail())
+                        .claim("role", account.getAccountRole())
+                        .claim("legalName", account.getLegalName())
                         .issuedAt(new Date())
                         .expiration(expiration)
                         .signWith(key)

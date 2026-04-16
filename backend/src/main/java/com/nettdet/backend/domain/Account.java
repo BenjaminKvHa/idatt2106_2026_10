@@ -28,7 +28,7 @@ public class Account extends CreatedAtEntity {
     @Column(name = "account_role")
     private AccountRole accountRole;
 
-    @OneToMany(mappedBy = "account_email")
+    @OneToMany(mappedBy = "account")
     private List<RefreshToken> refreshTokens = new ArrayList<>();
 
     // @Column(name = "classrom_code")

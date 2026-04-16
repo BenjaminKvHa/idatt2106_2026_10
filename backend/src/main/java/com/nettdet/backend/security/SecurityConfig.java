@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -61,6 +62,12 @@ public class SecurityConfig {
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/login", "/auth/register", "/auth/refresh", "/swagger-ui/**", "/v3/api-docs/**").permitAll() // for this url endpoint, all requests are permitted
                 .anyRequest().authenticated()); // to any other requests to endpoints, authentication is needed
+
+        http.exceptionHandling(exceptions -> exceptions
+                .authenticationEntryPoint((request, response, authException) ->
+                        response.sendError(HttpStatus.UNAUTHORIZED.value()))
+                .accessDeniedHandler((request, response, accessDeniedException) ->
+                        response.sendError(HttpStatus.FORBIDDEN.value())));
 
         // since SecurityConfig is initially run before Server Dispatchlet, it blocks due to CORS restriction, therefore we have
         // to define here that our backend can take in requests from the frontend

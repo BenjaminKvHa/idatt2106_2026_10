@@ -9,4 +9,8 @@ public interface AccountClassroomBridgeTeacherRepository
         extends JpaRepository<AccountClassroomBridgeTeacher, AccountClassroomBridgeTeacherId> {
 
     boolean existsByIdAccountEmailAndIdClassroomCode(String accountEmail, String classroomCode);
+
+    long countByIdClassroomCode(String classroomCode);
+
+    void deleteByIdAccountEmailAndIdClassroomCode(String accountEmail, String classroomCode);
 }

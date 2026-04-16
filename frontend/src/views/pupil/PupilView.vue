@@ -10,29 +10,29 @@ const route = useRoute()
       <router-link to="/pupil/profile" class="overlay-button profile">
         Gå til profil
       </router-link>
-      <router-link to="/pupil/settings" class="overlay-button settings">
+      <router-link to="/pupil/classroom/settings" class="overlay-button settings">
         <img src="/src/assets/homescreen/icon_settings.png"/>
       </router-link>
       <div class="image-wrapper">
         <img src="/src/assets/korktavle.png" alt="Background" />
-        <router-link to="/pupil/notebook" class="overlay-button notes">
+        <router-link to="/pupil/classroom/notebook" class="overlay-button notes">
           <img src="/src/assets/homescreen/icon_notes.png"/>
         </router-link>
-        <router-link to="/pupil/mystery" class="overlay-button mystery">
+        <router-link to="/pupil/classroom/mystery" class="overlay-button mystery">
           <img src="/src/assets/homescreen/icon_mystery.png"/>
         </router-link>
-        <router-link to="/pupil/medals" class="overlay-button medals">
+        <router-link to="/pupil/classroom/medals" class="overlay-button medals">
           <img src="/src/assets/homescreen/icon_medals.png"/>
         </router-link>
-        <router-link to="/pupil/map" class="overlay-button map">
+        <router-link to="/pupil/classroom/map" class="overlay-button map">
           <img src="/src/assets/homescreen/icon_map.png"/>
         </router-link>
-        <router-link to="/pupil/leaderboard" class="overlay-button leaderboard">
+        <router-link to="/pupil/classroom/leaderboard" class="overlay-button leaderboard">
           <img src="/src/assets/homescreen/icon_leaderboard.png"/>
         </router-link>
-        <!--router-link to="/pupil/help" class="overlay-button help">
+        <router-link to="/pupil/classroom/help" class="overlay-button help">
           <img src="/src/assets/homescreen/icon_help.png"/>
-        </router-link>*/-->
+        </router-link>
       </div>
     </div>
   </div>
@@ -93,6 +93,11 @@ const route = useRoute()
 .notes {
   top: 55%;
   right: 8%;
+}
+
+.help{
+  top: 55%;
+  left: 38%;
 }
 
 .profile{

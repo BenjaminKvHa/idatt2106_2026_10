@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.nettdet.backend.domain.AccountClassroomBridgeTeacher;
-import com.nettdet.backend.domain.AccountClassroomBridgeTeacherId;
+import com.nettdet.backend.domain.ids.AccountClassroomBridgeTeacherId;
 import com.nettdet.backend.domain.Classroom;
 import com.nettdet.backend.domain.enums.AccountRole;
 import com.nettdet.backend.dto.ClassroomResponse;

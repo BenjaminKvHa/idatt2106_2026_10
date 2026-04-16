@@ -10,7 +10,7 @@ on:
 
 jobs:
   build-and-test:
-    runs-on: [self-hosted, ntnu-runners]
+    runs-on: ntnu-runners
     name: Compile, build, install dependencies and test frontend
     defaults:
       run:

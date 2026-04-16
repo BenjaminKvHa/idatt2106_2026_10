@@ -1,7 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/shared/HomeView.vue'
-import SignInView from '@/views/shared/SignInView.vue'
-import SignUpView from '@/views/shared/SignUpView.vue'
 import NotFoundView from '@/views/shared/NotFoundView.vue'
 import LeaderboardView from '@/views/shared/LeaderboardView.vue'
 import EnterClassroomCodeView from '@/views/shared/EnterClassroomCodeView.vue'
@@ -21,6 +19,8 @@ import PupilsNotebookChapterView from '@/views/pupil/PupilsNotebookChapterView.v
 import PupilsMysteryView from '@/views/pupil/PupilsMysteryView.vue'
 import PupilsMedalsView from '@/views/pupil/PupilsMedalsView.vue'
 import PupilsMapView from '@/views/pupil/PupilsMapView.vue'
+import SignInView from '@/views/shared/SignInView.vue'
+import SignUpView from '@/views/shared/SignUpView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -57,7 +57,6 @@ const router = createRouter({
     },
     {
       path: '/teacher',
-      // component: ...,
       children: [
         {
           path: 'profile',
@@ -69,8 +68,11 @@ const router = createRouter({
         },
         {
           path: 'classrooms',
-          component: TeachersClassroomsView,
           children: [
+            {
+              path: '',
+              component: TeachersClassroomsView,
+            },
             {
               path: ':classroom_id',
               component: TeachersClassroomView,
@@ -85,8 +87,11 @@ const router = createRouter({
                   children: [
                     {
                       path: ':pupil_id',
-                      component: TeachersPupilView,
                       children: [
+                        {
+                          path: '',
+                          component: TeachersPupilView,
+                        },
                         {
                           path: 'notbook',
                           children: [
@@ -108,20 +113,29 @@ const router = createRouter({
     },
     {
       path: '/pupil',
-      component: PupilView,
       children: [
+        {
+          component: PupilView,
+          path: '',
+        },
         {
           path: 'profile',
           component: PupilsProfileView,
         },
         {
           path: 'classroom',
-          component: PupilsClassroomView,
           children: [
             {
+              component: PupilsClassroomView,
+              path: '',
+            },
+            {
               path: 'notebook',
-              component: PupilsNotebookView,
               children: [
+                {
+                  component: PupilsNotebookView,
+                  path: '',
+                },
                 {
                   path: ':chapter_id',
                   component: PupilsNotebookChapterView,

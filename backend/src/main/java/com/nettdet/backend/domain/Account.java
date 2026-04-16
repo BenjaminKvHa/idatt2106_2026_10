@@ -7,8 +7,11 @@ import java.util.List;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -19,20 +22,27 @@ public class Account extends CreatedAtEntity {
     @Column(name = "email")
     private String email;
 
-    @Column(name = "password_data", columnDefinition = "TEXT")
+    @Column(name = "password_data", nullable = false, columnDefinition = "TEXT")
     private String passwordData;
 
     @Column(name = "legal_name", nullable = false)
     private String legalName;
 
-    @Column(name = "account_role")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "account_role", nullable = false)
     private AccountRole accountRole;
 
-    @OneToMany(mappedBy = "account_email")
+    @OneToMany(mappedBy = "account")
     private List<RefreshToken> refreshTokens = new ArrayList<>();
 
-    // @Column(name = "classrom_code")
-    // private String classromCode;
+    @OneToMany(mappedBy = "uploadedByAccount")
+    private List<FileObject> uploadedFiles = new ArrayList<>();
+
+    @OneToMany(mappedBy = "account")
+    private List<AccountClassroomBridgeTeacher> teacherClassrooms = new ArrayList<>();
+
+    @OneToOne(mappedBy = "account")
+    private PupilClassroomMembership pupilMembership;
 
     public Account() {}
 
@@ -70,5 +80,33 @@ public class Account extends CreatedAtEntity {
 
     public List<RefreshToken> getRefreshTokens() {
         return refreshTokens;
+    }
+
+    public void setRefreshTokens(List<RefreshToken> refreshTokens) {
+        this.refreshTokens = refreshTokens;
+    }
+
+    public List<FileObject> getUploadedFiles() {
+        return uploadedFiles;
+    }
+
+    public void setUploadedFiles(List<FileObject> uploadedFiles) {
+        this.uploadedFiles = uploadedFiles;
+    }
+
+    public List<AccountClassroomBridgeTeacher> getTeacherClassrooms() {
+        return teacherClassrooms;
+    }
+
+    public void setTeacherClassrooms(List<AccountClassroomBridgeTeacher> teacherClassrooms) {
+        this.teacherClassrooms = teacherClassrooms;
+    }
+
+    public PupilClassroomMembership getPupilMembership() {
+        return pupilMembership;
+    }
+
+    public void setPupilMembership(PupilClassroomMembership pupilMembership) {
+        this.pupilMembership = pupilMembership;
     }
 }

@@ -22,11 +22,11 @@ public class RefreshToken extends CreatedAtEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "refresh_token", columnDefinition = "TEXT")
+    @Column(name = "refresh_token", nullable = false, columnDefinition = "TEXT")
     private String refreshToken;
 
 
-    @JoinColumn(name = "account_email", nullable = false)
+    @JoinColumn(name = "email", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
     private Account account;
 

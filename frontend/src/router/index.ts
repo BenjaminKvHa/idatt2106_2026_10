@@ -120,7 +120,7 @@ const router = createRouter({
       children: [
         {
           component: PupilView,
-          path: ''
+          path: '',
         },
         {
           path: 'profile',
@@ -131,14 +131,14 @@ const router = createRouter({
           children: [
             {
               component: PupilsClassroomView,
-              path: ''
+              path: '',
             },
             {
               path: 'notebook',
               children: [
                 {
                   component: PupilsNotebookView,
-                  path: ''
+                  path: '',
                 },
                 {
                   path: ':chapter_id',

@@ -26,7 +26,7 @@ public class RefreshToken extends CreatedAtEntity {
     private String refreshToken;
 
 
-    @JoinColumn(name = "account_email", nullable = false)
+    @JoinColumn(name = "email", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
     private Account account;
 

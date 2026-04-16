@@ -126,6 +126,14 @@ function handleConfirm() {
   cursor: pointer;
 }
 
+.btn-red:hover {
+  background: var(--red-danger-80);
+}
+
+.btn-green:hover {
+  background: var(--green-confirm-60);
+}
+
 .btn:active {
   transform: translateY(3px);
   box-shadow: 0 2px 0 var(--color-text);

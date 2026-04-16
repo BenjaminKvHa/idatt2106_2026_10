@@ -1,0 +1,42 @@
+name: CI/CD frontend pipeline
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - "frontend/**"
+
+jobs:
+  build-and-test:
+    runs-on: [self-hosted, ntnu-runners]
+    name: Compile, build, install dependencies and test frontend
+    defaults:
+      run:
+        working-directory: frontend
+        
+    steps:
+      - name: checkout repository that triggered workflow
+        uses: actions/checkout@v4
+
+      - name: setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: npm  # Caches npm dependencies to speed up subsequent runs by creating a hash key
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci # Installs dependencies using package-lock.json for consistency
+
+      - name: Lint code
+        run: npm run lint # Runs linting checks (adjust script name if necessary)
+
+      - name: Build project
+        run: npm run build # Builds the Vue application for production
+
+      # Optional: Add steps for testing if applicable
+      - name: Run tests
+        run: npm run test:unit  # Runs tests, passes if no tests are found
+    

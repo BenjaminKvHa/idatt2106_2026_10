@@ -106,7 +106,7 @@ public class JwtUtil {
     }
 
     public String extractUserRole(String jwtToken) {
-        return extractAllClaims(jwtToken).get("Role", String.class);
+        return extractAllClaims(jwtToken).get("role", String.class);
     }
 
     public String extractLegalName(String jwtToken) {

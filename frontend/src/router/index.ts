@@ -32,15 +32,15 @@ const router = createRouter({
     },
     {
       path: '/leaderboard',
-      component: LeaderboardView
+      component: LeaderboardView,
     },
     {
       path: '/sign-in',
-      component: SignInView
+      component: SignInView,
     },
     {
       path: '/sign-up',
-      component: SignUpView
+      component: SignUpView,
     },
     {
       path: '/join-classroom',
@@ -53,7 +53,7 @@ const router = createRouter({
           path: 'create-avatar',
           component: CreateAvatarView,
         },
-      ]
+      ],
     },
     {
       path: '/teacher',
@@ -61,11 +61,11 @@ const router = createRouter({
       children: [
         {
           path: 'profile',
-          component: TeachersProfileView
+          component: TeachersProfileView,
         },
         {
           path: 'notifications',
-          component: TeachersNotificationsView
+          component: TeachersNotificationsView,
         },
         {
           path: 'classrooms',
@@ -93,27 +93,26 @@ const router = createRouter({
                             {
                               path: ':chapter_id',
                               component: TeachersNotebookChapterView,
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 },
-              ]
+              ],
             },
-          ]
+          ],
         },
-      ]
+      ],
     },
     {
       path: '/pupil',
       component: PupilView,
       children: [
-
         {
           path: 'profile',
-          component: PupilsProfileView
+          component: PupilsProfileView,
         },
         {
           path: 'classroom',
@@ -126,12 +125,12 @@ const router = createRouter({
                 {
                   path: ':chapter_id',
                   component: PupilsNotebookChapterView,
-                }
-              ]
+                },
+              ],
             },
             {
               path: 'mystery',
-              component: PupilsMysteryView
+              component: PupilsMysteryView,
             },
             {
               path: 'medals',
@@ -141,15 +140,15 @@ const router = createRouter({
               path: 'map',
               component: PupilsMapView,
             },
-          ]
-        }
-      ]
+          ],
+        },
+      ],
     },
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: NotFoundView,
-    }
+    },
   ],
 })
 

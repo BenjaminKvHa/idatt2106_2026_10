@@ -1,9 +1,9 @@
 package com.nettdet.backend.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "classroom")
@@ -18,6 +18,21 @@ public class Classroom {
 
     @Column(name = "classroom_description", columnDefinition = "TEXT")
     private String classroomDescription;
+
+    @OneToMany(mappedBy = "classroom")
+    private List<FileObject> files = new ArrayList<>();
+
+    @OneToMany(mappedBy = "classroom")
+    private List<AccountClassroomBridgeTeacher> teacherBridges = new ArrayList<>();
+
+    @OneToMany(mappedBy = "classroom")
+    private List<PupilClassroomMembership> pupilMemberships = new ArrayList<>();
+
+    @OneToMany(mappedBy = "classroom")
+    private List<Task> tasks = new ArrayList<>();
+
+    public Classroom() {
+    }
 
     public String getClassroomCode() {
         return classroomCode;
@@ -41,5 +56,37 @@ public class Classroom {
 
     public void setClassroomDescription(String classroomDescription) {
         this.classroomDescription = classroomDescription;
+    }
+
+    public List<FileObject> getFiles() {
+        return files;
+    }
+
+    public void setFiles(List<FileObject> files) {
+        this.files = files;
+    }
+
+    public List<AccountClassroomBridgeTeacher> getTeacherBridges() {
+        return teacherBridges;
+    }
+
+    public void setTeacherBridges(List<AccountClassroomBridgeTeacher> teacherBridges) {
+        this.teacherBridges = teacherBridges;
+    }
+
+    public List<PupilClassroomMembership> getPupilMemberships() {
+        return pupilMemberships;
+    }
+
+    public void setPupilMemberships(List<PupilClassroomMembership> pupilMemberships) {
+        this.pupilMemberships = pupilMemberships;
+    }
+
+    public List<Task> getTasks() {
+        return tasks;
+    }
+
+    public void setTasks(List<Task> tasks) {
+        this.tasks = tasks;
     }
 }

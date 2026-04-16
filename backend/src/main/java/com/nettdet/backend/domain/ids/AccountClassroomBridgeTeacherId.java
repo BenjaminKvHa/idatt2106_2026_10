@@ -1,4 +1,4 @@
-package com.nettdet.backend.domain;
+package com.nettdet.backend.domain.ids;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -40,15 +40,16 @@ public class AccountClassroomBridgeTeacherId implements Serializable {
     }
 
     @Override
-    public boolean equals(Object object) {
-        if (this == object) {
+    public boolean equals(Object o) {
+        if (this == o) {
             return true;
         }
-        if (!(object instanceof AccountClassroomBridgeTeacherId other)) {
+        if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        return Objects.equals(accountEmail, other.accountEmail)
-                && Objects.equals(classroomCode, other.classroomCode);
+        AccountClassroomBridgeTeacherId that = (AccountClassroomBridgeTeacherId) o;
+        return Objects.equals(accountEmail, that.accountEmail)
+                && Objects.equals(classroomCode, that.classroomCode);
     }
 
     @Override

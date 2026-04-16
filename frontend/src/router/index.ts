@@ -18,9 +18,13 @@ import PupilsNotebookView from '@/views/pupil/PupilsNotebookView.vue'
 import PupilsNotebookChapterView from '@/views/pupil/PupilsNotebookChapterView.vue'
 import PupilsMysteryView from '@/views/pupil/PupilsMysteryView.vue'
 import PupilsMedalsView from '@/views/pupil/PupilsMedalsView.vue'
+import PupilsSettingsView from "@/views/pupil/PupilsSettingsView.vue";
+import PupilsHelpView from "@/views/pupil/PupilsHelpView.vue";
+import PupilsLeaderboardView from "@/views/pupil/PupilsLeaderboardView.vue";
 import PupilsMapView from '@/views/pupil/PupilsMapView.vue'
 import SignInView from '@/views/shared/SignInView.vue'
 import SignUpView from '@/views/shared/SignUpView.vue'
+
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -93,7 +97,7 @@ const router = createRouter({
                           component: TeachersPupilView,
                         },
                         {
-                          path: 'notbook',
+                          path: 'notebook',
                           children: [
                             {
                               path: ':chapter_id',
@@ -153,6 +157,18 @@ const router = createRouter({
             {
               path: 'map',
               component: PupilsMapView,
+            },
+            {
+              path: 'settings',
+              component: PupilsSettingsView,
+            },
+            {
+              path: 'help',
+              component: PupilsHelpView,
+            },
+            {
+              path: 'leaderboard',
+              component: PupilsLeaderboardView,
             },
           ],
         },

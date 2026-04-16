@@ -64,8 +64,6 @@
   --yellow-award-20: rgb(251 198 10 / 20%);
   --yellow-award-10: rgb(251 198 10 / 10%);
   --yellow-award: var(--yellow-award-100);
-
-  
 }
 
 body {

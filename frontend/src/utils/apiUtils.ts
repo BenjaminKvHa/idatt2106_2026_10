@@ -24,12 +24,14 @@ export async function getNewTokens(): Promise<void> {
   if (refreshPromise) return refreshPromise
 
   refreshPromise = (async () => {
+    console.info('Attempting to refresh tokens')
     const res = await fetch('/api/auth/refresh', {
       method: 'POST',
       credentials: 'include',
     })
 
     if (res.status === 401 || !res.ok) {
+      console.info('Refreshing tokens failed. Clearing session storage & redirecting to signin')
       clearAuthSessionStorage()
       redirectToSignIn()
       throw new Error('Unable to refresh session')
@@ -37,6 +39,9 @@ export async function getNewTokens(): Promise<void> {
 
     const data = (await res.json()) as RefreshResponse
     if (!data.accessToken) {
+      console.info(
+        'Refreshing tokens failed because of missing access token. Clearing session storage & redirecting to signin',
+      )
       clearAuthSessionStorage()
       redirectToSignIn()
       throw new Error('Refresh response missing access token')
@@ -66,9 +71,7 @@ async function requestWithOptions<T = unknown>(
     await getNewTokens()
   }
 
-  const headers: Record<string, string> = {
-    ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
-  }
+  const headers: Record<string, string> = (body !== undefined ? { 'Content-Type': 'application/json' } : {})
 
   const token = getAccessToken()
   if (token) {
@@ -83,9 +86,13 @@ async function requestWithOptions<T = unknown>(
   }
   let res = await fetch(endpoint, requestData)
   if (res.status === 401) {
+    console.info(`fetching ${endpoint} failed, attempting to get new tokens & refetching`)
     await getNewTokens()
     const refreshedToken = getAccessToken()
     if (!refreshedToken) {
+      console.info(
+        `getting new tokens after failure also failed. Clearing session storage & redirecting to signin`,
+      )
       clearAuthSessionStorage()
       redirectToSignIn()
       throw new Error('Unauthorized')

@@ -30,7 +30,6 @@ img {
   border-radius: 38px;
   font-weight: 600;
   font-size: 50px;
-  font-family: Inter;
   box-shadow: -10px 8px 8px rgba(0,0,0,0.4);
 }
 .center-container {

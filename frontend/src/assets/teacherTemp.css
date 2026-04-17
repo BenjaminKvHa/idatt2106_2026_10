@@ -16,7 +16,7 @@
     sizing
     */
     --border-radius: 30px;
-    --border-width: 7px;
+    --border-width: 5px;
 
     --mid-margin: 10px;
     --tight-margin: 0px;
@@ -29,6 +29,14 @@
     --medium-gap: 20px;
     --thin-gap: 10px;
 
+    --card-header-padding: var(--medium-padding);
+    --card-title-padding: var(--thin-padding) var(--medium-padding);
+    --card-body-padding: var(--medium-padding);
+    --card-item-padding: var(--thin-padding) var(--medium-padding);
+    --card-item-radius: calc(var(--border-radius) / 2);
+    --card-header-gap: var(--medium-gap);
+    --card-body-gap: var(--thin-gap);
+
     /*
     misc stuffs and things
     */
@@ -38,11 +46,75 @@
 .teacher-content {
     color: var(--accent);
     background-color: var(--background-body);
-    margin: 0px;
+    margin: 0;
     display: flex;
     flex-direction: row;
     justify-content: center;
     
+}
+
+.teacher-card {
+    color: var(--accent);
+    background-color: var(--background-body);
+    border-radius: var(--border-radius);
+    border: var(--border-width) solid var(--accent);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.teacher-card-header {
+    background-color: var(--accent);
+    color: var(--txt-sec);
+    padding: var(--card-header-padding);
+    display: flex;
+    flex-direction: column;
+    gap: var(--card-header-gap);
+    cursor: pointer;
+    text-align: center;
+}
+
+.teacher-card-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--accent);
+    color: var(--txt-sec);
+    font-weight: 700;
+    width: 100%;
+    box-sizing: border-box;
+    padding: var(--thin-padding);
+    margin: 0;
+}
+
+.teacher-card-header-actions {
+    display: flex;
+    justify-content: center;
+    gap: var(--thin-gap);
+}
+
+.teacher-card-body {
+    padding: var(--card-body-padding);
+    background-color: var(--background);
+    display: flex;
+    flex-direction: column;
+    gap: var(--card-body-gap);
+}
+
+
+.teacher-card-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--card-item-padding);
+    border-radius: var(--card-item-radius);
+    background-color: var(--background-sec);
+    color: var(--accent);
+}
+
+.teacher-card-header :where(button, a) {
+    cursor: pointer;
 }
 
 .teacher-variant-1 {
@@ -66,7 +138,8 @@
     border-style: solid;
     display: flex;
     flex-direction: column;
-    gap: var(--medium-gap);
+    justify-content: flex-start;
+    gap: var(--thin-gap);
 }
 
 .button-variant-1 {
@@ -76,8 +149,8 @@
     border-radius: var(--border-radius);
     border-width: var(--border-width);
     border-style: solid;
+    border-color: var(--accent);
     transition: ease-in-out var(--animation-time-1);
-
 }
 
 .button-variant-1:hover, .button-variant-1::selection {
@@ -92,6 +165,7 @@
     border-radius: var(--border-radius);
     border-width: var(--border-width);
     border-style: solid;
+    border-color: var(--accent);
     transition: ease-in-out var(--animation-time-1);
 }
 
@@ -107,11 +181,18 @@
     border-radius: var(--border-radius);
     border-width: var(--border-width);
     border-style: solid;
+    border-color: var(--warning);
     transition: ease-in-out var(--animation-time-1);
 }
 
 .button-warning:hover, .button-warning::selection {
     background-color: var(--warning-sec);
+}
+
+.teacher-card-body button {
+    border: none;
+    background-color: var(--background-body);
+    color: var(--accent);
 }
 
 

@@ -86,10 +86,12 @@
       </div>
     </div>
   </div>
+  <router-view />
 </template>
 
 <script setup>
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 // Bytt disse til filene du laster opp senere
 import profileImage from '@/assets/icons/profil.png'
@@ -101,6 +103,8 @@ import passordbankenImage from '@/assets/stoppesteder/passordbanken.png'
 import markedsplassenImage from '@/assets/stoppesteder/markedsplassen.png'
 import sosialMoteplassImage from '@/assets/stoppesteder/den-sosiale-moteplassen.png'
 import datasenteretImage from '@/assets/stoppesteder/datasenteret.png'
+
+const router = useRouter()
 
 const currentPage = ref(0)
 const itemsPerPage = 4
@@ -195,8 +199,10 @@ function goToPage(index) {
 function openStop(stop) {
   if (stop.locked) return
 
-  console.log('Åpner stoppested:', stop.name)
-  // router.push(`/stoppested/${stop.id}`)
+  if (stop.name === 'Nyhetskvartalet') {
+    router.push('/pupil/classroom/map/news')
+    console.log('Åpner stoppested:', stop.name)
+  }
 }
 
 function goBack() {

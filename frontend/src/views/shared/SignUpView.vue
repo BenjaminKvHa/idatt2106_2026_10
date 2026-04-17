@@ -1,8 +1,74 @@
+<script setup lang="ts">
+import { ref } from 'vue'
+
+type Role = 'TEACHER' | 'PUPIL'
+
+const email = ref<string>('')
+const password = ref<string>('')
+const confirmPassword = ref<string>('')
+const role = ref<Role>('TEACHER')
+const error = ref<string>('')
+const loading = ref<boolean>(false)
+const submitted = ref<boolean>(false)
+
+const validatePassword = (pwd: string): string | null => {
+  if (pwd.length < 8) return 'Passordet må være minst 8 tegn.'
+  if (!/[A-ZÆØÅ]/.test(pwd)) return 'Passordet må inneholde minst én stor bokstav.'
+  if (!/[0-9]/.test(pwd)) return 'Passordet må inneholde minst ett tall.'
+  return null
+}
+
+const handleRegister = async (): Promise<void> => {
+  error.value = ''
+  submitted.value = false
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(email.value)) {
+    error.value = 'Du må skrive inn en gyldig e-postadresse.'
+    return
+  }
+
+  const passwordError = validatePassword(password.value)
+  if (passwordError) {
+    error.value = passwordError
+    return
+  }
+
+  if (password.value !== confirmPassword.value) {
+    error.value = 'Passordene er ikke like.'
+    return
+  }
+
+  loading.value = true
+
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 700))
+
+    console.log('Demo signup:', {
+      email: email.value,
+      role: role.value,
+      passwordLength: password.value.length,
+    })
+
+    submitted.value = true
+
+    email.value = ''
+    password.value = ''
+    confirmPassword.value = ''
+    role.value = 'TEACHER'
+  } catch {
+    error.value = 'Kunne ikke opprette bruker.'
+  } finally {
+    loading.value = false
+  }
+}
+</script>
+
 <template>
   <div class="signup-page">
     <div class="signup-card">
       <div class="signup-body">
-        <img :src="logo" alt="NTNU" class="brand-logo" />
+        <img src="@/assets/NTNU.png" alt="NTNU" class="brand-logo" />
 
         <div class="header-text">
           <h1>Opprett bruker</h1>
@@ -103,73 +169,6 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref } from 'vue'
-import logo from '@/assets/NTNU.png'
-
-type Role = 'TEACHER' | 'PUPIL'
-
-const email = ref<string>('')
-const password = ref<string>('')
-const confirmPassword = ref<string>('')
-const role = ref<Role>('TEACHER')
-const error = ref<string>('')
-const loading = ref<boolean>(false)
-const submitted = ref<boolean>(false)
-
-const validatePassword = (pwd: string): string | null => {
-  if (pwd.length < 8) return 'Passordet må være minst 8 tegn.'
-  if (!/[A-ZÆØÅ]/.test(pwd)) return 'Passordet må inneholde minst én stor bokstav.'
-  if (!/[0-9]/.test(pwd)) return 'Passordet må inneholde minst ett tall.'
-  return null
-}
-
-const handleRegister = async (): Promise<void> => {
-  error.value = ''
-  submitted.value = false
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (!emailRegex.test(email.value)) {
-    error.value = 'Du må skrive inn en gyldig e-postadresse.'
-    return
-  }
-
-  const passwordError = validatePassword(password.value)
-  if (passwordError) {
-    error.value = passwordError
-    return
-  }
-
-  if (password.value !== confirmPassword.value) {
-    error.value = 'Passordene er ikke like.'
-    return
-  }
-
-  loading.value = true
-
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 700))
-
-    console.log('Demo signup:', {
-      email: email.value,
-      role: role.value,
-      passwordLength: password.value.length,
-    })
-
-    submitted.value = true
-
-    email.value = ''
-    password.value = ''
-    confirmPassword.value = ''
-    role.value = 'TEACHER'
-  } catch {
-    error.value = 'Kunne ikke opprette bruker.'
-  } finally {
-    loading.value = false
-  }
-}
-</script>
 
 <style scoped>
 * {

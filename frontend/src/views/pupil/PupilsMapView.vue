@@ -137,7 +137,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onActivated, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import detektivkontoretImage from '@/assets/stoppesteder/detektivkontoret.png'
@@ -149,6 +149,19 @@ import passordbankenImage from '@/assets/stoppesteder/passordbanken.png'
 import markedsplassenImage from '@/assets/stoppesteder/markedsplassen.png'
 import sosialMoteplassImage from '@/assets/stoppesteder/den-sosiale-moteplassen.png'
 import datasenteretImage from '@/assets/stoppesteder/datasenteret.png'
+
+type StopSide = 'top' | 'bottom'
+
+type Stop = {
+  id: number
+  name: string
+  stars: number
+  image: string
+  side: StopSide
+  isHome?: boolean
+  routeName: string | null
+  requiredPreviousStop: string | null
+}
 
 const router = useRouter()
 
@@ -246,6 +259,26 @@ const paginatedStops = computed<Stop[]>(() => {
   return stops.value.slice(start, start + itemsPerPage)
 })
 
+function loadStars(): void {
+  const starKeys: Record<string, string> = {
+    Nyhetskvartalet: 'nyhetskvartaletStars',
+    Fotografen: 'fotografenStars',
+    Postkontoret: 'postkontoretStars',
+    Passordbanken: 'passordbankenStars',
+    Markedsplassen: 'markedsplassenStars',
+    'Den sosiale møteplassen': 'denSosialeMoteplassenStars',
+    Datasenteret: 'datasenteretStars',
+  }
+
+  stops.value.forEach((stop) => {
+    const storageKey = starKeys[stop.name]
+    if (!storageKey) return
+
+    const savedStars = localStorage.getItem(storageKey)
+    stop.stars = savedStars ? JSON.parse(savedStars) : 0
+  })
+}
+
 function findStopByName(name: string): Stop | undefined {
   return stops.value.find((stop) => stop.name === name)
 }
@@ -302,12 +335,6 @@ function closeLockedPopup(): void {
   activeLockedStop.value = null
 }
 
-
-  if (stop.name === 'Nyhetskvartalet') {
-    router.push('/pupil/classroom/map/news')
-    console.log('Åpner stoppested:', stop.name)
-  }
-
 function goToRequiredStop(): void {
   if (!activeLockedStop.value?.requiredPreviousStop) return
 
@@ -321,6 +348,10 @@ function goToRequiredStop(): void {
 function goBack(): void {
   router.push({ name: 'PupilView' })
 }
+
+onActivated(() => {
+  loadStars()
+})
 </script>
 
 <style scoped>

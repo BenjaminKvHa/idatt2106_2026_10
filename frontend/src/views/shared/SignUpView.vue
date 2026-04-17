@@ -104,26 +104,30 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 import logo from '@/assets/NTNU.png'
 
-const email = ref('')
-const password = ref('')
-const confirmPassword = ref('')
-const role = ref('TEACHER')
-const error = ref('')
-const loading = ref(false)
+type Role = 'TEACHER' | 'PUPIL'
 
-const validatePassword = (pwd) => {
+const email = ref<string>('')
+const password = ref<string>('')
+const confirmPassword = ref<string>('')
+const role = ref<Role>('TEACHER')
+const error = ref<string>('')
+const loading = ref<boolean>(false)
+const submitted = ref<boolean>(false)
+
+const validatePassword = (pwd: string): string | null => {
   if (pwd.length < 8) return 'Passordet må være minst 8 tegn.'
   if (!/[A-ZÆØÅ]/.test(pwd)) return 'Passordet må inneholde minst én stor bokstav.'
   if (!/[0-9]/.test(pwd)) return 'Passordet må inneholde minst ett tall.'
   return null
 }
 
-const handleRegister = async () => {
+const handleRegister = async (): Promise<void> => {
   error.value = ''
+  submitted.value = false
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!emailRegex.test(email.value)) {
@@ -143,15 +147,24 @@ const handleRegister = async () => {
   }
 
   loading.value = true
+
   try {
-    const result = await auth.register(email.value, password.value, role.value, 1)
-    if (result?.success ?? result) {
-      router.push('/')
-    } else {
-      error.value = result?.message || 'Noe gikk galt. Prøv igjen.'
-    }
+    await new Promise((resolve) => setTimeout(resolve, 700))
+
+    console.log('Demo signup:', {
+      email: email.value,
+      role: role.value,
+      passwordLength: password.value.length,
+    })
+
+    submitted.value = true
+
+    email.value = ''
+    password.value = ''
+    confirmPassword.value = ''
+    role.value = 'TEACHER'
   } catch {
-    error.value = 'Kunne ikke opprette bruker. Kanskje e-postadressen allerede er i bruk?'
+    error.value = 'Kunne ikke opprette bruker.'
   } finally {
     loading.value = false
   }

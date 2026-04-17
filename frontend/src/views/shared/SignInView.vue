@@ -118,27 +118,27 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 import logo from '@/assets/NTNU.png'
 
-const step = ref(1)
-const email = ref('')
-const password = ref('')
-const submitted = ref(false)
+const step = ref<number>(1)
+const email = ref<string>('')
+const password = ref<string>('')
+const submitted = ref<boolean>(false)
 
-const goToPassword = () => {
+const goToPassword = (): void => {
   submitted.value = false
   step.value = 3
 }
 
-const changeAccount = () => {
+const changeAccount = (): void => {
   password.value = ''
   submitted.value = false
   step.value = 2
 }
 
-const login = () => {
+const login = (): void => {
   submitted.value = true
   console.log('Demo login:', {
     email: email.value,
@@ -146,7 +146,7 @@ const login = () => {
   })
 }
 
-const goToSignup = () => {
+const goToSignup = (): void => {
   window.location.href = '/sign-up'
 }
 </script>

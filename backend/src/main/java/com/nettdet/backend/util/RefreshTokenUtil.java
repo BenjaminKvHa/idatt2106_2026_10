@@ -70,6 +70,15 @@ public class RefreshTokenUtil {
         return cookie;
     }
 
+    public ResponseCookie createExpiredRefreshTokenCookie() {
+        return ResponseCookie.from("refresh_token", "")
+                             .httpOnly(true)
+                             .maxAge(0)
+                             .path("/api/auth")
+                             .sameSite("Strict")
+                             .build();
+    }
+
     /**
      * Creates a one-way SHA-256 hash of a plaintext token.
      * <p>

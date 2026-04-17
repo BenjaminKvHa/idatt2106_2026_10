@@ -7,7 +7,7 @@
             <img src="@/assets/icons/profil.png" alt="Profil" class="top-icon-image" />
           </button>
 
-          <button class="square-btn help-btn" aria-label="Hjelp">?</button>
+          <button class="square-btn help-btn" aria-label="Hjelp" @click="openHintPopup">?</button>
         </div>
 
         <button class="back-btn" @click="goBack">Tilbake</button>
@@ -30,13 +30,17 @@
             v-for="(stop, index) in paginatedStops"
             :key="stop.id"
             class="stop-node"
-            :class="[positions[index], stop.side]"
+            :class="[positions[index], stop.side, { homeNode: stop.isHome }]"
           >
             <div class="path-point"></div>
             <div class="connector"></div>
 
             <div class="stop-content">
-              <div class="stars" :class="{ bottomStars: stop.side === 'bottom' }">
+              <div
+                v-if="!stop.isHome"
+                class="stars"
+                :class="{ bottomStars: stop.side === 'bottom' }"
+              >
                 <span
                   v-for="starIndex in 3"
                   :key="starIndex"
@@ -48,14 +52,18 @@
 
               <button
                 class="stop-circle"
-                :class="{ locked: stop.locked, unlocked: !stop.locked }"
-                :disabled="stop.locked"
+                :class="{ locked: !isUnlocked(stop), unlocked: isUnlocked(stop) }"
                 @click="openStop(stop)"
               >
                 <div class="image-wrapper">
                   <img :src="stop.image" :alt="stop.name" class="stop-image" />
 
-                  <img v-if="stop.locked" :src="lockImage" class="lock-overlay" alt="Låst" />
+                  <img
+                    v-if="!isUnlocked(stop) && !stop.isHome"
+                    :src="lockImage"
+                    class="lock-overlay"
+                    alt="Låst"
+                  />
                 </div>
               </button>
 
@@ -84,16 +92,56 @@
           :aria-label="`Gå til side ${index + 1}`"
         />
       </div>
+      <div v-if="activeLockedStop" class="popup-overlay" @click="closeLockedPopup">
+        <div class="locked-popup" @click.stop>
+          <h2 class="popup-title">{{ activeLockedStop.name }} er låst.</h2>
+
+          <p class="popup-text">
+            Få 3 stjerner på
+            {{ activeLockedStop.requiredPreviousStop }}
+            for å låse det opp!
+          </p>
+
+          <div class="popup-actions">
+            <button class="popup-btn popup-btn-back" @click="closeLockedPopup">Tilbake</button>
+
+            <button class="popup-btn popup-btn-play" @click="goToRequiredStop">Spill</button>
+          </div>
+        </div>
+      </div>
+      <div v-if="showHintPopup" class="popup-overlay" @click="closeHintPopup">
+        <div class="hint-popup" @click.stop>
+          <h2 class="popup-title">Trenger du hjelp?</h2>
+
+          <div class="hint-text">
+            <p>
+              Inne på denne siden kan du trykke deg inn på de ulike stoppestedene og gjøre ulike
+              oppgaver knyttet til de.
+            </p>
+            <ul>
+              <li>Begynn med nyhetskvartalet.</li>
+              <li>Fullfør oppgavene, oppnå 3 stjerner, og lås opp neste stoppested.</li>
+              <li>Fullfør alle oppgavene på alle stoppestedene og slå bossen i datasenteret.</li>
+              <li>Trykk på Hjem for å gå tilbake til hovedskjermen.</li>
+            </ul>
+          </div>
+
+          <div class="popup-actions">
+            <button class="popup-btn popup-btn-play" @click="closeHintPopup">Ok</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
+  <router-view />
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
-// Bytt disse til filene du laster opp senere
-import profileImage from '@/assets/icons/profil.png'
-import lockImageFile from '@/assets/icons/lock.png'
+import detektivkontoretImage from '@/assets/stoppesteder/detektivkontoret.png'
+import lockImage from '@/assets/icons/lock.png'
 import nyhetskvartaletImage from '@/assets/stoppesteder/nyhetskvartalet.png'
 import fotografenImage from '@/assets/stoppesteder/fotografen.png'
 import postkontoretImage from '@/assets/stoppesteder/postkontoret.png'
@@ -102,105 +150,176 @@ import markedsplassenImage from '@/assets/stoppesteder/markedsplassen.png'
 import sosialMoteplassImage from '@/assets/stoppesteder/den-sosiale-moteplassen.png'
 import datasenteretImage from '@/assets/stoppesteder/datasenteret.png'
 
-const currentPage = ref(0)
+const router = useRouter()
+
+const currentPage = ref<number>(0)
 const itemsPerPage = 4
+const activeLockedStop = ref<Stop | null>(null)
+const showHintPopup = ref<boolean>(false)
 
-const lockImage = lockImageFile
-
-const stops = ref([
+const stops = ref<Stop[]>([
+  {
+    id: 0,
+    name: 'Hjem',
+    stars: 0,
+    image: detektivkontoretImage,
+    side: 'top',
+    isHome: true,
+    routeName: 'PupilView',
+    requiredPreviousStop: null,
+  },
   {
     id: 1,
     name: 'Nyhetskvartalet',
     stars: 0,
     image: nyhetskvartaletImage,
-    locked: false,
     side: 'top',
+    routeName: 'NewsView',
+    requiredPreviousStop: null,
   },
   {
     id: 2,
     name: 'Fotografen',
     stars: 0,
     image: fotografenImage,
-    locked: true,
     side: 'bottom',
+    routeName: 'PhotographerView',
+    requiredPreviousStop: 'Nyhetskvartalet',
   },
   {
     id: 3,
     name: 'Postkontoret',
     stars: 0,
     image: postkontoretImage,
-    locked: true,
     side: 'top',
+    routeName: 'PostofficeView',
+    requiredPreviousStop: 'Fotografen',
   },
   {
     id: 4,
     name: 'Passordbanken',
     stars: 0,
     image: passordbankenImage,
-    locked: true,
     side: 'bottom',
+    routeName: 'PasswordbankView',
+    requiredPreviousStop: 'Postkontoret',
   },
   {
     id: 5,
     name: 'Markedsplassen',
     stars: 0,
     image: markedsplassenImage,
-    locked: true,
     side: 'top',
+    routeName: 'MarketplaceView',
+    requiredPreviousStop: 'Passordbanken',
   },
   {
     id: 6,
     name: 'Den sosiale møteplassen',
     stars: 0,
     image: sosialMoteplassImage,
-    locked: true,
     side: 'bottom',
+    routeName: 'MeetingplaceView',
+    requiredPreviousStop: 'Markedsplassen',
   },
   {
     id: 7,
     name: 'Datasenteret',
     stars: 0,
     image: datasenteretImage,
-    locked: true,
     side: 'top',
+    routeName: 'DatacenterView',
+    requiredPreviousStop: 'Den sosiale møteplassen',
   },
 ])
 
-const positions = ['pos-1', 'pos-2', 'pos-3', 'pos-4']
+const positions = ['pos-1', 'pos-2', 'pos-3', 'pos-4'] as const
 
-const totalPages = computed(() => Math.ceil(stops.value.length / itemsPerPage))
-const pages = computed(() => Array.from({ length: totalPages.value }))
+const totalPages = computed<number>(() => Math.ceil(stops.value.length / itemsPerPage))
 
-const paginatedStops = computed(() => {
+const pages = computed<number[]>(() =>
+  Array.from({ length: totalPages.value }, (_, index) => index),
+)
+
+const paginatedStops = computed<Stop[]>(() => {
   const start = currentPage.value * itemsPerPage
   return stops.value.slice(start, start + itemsPerPage)
 })
 
-function nextPage() {
+function findStopByName(name: string): Stop | undefined {
+  return stops.value.find((stop) => stop.name === name)
+}
+
+function isUnlocked(stop: Stop): boolean {
+  if (stop.isHome) return true
+  if (!stop.requiredPreviousStop) return true
+
+  const previousStop = findStopByName(stop.requiredPreviousStop)
+  return previousStop?.stars === 3
+}
+
+function openHintPopup(): void {
+  showHintPopup.value = true
+}
+
+function closeHintPopup(): void {
+  showHintPopup.value = false
+}
+
+function nextPage(): void {
   if (currentPage.value < totalPages.value - 1) {
     currentPage.value++
   }
 }
 
-function prevPage() {
+function prevPage(): void {
   if (currentPage.value > 0) {
     currentPage.value--
   }
 }
 
-function goToPage(index) {
+function goToPage(index: number): void {
   currentPage.value = index
 }
 
-function openStop(stop) {
-  if (stop.locked) return
+function openStop(stop: Stop): void {
+  if (stop.isHome) {
+    goBack()
+    return
+  }
 
-  console.log('Åpner stoppested:', stop.name)
-  // router.push(`/stoppested/${stop.id}`)
+  if (!isUnlocked(stop)) {
+    activeLockedStop.value = stop
+    return
+  }
+
+  if (stop.routeName) {
+    router.push({ name: stop.routeName })
+  }
 }
 
-function goBack() {
-  window.history.back()
+function closeLockedPopup(): void {
+  activeLockedStop.value = null
+}
+
+
+  if (stop.name === 'Nyhetskvartalet') {
+    router.push('/pupil/classroom/map/news')
+    console.log('Åpner stoppested:', stop.name)
+  }
+
+function goToRequiredStop(): void {
+  if (!activeLockedStop.value?.requiredPreviousStop) return
+
+  const previousStop = findStopByName(activeLockedStop.value.requiredPreviousStop)
+  if (!previousStop?.routeName) return
+
+  closeLockedPopup()
+  router.push({ name: previousStop.routeName })
+}
+
+function goBack(): void {
+  router.push({ name: 'PupilView' })
 }
 </script>
 
@@ -249,6 +368,25 @@ function goBack() {
 
   cursor: pointer;
   overflow: hidden;
+}
+
+.homeNode {
+  left: 0 !important;
+}
+
+.homeNode .path-point {
+  left: 50%;
+  transform: translateX(-50%);
+  top: 343px;
+}
+
+.homeNode .connector {
+  top: 290px;
+  height: 48px;
+}
+
+.homeNode .stop-content {
+  top: 60px;
 }
 
 .top-icon-image {
@@ -352,17 +490,13 @@ function goBack() {
 }
 
 .stop-node.top .connector {
-  top: 280px;
-  height: 70px;
-}
-
-.stop-node.top .stop-content {
-  top: 0;
+  top: 286px;
+  height: 52px;
 }
 
 .stop-node.bottom .connector {
-  top: 377px;
-  height: 70px;
+  top: 378px;
+  height: 42px;
 }
 
 .stop-node.bottom .stop-content {
@@ -432,6 +566,11 @@ function goBack() {
   cursor: not-allowed;
   opacity: 0.6;
   filter: grayscale(40%);
+}
+
+.stop-circle.home {
+  border: 3px solid #bf7b33;
+  background: rgba(255, 255, 255, 0.9);
 }
 
 .stop-image {
@@ -747,5 +886,124 @@ function goBack() {
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.18);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.locked-popup {
+  width: min(520px, calc(100vw - 32px));
+  background: #ea9447;
+  border: 4px solid #6f4d33;
+  border-radius: 28px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+  padding: 28px 24px 20px;
+  text-align: center;
+}
+
+.popup-title {
+  margin: 0 0 10px;
+  font-size: 2rem;
+  line-height: 1.15;
+  font-weight: 800;
+  color: #111;
+}
+
+.popup-text {
+  margin: 0;
+  font-size: 1.8rem;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #111;
+}
+
+.popup-actions {
+  margin-top: 26px;
+  display: flex;
+  justify-content: center;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+
+.popup-btn {
+  min-width: 130px;
+  padding: 14px 24px;
+  border-radius: 22px;
+  border: 4px solid #111;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #111;
+  cursor: pointer;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.18);
+}
+
+.popup-btn-back {
+  background: #ef3b37;
+}
+
+.popup-btn-play {
+  background: #8ee22d;
+}
+
+@media (max-width: 700px) {
+  .locked-popup {
+    padding: 22px 16px 18px;
+    border-radius: 22px;
+  }
+
+  .popup-title {
+    font-size: 1.45rem;
+  }
+
+  .popup-text {
+    font-size: 1.3rem;
+  }
+
+  .popup-btn {
+    min-width: 110px;
+    font-size: 1rem;
+    padding: 12px 18px;
+  }
+}
+
+.hint-popup {
+  width: min(560px, calc(100vw - 32px));
+  background: rgba(234, 148, 71, 0.72);
+  border: 4px solid #6f4d33;
+  border-radius: 28px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+  padding: 28px 24px 20px;
+  text-align: center;
+  backdrop-filter: blur(2px);
+}
+
+.hint-text {
+  margin-top: 10px;
+  font-size: 1.1rem;
+  line-height: 1.35;
+  font-weight: 700;
+  color: #111;
+  text-align: left;
+}
+
+.hint-text p {
+  margin: 0 0 8px;
+  font-size: 1.2rem;
+}
+
+.hint-text ul {
+  margin: 0;
+  padding-left: 24px;
+}
+
+.hint-text li {
+  margin-bottom: 6px;
 }
 </style>

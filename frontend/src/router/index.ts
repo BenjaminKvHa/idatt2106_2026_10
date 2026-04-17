@@ -4,6 +4,7 @@ import NotFoundView from '@/views/shared/NotFoundView.vue'
 import LeaderboardView from '@/views/shared/LeaderboardView.vue'
 import EnterClassroomCodeView from '@/views/shared/EnterClassroomCodeView.vue'
 import CreateAvatarView from '@/views/shared/CreateAvatarView.vue'
+import TeacherView from '@/views/teacher/TeacherView.vue'
 import TeachersProfileView from '@/views/teacher/TeachersProfileView.vue'
 import TeachersNotificationsView from '@/views/teacher/TeachersNotificationsView.vue'
 import TeachersClassroomsView from '@/views/teacher/TeachersClassroomsView.vue'
@@ -62,6 +63,10 @@ const router = createRouter({
     {
       path: '/teacher',
       children: [
+        {
+          path: '',
+          component: TeacherView,
+        },
         {
           path: 'profile',
           component: TeachersProfileView,

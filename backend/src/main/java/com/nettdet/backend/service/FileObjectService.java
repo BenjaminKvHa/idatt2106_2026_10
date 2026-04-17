@@ -1,0 +1,106 @@
+package com.nettdet.backend.service;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.nettdet.backend.domain.Account;
+import com.nettdet.backend.domain.Classroom;
+import com.nettdet.backend.domain.FileObject;
+import com.nettdet.backend.domain.enums.ClassroomAccess;
+import com.nettdet.backend.repository.FileObjectRepository;
+
+import jakarta.persistence.EntityNotFoundException;
+import software.amazon.awssdk.core.ResponseBytes;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+
+@Service
+public class FileObjectService {
+
+    private final S3Client s3Client;
+    private final FileObjectRepository repository;
+    private final String bucket;
+
+    public record StoredFile(
+            FileObject fileObject,
+            String contentType,
+            byte[] bytes) {
+    }
+
+    public FileObjectService(
+            S3Client s3Client,
+            FileObjectRepository repository,
+            @Value("${s3.bucket}") String bucket) {
+        this.s3Client = s3Client;
+        this.repository = repository;
+        this.bucket = bucket;
+    }
+
+    @Transactional
+    public FileObject upload(
+            String objectKey,
+            byte[] bytes,
+            String contentType,
+            Account uploadedBy,
+            Classroom classroom,
+            ClassroomAccess accessLevel,
+            String fileName) {
+        PutObjectRequest putRequest = PutObjectRequest.builder()
+                .bucket(bucket)
+                .key(objectKey)
+                .contentType(contentType)
+                .build();
+
+        s3Client.putObject(putRequest, RequestBody.fromBytes(bytes));
+
+        FileObject fileObject = new FileObject();
+        fileObject.setObjectKey(objectKey);
+        fileObject.setUploadedByAccount(uploadedBy);
+        fileObject.setClassroom(classroom);
+        fileObject.setAccessLevel(accessLevel);
+        fileObject.setFileName(fileName);
+
+        try {
+            return repository.save(fileObject);
+        } catch (RuntimeException exception) {
+            s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(objectKey).build());
+            throw exception;
+        }
+    }
+
+    @Transactional
+    public void delete(Long fileObjectId) {
+        FileObject fileObject = repository.findById(fileObjectId)
+                .orElseThrow(() -> new EntityNotFoundException("File object not found"));
+
+        s3Client.deleteObject(DeleteObjectRequest.builder()
+                .bucket(bucket)
+                .key(fileObject.getObjectKey())
+                .build());
+
+        repository.delete(fileObject);
+    }
+
+    @Transactional(readOnly = true)
+    public StoredFile read(Long fileObjectId) {
+        FileObject fileObject = repository.findById(fileObjectId)
+                .orElseThrow(() -> new EntityNotFoundException("File object not found"));
+
+        ResponseBytes<GetObjectResponse> response = s3Client.getObjectAsBytes(GetObjectRequest.builder()
+                .bucket(bucket)
+                .key(fileObject.getObjectKey())
+                .build());
+
+        String contentType = response.response().contentType();
+        if (contentType == null || contentType.isBlank()) {
+            contentType = "application/octet-stream";
+        }
+
+        return new StoredFile(fileObject, contentType, response.asByteArray());
+    }
+}

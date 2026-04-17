@@ -24,6 +24,13 @@ import PupilsLeaderboardView from "@/views/pupil/PupilsLeaderboardView.vue";
 import PupilsMapView from '@/views/pupil/PupilsMapView.vue'
 import SignInView from '@/views/shared/SignInView.vue'
 import SignUpView from '@/views/shared/SignUpView.vue'
+import NewsView from "@/views/pupil/map_locations/NewsView.vue";
+import DatacenterView from "@/views/pupil/map_locations/DatacenterView.vue";
+import MarketplaceView from "@/views/pupil/map_locations/MarketplaceView.vue";
+import MeetingplaceView from "@/views/pupil/map_locations/MeetingplaceView.vue";
+import PasswordbankView from "@/views/pupil/map_locations/PasswordbankView.vue";
+import PostofficeView from "@/views/pupil/map_locations/PostofficeView.vue";
+import PhotographerView from "@/views/pupil/map_locations/PhotographerView.vue";
 
 
 const router = createRouter({
@@ -157,6 +164,34 @@ const router = createRouter({
             {
               path: 'map',
               component: PupilsMapView,
+            },
+            {
+              path: 'map/news',
+              component: NewsView,
+            },
+            {
+              path: 'map/datacenter',
+              component: DatacenterView,
+            },
+            {
+              path: 'map/marketplace',
+              component: MarketplaceView,
+            },
+            {
+              path: 'map/meetingplace',
+              component: MeetingplaceView,
+            },
+            {
+              path: 'map/passwordbank',
+              component: PasswordbankView,
+            },
+            {
+              path: 'map/postoffice',
+              component: PostofficeView,
+            },
+            {
+              path: 'map/photographer',
+              component: PhotographerView,
             },
             {
               path: 'settings',

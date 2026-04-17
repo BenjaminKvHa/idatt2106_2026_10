@@ -133,6 +133,7 @@
       </div>
     </div>
   </div>
+  <router-view />
 </template>
 
 <script setup lang="ts">
@@ -148,19 +149,6 @@ import passordbankenImage from '@/assets/stoppesteder/passordbanken.png'
 import markedsplassenImage from '@/assets/stoppesteder/markedsplassen.png'
 import sosialMoteplassImage from '@/assets/stoppesteder/den-sosiale-moteplassen.png'
 import datasenteretImage from '@/assets/stoppesteder/datasenteret.png'
-
-type StopSide = 'top' | 'bottom'
-
-interface Stop {
-  id: number
-  name: string
-  stars: number
-  image: string
-  side: StopSide
-  routeName?: string
-  requiredPreviousStop?: string | null
-  isHome?: boolean
-}
 
 const router = useRouter()
 
@@ -186,7 +174,7 @@ const stops = ref<Stop[]>([
     stars: 0,
     image: nyhetskvartaletImage,
     side: 'top',
-    routeName: 'NyhetskvartaletView',
+    routeName: 'NewsView',
     requiredPreviousStop: null,
   },
   {
@@ -195,7 +183,7 @@ const stops = ref<Stop[]>([
     stars: 0,
     image: fotografenImage,
     side: 'bottom',
-    routeName: 'FotografenView',
+    routeName: 'PhotographerView',
     requiredPreviousStop: 'Nyhetskvartalet',
   },
   {
@@ -204,7 +192,7 @@ const stops = ref<Stop[]>([
     stars: 0,
     image: postkontoretImage,
     side: 'top',
-    routeName: 'PostkontoretView',
+    routeName: 'PostofficeView',
     requiredPreviousStop: 'Fotografen',
   },
   {
@@ -213,7 +201,7 @@ const stops = ref<Stop[]>([
     stars: 0,
     image: passordbankenImage,
     side: 'bottom',
-    routeName: 'PassordbankenView',
+    routeName: 'PasswordbankView',
     requiredPreviousStop: 'Postkontoret',
   },
   {
@@ -222,7 +210,7 @@ const stops = ref<Stop[]>([
     stars: 0,
     image: markedsplassenImage,
     side: 'top',
-    routeName: 'MarkedsplassenView',
+    routeName: 'MarketplaceView',
     requiredPreviousStop: 'Passordbanken',
   },
   {
@@ -231,7 +219,7 @@ const stops = ref<Stop[]>([
     stars: 0,
     image: sosialMoteplassImage,
     side: 'bottom',
-    routeName: 'DenSosialeMoteplassenView',
+    routeName: 'MeetingplaceView',
     requiredPreviousStop: 'Markedsplassen',
   },
   {
@@ -240,7 +228,7 @@ const stops = ref<Stop[]>([
     stars: 0,
     image: datasenteretImage,
     side: 'top',
-    routeName: 'DatasenteretView',
+    routeName: 'DatacenterView',
     requiredPreviousStop: 'Den sosiale møteplassen',
   },
 ])
@@ -313,6 +301,12 @@ function openStop(stop: Stop): void {
 function closeLockedPopup(): void {
   activeLockedStop.value = null
 }
+
+
+  if (stop.name === 'Nyhetskvartalet') {
+    router.push('/pupil/classroom/map/news')
+    console.log('Åpner stoppested:', stop.name)
+  }
 
 function goToRequiredStop(): void {
   if (!activeLockedStop.value?.requiredPreviousStop) return

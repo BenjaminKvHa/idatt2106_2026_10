@@ -1,3 +1,35 @@
+<script setup lang="ts">
+import { ref } from 'vue'
+
+const step = ref<number>(1)
+const email = ref<string>('')
+const password = ref<string>('')
+const submitted = ref<boolean>(false)
+
+const goToPassword = (): void => {
+  submitted.value = false
+  step.value = 3
+}
+
+const changeAccount = (): void => {
+  password.value = ''
+  submitted.value = false
+  step.value = 2
+}
+
+const login = (): void => {
+  submitted.value = true
+  console.log('Demo login:', {
+    email: email.value,
+    passwordLength: password.value.length,
+  })
+}
+
+const goToSignup = (): void => {
+  window.location.href = '/sign-up'
+}
+</script>
+
 <template>
   <div class="page">
     <div class="frame">
@@ -19,7 +51,7 @@
             <div class="affiliation">
               <p class="label">Din tilhørighet</p>
               <div class="affiliation-box">
-                <img :src="logo" alt="NTNU" class="affiliation-logo" />
+                <img src="@/assets/NTNU.png" alt="NTNU" class="affiliation-logo" />
               </div>
             </div>
 
@@ -50,7 +82,7 @@
 
         <section v-else-if="step === 2" class="card auth-card small-card">
           <div class="auth-body">
-            <img :src="logo" alt="NTNU" class="brand-logo" />
+            <img src="@/assets/NTNU.png" alt="NTNU" class="brand-logo" />
             <h2>Logg på</h2>
 
             <form @submit.prevent="goToPassword">
@@ -81,7 +113,7 @@
 
         <section v-else class="card auth-card password-card">
           <div class="auth-body password-body">
-            <img :src="logo" alt="NTNU" class="brand-logo" />
+            <img src="@/assets/NTNU.png" alt="NTNU" class="brand-logo" />
             <p class="signed-in-as">{{ email || 'eksempel@epost.no' }}</p>
             <h2>Skriv inn passord</h2>
 
@@ -117,39 +149,6 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref } from 'vue'
-import logo from '@/assets/NTNU.png'
-
-const step = ref<number>(1)
-const email = ref<string>('')
-const password = ref<string>('')
-const submitted = ref<boolean>(false)
-
-const goToPassword = (): void => {
-  submitted.value = false
-  step.value = 3
-}
-
-const changeAccount = (): void => {
-  password.value = ''
-  submitted.value = false
-  step.value = 2
-}
-
-const login = (): void => {
-  submitted.value = true
-  console.log('Demo login:', {
-    email: email.value,
-    passwordLength: password.value.length,
-  })
-}
-
-const goToSignup = (): void => {
-  window.location.href = '/sign-up'
-}
-</script>
 
 <style scoped>
 * {

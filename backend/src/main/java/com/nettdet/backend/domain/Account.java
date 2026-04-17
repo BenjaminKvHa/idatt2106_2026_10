@@ -14,6 +14,9 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 @Entity
 @Table(name = "account")
 public class Account extends CreatedAtEntity {
@@ -29,7 +32,8 @@ public class Account extends CreatedAtEntity {
     private String legalName;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "account_role", nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "account_role", nullable = false, columnDefinition = "account_role_enum")
     private AccountRole accountRole;
 
     @OneToMany(mappedBy = "account")

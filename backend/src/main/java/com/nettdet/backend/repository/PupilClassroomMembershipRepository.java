@@ -10,6 +10,7 @@ import com.nettdet.backend.domain.PupilClassroomMembership;
 
 public interface PupilClassroomMembershipRepository extends JpaRepository<PupilClassroomMembership, String> {
 
+    boolean existsByAccountEmailAndClassroomClassroomCode(String accountEmail, String classroomCode);
     Optional<PupilClassroomMembership> findByAccountEmailAndClassroomClassroomCode(String accountEmail, String classroomCode);
 
     @EntityGraph(attributePaths = "chapterProgressions")

@@ -1,0 +1,118 @@
+:root {
+    /*
+    Colors!
+    */
+    --background-body: #eed2ad;
+    --background: #f5e2ca;
+    --background-sec: #cfb99c;
+    --accent: #5a402f;
+    --txt: #5a402f;
+    --txt-sec: #eed2ad;
+    --txt-contrast: white;
+    --warning: #de3333;
+    --warning-sec: #ae1f1f;
+    --obscure: #00000036;
+    /*
+    sizing
+    */
+    --border-radius: 30px;
+    --border-width: 7px;
+
+    --mid-margin: 10px;
+    --tight-margin: 0px;
+    
+    --thick-padding: 30px;
+    --medium-padding: 20px;
+    --thin-padding: 10px;
+    
+    --thick-gap: 30px;
+    --medium-gap: 20px;
+    --thin-gap: 10px;
+
+    /*
+    misc stuffs and things
+    */
+    --animation-time-1: 0.2s;
+}
+
+.teacher-content {
+    color: var(--accent);
+    background-color: var(--background-body);
+    margin: 0px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    
+}
+
+.teacher-variant-1 {
+    color: var(--accent);
+    background-color: var(--background);
+    
+    border-radius: var(--border-radius);
+    border-width: var(--border-width);
+    border-style: solid;
+    display: flex;
+    flex-direction: column;
+    gap: var(--medium-gap);
+}
+
+.teacher-variant-2 {
+    color: var(--accent);
+    background-color: var(--background-sec);
+    
+    border-radius: var(--border-radius);
+    border-width: var(--border-width);
+    border-style: solid;
+    display: flex;
+    flex-direction: column;
+    gap: var(--medium-gap);
+}
+
+.button-variant-1 {
+    color: var(--accent);
+    background-color: var(--background);
+    
+    border-radius: var(--border-radius);
+    border-width: var(--border-width);
+    border-style: solid;
+    transition: ease-in-out var(--animation-time-1);
+
+}
+
+.button-variant-1:hover, .button-variant-1::selection {
+    color: var(--txt-sec);
+    background-color: var(--accent);
+}
+
+.button-variant-2 {
+    color: var(--txt-sec);
+    background-color: var(--accent);
+    
+    border-radius: var(--border-radius);
+    border-width: var(--border-width);
+    border-style: solid;
+    transition: ease-in-out var(--animation-time-1);
+}
+
+.button-variant-2:hover, .button-variant-2::selection {
+    color: var(--txt);
+    background-color: var(--background);
+}
+
+.button-warning {
+    color: var(--txt-contrast);
+    background-color: var(--warning);
+    
+    border-radius: var(--border-radius);
+    border-width: var(--border-width);
+    border-style: solid;
+    transition: ease-in-out var(--animation-time-1);
+}
+
+.button-warning:hover, .button-warning::selection {
+    background-color: var(--warning-sec);
+}
+
+
+

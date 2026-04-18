@@ -1,12 +1,10 @@
 package com.nettdet.backend.service;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseCookie;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -72,6 +70,15 @@ public class RefreshTokenService {
         logger.info("Refresh token stored in database for user: {}", user.getLegalName());
 
         return util.createRefreshTokenCookie(plaintext);
+    }
+
+    @Transactional
+    public ResponseCookie logout(String incomingToken) {
+        RefreshToken token = getStoredRefreshToken(incomingToken);
+        Account account = token.getAccount();
+        logger.info("Logging out user: {}", account.getEmail());
+        repository.delete(token);
+        return util.createExpiredRefreshTokenCookie();
     }
 
     public void revokeAllTokens(Account account) {

@@ -37,7 +37,7 @@ public class AccountService {
         account.setEmail(request.email());
         account.setPasswordData(passwordEncoder.encode(request.password()));
         account.setLegalName(request.legalName());
-        account.setAccountRole(AccountRole.PUPIL);
+        account.setAccountRole(request.role());
 
         Account saved = accountRepository.save(account);
         logger.info("Account '{}' registered successfully", saved.getEmail());

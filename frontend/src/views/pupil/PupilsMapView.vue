@@ -1,7 +1,11 @@
 <template>
   <div class="stops-page">
     <div class="stops-card">
-      <TopBar title="Kart" @help="openHelpPopup" @hint="openHintPopup" />
+      <TopBar
+        title="Kart"
+        @help="openHelpPopup"
+        @hint="openHintPopup"
+      />
 
       <div class="map-wrapper">
         <button
@@ -147,7 +151,6 @@
       </div>
     </div>
   </div>
-  <router-view />
 </template>
 
 <script setup lang="ts">
@@ -434,20 +437,23 @@ onMounted(() => {
 
 <style scoped>
 .stops-page {
-  min-height: 100vh;
+  height: 100vh;
   background: var(--beige-medium);
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .stops-card {
   width: 100%;
-  min-height: 100vh;
+  height: 100vh;
   background: var(--beige-medium);
   box-sizing: border-box;
-  padding: 28px 36px 24px;
+  padding: 20px 36px 16px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .homeNode {
@@ -471,12 +477,15 @@ onMounted(() => {
 
 .map-wrapper {
   position: relative;
-  padding: 20px 90px 0;
+  padding: 12px 90px 0;
+  flex: 1;
+  min-height: 0;
 }
 
 .map-area {
   position: relative;
-  min-height: 720px;
+  height: 100%;
+  min-height: 0;
 }
 
 .path-line {
@@ -676,7 +685,8 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   gap: 18px;
-  margin-top: 10px;
+  margin-top: 6px;
+  padding-bottom: 4px;
 }
 
 .map-status {

@@ -2,7 +2,6 @@
 import { useRoute } from 'vue-router'
 import ProfileButton from '@/components/ProfileButton.vue'
 import SettingsButton from '@/components/SettingsButton.vue'
-import { user } from '@/components/exampleUser'
 
 const route = useRoute()
 </script>
@@ -54,13 +53,15 @@ const route = useRoute()
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
+  width: 100%;
 }
 
 .top-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 1100px;
+  width: 100%;
+  max-width: 1100px;
   padding: 0 0.5rem;
 }
 
@@ -70,22 +71,26 @@ const route = useRoute()
 
 .image-wrapper {
   position: relative;
-  display: inline-block;
+  width: 100%;
+  max-width: 1100px;
 }
 
 .image-wrapper > img {
-  width: 1100px;
+  width: 100%;
+  height: auto;
   display: block;
 }
 
 .overlay-button {
   position: absolute;
   cursor: pointer;
+  width: 25%;
+  max-width: 300px;
 }
 
 .overlay-button img {
   display: block;
-  width: 300px;
+  width: 100%;
 }
 
 .overlay-button:hover img {
@@ -93,10 +98,37 @@ const route = useRoute()
   transition: transform 0.15s ease;
 }
 
-.medals  { top: 22%; left: 8%; }
-.map     { top: 20%; left: 38%; }
-.leaderboard { top: 22%; right: 8%; }
-.mystery { top: 55%; left: 8%; }
-.notes   { top: 55%; right: 8%; }
-.help    { top: 55%; left: 38%; }
+/*Responsive positions*/
+.medals       { top: 22%; left: 8%; }
+.map          { top: 20%; left: 38%; }
+.leaderboard  { top: 22%; right: 8%; }
+.mystery      { top: 55%; left: 8%; }
+.notes        { top: 55%; right: 8%; }
+.help         { top: 55%; left: 38%; }
+
+/*Medium screen*/
+@media (max-width: 768px) {
+  .overlay-button {
+    width: 30%;
+  }
+
+  .top-bar .settings img {
+    width: 50px;
+  }
+}
+
+/*Small screen*/
+@media (max-width: 480px) {
+  .overlay-button {
+    width: 35%;
+  }
+
+  .top-bar {
+    padding: 0 0.25rem;
+  }
+
+  .top-bar .settings img {
+    width: 40px;
+  }
+}
 </style>

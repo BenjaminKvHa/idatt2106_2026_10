@@ -1,32 +1,54 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
+import { loginWithCredentials } from '@/utils/apiUtils'
+import { decodeJwtPayload, getDefaultRouteForRole } from '@/utils/jwtUtils'
+
+const router = useRouter()
 const step = ref<number>(1)
 const email = ref<string>('')
 const password = ref<string>('')
 const submitted = ref<boolean>(false)
+const loading = ref<boolean>(false)
+const error = ref<string>('')
 
 const goToPassword = (): void => {
+  error.value = ''
   submitted.value = false
   step.value = 3
 }
 
 const changeAccount = (): void => {
   password.value = ''
+  error.value = ''
   submitted.value = false
   step.value = 2
 }
 
-const login = (): void => {
-  submitted.value = true
-  console.log('Demo login:', {
-    email: email.value,
-    passwordLength: password.value.length,
-  })
+const login = async (): Promise<void> => {
+  error.value = ''
+  submitted.value = false
+  loading.value = true
+
+  try {
+    const accessToken = await loginWithCredentials({
+      email: email.value.trim(),
+      password: password.value,
+    })
+
+    const payload = decodeJwtPayload(accessToken)
+    submitted.value = true
+    await router.push(getDefaultRouteForRole(payload?.role))
+  } catch (caughtError) {
+    error.value = caughtError instanceof Error ? caughtError.message : 'Kunne ikke logge inn.'
+  } finally {
+    loading.value = false
+  }
 }
 
 const goToSignup = (): void => {
-  window.location.href = '/sign-up'
+  router.push('/sign-up')
 }
 </script>
 
@@ -118,8 +140,7 @@ const goToSignup = (): void => {
             <h2>Skriv inn passord</h2>
 
             <p class="description">
-              Dette er kun en visuell demo. Du kan skrive inn passord og trykke på knappen, men
-              innloggingen er ikke koblet til noen ekte tjeneste.
+              Skriv inn passordet ditt for å logge inn på den valgte kontoen.
             </p>
 
             <form @submit.prevent="login">
@@ -138,11 +159,14 @@ const goToSignup = (): void => {
               </div>
 
               <div class="login-button-row">
-                <button type="submit" class="primary-btn">Logg på</button>
+                <button type="submit" class="primary-btn" :disabled="loading">
+                  {{ loading ? 'Logger inn...' : 'Logg på' }}
+                </button>
               </div>
             </form>
 
-            <p v-if="submitted" class="demo-message">Demo: Innlogging registrert lokalt.</p>
+            <p v-if="error" class="error-message" role="alert">{{ error }}</p>
+            <p v-else-if="submitted" class="demo-message">Innlogging registrert.</p>
           </div>
         </section>
       </div>
@@ -485,6 +509,12 @@ h2 {
   margin-top: 16px;
   font-size: 13px;
   color: #1f5d1f;
+}
+
+.error-message {
+  margin-top: 16px;
+  font-size: 13px;
+  color: #991b1b;
 }
 
 @media (max-width: 480px) {

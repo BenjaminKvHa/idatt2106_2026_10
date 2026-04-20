@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import software.amazon.awssdk.services.s3.S3Client;
@@ -14,6 +15,7 @@ import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
 @Component
+@Order(0)
 public class S3BucketInitializer implements ApplicationRunner {
 
     private static final Logger logger = LoggerFactory.getLogger(S3BucketInitializer.class);

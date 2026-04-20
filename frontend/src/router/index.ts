@@ -32,6 +32,7 @@ import MeetingplaceView from "@/views/pupil/map_locations/MeetingplaceView.vue";
 import PasswordbankView from "@/views/pupil/map_locations/PasswordbankView.vue";
 import PostofficeView from "@/views/pupil/map_locations/PostofficeView.vue";
 import PhotographerView from "@/views/pupil/map_locations/PhotographerView.vue";
+import PupilsWelcomePageView from "@/views/pupil/PupilsWelcomePageView.vue";
 
 
 const router = createRouter({
@@ -64,6 +65,10 @@ const router = createRouter({
         {
           path: 'create-avatar',
           component: CreateAvatarView,
+        },
+        {
+          path: 'welcome-classroom',
+          component: PupilsWelcomePageView,
         },
       ],
     },

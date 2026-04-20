@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
+import ProfileButton from '@/components/ProfileButton.vue'
+import SettingsButton from '@/components/SettingsButton.vue'
 
 const route = useRoute()
 </script>
@@ -7,12 +9,11 @@ const route = useRoute()
 <template>
   <div v-if="route.path === '/pupil'" class="page">
     <div class="center-container">
-      <router-link to="/pupil/profile" class="overlay-button profile">
-        Gå til profil
-      </router-link>
-      <router-link to="/pupil/classroom/settings" class="overlay-button settings">
-        <img src="/src/assets/homescreen/icon_settings.png"/>
-      </router-link>
+      <div class="top-bar">
+        <ProfileButton variant="home"
+        />
+        <SettingsButton />
+      </div>
       <div class="image-wrapper">
         <img src="/src/assets/korktavle.png" alt="Background" />
         <router-link to="/pupil/classroom/notebook" class="overlay-button notes">
@@ -34,90 +35,100 @@ const route = useRoute()
           <img src="/src/assets/homescreen/icon_help.png"/>
         </router-link>
       </div>
+
     </div>
   </div>
   <router-view />
 </template>
 
 <style scoped>
-.page{
+.page {
   display: grid;
   place-items: center;
   height: 100%;
-  background-color: var(--beige-light);
-}
-
-.image-wrapper{
-  position: relative;
-  display: inline-block;
-}
-
-.image-wrapper > img {
-  width: 1100px;
-  display: block;
-}
-
-.overlay-button {
-  position: absolute;
-  cursor: pointer;
-}
-.overlay-button img {
-  display: block;
-  width: 300px;
-}
-
-.overlay-button:hover img {
-  transform: scale(1.05);
-  transition: transform 0.15s ease;
-}
-.medals {
-  top: 22%;
-  left: 8%;
-}
-
-.map {
-  top: 20%;
-  left: 38%;
-}
-
-.leaderboard {
-  top: 22%;
-  right: 8%;
-}
-
-.mystery {
-  top: 55%;
-  left: 8%;
-}
-
-.notes {
-  top: 55%;
-  right: 8%;
-}
-
-.help{
-  top: 55%;
-  left: 38%;
-}
-
-.profile{
-  top: 10%;
-  left: 5%;
-}
-
-.settings {
-  top: 1%;
-  right: 2%;
-}
-
-.settings img {
-  width: 150px;
 }
 
 .center-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3rem;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 1100px;
+  padding: 0 0.5rem;
+}
+
+.top-bar .settings img {
+  width: 80px;
+}
+
+.image-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 1100px;
+}
+
+.image-wrapper > img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.overlay-button {
+  position: absolute;
+  cursor: pointer;
+  width: 25%;
+  max-width: 300px;
+}
+
+.overlay-button img {
+  display: block;
+  width: 100%;
+}
+
+.overlay-button:hover img {
+  transform: scale(1.05);
+  transition: transform 0.15s ease;
+}
+
+/*Responsive positions*/
+.medals       { top: 22%; left: 8%; }
+.map          { top: 20%; left: 38%; }
+.leaderboard  { top: 22%; right: 8%; }
+.mystery      { top: 55%; left: 8%; }
+.notes        { top: 55%; right: 8%; }
+.help         { top: 55%; left: 38%; }
+
+/*Medium screen*/
+@media (max-width: 768px) {
+  .overlay-button {
+    width: 30%;
+  }
+
+  .top-bar .settings img {
+    width: 50px;
+  }
+}
+
+/*Small screen*/
+@media (max-width: 480px) {
+  .overlay-button {
+    width: 35%;
+  }
+
+  .top-bar {
+    padding: 0 0.25rem;
+  }
+
+  .top-bar .settings img {
+    width: 40px;
+  }
 }
 </style>

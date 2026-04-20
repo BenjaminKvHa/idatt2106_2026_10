@@ -9,7 +9,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.nettdet.backend.domain.Account;
 import com.nettdet.backend.domain.Classroom;
+import com.nettdet.backend.domain.FileObject;
 import com.nettdet.backend.domain.PupilClassroomMembership;
+import com.nettdet.backend.dto.PupilClassroomMembershipResponse;
 import com.nettdet.backend.dto.PupilProgressionResponse;
 import com.nettdet.backend.dto.PupilRequest;
 import com.nettdet.backend.dto.PupilResponse;
@@ -27,13 +29,16 @@ public class PupilService {
     private final PupilClassroomMembershipRepository pupilMembershipRepository;
     private final AccountRepository accountRepository;
     private final ClassroomRepository classroomRepository;
+    private final AvatarService avatarService;
 
     public PupilService(PupilClassroomMembershipRepository pupilMembershipRepository,
                         AccountRepository accountRepository,
-                        ClassroomRepository classroomRepository) {
+                        ClassroomRepository classroomRepository,
+                        AvatarService avatarService) {
         this.pupilMembershipRepository = pupilMembershipRepository;
         this.accountRepository = accountRepository;
         this.classroomRepository = classroomRepository;
+        this.avatarService = avatarService;
     }
 
     // 1. method for retrieving a pupils information (email, username)
@@ -99,5 +104,30 @@ public class PupilService {
         PupilClassroomMembership saved = pupilMembershipRepository.save(membership);
         logger.info("Pupil {} requested to join classroom {}", pupilRequest.email(), pupilRequest.classroomCode());
         return PupilResponse.from(saved);
+    }
+
+    @Transactional
+    public PupilClassroomMembershipResponse updateClassroomMembership(
+            String email,
+            String classroomCode,
+            String username,
+            String avatar) {
+        if (username == null || username.isBlank()) {
+            throw new IllegalArgumentException("Username must not be blank");
+        }
+
+        PupilClassroomMembership membership = pupilMembershipRepository
+                .findByAccountEmailAndClassroomClassroomCode(email, classroomCode)
+                .orElseThrow(() -> {
+                    logger.warn("Pupil membership not found for email {} in classroom {}", email, classroomCode);
+                    return new EntityNotFoundException("Pupil membership not found");
+                });
+
+        membership.setUsername(username.trim());
+        FileObject avatarFileObject = avatarService.getOrCreateAvatar(avatar);
+        membership.setAvatarFileObject(avatarFileObject);
+
+        PupilClassroomMembership savedMembership = pupilMembershipRepository.save(membership);
+        return PupilClassroomMembershipResponse.from(savedMembership);
     }
 }

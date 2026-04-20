@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -29,9 +28,6 @@ public class AvatarAssetInitializer implements ApplicationRunner {
             "../initial_avatar_assets",
             "initial_avatar_assets");
 
-    private static final Set<String> PERSON_NAMES = Set.of("white", "brown");
-    private static final Set<String> COSTUME_NAMES = Set.of("regular-joe", "detective", "sweater");
-
     private final FileObjectRepository fileObjectRepository;
     private final FileObjectService fileObjectService;
 
@@ -48,19 +44,28 @@ public class AvatarAssetInitializer implements ApplicationRunner {
             return;
         }
 
-        try (Stream<Path> files = Files.list(assetDirectory)) {
-            files.filter(Files::isRegularFile)
-                    .filter(path -> path.getFileName().toString().toLowerCase().endsWith(".png"))
-                    .forEach(this::seedAssetFile);
+        try (Stream<Path> categoryDirectories = Files.list(assetDirectory)) {
+            categoryDirectories.filter(Files::isDirectory)
+                    .forEach(this::seedCategoryDirectory);
         } catch (IOException exception) {
             throw new IllegalStateException("Could not read initial avatar assets", exception);
         }
     }
 
-    private void seedAssetFile(Path path) {
+    private void seedCategoryDirectory(Path categoryDirectory) {
+        String category = categoryDirectory.getFileName().toString();
+
+        try (Stream<Path> files = Files.walk(categoryDirectory, 1)) {
+            files.filter(Files::isRegularFile)
+                    .filter(path -> path.getFileName().toString().toLowerCase().endsWith(".png"))
+                    .forEach(path -> seedAssetFile(path, category));
+        } catch (IOException exception) {
+            throw new IllegalStateException("Could not read avatar asset category: " + categoryDirectory, exception);
+        }
+    }
+
+    private void seedAssetFile(Path path, String category) {
         String fileName = path.getFileName().toString();
-        String nameWithoutExtension = fileName.substring(0, fileName.length() - 4);
-        String category = resolveCategory(nameWithoutExtension);
         String objectKey = "avatar-assets/" + category + "/" + fileName;
 
         if (fileObjectRepository.findByObjectKey(objectKey).isPresent()) {
@@ -81,18 +86,6 @@ public class AvatarAssetInitializer implements ApplicationRunner {
         } catch (IOException exception) {
             throw new IllegalStateException("Could not read asset file: " + path, exception);
         }
-    }
-
-    private String resolveCategory(String assetName) {
-        if (PERSON_NAMES.contains(assetName)) {
-            return "person";
-        }
-
-        if (COSTUME_NAMES.contains(assetName)) {
-            return "costume";
-        }
-
-        return "hair";
     }
 
     private Path resolveAssetDirectory() {

@@ -6,14 +6,27 @@ defineProps<{
   title?: string
 }>()
 
+const emit = defineEmits<{
+  (e: 'help'): void
+  (e: 'hint'): void
+}>()
+
 const router = useRouter()
 
-function goBack() {
+function goBack(): void {
   router.push('/pupil')
 }
 
-function goToProfile() {
+function goToProfile(): void {
   router.push('/pupil/profile')
+}
+
+function openHelp(): void {
+  emit('help')
+}
+
+function openHint(): void {
+  emit('hint')
 }
 </script>
 
@@ -24,7 +37,8 @@ function goToProfile() {
         <img :src="profileIcon" alt="Profil" />
         <span class="profile-name">Navn navnesen</span>
       </button>
-      <button class="icon-btn" aria-label="Hjelp">
+
+      <button class="icon-btn" aria-label="Hjelp" @click="openHelp">
         <span class="icon-text">?</span>
       </button>
     </div>
@@ -32,8 +46,9 @@ function goToProfile() {
     <div class="center">
       <h1 class="page-title">{{ title }}</h1>
     </div>
+
     <div class="right">
-      <button class="icon-btn" aria-label="Tips">
+      <button class="icon-btn" aria-label="Tips" @click="openHint">
         <span class="icon-text">💡</span>
       </button>
       <button class="back-btn" @click="goBack">Tilbake</button>

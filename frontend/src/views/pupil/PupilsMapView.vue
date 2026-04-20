@@ -1,17 +1,7 @@
 <template>
   <div class="stops-page">
     <div class="stops-card">
-      <header class="top-bar">
-        <div class="top-left">
-          <button class="square-btn" aria-label="Profil">
-            <img src="@/assets/icons/profil.png" alt="Profil" class="top-icon-image" />
-          </button>
-
-          <button class="square-btn help-btn" aria-label="Hjelp" @click="openHintPopup">?</button>
-        </div>
-
-        <button class="back-btn" @click="goBack">Tilbake</button>
-      </header>
+      <TopBar title="Kart" />
 
       <div class="map-wrapper">
         <button
@@ -139,6 +129,7 @@
 <script setup lang="ts">
 import { computed, onActivated, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import TopBar from '@/components/TopBar.vue'
 
 import detektivkontoretImage from '@/assets/stoppesteder/detektivkontoret.png'
 import lockImage from '@/assets/icons/lock.png'
@@ -159,7 +150,7 @@ type Stop = {
   image: string
   side: StopSide
   isHome?: boolean
-  routeName: string | null
+  routePath: string | null
   requiredPreviousStop: string | null
 }
 
@@ -178,7 +169,7 @@ const stops = ref<Stop[]>([
     image: detektivkontoretImage,
     side: 'top',
     isHome: true,
-    routeName: 'PupilView',
+    routePath: '/pupil',
     requiredPreviousStop: null,
   },
   {
@@ -187,7 +178,7 @@ const stops = ref<Stop[]>([
     stars: 0,
     image: nyhetskvartaletImage,
     side: 'top',
-    routeName: 'NewsView',
+    routePath: '/pupil/classroom/map/news',
     requiredPreviousStop: null,
   },
   {
@@ -196,7 +187,7 @@ const stops = ref<Stop[]>([
     stars: 0,
     image: fotografenImage,
     side: 'bottom',
-    routeName: 'PhotographerView',
+    routePath: '/pupil/classroom/map/photographer',
     requiredPreviousStop: 'Nyhetskvartalet',
   },
   {
@@ -205,7 +196,7 @@ const stops = ref<Stop[]>([
     stars: 0,
     image: postkontoretImage,
     side: 'top',
-    routeName: 'PostofficeView',
+    routePath: '/pupil/classroom/map/postoffice',
     requiredPreviousStop: 'Fotografen',
   },
   {
@@ -214,7 +205,7 @@ const stops = ref<Stop[]>([
     stars: 0,
     image: passordbankenImage,
     side: 'bottom',
-    routeName: 'PasswordbankView',
+    routePath: '/pupil/classroom/map/passwordbank',
     requiredPreviousStop: 'Postkontoret',
   },
   {
@@ -223,7 +214,7 @@ const stops = ref<Stop[]>([
     stars: 0,
     image: markedsplassenImage,
     side: 'top',
-    routeName: 'MarketplaceView',
+    routePath: '/pupil/classroom/map/marketplace',
     requiredPreviousStop: 'Passordbanken',
   },
   {
@@ -232,7 +223,7 @@ const stops = ref<Stop[]>([
     stars: 0,
     image: sosialMoteplassImage,
     side: 'bottom',
-    routeName: 'MeetingplaceView',
+    routePath: '/pupil/classroom/map/meetingplace',
     requiredPreviousStop: 'Markedsplassen',
   },
   {
@@ -241,7 +232,7 @@ const stops = ref<Stop[]>([
     stars: 0,
     image: datasenteretImage,
     side: 'top',
-    routeName: 'DatacenterView',
+    routePath: '/pupil/classroom/map/datacenter',
     requiredPreviousStop: 'Den sosiale møteplassen',
   },
 ])
@@ -316,9 +307,8 @@ function goToPage(index: number): void {
 }
 
 function openStop(stop: Stop): void {
-  if (stop.isHome) {
-    goBack()
-    return
+  if (stop.routePath) {
+    router.push(stop.routePath)
   }
 
   if (!isUnlocked(stop)) {
@@ -326,8 +316,8 @@ function openStop(stop: Stop): void {
     return
   }
 
-  if (stop.routeName) {
-    router.push({ name: stop.routeName })
+  if (stop.routePath) {
+    router.push({ name: stop.routePath })
   }
 }
 
@@ -339,14 +329,14 @@ function goToRequiredStop(): void {
   if (!activeLockedStop.value?.requiredPreviousStop) return
 
   const previousStop = findStopByName(activeLockedStop.value.requiredPreviousStop)
-  if (!previousStop?.routeName) return
+  if (!previousStop?.routePath) return
 
   closeLockedPopup()
-  router.push({ name: previousStop.routeName })
+  router.push(previousStop.routePath)
 }
 
 function goBack(): void {
-  router.push({ name: 'PupilView' })
+  router.push('/pupil')
 }
 
 onActivated(() => {
@@ -372,35 +362,6 @@ onActivated(() => {
   overflow: hidden;
 }
 
-.top-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 20px;
-}
-
-.top-left {
-  display: flex;
-  gap: 18px;
-}
-
-.square-btn {
-  width: 92px;
-  height: 92px;
-  border-radius: 22px;
-
-  border: 4px solid #7a5b43;
-
-  background: #ffffff;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  cursor: pointer;
-  overflow: hidden;
-}
-
 .homeNode {
   left: 0 !important;
 }
@@ -420,28 +381,7 @@ onActivated(() => {
   top: 60px;
 }
 
-.top-icon-image {
-  width: 56px;
-  height: 56px;
-  object-fit: contain;
-}
 
-.help-btn {
-  font-size: 2.6rem;
-  font-weight: 800;
-  color: #1c1712;
-}
-
-.back-btn {
-  background: #ff433b;
-  color: #111;
-  border: 5px solid #111;
-  border-radius: 26px;
-  padding: 18px 38px;
-  font-size: 2rem;
-  font-weight: 800;
-  cursor: pointer;
-}
 
 .map-wrapper {
   position: relative;
@@ -727,16 +667,6 @@ onActivated(() => {
   .stop-node.pos-4 {
     left: 76%;
   }
-
-  .back-btn {
-    font-size: 1.5rem;
-    padding: 14px 26px;
-  }
-
-  .square-btn {
-    width: 78px;
-    height: 78px;
-  }
 }
 
 @media (max-width: 900px) {
@@ -808,30 +738,6 @@ onActivated(() => {
 }
 
 @media (max-width: 700px) {
-  .top-bar {
-    align-items: center;
-  }
-
-  .square-btn {
-    width: 64px;
-    height: 64px;
-    border-radius: 18px;
-  }
-
-  .top-icon-image {
-    width: 40px;
-    height: 40px;
-  }
-
-  .help-btn {
-    font-size: 2rem;
-  }
-
-  .back-btn {
-    font-size: 1.15rem;
-    padding: 10px 18px;
-    border-radius: 18px;
-  }
 
   .map-wrapper {
     padding: 10px 36px 0;

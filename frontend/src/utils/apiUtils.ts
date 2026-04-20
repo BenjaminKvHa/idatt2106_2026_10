@@ -1,7 +1,19 @@
 const ACCESS_TOKEN_KEY = 'access_token'
+
+export type BackendAccountRole = 'TEACHER' | 'PUPIL'
+
+type AuthResponse = {
+  accessToken?: string
+}
+
 export function clearAuthSessionStorage() {
   sessionStorage.removeItem(ACCESS_TOKEN_KEY)
 }
+
+export function setAccessToken(token: string) {
+  sessionStorage.setItem(ACCESS_TOKEN_KEY, token)
+}
+
 export function getAccessToken(): string {
   return sessionStorage.getItem(ACCESS_TOKEN_KEY) ?? ''
 }
@@ -15,8 +27,17 @@ function redirectToSignIn() {
 }
 
 let refreshPromise: Promise<void> | null = null
-type RefreshResponse = {
-  accessToken?: string
+
+type LoginRequest = {
+  email: string
+  password: string
+}
+
+type SignupRequest = {
+  email: string
+  password: string
+  legalName: string
+  role: BackendAccountRole
 }
 
 export async function getNewTokens(): Promise<void> {
@@ -37,7 +58,7 @@ export async function getNewTokens(): Promise<void> {
       throw new Error('Unable to refresh session')
     }
 
-    const data = (await res.json()) as RefreshResponse
+    const data = (await res.json()) as AuthResponse
     if (!data.accessToken) {
       console.info(
         'Refreshing tokens failed because of missing access token. Clearing session storage & redirecting to signin',
@@ -47,7 +68,7 @@ export async function getNewTokens(): Promise<void> {
       throw new Error('Refresh response missing access token')
     }
 
-    sessionStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken)
+    setAccessToken(data.accessToken)
   })().finally(() => {
     refreshPromise = null
   })
@@ -128,4 +149,74 @@ export async function put<T = unknown>(endpoint: string, body: unknown): Promise
 }
 export async function del<T = unknown>(endpoint: string, body?: unknown): Promise<T> {
   return await requestWithOptions(endpoint, 'DELETE', body)
+}
+
+async function extractAuthResponse(res: Response): Promise<string> {
+  const data = (await parseResponse(res)) as AuthResponse
+  if (!data?.accessToken) {
+    throw new Error('Auth response missing access token')
+  }
+
+  setAccessToken(data.accessToken)
+  return data.accessToken
+}
+
+async function parseErrorMessage(res: Response): Promise<string> {
+  const data = await parseResponse(res)
+
+  if (typeof data === 'string' && data.trim().length > 0) {
+    return data
+  }
+
+  if (data && typeof data === 'object') {
+    const mapped = data as Record<string, unknown>
+
+    if (typeof mapped.error === 'string' && mapped.error.trim().length > 0) {
+      return mapped.error
+    }
+
+    const firstFieldError = Object.values(mapped).find(
+      (value): value is string => typeof value === 'string' && value.trim().length > 0,
+    )
+
+    if (firstFieldError) {
+      return firstFieldError
+    }
+  }
+
+  return `Request failed with status ${res.status}`
+}
+
+export async function loginWithCredentials(request: LoginRequest): Promise<string> {
+  const res = await fetch('/api/auth/login', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(request),
+  })
+
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res))
+  }
+
+  return await extractAuthResponse(res)
+}
+
+export async function signupWithCredentials(request: SignupRequest): Promise<string> {
+  const res = await fetch('/api/auth/signup', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(request),
+  })
+
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res))
+  }
+
+  return await extractAuthResponse(res)
 }

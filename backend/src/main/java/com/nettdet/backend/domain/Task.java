@@ -14,6 +14,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 @Entity
 @Table(name = "task")
 public class Task extends CreatedAtEntity {
@@ -23,7 +26,8 @@ public class Task extends CreatedAtEntity {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "difficulty", nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "difficulty", nullable = false, columnDefinition = "task_difficulty_enum")
     private TaskDifficulty difficulty;
 
     @ManyToOne(fetch = FetchType.LAZY)

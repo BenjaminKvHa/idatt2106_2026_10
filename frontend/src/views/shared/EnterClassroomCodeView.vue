@@ -1,15 +1,68 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import creatureSitting from '@/assets/creatureSitting.png'
+import { post } from '@/utils/apiUtils'
+
+const router = useRouter()
 
 const classroomCode = ref('')
+const waiting = ref(false)
+const errorMessage = ref('')
+
+type ValidateClassroomResponse = {
+  exists: boolean
+  message?: string
+}
+
+function handleInput(event: Event) {
+  const target = event.target as HTMLInputElement
+
+  let value = target.value
+  value = value.replace(/[^a-zA-Z]/g, '')
+  value = value.toUpperCase()
+  value = value.slice(0, 6)
+
+  classroomCode.value = value
+  target.value = value
+}
 
 function handleLogout() {
   console.log('Logg ut')
 }
 
-function handleConfirm() {
-  console.log('Klasseromkode:', classroomCode.value)
+async function handleConfirm() {
+  if (classroomCode.value.length !== 6) return
+
+  errorMessage.value = ''
+  waiting.value = true
+
+  try {
+  /*
+    const data = await post<ValidateClassroomResponse>(
+      '/classrooms/validate-code',
+      {
+        classroomCode: classroomCode.value,
+      },
+    )
+
+    if (!data?.exists) {
+      errorMessage.value = data?.message || 'Klasserommet finnes ikke, har du skrevet inn ' +
+        'riktig kode?'
+    }
+*/
+    router.push({
+      path: '/join-classroom/create-avatar',
+      query: {
+        classroomCode: classroomCode.value,
+      },
+    })
+  } catch (e) {
+    errorMessage.value = "Noe gikk galt"
+    console.error(e)
+  } finally {
+    waiting.value = false
+  }
 }
 </script>
 
@@ -23,13 +76,28 @@ function handleConfirm() {
       <label class="label" for="classroom-code">Klasseromkode:</label>
       <div class="input-wrapper">
         <img :src="creatureSitting" alt="Figur" class="creature" />
-        <input id="classroom-code" v-model="classroomCode" type="text" class="input" />
+        <input
+          id="classroom-code"
+          :value="classroomCode"
+          @input="handleInput"
+          type="text"
+          class="input"
+          maxlength="6"
+        />
       </div>
     </div>
 
+    <p>WIP: Validerer ikke klasserom enda, alle 6 bokstaver lange koder redirecter</p>
+
     <div class="buttons">
       <button class="btn btn-red" @click="handleLogout">Logg ut</button>
-      <button class="btn btn-green" @click="handleConfirm">Bekreft</button>
+      <button
+        class="btn btn-green"
+        @click="handleConfirm()"
+        :disabled="classroomCode.length !== 6 || waiting"
+      >
+        Bekreft
+      </button>
     </div>
   </main>
 </template>
@@ -137,6 +205,12 @@ function handleConfirm() {
 .btn:active {
   transform: translateY(3px);
   box-shadow: 0 2px 0 var(--color-text);
+}
+
+.btn-green:disabled {
+  background: var(--green-confirm-40);
+  cursor: not-allowed;
+  transform: none;
 }
 
 .btn-red {

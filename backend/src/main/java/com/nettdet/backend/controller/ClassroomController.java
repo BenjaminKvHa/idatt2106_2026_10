@@ -2,6 +2,8 @@ package com.nettdet.backend.controller;
 
 import jakarta.validation.Valid;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,9 +17,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.nettdet.backend.dto.AcceptedPupilMembershipResponse;
 import com.nettdet.backend.dto.ClassroomResponse;
 import com.nettdet.backend.dto.CreateClassroomRequest;
 import com.nettdet.backend.dto.InviteTeacherRequest;
+import com.nettdet.backend.dto.PendingPupilRequestResponse;
 import com.nettdet.backend.dto.TeacherLeaveStatusResponse;
 import com.nettdet.backend.dto.UpdateClassroomRequest;
 import com.nettdet.backend.security.JwtUserPrincipal;
@@ -85,6 +89,23 @@ public class ClassroomController {
             @AuthenticationPrincipal JwtUserPrincipal principal) {
         classroomService.leaveClassroom(classroomCode, principal);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{classroomCode}/pupils/pending")
+    @PreAuthorize("hasAuthority('TEACHER')")
+    public ResponseEntity<List<PendingPupilRequestResponse>> getPendingPupilRequests(
+            @PathVariable String classroomCode,
+            @AuthenticationPrincipal JwtUserPrincipal principal) {
+        return ResponseEntity.ok(classroomService.getPendingPupilRequests(classroomCode, principal));
+    }
+
+    @PutMapping("/{classroomCode}/pupils/{pupilEmail}/accept")
+    @PreAuthorize("hasAuthority('TEACHER')")
+    public ResponseEntity<AcceptedPupilMembershipResponse> acceptPupilRequest(
+            @PathVariable String classroomCode,
+            @PathVariable String pupilEmail,
+            @AuthenticationPrincipal JwtUserPrincipal principal) {
+        return ResponseEntity.ok(classroomService.acceptPupilRequest(classroomCode, pupilEmail, principal));
     }
 
     @DeleteMapping("/{classroomCode}/pupils/{pupilEmail}")

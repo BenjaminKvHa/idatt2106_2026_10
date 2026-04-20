@@ -8,7 +8,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-//import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -67,28 +66,24 @@ public class SecurityConfig {
 
         // expose endpoint /auth/login - /auth/register - /auth/refresh - /health, as available to all, but any other requests to other endpoints require authentication
         http.authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/login", "/auth/register", "/auth/refresh", "/swagger-ui/**", "/v3/api-docs/**").permitAll() // for this url endpoint, all requests are permitted
+                .requestMatchers("/auth/login", "/auth/signup", "/auth/refresh", "/swagger-ui/**", "/v3/api-docs/**").permitAll() // for this url endpoint, all requests are permitted
                 .anyRequest().authenticated()); // to any other requests to endpoints, authentication is needed
-
-        /*http.exceptionHandling(exceptions -> exceptions
-                .authenticationEntryPoint((request, response, authException) ->
-                        response.sendError(HttpStatus.UNAUTHORIZED.value()))
-                .accessDeniedHandler((request, response, accessDeniedException) ->
-                        response.sendError(HttpStatus.FORBIDDEN.value())));*/
 
         // since SecurityConfig is initially run before Server Dispatchlet, it blocks due to CORS restriction, therefore we have
         // to define here that our backend can take in requests from the frontend
         http.cors(cors -> cors.configurationSource(request -> {
             CorsConfiguration config = new CorsConfiguration();
             config.setAllowedOrigins(List.of(
+                "http://localhost:3000",
+                "http://127.0.0.1:3000",
                 "http://localhost:80",
                 "http://localhost:8080",
-                "http://localhost:5173",
-                "http://127.0.0.1:8080",
-                "http://127.0.0.1:5173"
+                "http://127.0.0.1:80",
+                "http://127.0.0.1:8080"
             ));
-            config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE"));
+            config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
             config.setAllowedHeaders(List.of("*"));
+            config.setAllowCredentials(true);
             return config;
         }));
 

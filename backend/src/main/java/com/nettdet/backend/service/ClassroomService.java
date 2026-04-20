@@ -1,5 +1,8 @@
 package com.nettdet.backend.service;
 
+import java.util.Comparator;
+import java.util.List;
+
 import jakarta.persistence.EntityNotFoundException;
 
 import org.springframework.dao.DataIntegrityViolationException;
@@ -13,9 +16,11 @@ import com.nettdet.backend.domain.Classroom;
 import com.nettdet.backend.domain.PupilClassroomMembership;
 import com.nettdet.backend.domain.enums.AccountRole;
 import com.nettdet.backend.domain.ids.AccountClassroomBridgeTeacherId;
+import com.nettdet.backend.dto.AcceptedPupilMembershipResponse;
 import com.nettdet.backend.dto.ClassroomResponse;
 import com.nettdet.backend.dto.CreateClassroomRequest;
 import com.nettdet.backend.dto.InviteTeacherRequest;
+import com.nettdet.backend.dto.PendingPupilRequestResponse;
 import com.nettdet.backend.dto.TeacherLeaveStatusResponse;
 import com.nettdet.backend.dto.UpdateClassroomRequest;
 import com.nettdet.backend.repository.AccountClassroomBridgeTeacherRepository;
@@ -158,6 +163,41 @@ public class ClassroomService {
         bridgeRepository.deleteByIdAccountEmailAndIdClassroomCode(principal.email(), classroomCode);
     }
 
+    @Transactional(readOnly = true)
+    public List<PendingPupilRequestResponse> getPendingPupilRequests(String classroomCode, JwtUserPrincipal principal) {
+        verifyTeacherPrincipal(principal);
+        getRequiredClassroom(classroomCode);
+        verifyTeacherOwnership(principal.email(), classroomCode);
+
+        return pupilClassroomMembershipRepository
+                .findAllByClassroomClassroomCodeAndMembershipConfirmedByTeacherFalse(classroomCode)
+                .stream()
+                .sorted(Comparator.comparing(
+                                (PupilClassroomMembership membership) -> membership.getAccount().getLegalName(),
+                                String.CASE_INSENSITIVE_ORDER)
+                        .thenComparing(PupilClassroomMembership::getAccountEmail))
+                .map(this::toPendingPupilRequestResponse)
+                .toList();
+    }
+
+    @Transactional
+    public AcceptedPupilMembershipResponse acceptPupilRequest(String classroomCode,
+                                                              String pupilEmail,
+                                                              JwtUserPrincipal principal) {
+        verifyTeacherPrincipal(principal);
+        getRequiredClassroom(classroomCode);
+        verifyTeacherOwnership(principal.email(), classroomCode);
+
+        PupilClassroomMembership membership = pupilClassroomMembershipRepository
+                .findByAccountEmailAndClassroomClassroomCodeAndMembershipConfirmedByTeacherFalse(
+                        normalizeEmail(pupilEmail),
+                        classroomCode)
+                .orElseThrow(() -> new EntityNotFoundException("Pending pupil membership not found"));
+
+        membership.setMembershipConfirmedByTeacher(true);
+        return toAcceptedPupilMembershipResponse(pupilClassroomMembershipRepository.save(membership));
+    }
+
     @Transactional
     public void kickPupil(String classroomCode, String pupilEmail, JwtUserPrincipal principal) {
         verifyTeacherPrincipal(principal);
@@ -223,5 +263,18 @@ public class ClassroomService {
                 classroom.getClassroomCode(),
                 classroom.getClassroomName(),
                 classroom.getClassroomDescription());
+    }
+
+    private PendingPupilRequestResponse toPendingPupilRequestResponse(PupilClassroomMembership membership) {
+        return new PendingPupilRequestResponse(
+                membership.getAccountEmail(),
+                membership.getAccount().getLegalName());
+    }
+
+    private AcceptedPupilMembershipResponse toAcceptedPupilMembershipResponse(PupilClassroomMembership membership) {
+        return new AcceptedPupilMembershipResponse(
+                membership.getAccountEmail(),
+                membership.getAccount().getLegalName(),
+                membership.isMembershipConfirmedByTeacher());
     }
 }

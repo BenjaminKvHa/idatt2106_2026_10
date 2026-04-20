@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import TeacherMenu from '@/components/layout/TeacherMenu.vue'
+import TeacherTopbar from '@/components/ui/TeacherTopbar.vue'
 </script>
 
 <template>
@@ -9,11 +10,7 @@ import TeacherMenu from '@/components/layout/TeacherMenu.vue'
     </aside>
 
     <div class="teacher-main">
-      <header class="teacher-navbar">
-        <router-link to="/teacher/profile" class="overlay-button profile">
-          Gå til profil
-        </router-link>
-      </header>
+      <TeacherTopbar />
 
       <main class="teacher-content">
         <router-view />
@@ -43,18 +40,6 @@ import TeacherMenu from '@/components/layout/TeacherMenu.vue'
   grid-template-rows: auto 1fr;
   min-height: 0;
   min-width: 0;
-}
-
-.teacher-navbar {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background-color: var(--background-body);
-  padding: 0 var(--medium-padding);
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .teacher-content {

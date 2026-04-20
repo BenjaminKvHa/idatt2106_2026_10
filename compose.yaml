@@ -40,6 +40,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    volumes:
+      - ./initial_avatar_assets:/app/initial_avatar_assets:ro
     depends_on:
       db:
         condition: service_healthy

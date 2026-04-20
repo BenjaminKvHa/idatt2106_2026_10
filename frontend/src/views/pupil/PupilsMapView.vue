@@ -32,7 +32,7 @@
                 :class="{ bottomStars: stop.side === 'bottom' }"
               >
                 <span
-                  v-for="starIndex in 3"
+                  v-for="starIndex in stop.maxStars"
                   :key="starIndex"
                   :class="['star', starIndex <= stop.stars ? 'filled' : 'empty']"
                 >
@@ -82,6 +82,10 @@
           :aria-label="`Gå til side ${index + 1}`"
         />
       </div>
+      <p v-if="loadingProgress" class="map-status" role="status">Laster progresjon...</p>
+      <p v-else-if="progressError" class="map-status error" role="alert">
+        {{ progressError }}
+      </p>
       <div v-if="activeLockedStop" class="popup-overlay" @click="closeLockedPopup">
         <div class="locked-popup" @click.stop>
           <h2 class="popup-title">{{ activeLockedStop.name }} er låst.</h2>
@@ -110,7 +114,7 @@
             </p>
             <ul>
               <li>Begynn med Nyhetskvartalet.</li>
-              <li>Fullfør oppgavene, oppnå 3 stjerner, og lås opp neste stoppested.</li>
+              <li>Fullfør oppgavene og tjen stjerner for å låse opp neste stoppested.</li>
               <li>Fullfør alle oppgavene på alle stoppestedene og slå bossen i Datasenteret.</li>
               <li>Trykk på Hjem for å gå tilbake til hovedskjermen.</li>
             </ul>
@@ -130,7 +134,7 @@
               Tenk på kartet som en rekkefølge du må følge.
             </p>
             <ul>
-              <li>Stoppesteder med lås kan ikke åpnes før du har 3 stjerner på forrige sted.</li>
+              <li>Stoppesteder med lås kan ikke åpnes før forrige kapittel er fullført.</li>
               <li>Hvis du står fast, gå tilbake og fullfør tidligere oppgaver.</li>
               <li>Se på stjernene under hvert stoppested for å følge progresjonen din.</li>
             </ul>
@@ -147,9 +151,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onActivated, ref } from 'vue'
+import { computed, onActivated, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/components/TopBar.vue'
+import { get } from '@/utils/apiUtils'
 
 import detektivkontoretImage from '@/assets/stoppesteder/detektivkontoret.png'
 import lockImage from '@/assets/icons/lock.png'
@@ -163,10 +168,19 @@ import datasenteretImage from '@/assets/stoppesteder/datasenteret.png'
 
 type StopSide = 'top' | 'bottom'
 
+type PupilChapterProgressResponse = {
+  chapterId: number
+  highscore: number
+  unlocked: boolean
+}
+
 type Stop = {
   id: number
   name: string
+  chapterId: number | null
+  maxStars: number
   stars: number
+  unlocked: boolean
   image: string
   side: StopSide
   isHome?: boolean
@@ -181,12 +195,17 @@ const itemsPerPage = 4
 const activeLockedStop = ref<Stop | null>(null)
 const showHelpPopup = ref<boolean>(false)
 const showHintPopup = ref<boolean>(false)
+const loadingProgress = ref<boolean>(false)
+const progressError = ref<string>('')
 
 const stops = ref<Stop[]>([
   {
     id: 0,
     name: 'Hjem',
+    chapterId: null,
+    maxStars: 0,
     stars: 0,
+    unlocked: true,
     image: detektivkontoretImage,
     side: 'top',
     isHome: true,
@@ -196,7 +215,10 @@ const stops = ref<Stop[]>([
   {
     id: 1,
     name: 'Nyhetskvartalet',
+    chapterId: 1,
+    maxStars: 3,
     stars: 0,
+    unlocked: false,
     image: nyhetskvartaletImage,
     side: 'top',
     routePath: '/pupil/classroom/map/news',
@@ -205,7 +227,10 @@ const stops = ref<Stop[]>([
   {
     id: 2,
     name: 'Fotografen',
+    chapterId: 2,
+    maxStars: 3,
     stars: 0,
+    unlocked: false,
     image: fotografenImage,
     side: 'bottom',
     routePath: '/pupil/classroom/map/photographer',
@@ -214,7 +239,10 @@ const stops = ref<Stop[]>([
   {
     id: 3,
     name: 'Postkontoret',
+    chapterId: null,
+    maxStars: 3,
     stars: 0,
+    unlocked: false,
     image: postkontoretImage,
     side: 'top',
     routePath: '/pupil/classroom/map/postoffice',
@@ -223,7 +251,10 @@ const stops = ref<Stop[]>([
   {
     id: 4,
     name: 'Passordbanken',
+    chapterId: null,
+    maxStars: 3,
     stars: 0,
+    unlocked: false,
     image: passordbankenImage,
     side: 'bottom',
     routePath: '/pupil/classroom/map/passwordbank',
@@ -232,7 +263,10 @@ const stops = ref<Stop[]>([
   {
     id: 5,
     name: 'Markedsplassen',
+    chapterId: null,
+    maxStars: 3,
     stars: 0,
+    unlocked: false,
     image: markedsplassenImage,
     side: 'top',
     routePath: '/pupil/classroom/map/marketplace',
@@ -241,7 +275,10 @@ const stops = ref<Stop[]>([
   {
     id: 6,
     name: 'Den sosiale møteplassen',
+    chapterId: null,
+    maxStars: 3,
     stars: 0,
+    unlocked: false,
     image: sosialMoteplassImage,
     side: 'bottom',
     routePath: '/pupil/classroom/map/meetingplace',
@@ -250,11 +287,14 @@ const stops = ref<Stop[]>([
   {
     id: 7,
     name: 'Datasenteret',
+    chapterId: 3,
+    maxStars: 5,
     stars: 0,
+    unlocked: false,
     image: datasenteretImage,
     side: 'top',
     routePath: '/pupil/classroom/map/datacenter',
-    requiredPreviousStop: 'Den sosiale møteplassen',
+    requiredPreviousStop: 'Fotografen',
   },
 ])
 
@@ -271,24 +311,40 @@ const paginatedStops = computed<Stop[]>(() => {
   return stops.value.slice(start, start + itemsPerPage)
 })
 
-function loadStars(): void {
-  const starKeys: Record<string, string> = {
-    Nyhetskvartalet: 'nyhetskvartaletStars',
-    Fotografen: 'fotografenStars',
-    Postkontoret: 'postkontoretStars',
-    Passordbanken: 'passordbankenStars',
-    Markedsplassen: 'markedsplassenStars',
-    'Den sosiale møteplassen': 'denSosialeMoteplassenStars',
-    Datasenteret: 'datasenteretStars',
+async function loadProgress(): Promise<void> {
+  loadingProgress.value = true
+  progressError.value = ''
+
+  try {
+    const progress = await get<PupilChapterProgressResponse[]>('/api/pupil/progress')
+    const progressByChapterId = new Map(progress.map((entry) => [entry.chapterId, entry]))
+
+    stops.value = stops.value.map((stop) => {
+      if (stop.isHome) {
+        return { ...stop, unlocked: true, stars: 0 }
+      }
+
+      if (stop.chapterId === null) {
+        return { ...stop, stars: 0, unlocked: false }
+      }
+
+      const chapterProgress = progressByChapterId.get(stop.chapterId)
+      if (!chapterProgress) {
+        return { ...stop, stars: 0, unlocked: false }
+      }
+
+      return {
+        ...stop,
+        stars: Math.max(0, Math.min(stop.maxStars, chapterProgress.highscore)),
+        unlocked: chapterProgress.unlocked,
+      }
+    })
+  } catch (error) {
+    console.error('Unable to load pupil progress for map', error)
+    progressError.value = 'Kunne ikke hente progresjon akkurat nå.'
+  } finally {
+    loadingProgress.value = false
   }
-
-  stops.value.forEach((stop) => {
-    const storageKey = starKeys[stop.name]
-    if (!storageKey) return
-
-    const savedStars = localStorage.getItem(storageKey)
-    stop.stars = savedStars ? JSON.parse(savedStars) : 0
-  })
 }
 
 function findStopByName(name: string): Stop | undefined {
@@ -296,11 +352,7 @@ function findStopByName(name: string): Stop | undefined {
 }
 
 function isUnlocked(stop: Stop): boolean {
-  if (stop.isHome) return true
-  if (!stop.requiredPreviousStop) return true
-
-  const previousStop = findStopByName(stop.requiredPreviousStop)
-  return previousStop?.stars === 3
+  return stop.unlocked
 }
 
 function openHelpPopup(): void {
@@ -336,6 +388,8 @@ function goToPage(index: number): void {
 }
 
 function openStop(stop: Stop): void {
+  if (loadingProgress.value) return
+
   if (stop.isHome) {
     goBack()
     return
@@ -370,7 +424,11 @@ function goBack(): void {
 }
 
 onActivated(() => {
-  loadStars()
+  void loadProgress()
+})
+
+onMounted(() => {
+  void loadProgress()
 })
 </script>
 
@@ -619,6 +677,17 @@ onActivated(() => {
   justify-content: center;
   gap: 18px;
   margin-top: 10px;
+}
+
+.map-status {
+  margin: 12px 0 0;
+  text-align: center;
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
+.map-status.error {
+  color: #a12a2a;
 }
 
 .pagination-dot {

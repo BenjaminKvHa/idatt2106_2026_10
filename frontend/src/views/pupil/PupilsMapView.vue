@@ -1,7 +1,7 @@
 <template>
   <div class="stops-page">
     <div class="stops-card">
-      <TopBar title="Kart" />
+      <TopBar title="Kart" @help="openHelpPopup" @hint="openHintPopup" />
 
       <div class="map-wrapper">
         <button
@@ -99,7 +99,7 @@
           </div>
         </div>
       </div>
-      <div v-if="showHintPopup" class="popup-overlay" @click="closeHintPopup">
+      <div v-if="showHelpPopup" class="popup-overlay" @click="closeHelpPopup">
         <div class="hint-popup" @click.stop>
           <h2 class="popup-title">Trenger du hjelp?</h2>
 
@@ -109,10 +109,30 @@
               oppgaver knyttet til de.
             </p>
             <ul>
-              <li>Begynn med nyhetskvartalet.</li>
+              <li>Begynn med Nyhetskvartalet.</li>
               <li>Fullfør oppgavene, oppnå 3 stjerner, og lås opp neste stoppested.</li>
-              <li>Fullfør alle oppgavene på alle stoppestedene og slå bossen i datasenteret.</li>
+              <li>Fullfør alle oppgavene på alle stoppestedene og slå bossen i Datasenteret.</li>
               <li>Trykk på Hjem for å gå tilbake til hovedskjermen.</li>
+            </ul>
+          </div>
+
+          <div class="popup-actions">
+            <button class="popup-btn popup-btn-play" @click="closeHelpPopup">Ok</button>
+          </div>
+        </div>
+      </div>
+      <div v-if="showHintPopup" class="popup-overlay" @click="closeHintPopup">
+        <div class="hint-popup" @click.stop>
+          <h2 class="popup-title">Tips 💡</h2>
+
+          <div class="hint-text">
+            <p>
+              Tenk på kartet som en rekkefølge du må følge.
+            </p>
+            <ul>
+              <li>Stoppesteder med lås kan ikke åpnes før du har 3 stjerner på forrige sted.</li>
+              <li>Hvis du står fast, gå tilbake og fullfør tidligere oppgaver.</li>
+              <li>Se på stjernene under hvert stoppested for å følge progresjonen din.</li>
             </ul>
           </div>
 
@@ -159,6 +179,7 @@ const router = useRouter()
 const currentPage = ref<number>(0)
 const itemsPerPage = 4
 const activeLockedStop = ref<Stop | null>(null)
+const showHelpPopup = ref<boolean>(false)
 const showHintPopup = ref<boolean>(false)
 
 const stops = ref<Stop[]>([
@@ -282,6 +303,14 @@ function isUnlocked(stop: Stop): boolean {
   return previousStop?.stars === 3
 }
 
+function openHelpPopup(): void {
+  showHelpPopup.value = true
+}
+
+function closeHelpPopup(): void {
+  showHelpPopup.value = false
+}
+
 function openHintPopup(): void {
   showHintPopup.value = true
 }
@@ -307,8 +336,9 @@ function goToPage(index: number): void {
 }
 
 function openStop(stop: Stop): void {
-  if (stop.routePath) {
-    router.push(stop.routePath)
+  if (stop.isHome) {
+    goBack()
+    return
   }
 
   if (!isUnlocked(stop)) {
@@ -317,7 +347,7 @@ function openStop(stop: Stop): void {
   }
 
   if (stop.routePath) {
-    router.push({ name: stop.routePath })
+    router.push(stop.routePath)
   }
 }
 
@@ -347,7 +377,7 @@ onActivated(() => {
 <style scoped>
 .stops-page {
   min-height: 100vh;
-  background: #ead3b4;
+  background: var(--beige-medium);
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -356,7 +386,7 @@ onActivated(() => {
 .stops-card {
   width: 100%;
   min-height: 100vh;
-  background: #ead3b4;
+  background: var(--beige-medium);
   box-sizing: border-box;
   padding: 28px 36px 24px;
   overflow: hidden;
@@ -381,8 +411,6 @@ onActivated(() => {
   top: 60px;
 }
 
-
-
 .map-wrapper {
   position: relative;
   padding: 20px 90px 0;
@@ -401,7 +429,7 @@ onActivated(() => {
   transform: translateY(-50%);
   height: 28px;
   border-radius: 999px;
-  background: #d4af7c;
+  background: var(--beige-medium);
 }
 
 .stop-node {
@@ -417,7 +445,7 @@ onActivated(() => {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: #bf7b33;
+  background: var(--brown-medium);
   z-index: 3;
 }
 
@@ -426,7 +454,7 @@ onActivated(() => {
   left: 50%;
   transform: translateX(-50%);
   width: 0;
-  border-left: 5px dotted #8a6546;
+  border-left: 5px dotted var(--brown-medium);
   z-index: 1;
 }
 
@@ -502,11 +530,11 @@ onActivated(() => {
 
 .star.empty {
   color: transparent;
-  -webkit-text-stroke: 2px #7a5b43;
+  -webkit-text-stroke: 2px var(--brown-dark);
 }
 
 .star.filled {
-  color: #f0c33a;
+  color: var(--yellow-award);
   -webkit-text-stroke: 0;
 }
 
@@ -515,11 +543,11 @@ onActivated(() => {
   height: 170px;
   border-radius: 50%;
   border: none;
-  background: rgba(255, 255, 255, 0.72);
+  background: rgb(255 255 255 / 72%);
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: inset 0 0 0 2px rgba(122, 91, 67, 0.08);
+  box-shadow: inset 0 0 0 2px var(--brown-dark-10);
   overflow: hidden;
   padding: 0;
 }
@@ -540,8 +568,8 @@ onActivated(() => {
 }
 
 .stop-circle.home {
-  border: 3px solid #bf7b33;
-  background: rgba(255, 255, 255, 0.9);
+  border: 3px solid var(--brown-medium);
+  background: rgb(255 255 255 / 90%);
 }
 
 .stop-image {
@@ -556,7 +584,7 @@ onActivated(() => {
   font-size: 1.75rem;
   font-weight: 800;
   line-height: 1.1;
-  color: #111;
+  color: var(--color-text);
   text-align: center;
   max-width: 260px;
 }
@@ -568,9 +596,9 @@ onActivated(() => {
   width: 66px;
   height: 66px;
   border-radius: 50%;
-  border: 3px solid #c9873a;
+  border: 3px solid var(--orange-medium);
   background: transparent;
-  color: #c9873a;
+  color: var(--orange-medium);
   font-size: 2.2rem;
   cursor: pointer;
   display: flex;
@@ -598,7 +626,7 @@ onActivated(() => {
   height: 16px;
   border-radius: 50%;
   border: none;
-  background: #bf7b33;
+  background: var(--brown-medium);
   opacity: 0.45;
   cursor: pointer;
 }
@@ -738,7 +766,6 @@ onActivated(() => {
 }
 
 @media (max-width: 700px) {
-
   .map-wrapper {
     padding: 10px 36px 0;
   }
@@ -802,18 +829,14 @@ onActivated(() => {
 
 .lock-overlay {
   position: absolute;
-
   width: 85px;
   height: 85px;
-
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-
-  background: rgba(0, 0, 0, 0.35);
+  background: rgb(0 0 0 / 35%);
   border-radius: 50%;
   padding: 16px;
-
   display: flex;
   align-items: center;
   justify-content: center;
@@ -828,7 +851,7 @@ onActivated(() => {
 .popup-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.18);
+  background: rgb(0 0 0 / 18%);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -837,10 +860,10 @@ onActivated(() => {
 
 .locked-popup {
   width: min(520px, calc(100vw - 32px));
-  background: #ea9447;
-  border: 4px solid #6f4d33;
+  background: var(--orange-medium);
+  border: 4px solid var(--brown-dark);
   border-radius: 28px;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 24px rgb(0 0 0 / 20%);
   padding: 28px 24px 20px;
   text-align: center;
 }
@@ -850,7 +873,7 @@ onActivated(() => {
   font-size: 2rem;
   line-height: 1.15;
   font-weight: 800;
-  color: #111;
+  color: var(--color-text);
 }
 
 .popup-text {
@@ -858,7 +881,7 @@ onActivated(() => {
   font-size: 1.8rem;
   line-height: 1.2;
   font-weight: 700;
-  color: #111;
+  color: var(--color-text);
 }
 
 .popup-actions {
@@ -873,20 +896,20 @@ onActivated(() => {
   min-width: 130px;
   padding: 14px 24px;
   border-radius: 22px;
-  border: 4px solid #111;
+  border: 4px solid var(--brown-dark);
   font-size: 1.15rem;
   font-weight: 800;
-  color: #111;
+  color: var(--color-text);
   cursor: pointer;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 6px 12px rgb(0 0 0 / 18%);
 }
 
 .popup-btn-back {
-  background: #ef3b37;
+  background: var(--red-danger);
 }
 
 .popup-btn-play {
-  background: #8ee22d;
+  background: var(--green-confirm);
 }
 
 @media (max-width: 700px) {
@@ -912,10 +935,10 @@ onActivated(() => {
 
 .hint-popup {
   width: min(560px, calc(100vw - 32px));
-  background: rgba(234, 148, 71, 0.72);
-  border: 4px solid #6f4d33;
+  background: var(--orange-medium-80);
+  border: 4px solid var(--brown-dark);
   border-radius: 28px;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 24px rgb(0 0 0 / 20%);
   padding: 28px 24px 20px;
   text-align: center;
   backdrop-filter: blur(2px);
@@ -926,7 +949,7 @@ onActivated(() => {
   font-size: 1.1rem;
   line-height: 1.35;
   font-weight: 700;
-  color: #111;
+  color: var(--color-text);
   text-align: left;
 }
 

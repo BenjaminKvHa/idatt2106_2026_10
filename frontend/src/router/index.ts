@@ -68,12 +68,14 @@ const router = createRouter({
       ],
     },
     {
-      path: '/teacher',
+      path: '/:teacherUsername',
+      component: TeacherView,
+      meta: {
+        isTeacherRoute: true,
+        breadcrumb: (route: { params: Record<string, string | string[]> }) =>
+          String(route.params.teacherUsername),
+      },
       children: [
-        {
-          path: '',
-          component: TeacherView,
-        },
         {
           path: 'profile',
           component: TeachersProfileView,
@@ -90,13 +92,22 @@ const router = createRouter({
               component: TeachersClassroomsView,
             },
             {
-              path: ':classroom_id',
-              component: TeachersClassroomView,
+              path: ':classroomName',
+              meta: {
+                breadcrumb: (route: { params: Record<string, string | string[]> }) =>
+                  String(route.params.classroomName)
+                    .replace(/-/g, ' ')
+                    .replace(/\b\w/g, (c) => c.toUpperCase()),
+              },
               children: [
-                // {
-                //   path: 'censorship',
-                //   component: HomeView,
-                // },
+                {
+                  path: '',
+                  component: TeachersClassroomView,
+                },
+                {
+                  path: 'edit-classroom',
+                  component: TeachersClassroomView,
+                },
                 {
                   path: 'pupils',
                   component: TeachersPupilsView,

@@ -106,7 +106,7 @@ function openHint(): void {
 }
 
 .icon-btn:hover {
-  background: var(--beige-light-80);
+  transform: scale(1.05);
 }
 .icon-text {
   font-size: clamp(1.25rem, 2.5vw, 2.25rem);
@@ -130,7 +130,7 @@ function openHint(): void {
 }
 
 .back-btn:hover {
-  background: var(--red-danger-80);
+  transform: scale(1.05);
 }
 
 /**Medium screens*/

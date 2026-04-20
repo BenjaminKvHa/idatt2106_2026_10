@@ -52,7 +52,7 @@ function goToProfile(): void {
 }
 
 .profile-btn:hover {
-  background: var(--beige-light-80);
+  transform: scale(1.05);
 }
 
 .profile-name {

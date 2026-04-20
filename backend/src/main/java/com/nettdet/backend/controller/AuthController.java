@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import java.util.Map;
 
 import com.nettdet.backend.domain.Account;
 import com.nettdet.backend.domain.RefreshToken;
@@ -50,7 +51,7 @@ public class AuthController {
         String jwtToken = jwtUtil.generateToken(account);
         logger.info("Issued new access and refresh token for account: {}", account.getEmail());
 
-        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, refCookie.toString()).body(jwtToken);
+        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, refCookie.toString()).body(Map.of("accessToken", jwtToken));
     }
 
     @PostMapping("/logout")
@@ -68,7 +69,7 @@ public class AuthController {
         ResponseCookie refCookie = refTokenService.createAndStoreRefreshToken(logIn);
 
         logger.info("User logged in succesfully: {}", logIn.getEmail());
-        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, refCookie.toString()).body(jwtToken);
+        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, refCookie.toString()).body(Map.of("accessToken", jwtToken));
     }
 
     @PostMapping("/signup")
@@ -80,7 +81,7 @@ public class AuthController {
         ResponseCookie refCookie = refTokenService.createAndStoreRefreshToken(account);
 
         logger.info("Account registered and logged in: {}", account.getEmail());
-        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, refCookie.toString()).body(jwtToken);
+        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, refCookie.toString()).body(Map.of("accessToken", jwtToken));
     }
 
 }

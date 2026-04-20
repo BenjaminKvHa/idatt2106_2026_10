@@ -74,13 +74,16 @@ public class SecurityConfig {
         http.cors(cors -> cors.configurationSource(request -> {
             CorsConfiguration config = new CorsConfiguration();
             config.setAllowedOrigins(List.of(
+                "http://localhost:3000",
+                "http://127.0.0.1:3000",
                 "http://localhost:80",
                 "http://localhost:8080",
                 "http://127.0.0.1:80",
                 "http://127.0.0.1:8080"
             ));
-            config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE"));
+            config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
             config.setAllowedHeaders(List.of("*"));
+            config.setAllowCredentials(true);
             return config;
         }));
 

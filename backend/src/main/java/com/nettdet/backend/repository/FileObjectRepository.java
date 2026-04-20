@@ -10,4 +10,6 @@ import com.nettdet.backend.domain.FileObject;
 @Repository
 public interface FileObjectRepository extends JpaRepository<FileObject, Long> {
     Optional<FileObject> findByObjectKey(String objectKey);
+
+    java.util.List<FileObject> findAllByObjectKeyStartingWith(String objectKeyPrefix);
 }

@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <PupilTopBar title="Fotografen" />
+    <TopBar title="Fotografen" />
 
     <div class="content">
       <h1 class="level">Nivå {{ currentLevel + 1 }}</h1>
@@ -108,7 +108,7 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import PupilTopBar from '@/components/PupilTopBar.vue'
+import TopBar from '@/components/TopBar.vue'
 
 const router = useRouter()
 

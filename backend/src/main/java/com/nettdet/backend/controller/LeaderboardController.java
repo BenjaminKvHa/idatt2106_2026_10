@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.nettdet.backend.dto.ClassroomLeaderboardEntryResponse;
 import com.nettdet.backend.dto.ClassroomPupilLeaderboardResponse;
+import com.nettdet.backend.dto.TeacherClassroomOverviewResponse;
 import com.nettdet.backend.security.JwtUserPrincipal;
 import com.nettdet.backend.service.LeaderboardService;
 
@@ -29,6 +30,13 @@ public class LeaderboardController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<ClassroomLeaderboardEntryResponse>> getGlobalClassroomLeaderboard() {
         return ResponseEntity.ok(leaderboardService.getGlobalClassroomLeaderboard());
+    }
+
+    @GetMapping("/teacher/classrooms")
+    @PreAuthorize("hasAuthority('TEACHER')")
+    public ResponseEntity<List<TeacherClassroomOverviewResponse>> getTeacherClassrooms(
+            @AuthenticationPrincipal JwtUserPrincipal principal) {
+        return ResponseEntity.ok(leaderboardService.getTeacherClassrooms(principal));
     }
 
     @GetMapping("/classrooms/{classroomCode}/leaderboard")

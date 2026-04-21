@@ -19,6 +19,7 @@ import com.nettdet.backend.domain.enums.AccountRole;
 import com.nettdet.backend.dto.ClassroomLeaderboardEntryResponse;
 import com.nettdet.backend.dto.ClassroomPupilLeaderboardEntryResponse;
 import com.nettdet.backend.dto.ClassroomPupilLeaderboardResponse;
+import com.nettdet.backend.dto.TeacherClassroomOverviewResponse;
 import com.nettdet.backend.repository.AccountClassroomBridgeTeacherRepository;
 import com.nettdet.backend.repository.ClassroomRepository;
 import com.nettdet.backend.repository.PupilClassroomMembershipRepository;
@@ -44,6 +45,37 @@ public class LeaderboardService {
 
     @Transactional(readOnly = true)
     public List<ClassroomLeaderboardEntryResponse> getGlobalClassroomLeaderboard() {
+        return buildRankedClassroomScores().stream()
+                .map(score -> new ClassroomLeaderboardEntryResponse(
+                        score.classroomCode(),
+                        score.classroomName(),
+                        score.totalScore()))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<TeacherClassroomOverviewResponse> getTeacherClassrooms(JwtUserPrincipal principal) {
+        verifyTeacherPrincipal(principal);
+
+        List<String> teacherClassroomCodes = bridgeRepository.findAllByIdAccountEmail(principal.email()).stream()
+                .map(bridge -> bridge.getId().getClassroomCode())
+                .toList();
+
+        if (teacherClassroomCodes.isEmpty()) {
+            return List.of();
+        }
+
+        return buildRankedClassroomScores().stream()
+                .filter(score -> teacherClassroomCodes.contains(score.classroomCode()))
+                .map(score -> new TeacherClassroomOverviewResponse(
+                        score.classroomCode(),
+                        score.classroomName(),
+                        score.totalScore(),
+                        score.globalRank()))
+                .toList();
+    }
+
+    private List<RankedClassroomScore> buildRankedClassroomScores() {
         Map<String, ClassroomScore> scoresByClassroom = new LinkedHashMap<>();
         for (Classroom classroom : classroomRepository.findAll()) {
             scoresByClassroom.put(
@@ -67,15 +99,31 @@ public class LeaderboardService {
             }
         }
 
-        return scoresByClassroom.values().stream()
+        List<ClassroomScore> sortedScores = scoresByClassroom.values().stream()
                 .sorted(Comparator.comparingLong(ClassroomScore::totalXp).reversed()
                         .thenComparing(ClassroomScore::classroomName, String.CASE_INSENSITIVE_ORDER)
                         .thenComparing(ClassroomScore::classroomCode))
-                .map(score -> new ClassroomLeaderboardEntryResponse(
-                        score.classroomCode(),
-                        score.classroomName(),
-                        score.totalXp()))
                 .toList();
+
+        List<RankedClassroomScore> rankedScores = new ArrayList<>();
+        long previousScore = Long.MIN_VALUE;
+        int currentRank = 0;
+
+        for (int index = 0; index < sortedScores.size(); index++) {
+            ClassroomScore score = sortedScores.get(index);
+            if (score.totalXp() != previousScore) {
+                currentRank = index + 1;
+                previousScore = score.totalXp();
+            }
+
+            rankedScores.add(new RankedClassroomScore(
+                    score.classroomCode(),
+                    score.classroomName(),
+                    score.totalXp(),
+                    currentRank));
+        }
+
+        return rankedScores;
     }
 
     @Transactional(readOnly = true)
@@ -169,5 +217,12 @@ public class LeaderboardService {
         private long totalXp() {
             return totalXp;
         }
+    }
+
+    private record RankedClassroomScore(
+            String classroomCode,
+            String classroomName,
+            long totalScore,
+            int globalRank) {
     }
 }

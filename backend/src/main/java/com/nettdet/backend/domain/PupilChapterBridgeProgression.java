@@ -37,6 +37,9 @@ public class PupilChapterBridgeProgression extends CreatedAtEntity {
     @Column(name = "unsuccessful_streak", nullable = false)
     private Integer unsuccessfulStreak;
 
+    @Column(name = "notebook_json", nullable = false, columnDefinition = "JSONB")
+    private String notebookJson;
+
     public PupilChapterBridgeProgression() {
     }
 
@@ -86,5 +89,13 @@ public class PupilChapterBridgeProgression extends CreatedAtEntity {
 
     public void setUnsuccessfulStreak(Integer unsuccessfulStreak) {
         this.unsuccessfulStreak = unsuccessfulStreak;
+    }
+
+    public String getNotebookJson() {
+        return notebookJson;
+    }
+
+    public void setNotebookJson(String notebookJson) {
+        this.notebookJson = notebookJson;
     }
 }

@@ -333,7 +333,7 @@ async function loadProgress(): Promise<void> {
 
       const chapterProgress = progressByChapterId.get(stop.chapterId)
       if (!chapterProgress) {
-        return { ...stop, stars: 0, unlocked: false }
+        return { ...stop, stars: 0, unlocked: stop.requiredPreviousStop === null }
       }
 
       return {
@@ -355,6 +355,8 @@ function findStopByName(name: string): Stop | undefined {
 }
 
 function isUnlocked(stop: Stop): boolean {
+  if (stop.isHome) return true
+  if (stop.requiredPreviousStop === null) return true
   return stop.unlocked
 }
 

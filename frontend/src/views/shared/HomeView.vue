@@ -16,7 +16,6 @@
   display: grid;
   place-items: center;
   height: 100%;
-  background-color: var(--beige-light);
 }
 
 img {
@@ -40,9 +39,4 @@ img {
 }
 </style>
 <style>
-html, body, #app {
-  height: 100% !important;
-  margin: 0;
-  padding: 0;
-}
 </style>

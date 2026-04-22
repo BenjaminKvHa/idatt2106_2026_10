@@ -52,7 +52,7 @@ async function handleConfirm() {
     }
 */
     router.push({
-      path: '/join-classroom/create-avatar',
+      path: '/join-classroom/waiting-classroom',
       query: {
         classroomCode: classroomCode.value,
       },

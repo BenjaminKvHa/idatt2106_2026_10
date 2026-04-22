@@ -22,10 +22,10 @@ public interface PupilClassroomMembershipRepository extends JpaRepository<PupilC
             String accountEmail,
             String classroomCode);
 
-    @EntityGraph(attributePaths = "chapterProgressions")
+    @EntityGraph(attributePaths = {"account", "chapterProgressions"})
     List<PupilClassroomMembership> findAllByMembershipConfirmedByTeacherTrue();
 
-    @EntityGraph(attributePaths = "chapterProgressions")
+    @EntityGraph(attributePaths = {"account", "avatarFileObject", "chapterProgressions"})
     List<PupilClassroomMembership> findAllByClassroomClassroomCodeAndMembershipConfirmedByTeacherTrue(String classroomCode);
 
     @EntityGraph(attributePaths = "account")

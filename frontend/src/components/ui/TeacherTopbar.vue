@@ -43,8 +43,6 @@ const autoPath = computed<Crumb[]>(() => {
   const isTeacherRoute = route.matched.some((r) => r.meta?.isTeacherRoute)
   if (!isTeacherRoute) return []
 
-  // Deduplicate matched records by template path to avoid duplicate crumbs
-  // from empty-path children sharing the same resolved path as their parent.
   const seen = new Set<string>()
   const dedupedRecords = route.matched.filter((record) => {
     if (seen.has(record.path)) return false
@@ -112,14 +110,13 @@ const autoTitle = computed<string>(() => {
       </nav>
     </div>
 
-    <!-- tabs take priority; fall back to title -->
     <div v-if="effectiveTabs.length" class="topbar-tabs">
       <router-link
         v-for="tab in effectiveTabs"
         :key="tab.to"
         :to="tab.to"
         class="topbar-tab"
-        :class="isActive(tab.to) ? 'button-variant-2' : 'button-variant-1'"
+        :class="isActive(tab.to) ? 'button-variant-1 topbar-tab-button-1' : 'button-variant-2 topbar-tab-button-2'"
       >
         {{ tab.label }}
       </router-link>
@@ -135,6 +132,7 @@ const autoTitle = computed<string>(() => {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  padding-bottom: 0;
 }
 
 .topbar-top-row {
@@ -187,6 +185,8 @@ const autoTitle = computed<string>(() => {
   flex-wrap: wrap;
   gap: var(--thin-gap);
   padding: var(--thin-padding) 0;
+  padding-bottom: 0;
+  margin-bottom: 0;
 }
 
 .topbar-tab {
@@ -196,5 +196,30 @@ const autoTitle = computed<string>(() => {
   padding: 4px var(--medium-padding);
   cursor: pointer;
   white-space: nowrap;
+}
+
+.topbar-tab-button-1{
+  margin-bottom: 0;
+  background-color: var(--background-body);
+  border-radius: var(--border-radius-2) var(--border-radius-2) 0 0;
+  border-style: none;
+}
+
+.topbar-tab-button-1:hover {
+  background-color: var(--background-body);
+  color: var(--txt);
+}
+
+.topbar-tab-button-2{
+  margin-bottom: 0;
+  background-color: var(--background-sec);
+  border-radius: var(--border-radius-2) var(--border-radius-2) 0 0;
+  border-style: none;
+  color: var(--txt);
+}
+
+.topbar-tab-button-2:hover {
+  background-color: var(--background-body);
+  color: var(--txt);
 }
 </style>

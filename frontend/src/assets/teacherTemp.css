@@ -447,3 +447,52 @@
     font-weight: 600;
     font-size: 1rem;
 }
+
+.state-message {
+    padding: var(--thick-padding);
+    text-align: center;
+    color: var(--accent);
+}
+
+.state-message.error {
+    color: var(--warning);
+}
+
+.message {
+    padding: var(--medium-padding);
+    border-radius: var(--border-radius);
+    margin-bottom: var(--medium-padding);
+    font-weight: 500;
+}
+
+.message.error {
+    background-color: #ffebee;
+    color: var(--warning);
+}
+
+.message.success {
+    background-color: #c8e6c9;
+    color: #2e7d32;
+    text-align: center;
+}
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--thick-gap);
+    width: 100%;
+    max-width: 1200px;
+}
+
+.row {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--thin-padding) 0;
+    border-bottom: 2px solid var(--background-sec);
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.row .value {
+    font-weight: 700;
+}

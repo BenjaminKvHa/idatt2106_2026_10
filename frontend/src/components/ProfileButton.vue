@@ -2,6 +2,7 @@
 import { useRouter } from 'vue-router'
 import { user } from '@/components/exampleUser'
 import { computed } from 'vue'
+import { getJwtData } from '@/utils/jwtUtils';
 
 const props = withDefaults(
   defineProps<{
@@ -16,10 +17,19 @@ const props = withDefaults(
 
 const router = useRouter()
 
-const displayName = computed(() => user.value.name || 'Navn navnesen')
+function getUsername(): string {
+  const jwtData = getJwtData();
+  if (jwtData) {
+    return jwtData.legalName || jwtData.email || "Bruker uten navn"
+  }
+  return "Uten navn"
+}
+
+const displayName = computed(() => getUsername())
 const displayAvatar = computed(() => user.value.avatarUrl)
-function goToProfile(): void {
+function goToProfile() {
   router.push(props.to)
+  history.back();
 }
 </script>
 

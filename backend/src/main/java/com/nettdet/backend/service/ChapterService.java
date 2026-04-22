@@ -21,6 +21,7 @@ import com.nettdet.backend.domain.Task;
 import com.nettdet.backend.domain.enums.TaskDifficulty;
 import com.nettdet.backend.domain.ids.PupilChapterBridgeProgressionId;
 import com.nettdet.backend.dto.ChapterProgressionResponse;
+import com.nettdet.backend.dto.ChapterResponse;
 import com.nettdet.backend.dto.ImageVerificationResponse;
 import com.nettdet.backend.dto.ImageVerificationTask;
 import com.nettdet.backend.dto.NewsVerificationResponse;
@@ -143,6 +144,17 @@ public class ChapterService {
     }
 
     private record RunStateAfterAttempt(int currentRunAttempts, int currentRunCorrect, boolean runCompleted) {}
+
+    // --------------------------------------------------
+    // CHAPTER LISTING
+    // --------------------------------------------------
+
+    @Transactional(readOnly = true)
+    public List<ChapterResponse> getAllChapters() {
+        return chapterRepository.findAllByOrderByIdAsc().stream()
+            .map(c -> new ChapterResponse(c.getId(), c.getChapterName()))
+            .toList();
+    }
 
     // --------------------------------------------------
     // PROGRESSION LOOKUP (for frontend run-state recovery)

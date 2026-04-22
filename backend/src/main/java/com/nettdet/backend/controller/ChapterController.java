@@ -11,8 +11,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 import com.nettdet.backend.domain.enums.TaskDifficulty;
 import com.nettdet.backend.dto.ChapterProgressionResponse;
+import com.nettdet.backend.dto.ChapterResponse;
 import com.nettdet.backend.dto.ImageVerificationRequest;
 import com.nettdet.backend.dto.ImageVerificationResponse;
 import com.nettdet.backend.dto.NewsVerificationRequest;
@@ -29,6 +32,12 @@ public class ChapterController {
 
     public ChapterController(ChapterService chapterService) {
         this.chapterService = chapterService;
+    }
+
+    @GetMapping
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<ChapterResponse>> getAllChapters() {
+        return ResponseEntity.ok(chapterService.getAllChapters());
     }
 
     @GetMapping("/{chapterId}/progression")

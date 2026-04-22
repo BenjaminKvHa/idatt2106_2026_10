@@ -16,6 +16,7 @@
     sizing
     */
     --border-radius: 30px;
+    --border-radius-2: 15px;
     --border-width: 5px;
 
     --button-diameter: 48px;
@@ -313,8 +314,13 @@
     outline-color: var(--accent);
     outline-style: solid;
     padding: var(--medium-padding);
-    height: 100%;
     justify-content: flex-start;
+    margin: 0;
+    height: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    overflow-y: auto;
+    min-height: 0;
 }
 
 .teacher-menu-button {

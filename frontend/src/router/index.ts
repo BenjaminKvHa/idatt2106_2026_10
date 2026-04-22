@@ -18,21 +18,17 @@ import PupilsNotebookView from '@/views/pupil/PupilsNotebookView.vue'
 import PupilsNotebookChapterView from '@/views/pupil/PupilsNotebookChapterView.vue'
 import PupilsMysteryView from '@/views/pupil/PupilsMysteryView.vue'
 import PupilsMedalsView from '@/views/pupil/PupilsMedalsView.vue'
-import PupilsSettingsView from "@/views/pupil/PupilsSettingsView.vue";
-import PupilsHelpView from "@/views/pupil/PupilsHelpView.vue";
-import PupilsLeaderboardView from "@/views/pupil/PupilsLeaderboardView.vue";
+import PupilsSettingsView from '@/views/pupil/PupilsSettingsView.vue'
+import PupilsHelpView from '@/views/pupil/PupilsHelpView.vue'
+import PupilsLeaderboardView from '@/views/pupil/PupilsLeaderboardView.vue'
 import PupilsMapView from '@/views/pupil/PupilsMapView.vue'
 import SignInView from '@/views/shared/SignInView.vue'
 import SignUpView from '@/views/shared/SignUpView.vue'
-import NewsView from "@/views/pupil/map_locations/NewsView.vue";
-import DatacenterView from "@/views/pupil/map_locations/DatacenterView.vue";
-import MarketplaceView from "@/views/pupil/map_locations/MarketplaceView.vue";
-import MeetingplaceView from "@/views/pupil/map_locations/MeetingplaceView.vue";
-import PasswordbankView from "@/views/pupil/map_locations/PasswordbankView.vue";
-import PostofficeView from "@/views/pupil/map_locations/PostofficeView.vue";
-import PhotographerView from "@/views/pupil/map_locations/PhotographerView.vue";
-import PupilsWelcomePageView from "@/views/pupil/PupilsWelcomePageView.vue";
-
+import NewsView from '@/views/pupil/map_locations/NewsView.vue'
+import DatacenterView from '@/views/pupil/map_locations/DatacenterView.vue'
+import PostofficeView from '@/views/pupil/map_locations/PostofficeView.vue'
+import PhotographerView from '@/views/pupil/map_locations/PhotographerView.vue'
+import PupilsWelcomePageView from '@/views/pupil/PupilsWelcomePageView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -177,18 +173,6 @@ const router = createRouter({
             {
               path: 'map/datacenter',
               component: DatacenterView,
-            },
-            {
-              path: 'map/marketplace',
-              component: MarketplaceView,
-            },
-            {
-              path: 'map/meetingplace',
-              component: MeetingplaceView,
-            },
-            {
-              path: 'map/passwordbank',
-              component: PasswordbankView,
             },
             {
               path: 'map/postoffice',

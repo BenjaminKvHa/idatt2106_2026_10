@@ -72,7 +72,7 @@ const router = createRouter({
     {
       path: '/teacher',
       component: TeacherView,
-      meta: { isTeacherRoute: true, breadcrumb: 'Klasserom' },
+      meta: { isTeacherRoute: true, breadcrumb: 'Lærer' },
       children: [
         {
           path: 'profile',

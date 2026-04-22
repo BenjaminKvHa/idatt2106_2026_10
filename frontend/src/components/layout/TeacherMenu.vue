@@ -35,7 +35,7 @@ const navigateToClassroom = (classroomCode: string) => {
   const classroom = classrooms.value.find((c) => c.classroomCode === classroomCode)
   if (classroom) {
     const classroomName = classroom.classroomName.toLowerCase().replace(/\s+/g, '-')
-    router.push(`/teacher/classrooms/${classroomName}`)
+    router.push(`/teacher/classrooms/${classroomName}/oversikt`)
   }
 }
 

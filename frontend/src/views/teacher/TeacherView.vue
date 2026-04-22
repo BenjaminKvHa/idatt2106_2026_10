@@ -23,7 +23,7 @@ import TeacherTopbar from '@/components/ui/TeacherTopbar.vue'
 .teacher-page {
   display: grid;
   grid-template-columns: minmax(220px, 20vw) 1fr;
-  min-height: 100vh;
+  height: 100vh;
   min-width: 0;
 }
 
@@ -31,8 +31,9 @@ import TeacherTopbar from '@/components/ui/TeacherTopbar.vue'
   position: sticky;
   top: 0;
   align-self: start;
-  height: 100vh;
   z-index: 20;
+  height: 100vh;
+  display: flex;
 }
 
 .teacher-main {

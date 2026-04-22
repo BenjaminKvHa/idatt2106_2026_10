@@ -72,7 +72,7 @@ const router = createRouter({
     {
       path: '/teacher',
       component: TeacherView,
-      meta: { isTeacherRoute: true, breadcrumb: 'Lærer' },
+      meta: { isTeacherRoute: true, breadcrumb: '' },
       children: [
         {
           path: 'profile',
@@ -106,21 +106,30 @@ const router = createRouter({
                   String(route.params.classroomName)
                     .replace(/-/g, ' ')
                     .replace(/\b\w/g, (c) => c.toUpperCase()),
+                tabs: (route: RouteLocationNormalizedLoaded) => {
+                  const base = `/teacher/classrooms/${route.params.classroomName}`
+                  return [
+                    { label: 'Oversikt', to: `${base}/oversikt` },
+                    { label: 'Elever', to: `${base}/pupils` },
+                    { label: 'Innstillinger', to: `${base}/edit-classroom` },
+                  ]
+                },
               },
+              redirect: (to) => `/teacher/classrooms/${to.params.classroomName}/oversikt`,
               children: [
                 {
-                  path: '',
-                  meta: { isTeacherRoute: true },
+                  path: 'oversikt',
+                  meta: { isTeacherRoute: true, breadcrumb: 'Oversikt' },
                   component: TeachersClassroomView,
                 },
                 {
                   path: 'edit-classroom',
-                  meta: { isTeacherRoute: true },
+                  meta: { isTeacherRoute: true, breadcrumb: 'Rediger Klasserom' },
                   component: TeachersClassroomView,
                 },
                 {
                   path: 'pupils',
-                  meta: { isTeacherRoute: true },
+                  meta: { isTeacherRoute: true, breadcrumb: 'Elever' },
                   component: TeachersPupilsView,
                   children: [
                     {

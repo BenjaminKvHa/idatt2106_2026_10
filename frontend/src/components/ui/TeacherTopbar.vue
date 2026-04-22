@@ -84,9 +84,19 @@ const effectivePath = computed<Crumb[]>(() => {
   return autoPath.value
 })
 
+const autoTabs = computed<TopbarTab[]>(() => {
+  for (const record of [...route.matched].reverse()) {
+    const metaTabs = record.meta?.tabs
+    if (typeof metaTabs === 'function') return metaTabs(route)
+    if (Array.isArray(metaTabs)) return metaTabs
+  }
+  return []
+})
+
 const effectiveTabs = computed<TopbarTab[]>(() => {
   if (props.tabs?.length) return props.tabs
-  return composableTabs.value
+  if (composableTabs.value.length) return composableTabs.value
+  return autoTabs.value
 })
 
 const autoTitle = computed<string>(() => {

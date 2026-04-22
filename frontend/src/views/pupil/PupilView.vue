@@ -39,9 +39,6 @@ const route = useRoute()
 </template>
 
 <style scoped>
-.page {
-  min-height: 100%;
-}
 
 .center-container {
   display: flex;

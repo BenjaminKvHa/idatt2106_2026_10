@@ -1,4 +1,4 @@
-import type { BackendAccountRole } from './apiUtils'
+import { getAccessToken, type BackendAccountRole } from './apiUtils'
 
 type JwtPayload = {
   role?: BackendAccountRole
@@ -33,4 +33,8 @@ export function getDefaultRouteForRole(role?: BackendAccountRole): string {
   }
 
   return '/'
+}
+
+export function getJwtData(): JwtPayload | null {
+  return decodeJwtPayload(getAccessToken());
 }

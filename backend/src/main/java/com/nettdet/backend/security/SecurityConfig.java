@@ -76,7 +76,8 @@ public class SecurityConfig {
                     "/v3/api-docs/**",
                     "/avatar-assets/**",
                     "/avatar-assets/",
-                    "/avatar-assets"
+                    "/avatar-assets",
+                    "/leaderboard/classrooms"
                 ).permitAll() // for this url endpoint, all requests are permitted
                 .anyRequest().authenticated()); // to any other requests to endpoints, authentication is needed
 

@@ -43,10 +43,6 @@ const router = createRouter({
       component: HomeView,
     },
     {
-      path: '/leaderboard',
-      component: LeaderboardView,
-    },
-    {
       path: '/sign-in',
       component: SignInView,
     },
@@ -148,6 +144,10 @@ const router = createRouter({
             {
               component: PupilsClassroomView,
               path: '',
+            },
+            {
+              path: 'leaderboard',
+              component: LeaderboardView,
             },
             {
               path: 'notebook',

@@ -22,7 +22,8 @@ export function hasAccessToken(): boolean {
 }
 function redirectToSignIn() {
   if (typeof window !== 'undefined') {
-    window.location.href = '/sign-in'
+    // window.location.href = '/sign-in'
+    alert("/sign-in redirectToSignIn")
   }
 }
 

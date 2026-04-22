@@ -38,7 +38,6 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> grantRefreshToken(@CookieValue("refresh_token") String cookie) {
         logger.info("Refresh token request received");
 
@@ -50,7 +49,7 @@ public class AuthController {
         String jwtToken = jwtUtil.generateToken(account);
         logger.info("Issued new access and refresh token for account: {}", account.getEmail());
 
-        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, refCookie.toString()).body(jwtToken);
+        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, refCookie.toString()).body(jwtToken); //TODO: Map.of("token", jwtToken)
     }
 
     @PostMapping("/logout")
@@ -68,7 +67,7 @@ public class AuthController {
         ResponseCookie refCookie = refTokenService.createAndStoreRefreshToken(logIn);
 
         logger.info("User logged in succesfully: {}", logIn.getEmail());
-        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, refCookie.toString()).body(jwtToken);
+        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, refCookie.toString()).body(jwtToken); //TODO: Map.of("token", jwtToken)
     }
 
     @PostMapping("/signup")
@@ -80,7 +79,7 @@ public class AuthController {
         ResponseCookie refCookie = refTokenService.createAndStoreRefreshToken(account);
 
         logger.info("Account registered and logged in: {}", account.getEmail());
-        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, refCookie.toString()).body(jwtToken);
+        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, refCookie.toString()).body(jwtToken); //TODO: Map.of("token", jwtToken)
     }
 
 }

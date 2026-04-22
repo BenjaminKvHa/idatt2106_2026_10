@@ -67,11 +67,24 @@
   --yellow-award-10: rgb(251 198 10 / 10%);
   --yellow-award: var(--yellow-award-100);
 
+  --border-wide: 4px;
+  --border-thin: 3px;
 }
 
-body {
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
   min-height: 100vh;
+  max-width: 100%;
+  /* overflow-x: hidden; */
   color: var(--color-text);
+  /* background-color: blue; */
   background: var(--beige-medium);
   transition:
     color 0.5s,
@@ -97,4 +110,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
   margin: 0;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.page {
+  min-height: 100%;
+  flex-grow: 1;
 }

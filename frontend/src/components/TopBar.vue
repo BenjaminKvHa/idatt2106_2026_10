@@ -1,172 +1,158 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import ProfileButton from '@/components/ProfileButton.vue'
+import { ChevronLeftIcon, HomeIcon, SettingsIcon } from '@lucide/vue';
+import { getJwtData } from '@/utils/jwtUtils';
 
-defineProps<{
+const props = defineProps<{
   title?: string
   profileName?: string | null
   profileAvatarUrl?: string | null
+  hint?: string
+  help?: string
+
 }>()
 
-const emit = defineEmits<{
-  (e: 'help'): void
-  (e: 'hint'): void
-}>()
-
-const router = useRouter()
-
-function goBack(): void {
-  router.push('/pupil')
-}
+const tokenData = getJwtData();
 
 function openHelp(): void {
-  emit('help')
+  alert(props.help || "No help")
 }
 
 function openHint(): void {
-  emit('hint')
+  alert(props.hint || "No hint")
 }
 </script>
 
 <template>
-  <div class="top-bar">
-    <div class="left">
-      <ProfileButton variant="topbar" />
-      <button class="icon-btn" aria-label="Hjelp" @click="openHelp">
-        <span class="icon-text">?</span>
-      </button>
+  <div class="mega-nav-container">
+    <div class="nav-container heavy-shadow">
+      <div>
+        <button @click="$router.go(-1)" class="nav-icon-parent transition">
+          <ChevronLeftIcon />
+        </button>
+        <RouterLink to="/pupil" class="nav-icon-parent transition">
+          <HomeIcon />
+        </RouterLink>
+      </div>
+      <div class="nav-center-text">
+        {{ title }}
+      </div>
+      <div>
+        <RouterLink to="/pupil/profile" class="avatar-button transition">
+          <img :src="profileAvatarUrl || '/api/avatar-assets/costume/detective.png'" />
+          {{ tokenData?.legalName || tokenData?.email || "No name" }}
+        </RouterLink>
+      </div>
     </div>
-
-    <div class="center">
-      <h1 class="page-title">{{ title }}</h1>
-    </div>
-
-    <div class="right">
-      <button class="icon-btn" aria-label="Tips" @click="openHint">
-        <span class="icon-text">💡</span>
+    <div class="extras">
+      <button v-if="hint" @click="openHint" class="heavy-shadow transition">
+        Få hint!
       </button>
-
-      <button class="back-btn" @click="goBack">Tilbake</button>
+      <button v-if="help" @click="openHelp" class="heavy-shadow transition">
+        Hjelp
+      </button>
     </div>
   </div>
 </template>
 
 <style scoped>
-.top-bar {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.75rem 1rem;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.left,
-.right {
+.avatar-button {
+  border: var(--border-thin) solid var(--brown-dark);
+  border-radius: 1rem;
+  background-color: var(--beige-light);
+  color: var(--brown-dark);
+  text-decoration: none;
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  min-width: 0;
-}
-
-.right {
-  justify-content: flex-end;
-}
-
-.center {
-  min-width: 0;
-  text-align: center;
-}
-
-.page-title {
-  font-size: clamp(1.4rem, 4vw, 4rem);
-  font-weight: bold;
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.icon-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
-  width: clamp(64px, 9vw, 122px);
-  height: clamp(64px, 9vw, 122px);
-  background: var(--beige-light);
-  border: clamp(2px, 0.35vw, 5px) solid var(--brown-dark);
-  border-radius: clamp(18px, 3vw, 38px);
-  cursor: pointer;
-  padding: 0.35rem;
-  transition: background 0.15s;
-  flex-shrink: 0;
-  box-sizing: border-box;
+  align-items: center;
+  padding: .25rem 1rem;
+  font-weight: 600;
+  gap: .5rem;
+
+  > img {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 100%;
+    background-color: white;
+    border: 1px solid var(--brown-dark-40);
+  }
+}
+.avatar-button:hover {
+  color: var(--beige-light);
+  background-color: var(--brown-dark);
 }
 
-.icon-btn:hover {
-  transform: scale(1.05);
+.extras {
+  position: absolute;
+  right: 0;
+  top: 5rem;
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  margin-right: 2rem;
+  > button {
+    border: var(--border-wide) solid var(--brown-dark);
+    border-radius: 1rem;
+    padding: .5rem 1rem;
+    background-color: var(--beige-light);
+    color: var(--brown-dark);
+    font-weight: 600;
+  }
+  > button:hover {
+    background-color: var(--brown-dark);
+    color: var(--beige-light);
+  }
 }
-.icon-text {
-  font-size: clamp(1.25rem, 2.5vw, 2.25rem);
-  line-height: 1;
+.mega-nav-container {
+  position: relative;
+}
+.nav-center-text {
+  text-decoration: underline;
+  color: var(--brown-dark);
+  font-weight: 600;
+}
+.nav-icon-parent {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 100%;
+  border: var(--border-thin) solid var(--brown-dark);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--beige-light);
+  /* background-color: red; */
+  stroke: var(--brown-dark);
+}
+.nav-icon-parent > svg {
+  stroke: var(--brown-dark);
+}
+.nav-icon-parent:hover > svg {
+  stroke: var(--beige-light);
+}
+.nav-icon-parent:hover {
+  background-color: var(--brown-dark);
+  stroke: var(--beige-light);
 }
 
-.back-btn {
-  height: clamp(64px, 9vw, 122px);
-  min-width: clamp(100px, 14vw, 200px);
-  padding: 0 1rem;
-  background: var(--red-danger);
-  color: var(--color-text);
-  font-weight: bold;
-  font-size: clamp(1rem, 2.2vw, 2.25rem);
-  border: clamp(2px, 0.35vw, 5px) solid var(--brown-dark);
-  border-radius: clamp(22px, 4vw, 50px);
-  cursor: pointer;
-  transition: background 0.15s;
-  flex-shrink: 0;
-  box-sizing: border-box;
-}
+.nav-container {
+  background-color: var(--beige-medium);
+  width: 100%;
+  height: 5rem;
+  display: flex;
+  justify-content: space-between;
+  padding-left: 2rem;
+  padding-right: 2rem;
+  border-bottom: var(--border-wide) solid var(--brown-dark);
 
-.back-btn:hover {
-  transform: scale(1.05);
-}
+  > div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+    gap: 1rem;
 
-/**Medium screens*/
-@media (max-width: 900px) {
-  .top-bar {
-    gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
-  }
-  .left,
-  .right {
-    gap: 0.5rem;
-  }
-
-  .back-btn {
-    min-width: 90px;
-    padding: 0 0.8rem;
   }
 }
 
-/**Small screens*/
-@media (max-width: 600px) {
-  .top-bar {
-    grid-template-columns: auto 1fr auto;
-    gap: 0.4rem;
-    padding: 0.4rem 0.5rem;
-  }
-  .left,
-  .right {
-    gap: 0.35rem;
-  }
-  .page-title {
-    font-size: clamp(1rem, 3.8vw, 1.6rem);
-  }
-  .back-btn {
-    min-width: 80px;
-    font-size: clamp(0.9rem, 2.8vw, 1.2rem);
-  }
-}
 </style>

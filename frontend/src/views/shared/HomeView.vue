@@ -40,9 +40,4 @@ img {
 }
 </style>
 <style>
-html, body, #app {
-  height: 100% !important;
-  margin: 0;
-  padding: 0;
-}
 </style>

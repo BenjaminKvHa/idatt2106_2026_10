@@ -39,7 +39,6 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> grantRefreshToken(@CookieValue("refresh_token") String cookie) {
         logger.info("Refresh token request received");
 

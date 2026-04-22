@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.nettdet.backend.dto.AcceptedPupilMembershipResponse;
+import com.nettdet.backend.dto.AcceptedClassroomPupilResponse;
 import com.nettdet.backend.dto.ClassroomResponse;
 import com.nettdet.backend.dto.CreateClassroomRequest;
 import com.nettdet.backend.dto.InviteTeacherRequest;
@@ -97,6 +98,14 @@ public class ClassroomController {
             @PathVariable String classroomCode,
             @AuthenticationPrincipal JwtUserPrincipal principal) {
         return ResponseEntity.ok(classroomService.getPendingPupilRequests(classroomCode, principal));
+    }
+
+    @GetMapping("/{classroomCode}/pupils")
+    @PreAuthorize("hasAuthority('TEACHER')")
+    public ResponseEntity<List<AcceptedClassroomPupilResponse>> getAcceptedPupils(
+            @PathVariable String classroomCode,
+            @AuthenticationPrincipal JwtUserPrincipal principal) {
+        return ResponseEntity.ok(classroomService.getAcceptedPupils(classroomCode, principal));
     }
 
     @PutMapping("/{classroomCode}/pupils/{pupilEmail}/accept")

@@ -37,6 +37,12 @@ public class PupilChapterBridgeProgression extends CreatedAtEntity {
     @Column(name = "unsuccessful_streak", nullable = false)
     private Integer unsuccessfulStreak;
 
+    @Column(name = "current_run_attempts", nullable = false)
+    private Integer currentRunAttempts;
+
+    @Column(name = "current_run_correct", nullable = false)
+    private Integer currentRunCorrect;
+
     public PupilChapterBridgeProgression() {
     }
 
@@ -86,5 +92,21 @@ public class PupilChapterBridgeProgression extends CreatedAtEntity {
 
     public void setUnsuccessfulStreak(Integer unsuccessfulStreak) {
         this.unsuccessfulStreak = unsuccessfulStreak;
+    }
+
+    public Integer getCurrentRunAttempts() {
+        return currentRunAttempts;
+    }
+
+    public void setCurrentRunAttempts(Integer currentRunAttempts) {
+        this.currentRunAttempts = currentRunAttempts;
+    }
+
+    public Integer getCurrentRunCorrect() {
+        return currentRunCorrect;
+    }
+
+    public void setCurrentRunCorrect(Integer currentRunCorrect) {
+        this.currentRunCorrect = currentRunCorrect;
     }
 }

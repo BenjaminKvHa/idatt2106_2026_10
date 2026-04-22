@@ -1,5 +1,7 @@
 package com.nettdet.backend.controller;
 
+import jakarta.validation.Valid;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -7,12 +9,16 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.nettdet.backend.dto.PupilClassroomMembershipResponse;
 import com.nettdet.backend.dto.PupilProgressionResponse;
 import com.nettdet.backend.dto.PupilRequest;
 import com.nettdet.backend.dto.PupilResponse;
+import com.nettdet.backend.dto.UpdatePupilClassroomMembershipRequest;
 import com.nettdet.backend.security.JwtUserPrincipal;
 import com.nettdet.backend.service.PupilService;
 
@@ -63,5 +69,21 @@ public class PupilController {
         PupilResponse response = pupilService.requestToJoinClassroom(
                 new PupilRequest(principal.email(), classroomCode));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PutMapping("/classrooms/{classroomCode}/membership")
+    @PreAuthorize("hasAuthority('PUPIL')")
+    public ResponseEntity<PupilClassroomMembershipResponse> setClassroomMembership(
+            @PathVariable String classroomCode,
+            @Valid @RequestBody UpdatePupilClassroomMembershipRequest request,
+            @AuthenticationPrincipal JwtUserPrincipal principal
+    ) {
+        PupilClassroomMembershipResponse response = pupilService.updateClassroomMembership(
+                principal.email(),
+                classroomCode,
+                request.username(),
+                request.avatar());
+
+        return ResponseEntity.ok(response);
     }
 }

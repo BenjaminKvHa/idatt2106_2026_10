@@ -74,6 +74,9 @@ public class SecurityConfig {
                     "/actuator/health/**",
                     "/swagger-ui/**",
                     "/v3/api-docs/**",
+                    "/avatar-images/**",
+                    "/avatar-images/",
+                    "/avatar-images",
                     "/avatar-assets/**",
                     "/avatar-assets/",
                     "/avatar-assets"

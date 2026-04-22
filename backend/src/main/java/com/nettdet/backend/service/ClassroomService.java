@@ -13,9 +13,11 @@ import org.springframework.transaction.annotation.Transactional;
 import com.nettdet.backend.domain.Account;
 import com.nettdet.backend.domain.AccountClassroomBridgeTeacher;
 import com.nettdet.backend.domain.Classroom;
+import com.nettdet.backend.domain.FileObject;
 import com.nettdet.backend.domain.PupilClassroomMembership;
 import com.nettdet.backend.domain.enums.AccountRole;
 import com.nettdet.backend.domain.ids.AccountClassroomBridgeTeacherId;
+import com.nettdet.backend.dto.AcceptedClassroomPupilResponse;
 import com.nettdet.backend.dto.AcceptedPupilMembershipResponse;
 import com.nettdet.backend.dto.ClassroomResponse;
 import com.nettdet.backend.dto.CreateClassroomRequest;
@@ -180,6 +182,23 @@ public class ClassroomService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<AcceptedClassroomPupilResponse> getAcceptedPupils(String classroomCode, JwtUserPrincipal principal) {
+        verifyTeacherPrincipal(principal);
+        getRequiredClassroom(classroomCode);
+        verifyTeacherOwnership(principal.email(), classroomCode);
+
+        return pupilClassroomMembershipRepository
+                .findAllByClassroomClassroomCodeAndMembershipConfirmedByTeacherTrue(classroomCode)
+                .stream()
+                .sorted(Comparator.comparing(
+                                PupilClassroomMembership::getUsername,
+                                Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER))
+                        .thenComparing(PupilClassroomMembership::getAccountEmail))
+                .map(this::toAcceptedClassroomPupilResponse)
+                .toList();
+    }
+
     @Transactional
     public AcceptedPupilMembershipResponse acceptPupilRequest(String classroomCode,
                                                               String pupilEmail,
@@ -276,5 +295,14 @@ public class ClassroomService {
                 membership.getAccountEmail(),
                 membership.getAccount().getLegalName(),
                 membership.isMembershipConfirmedByTeacher());
+    }
+
+    private AcceptedClassroomPupilResponse toAcceptedClassroomPupilResponse(PupilClassroomMembership membership) {
+        FileObject avatarFileObject = membership.getAvatarFileObject();
+
+        return new AcceptedClassroomPupilResponse(
+                membership.getAccountEmail(),
+                membership.getUsername(),
+                avatarFileObject != null ? avatarFileObject.getObjectKey() : null);
     }
 }

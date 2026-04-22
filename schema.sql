@@ -87,6 +87,7 @@ CREATE TABLE task (
 CREATE TABLE pupil_chapter_bridge_progression (
     email VARCHAR(255) NOT NULL REFERENCES pupil_classroom_membership(account_email) ON DELETE CASCADE,
     chapter_id BIGINT NOT NULL REFERENCES chapter(id) ON DELETE CASCADE,
+    notebook_json JSONB NOT NULL DEFAULT '{"tips":[],"ownNotes":""}'::jsonb,
     successful_runs INT NOT NULL DEFAULT 0,
     highscore INT NOT NULL DEFAULT 0,
     unsuccessful_streak INT NOT NULL DEFAULT 0,

@@ -42,6 +42,8 @@ public class PupilChapterBridgeProgression extends CreatedAtEntity {
 
     @Column(name = "current_run_correct", nullable = false)
     private Integer currentRunCorrect;
+    @Column(name = "notebook_json", nullable = false, columnDefinition = "JSONB")
+    private String notebookJson;
 
     public PupilChapterBridgeProgression() {
     }
@@ -108,5 +110,13 @@ public class PupilChapterBridgeProgression extends CreatedAtEntity {
 
     public void setCurrentRunCorrect(Integer currentRunCorrect) {
         this.currentRunCorrect = currentRunCorrect;
+    }
+    
+    public String getNotebookJson() {
+        return notebookJson;
+    }
+
+    public void setNotebookJson(String notebookJson) {
+        this.notebookJson = notebookJson;
     }
 }

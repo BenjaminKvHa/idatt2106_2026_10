@@ -103,4 +103,22 @@ public class FileObjectService {
 
         return new StoredFile(fileObject, contentType, response.asByteArray());
     }
+
+    @Transactional(readOnly = true)
+    public StoredFile read(String objectKey) {
+        FileObject fileObject = repository.findByObjectKey(objectKey)
+                .orElseThrow(() -> new EntityNotFoundException("File object not found"));
+
+        ResponseBytes<GetObjectResponse> response = s3Client.getObjectAsBytes(GetObjectRequest.builder()
+                .bucket(bucket)
+                .key(fileObject.getObjectKey())
+                .build());
+
+        String contentType = response.response().contentType();
+        if (contentType == null || contentType.isBlank()) {
+            contentType = "application/octet-stream";
+        }
+
+        return new StoredFile(fileObject, contentType, response.asByteArray());
+    }
 }

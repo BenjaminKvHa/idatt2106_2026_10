@@ -1,30 +1,38 @@
 <script setup lang="ts">
-import profileIcon from '@/assets/icons/profil.png'
 import { useRouter } from 'vue-router'
+import ProfileButton from '@/components/ProfileButton.vue'
 
 defineProps<{
   title?: string
+  profileName?: string | null
+  profileAvatarUrl?: string | null
+}>()
+
+const emit = defineEmits<{
+  (e: 'help'): void
+  (e: 'hint'): void
 }>()
 
 const router = useRouter()
 
-function goBack() {
+function goBack(): void {
   router.push('/pupil')
 }
 
-function goToProfile() {
-  router.push('/pupil/profile')
+function openHelp(): void {
+  emit('help')
+}
+
+function openHint(): void {
+  emit('hint')
 }
 </script>
 
 <template>
   <div class="top-bar">
     <div class="left">
-      <button class="icon-btn profile-btn" @click="goToProfile">
-        <img :src="profileIcon" alt="Profil" />
-        <span class="profile-name">Navn navnesen</span>
-      </button>
-      <button class="icon-btn" aria-label="Hjelp">
+      <ProfileButton variant="topbar" />
+      <button class="icon-btn" aria-label="Hjelp" @click="openHelp">
         <span class="icon-text">?</span>
       </button>
     </div>
@@ -32,10 +40,12 @@ function goToProfile() {
     <div class="center">
       <h1 class="page-title">{{ title }}</h1>
     </div>
+
     <div class="right">
-      <button class="icon-btn" aria-label="Tips">
+      <button class="icon-btn" aria-label="Tips" @click="openHint">
         <span class="icon-text">💡</span>
       </button>
+
       <button class="back-btn" @click="goBack">Tilbake</button>
     </div>
   </div>
@@ -85,7 +95,7 @@ function goToProfile() {
   justify-content: center;
   width: clamp(64px, 9vw, 122px);
   height: clamp(64px, 9vw, 122px);
-  background: #f0f0f0;
+  background: var(--beige-light);
   border: clamp(2px, 0.35vw, 5px) solid var(--brown-dark);
   border-radius: clamp(18px, 3vw, 38px);
   cursor: pointer;
@@ -96,35 +106,11 @@ function goToProfile() {
 }
 
 .icon-btn:hover {
-  background: #ddd;
+  transform: scale(1.05);
 }
-
 .icon-text {
   font-size: clamp(1.25rem, 2.5vw, 2.25rem);
   line-height: 1;
-}
-
-.profile-btn {
-  width: auto;
-  min-width: clamp(64px, 9vw, 122px);
-  padding: 0.4rem 0.6rem;
-  gap: 0.25rem;
-}
-
-.profile-btn img {
-  width: clamp(34px, 5vw, 80px);
-  height: clamp(34px, 5vw, 80px);
-  object-fit: contain;
-  border-radius: 50%;
-}
-
-.profile-name {
-  font-size: clamp(0.6rem, 1vw, 0.85rem);
-  color: var(--color-text);
-  white-space: nowrap;
-  max-width: 80px;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .back-btn {
@@ -132,7 +118,7 @@ function goToProfile() {
   min-width: clamp(100px, 14vw, 200px);
   padding: 0 1rem;
   background: var(--red-danger);
-  color: black;
+  color: var(--color-text);
   font-weight: bold;
   font-size: clamp(1rem, 2.2vw, 2.25rem);
   border: clamp(2px, 0.35vw, 5px) solid var(--brown-dark);
@@ -142,8 +128,9 @@ function goToProfile() {
   flex-shrink: 0;
   box-sizing: border-box;
 }
+
 .back-btn:hover {
-  background: var(--red-danger-80);
+  transform: scale(1.05);
 }
 
 /**Medium screens*/
@@ -156,9 +143,7 @@ function goToProfile() {
   .right {
     gap: 0.5rem;
   }
-  .profile-name {
-    display: none;
-  }
+
   .back-btn {
     min-width: 90px;
     padding: 0 0.8rem;
@@ -184,5 +169,4 @@ function goToProfile() {
     font-size: clamp(0.9rem, 2.8vw, 1.2rem);
   }
 }
-
 </style>

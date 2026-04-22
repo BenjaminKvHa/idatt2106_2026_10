@@ -14,16 +14,20 @@ public interface PupilClassroomMembershipRepository extends JpaRepository<PupilC
 
     boolean existsByAccountEmailAndClassroomClassroomCode(String accountEmail, String classroomCode);
     Optional<PupilClassroomMembership> findByAccountEmailAndClassroomClassroomCode(String accountEmail, String classroomCode);
+    Optional<PupilClassroomMembership> findByAccountEmailAndMembershipConfirmedByTeacherTrue(String accountEmail);
+    Optional<PupilClassroomMembership> findByAccountEmailAndClassroomClassroomCodeAndMembershipConfirmedByTeacherTrue(
+            String accountEmail,
+            String classroomCode);
 
     @EntityGraph(attributePaths = "account")
     Optional<PupilClassroomMembership> findByAccountEmailAndClassroomClassroomCodeAndMembershipConfirmedByTeacherFalse(
             String accountEmail,
             String classroomCode);
 
-    @EntityGraph(attributePaths = "chapterProgressions")
+    @EntityGraph(attributePaths = {"account", "chapterProgressions"})
     List<PupilClassroomMembership> findAllByMembershipConfirmedByTeacherTrue();
 
-    @EntityGraph(attributePaths = "chapterProgressions")
+    @EntityGraph(attributePaths = {"account", "avatarFileObject", "chapterProgressions"})
     List<PupilClassroomMembership> findAllByClassroomClassroomCodeAndMembershipConfirmedByTeacherTrue(String classroomCode);
 
     @EntityGraph(attributePaths = "account")

@@ -1,39 +1,23 @@
 <template>
   <div class="stops-page">
     <div class="stops-card">
-      <header class="top-bar">
-        <div class="top-left">
-          <button class="square-btn" aria-label="Profil">
-            <img src="@/assets/icons/profil.png" alt="Profil" class="top-icon-image" />
-          </button>
-
-          <button class="square-btn help-btn" aria-label="Hjelp" @click="openHintPopup">?</button>
-        </div>
-
-        <button class="back-btn" @click="goBack">Tilbake</button>
-      </header>
+      <TopBar title="Kart" @help="openHelpPopup" @hint="openHintPopup" />
 
       <div class="map-wrapper">
-        <button
-          v-if="currentPage > 0"
-          class="nav-arrow left"
-          @click="prevPage"
-          aria-label="Forrige side"
-        >
-          ←
-        </button>
-
         <div class="map-area">
           <div class="path-line"></div>
 
           <div
-            v-for="(stop, index) in paginatedStops"
+            v-for="(stop, index) in stops"
             :key="stop.id"
             class="stop-node"
-            :class="[positions[index], stop.side, { homeNode: stop.isHome }]"
+            :class="[
+              !stop.isHome && !stop.isEnd ? positions[index - 1] : '',
+              stop.side,
+              { homeNode: stop.isHome, endNode: stop.isEnd },
+            ]"
           >
             <div class="path-point"></div>
-            <div class="connector"></div>
 
             <div class="stop-content">
               <div
@@ -42,22 +26,26 @@
                 :class="{ bottomStars: stop.side === 'bottom' }"
               >
                 <span
-                  v-for="starIndex in 3"
+                  v-for="starIndex in stop.maxStars"
                   :key="starIndex"
                   :class="['star', starIndex <= stop.stars ? 'filled' : 'empty']"
+                  >★</span
                 >
-                  ★
-                </span>
               </div>
+
+              <div v-else class="stars home-stars-spacer" aria-hidden="true"></div>
 
               <button
                 class="stop-circle"
-                :class="{ locked: !isUnlocked(stop), unlocked: isUnlocked(stop) }"
+                :class="{
+                  locked: !isUnlocked(stop),
+                  unlocked: isUnlocked(stop),
+                  home: stop.isHome,
+                }"
                 @click="openStop(stop)"
               >
                 <div class="image-wrapper">
                   <img :src="stop.image" :alt="stop.name" class="stop-image" />
-
                   <img
                     v-if="!isUnlocked(stop) && !stop.isHome"
                     :src="lockImage"
@@ -71,212 +59,212 @@
             </div>
           </div>
         </div>
-
-        <button
-          v-if="currentPage < totalPages - 1"
-          class="nav-arrow right"
-          @click="nextPage"
-          aria-label="Neste side"
-        >
-          →
-        </button>
       </div>
 
-      <div class="pagination">
-        <button
-          v-for="(_, index) in pages"
-          :key="index"
-          class="pagination-dot"
-          :class="{ active: index === currentPage }"
-          @click="goToPage(index)"
-          :aria-label="`Gå til side ${index + 1}`"
-        />
-      </div>
-      <div v-if="activeLockedStop" class="popup-overlay" @click="closeLockedPopup">
-        <div class="locked-popup" @click.stop>
-          <h2 class="popup-title">{{ activeLockedStop.name }} er låst.</h2>
+      <p v-if="loadingProgress" class="map-status" role="status">Laster progresjon...</p>
+      <p v-else-if="progressError" class="map-status error" role="alert">{{ progressError }}</p>
+    </div>
+    <p v-if="loadingProgress" class="map-status" role="status">Laster progresjon...</p>
+    <p v-else-if="progressError" class="map-status error" role="alert">{{ progressError }}</p>
 
-          <p class="popup-text">
-            Få 3 stjerner på
-            {{ activeLockedStop.requiredPreviousStop }}
-            for å låse det opp!
-          </p>
-
-          <div class="popup-actions">
-            <button class="popup-btn popup-btn-back" @click="closeLockedPopup">Tilbake</button>
-
-            <button class="popup-btn popup-btn-play" @click="goToRequiredStop">Spill</button>
-          </div>
+    <div v-if="activeLockedStop" class="popup-overlay" @click="closeLockedPopup">
+      <div class="locked-popup" @click.stop>
+        <h2 class="popup-title">{{ activeLockedStop.name }} er låst.</h2>
+        <p class="popup-text">
+          Få 3 stjerner på {{ activeLockedStop.requiredPreviousStop }} for å låse det opp!
+        </p>
+        <div class="popup-actions">
+          <button class="popup-btn popup-btn-back" @click="closeLockedPopup">Tilbake</button>
+          <button class="popup-btn popup-btn-play" @click="goToRequiredStop">Spill</button>
         </div>
       </div>
-      <div v-if="showHintPopup" class="popup-overlay" @click="closeHintPopup">
-        <div class="hint-popup" @click.stop>
-          <h2 class="popup-title">Trenger du hjelp?</h2>
+    </div>
 
-          <div class="hint-text">
-            <p>
-              Inne på denne siden kan du trykke deg inn på de ulike stoppestedene og gjøre ulike
-              oppgaver knyttet til de.
-            </p>
-            <ul>
-              <li>Begynn med nyhetskvartalet.</li>
-              <li>Fullfør oppgavene, oppnå 3 stjerner, og lås opp neste stoppested.</li>
-              <li>Fullfør alle oppgavene på alle stoppestedene og slå bossen i datasenteret.</li>
-              <li>Trykk på Hjem for å gå tilbake til hovedskjermen.</li>
-            </ul>
-          </div>
+    <div v-if="showHelpPopup" class="popup-overlay" @click="closeHelpPopup">
+      <div class="hint-popup" @click.stop>
+        <h2 class="popup-title">Trenger du hjelp?</h2>
+        <div class="hint-text">
+          <p>
+            Inne på denne siden kan du trykke deg inn på de ulike stoppestedene og gjøre ulike
+            oppgaver knyttet til de.
+          </p>
+          <ul>
+            <li>Begynn med Nyhetskvartalet.</li>
+            <li>Fullfør oppgavene og tjen stjerner for å låse opp neste stoppested.</li>
+            <li>Fullfør alle oppgavene på alle stoppestedene og slå bossen i Datasenteret.</li>
+            <li>Trykk på Hjem for å gå tilbake til hovedskjermen.</li>
+          </ul>
+        </div>
+        <div class="popup-actions">
+          <button class="popup-btn popup-btn-play" @click="closeHelpPopup">Ok</button>
+        </div>
+      </div>
+    </div>
 
-          <div class="popup-actions">
-            <button class="popup-btn popup-btn-play" @click="closeHintPopup">Ok</button>
-          </div>
+    <div v-if="showHintPopup" class="popup-overlay" @click="closeHintPopup">
+      <div class="hint-popup" @click.stop>
+        <h2 class="popup-title">Tips 💡</h2>
+        <div class="hint-text">
+          <p>Tenk på kartet som en rekkefølge du må følge.</p>
+          <ul>
+            <li>Stoppesteder med lås kan ikke åpnes før forrige kapittel er fullført.</li>
+            <li>Hvis du står fast, gå tilbake og fullfør tidligere oppgaver.</li>
+            <li>Se på stjernene under hvert stoppested for å følge progresjonen din.</li>
+          </ul>
+        </div>
+        <div class="popup-actions">
+          <button class="popup-btn popup-btn-play" @click="closeHintPopup">Ok</button>
         </div>
       </div>
     </div>
   </div>
-  <router-view />
 </template>
 
 <script setup lang="ts">
-import { computed, onActivated, ref } from 'vue'
+import { computed, onActivated, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import TopBar from '@/components/TopBar.vue'
+import { get } from '@/utils/apiUtils'
 
 import detektivkontoretImage from '@/assets/stoppesteder/detektivkontoret.png'
 import lockImage from '@/assets/icons/lock.png'
 import nyhetskvartaletImage from '@/assets/stoppesteder/nyhetskvartalet.png'
 import fotografenImage from '@/assets/stoppesteder/fotografen.png'
 import postkontoretImage from '@/assets/stoppesteder/postkontoret.png'
-import passordbankenImage from '@/assets/stoppesteder/passordbanken.png'
-import markedsplassenImage from '@/assets/stoppesteder/markedsplassen.png'
-import sosialMoteplassImage from '@/assets/stoppesteder/den-sosiale-moteplassen.png'
 import datasenteretImage from '@/assets/stoppesteder/datasenteret.png'
 
 type StopSide = 'top' | 'bottom'
 
+type PupilChapterProgressResponse = {
+  chapterId: number
+  highscore: number
+  unlocked: boolean
+}
+
 type Stop = {
   id: number
   name: string
+  chapterId: number | null
+  maxStars: number
   stars: number
+  unlocked: boolean
   image: string
   side: StopSide
   isHome?: boolean
-  routeName: string | null
+  isEnd?: boolean
+  routePath: string | null
   requiredPreviousStop: string | null
 }
 
 const router = useRouter()
 
-const currentPage = ref<number>(0)
-const itemsPerPage = 4
 const activeLockedStop = ref<Stop | null>(null)
+const showHelpPopup = ref<boolean>(false)
 const showHintPopup = ref<boolean>(false)
+const loadingProgress = ref<boolean>(false)
+const progressError = ref<string>('')
+
+const positions = ['pos-1', 'pos-2', 'pos-3'] as const
 
 const stops = ref<Stop[]>([
   {
     id: 0,
     name: 'Hjem',
+    chapterId: null,
+    maxStars: 0,
     stars: 0,
+    unlocked: true,
     image: detektivkontoretImage,
     side: 'top',
     isHome: true,
-    routeName: 'PupilView',
+    routePath: '/pupil',
     requiredPreviousStop: null,
   },
   {
     id: 1,
     name: 'Nyhetskvartalet',
+    chapterId: 1,
+    maxStars: 3,
     stars: 0,
+    unlocked: false,
     image: nyhetskvartaletImage,
     side: 'top',
-    routeName: 'NewsView',
+    routePath: '/pupil/classroom/map/news',
     requiredPreviousStop: null,
   },
   {
     id: 2,
     name: 'Fotografen',
+    chapterId: 2,
+    maxStars: 3,
     stars: 0,
+    unlocked: false,
     image: fotografenImage,
     side: 'bottom',
-    routeName: 'PhotographerView',
+    routePath: '/pupil/classroom/map/photographer',
     requiredPreviousStop: 'Nyhetskvartalet',
   },
   {
     id: 3,
     name: 'Postkontoret',
+    chapterId: null,
+    maxStars: 3,
     stars: 0,
+    unlocked: false,
     image: postkontoretImage,
     side: 'top',
-    routeName: 'PostofficeView',
+    routePath: '/pupil/classroom/map/postoffice',
     requiredPreviousStop: 'Fotografen',
   },
   {
     id: 4,
-    name: 'Passordbanken',
-    stars: 0,
-    image: passordbankenImage,
-    side: 'bottom',
-    routeName: 'PasswordbankView',
-    requiredPreviousStop: 'Postkontoret',
-  },
-  {
-    id: 5,
-    name: 'Markedsplassen',
-    stars: 0,
-    image: markedsplassenImage,
-    side: 'top',
-    routeName: 'MarketplaceView',
-    requiredPreviousStop: 'Passordbanken',
-  },
-  {
-    id: 6,
-    name: 'Den sosiale møteplassen',
-    stars: 0,
-    image: sosialMoteplassImage,
-    side: 'bottom',
-    routeName: 'MeetingplaceView',
-    requiredPreviousStop: 'Markedsplassen',
-  },
-  {
-    id: 7,
     name: 'Datasenteret',
+    chapterId: 3,
+    maxStars: 5,
     stars: 0,
+    unlocked: false,
     image: datasenteretImage,
     side: 'top',
-    routeName: 'DatacenterView',
-    requiredPreviousStop: 'Den sosiale møteplassen',
+    isEnd: true,
+    routePath: '/pupil/classroom/map/datacenter',
+    requiredPreviousStop: 'Postkontoret',
   },
 ])
 
-const positions = ['pos-1', 'pos-2', 'pos-3', 'pos-4'] as const
+async function loadProgress(): Promise<void> {
+  loadingProgress.value = true
+  progressError.value = ''
 
-const totalPages = computed<number>(() => Math.ceil(stops.value.length / itemsPerPage))
+  try {
+    const progress = await get<PupilChapterProgressResponse[]>('/api/pupil/progress')
+    const progressByChapterId = new Map(progress.map((entry) => [entry.chapterId, entry]))
 
-const pages = computed<number[]>(() =>
-  Array.from({ length: totalPages.value }, (_, index) => index),
-)
+    stops.value = stops.value.map((stop) => {
+      if (stop.isHome) {
+        return { ...stop, unlocked: true, stars: 0 }
+      }
 
-const paginatedStops = computed<Stop[]>(() => {
-  const start = currentPage.value * itemsPerPage
-  return stops.value.slice(start, start + itemsPerPage)
-})
+      if (stop.chapterId === null) {
+        return { ...stop, stars: 0, unlocked: false }
+      }
 
-function loadStars(): void {
-  const starKeys: Record<string, string> = {
-    Nyhetskvartalet: 'nyhetskvartaletStars',
-    Fotografen: 'fotografenStars',
-    Postkontoret: 'postkontoretStars',
-    Passordbanken: 'passordbankenStars',
-    Markedsplassen: 'markedsplassenStars',
-    'Den sosiale møteplassen': 'denSosialeMoteplassenStars',
-    Datasenteret: 'datasenteretStars',
+      const chapterProgress = progressByChapterId.get(stop.chapterId)
+      if (!chapterProgress) {
+        return { ...stop, stars: 0, unlocked: stop.requiredPreviousStop === null }
+      }
+
+      return {
+        ...stop,
+        stars: Math.max(0, Math.min(stop.maxStars, chapterProgress.highscore)),
+        unlocked: chapterProgress.unlocked,
+      }
+    })
+  } catch (error) {
+    console.error('Unable to load pupil progress for map', error)
+    progressError.value = 'Kunne ikke hente progresjon akkurat nå.'
+  } finally {
+    loadingProgress.value = false
   }
-
-  stops.value.forEach((stop) => {
-    const storageKey = starKeys[stop.name]
-    if (!storageKey) return
-
-    const savedStars = localStorage.getItem(storageKey)
-    stop.stars = savedStars ? JSON.parse(savedStars) : 0
-  })
 }
 
 function findStopByName(name: string): Stop | undefined {
@@ -285,10 +273,16 @@ function findStopByName(name: string): Stop | undefined {
 
 function isUnlocked(stop: Stop): boolean {
   if (stop.isHome) return true
-  if (!stop.requiredPreviousStop) return true
+  if (stop.requiredPreviousStop === null) return true
+  return stop.unlocked
+}
 
-  const previousStop = findStopByName(stop.requiredPreviousStop)
-  return previousStop?.stars === 3
+function openHelpPopup(): void {
+  showHelpPopup.value = true
+}
+
+function closeHelpPopup(): void {
+  showHelpPopup.value = false
 }
 
 function openHintPopup(): void {
@@ -299,23 +293,9 @@ function closeHintPopup(): void {
   showHintPopup.value = false
 }
 
-function nextPage(): void {
-  if (currentPage.value < totalPages.value - 1) {
-    currentPage.value++
-  }
-}
-
-function prevPage(): void {
-  if (currentPage.value > 0) {
-    currentPage.value--
-  }
-}
-
-function goToPage(index: number): void {
-  currentPage.value = index
-}
-
 function openStop(stop: Stop): void {
+  if (loadingProgress.value) return
+
   if (stop.isHome) {
     goBack()
     return
@@ -326,8 +306,8 @@ function openStop(stop: Stop): void {
     return
   }
 
-  if (stop.routeName) {
-    router.push({ name: stop.routeName })
+  if (stop.routePath) {
+    router.push(stop.routePath)
   }
 }
 
@@ -339,37 +319,46 @@ function goToRequiredStop(): void {
   if (!activeLockedStop.value?.requiredPreviousStop) return
 
   const previousStop = findStopByName(activeLockedStop.value.requiredPreviousStop)
-  if (!previousStop?.routeName) return
+  if (!previousStop?.routePath) return
 
   closeLockedPopup()
-  router.push({ name: previousStop.routeName })
+  router.push(previousStop.routePath)
 }
 
 function goBack(): void {
-  router.push({ name: 'PupilView' })
+  router.push('/pupil')
 }
 
 onActivated(() => {
-  loadStars()
+  void loadProgress()
+})
+
+onMounted(() => {
+  void loadProgress()
 })
 </script>
 
 <style scoped>
 .stops-page {
   min-height: 100vh;
-  background: #ead3b4;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+
+  background-image: url('@/assets/backgrounds/map-bg.png');
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-attachment: scroll;
 }
 
 .stops-card {
   width: 100%;
   min-height: 100vh;
-  background: #ead3b4;
+  background: rgba(234, 211, 180, 0.35);
   box-sizing: border-box;
   padding: 28px 36px 24px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .top-bar {
@@ -388,36 +377,13 @@ onActivated(() => {
   width: 92px;
   height: 92px;
   border-radius: 22px;
-
-  border: 4px solid #7a5b43;
-
+  border: 4px solid var(--brown-dark, #7a5b43);
   background: #ffffff;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   cursor: pointer;
   overflow: hidden;
-}
-
-.homeNode {
-  left: 0 !important;
-}
-
-.homeNode .path-point {
-  left: 50%;
-  transform: translateX(-50%);
-  top: 343px;
-}
-
-.homeNode .connector {
-  top: 290px;
-  height: 48px;
-}
-
-.homeNode .stop-content {
-  top: 60px;
 }
 
 .top-icon-image {
@@ -429,18 +395,49 @@ onActivated(() => {
 .help-btn {
   font-size: 2.6rem;
   font-weight: 800;
-  color: #1c1712;
+  color: var(--color-text, #111);
 }
 
 .back-btn {
-  background: #ff433b;
-  color: #111;
-  border: 5px solid #111;
+  background: var(--red-danger, #ff433b);
+  color: var(--color-text, #111);
+  border: 5px solid var(--color-text, #111);
   border-radius: 26px;
   padding: 18px 38px;
   font-size: 2rem;
   font-weight: 800;
   cursor: pointer;
+}
+
+.homeNode {
+  left: -30px !important;
+}
+
+.homeNode .path-point {
+  top: 343px;
+  display: none;
+}
+
+.homeNode .connector {
+  top: 330px;
+  height: 31px;
+}
+
+.homeNode .stop-content {
+  top: 260px;
+}
+
+.endNode {
+  right: -30px !important;
+  left: auto !important;
+}
+
+.endNode .stop-content {
+  top: 200px;
+}
+
+.endNode .path-point {
+  display: none;
 }
 
 .map-wrapper {
@@ -450,18 +447,19 @@ onActivated(() => {
 
 .map-area {
   position: relative;
-  min-height: 720px;
+  min-height: 900px;
 }
 
 .path-line {
   position: absolute;
-  left: 90px;
-  right: 90px;
-  top: 50%;
+  left: 280px;
+  right: 280px;
+  top: 360px;
   transform: translateY(-50%);
-  height: 28px;
+  height: 40px;
   border-radius: 999px;
-  background: #d4af7c;
+  background: rgba(245, 237, 224, 0.95);
+  box-shadow: inset 0 0 0 2px rgba(122, 91, 67, 0.12);
 }
 
 .stop-node {
@@ -473,11 +471,12 @@ onActivated(() => {
 .stop-node .path-point {
   position: absolute;
   left: 50%;
+  top: 343px;
   transform: translateX(-50%);
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: #bf7b33;
+  background: var(--brown-medium, #bf7b33);
   z-index: 3;
 }
 
@@ -486,8 +485,9 @@ onActivated(() => {
   left: 50%;
   transform: translateX(-50%);
   width: 0;
-  border-left: 5px dotted #8a6546;
+  border-left: 5px dotted var(--brown-medium, #8a6546);
   z-index: 1;
+  display: none;
 }
 
 .stop-node .stop-content {
@@ -498,46 +498,59 @@ onActivated(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 10px 0;
 }
 
 .stop-node.pos-1 {
-  left: 6%;
+  left: 22%;
 }
 
 .stop-node.pos-2 {
-  left: 28%;
+  left: 44%;
 }
 
 .stop-node.pos-3 {
-  left: 62%;
-}
-
-.stop-node.pos-4 {
-  left: 84%;
-}
-
-.stop-node .path-point {
-  top: 343px;
+  left: 60%;
 }
 
 .stop-node.top .connector {
-  top: 286px;
-  height: 52px;
+  top: 170px;
+  height: 152px;
 }
 
 .stop-node.bottom .connector {
-  top: 378px;
-  height: 42px;
+  top: 386px;
+  height: 34px;
 }
 
 .stop-node.bottom .stop-content {
-  top: 430px;
+  top: 400px;
+  flex-direction: column;
+}
+
+.stop-node.bottom .bottomStars {
+  order: 0;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.stop-node.bottom .stop-circle {
+  order: 1;
+}
+
+.stop-node.bottom .stop-title {
+  order: 2;
+  margin-top: 14px;
 }
 
 .stars {
   display: flex;
   gap: 6px;
   margin-bottom: 12px;
+  padding: 6px 12px;
+  border-radius: 16px;
+  background: rgba(245, 237, 224, 0.5);
+  backdrop-filter: blur(2px);
 }
 
 .bottomStars {
@@ -558,28 +571,31 @@ onActivated(() => {
 .star {
   font-size: 3rem;
   line-height: 1;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.18));
 }
 
 .star.empty {
-  color: transparent;
-  -webkit-text-stroke: 2px #7a5b43;
+  color: rgba(245, 237, 224, 0.98);
+  -webkit-text-stroke: 2.5px var(--brown-dark, #7a5b43);
 }
 
 .star.filled {
-  color: #f0c33a;
-  -webkit-text-stroke: 0;
+  color: var(--yellow-award, #f0c33a);
+  -webkit-text-stroke: 1.5px var(--brown-dark, #7a5b43);
 }
 
 .stop-circle {
   width: 170px;
   height: 170px;
   border-radius: 50%;
-  border: none;
-  background: rgba(255, 255, 255, 0.72);
+  border: 4px solid rgba(146, 94, 44, 0.8);
+  background: rgba(245, 237, 224, 0.96);
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: inset 0 0 0 2px rgba(122, 91, 67, 0.08);
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.12),
+    inset 0 0 0 3px rgba(255, 255, 255, 0.3);
   overflow: hidden;
   padding: 0;
 }
@@ -589,26 +605,25 @@ onActivated(() => {
 }
 
 .stop-circle.unlocked:hover {
-  transform: scale(1.03);
+  transform: scale(1.05);
   transition: 0.2s;
 }
 
 .stop-circle.locked {
   cursor: not-allowed;
-  opacity: 0.6;
-  filter: grayscale(40%);
+  opacity: 0.75;
+  filter: grayscale(30%);
 }
 
 .stop-circle.home {
-  border: 3px solid #bf7b33;
-  background: rgba(255, 255, 255, 0.9);
+  border: 4px solid var(--brown-medium, #bf7b33);
+  background: rgba(245, 237, 224, 1);
 }
 
 .stop-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
 }
 
 .stop-title {
@@ -616,26 +631,37 @@ onActivated(() => {
   font-size: 1.75rem;
   font-weight: 800;
   line-height: 1.1;
-  color: #111;
+  color: var(--color-text, #111);
   text-align: center;
   max-width: 260px;
+
+  background: rgba(245, 237, 224, 0.92);
+  border: 3px solid rgba(122, 91, 67, 0.25);
+  border-radius: 18px;
+  padding: 10px 18px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+
+  display: inline-block;
+  min-width: 170px;
 }
 
 .nav-arrow {
   position: absolute;
-  top: 50%;
+  top: 360px;
   transform: translateY(-50%);
   width: 66px;
   height: 66px;
   border-radius: 50%;
-  border: 3px solid #c9873a;
-  background: transparent;
-  color: #c9873a;
+  border: 3px solid var(--brown-medium, #bf7b33);
+  background: rgba(245, 237, 224, 0.95);
+  color: var(--brown-medium, #bf7b33);
   font-size: 2.2rem;
+  font-weight: 800;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
 .nav-arrow.left {
@@ -653,12 +679,23 @@ onActivated(() => {
   margin-top: 10px;
 }
 
+.map-status {
+  margin: 12px 0 0;
+  text-align: center;
+  font-size: 1rem;
+  color: var(--color-text, #111);
+}
+
+.map-status.error {
+  color: #a12a2a;
+}
+
 .pagination-dot {
   width: 16px;
   height: 16px;
   border-radius: 50%;
   border: none;
-  background: #bf7b33;
+  background: var(--brown-medium, #bf7b33);
   opacity: 0.45;
   cursor: pointer;
 }
@@ -709,7 +746,7 @@ onActivated(() => {
   .path-line {
     left: 40px;
     right: 40px;
-    top: 50%;
+    top: 360px;
   }
 
   .stop-node.pos-1 {
@@ -855,14 +892,18 @@ onActivated(() => {
     top: 328px;
   }
 
+  .path-line {
+    top: 328px;
+  }
+
   .stop-node.top .connector {
-    top: 248px;
-    height: 82px;
+    top: calc(var(--path-y) - 60px);
+    height: 60px;
   }
 
   .stop-node.bottom .connector {
-    top: 356px;
-    height: 82px;
+    top: calc(var(--path-y) + 6px);
+    height: 60px;
   }
 
   .stop-node.bottom .stop-content {
@@ -896,18 +937,14 @@ onActivated(() => {
 
 .lock-overlay {
   position: absolute;
-
   width: 85px;
   height: 85px;
-
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-
   background: rgba(0, 0, 0, 0.35);
   border-radius: 50%;
   padding: 16px;
-
   display: flex;
   align-items: center;
   justify-content: center;
@@ -931,8 +968,8 @@ onActivated(() => {
 
 .locked-popup {
   width: min(520px, calc(100vw - 32px));
-  background: #ea9447;
-  border: 4px solid #6f4d33;
+  background: var(--orange-medium, #ea9447);
+  border: 4px solid var(--brown-dark, #6f4d33);
   border-radius: 28px;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
   padding: 28px 24px 20px;
@@ -944,7 +981,7 @@ onActivated(() => {
   font-size: 2rem;
   line-height: 1.15;
   font-weight: 800;
-  color: #111;
+  color: var(--color-text, #111);
 }
 
 .popup-text {
@@ -952,7 +989,7 @@ onActivated(() => {
   font-size: 1.8rem;
   line-height: 1.2;
   font-weight: 700;
-  color: #111;
+  color: var(--color-text, #111);
 }
 
 .popup-actions {
@@ -967,20 +1004,24 @@ onActivated(() => {
   min-width: 130px;
   padding: 14px 24px;
   border-radius: 22px;
-  border: 4px solid #111;
+  border: 4px solid var(--color-text, #111);
   font-size: 1.15rem;
   font-weight: 800;
-  color: #111;
+  color: var(--color-text, #111);
   cursor: pointer;
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.18);
 }
 
 .popup-btn-back {
-  background: #ef3b37;
+  background: var(--red-danger, #ef3b37);
 }
 
 .popup-btn-play {
-  background: #8ee22d;
+  background: var(--green-confirm, #8ee22d);
+}
+
+.home-stars-spacer {
+  display: none;
 }
 
 @media (max-width: 700px) {
@@ -1007,7 +1048,8 @@ onActivated(() => {
 .hint-popup {
   width: min(560px, calc(100vw - 32px));
   background: rgba(234, 148, 71, 0.72);
-  border: 4px solid #6f4d33;
+  background: var(--orange-medium-80, rgba(234, 148, 71, 0.72));
+  border: 4px solid var(--brown-dark, #6f4d33);
   border-radius: 28px;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
   padding: 28px 24px 20px;
@@ -1020,7 +1062,7 @@ onActivated(() => {
   font-size: 1.1rem;
   line-height: 1.35;
   font-weight: 700;
-  color: #111;
+  color: var(--color-text, #111);
   text-align: left;
 }
 

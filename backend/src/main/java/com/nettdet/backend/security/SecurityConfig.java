@@ -66,7 +66,22 @@ public class SecurityConfig {
 
         // expose endpoint /auth/login - /auth/register - /auth/refresh - /health, as available to all, but any other requests to other endpoints require authentication
         http.authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/login", "/auth/signup", "/auth/refresh", "/swagger-ui/**", "/v3/api-docs/**", "/objects/**").permitAll() // for this url endpoint, all requests are permitted
+                .requestMatchers(
+                    "/auth/login",
+                    "/auth/signup",
+                    "/auth/refresh",
+                    "/actuator/health",
+                    "/actuator/health/**",
+                    "/swagger-ui/**",
+                    "/v3/api-docs/**",
+                    "/avatar-images/**",
+                    "/avatar-images/",
+                    "/avatar-images",
+                    "/avatar-assets/**",
+                    "/avatar-assets/",
+                    "/avatar-assets",
+                    "/objects/**"
+                ).permitAll() // for this url endpoint, all requests are permitted
                 .anyRequest().authenticated()); // to any other requests to endpoints, authentication is needed
 
         // since SecurityConfig is initially run before Server Dispatchlet, it blocks due to CORS restriction, therefore we have
@@ -74,13 +89,16 @@ public class SecurityConfig {
         http.cors(cors -> cors.configurationSource(request -> {
             CorsConfiguration config = new CorsConfiguration();
             config.setAllowedOrigins(List.of(
+                "http://localhost:3000",
+                "http://127.0.0.1:3000",
                 "http://localhost:80",
                 "http://localhost:8080",
                 "http://127.0.0.1:80",
                 "http://127.0.0.1:8080"
             ));
-            config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE"));
+            config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
             config.setAllowedHeaders(List.of("*"));
+            config.setAllowCredentials(true);
             return config;
         }));
 

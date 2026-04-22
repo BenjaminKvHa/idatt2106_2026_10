@@ -12,7 +12,6 @@ import TeachersPupilsView from '@/views/teacher/TeachersPupilsView.vue'
 import TeachersPupilView from '@/views/teacher/TeachersPupilView.vue'
 import TeachersNotebookChapterView from '@/views/teacher/TeachersNotebookChapterView.vue'
 import PupilView from '@/views/pupil/PupilView.vue'
-import PupilsProfileView from '@/views/pupil/PupilsProfileView.vue'
 import PupilsClassroomView from '@/views/pupil/PupilsClassroomView.vue'
 import PupilsNotebookView from '@/views/pupil/PupilsNotebookView.vue'
 import PupilsNotebookChapterView from '@/views/pupil/PupilsNotebookChapterView.vue'
@@ -32,6 +31,7 @@ import PasswordbankView from "@/views/pupil/map_locations/PasswordbankView.vue";
 import PostofficeView from "@/views/pupil/map_locations/PostofficeView.vue";
 import PhotographerView from "@/views/pupil/map_locations/PhotographerView.vue";
 import PupilsWelcomePageView from "@/views/pupil/PupilsWelcomePageView.vue";
+import PupilsProfileView from '@/views/pupil/PupilsProfileView.vue'
 
 
 const router = createRouter({
@@ -132,10 +132,6 @@ const router = createRouter({
         },
         {
           path: 'profile',
-          component: PupilsProfileView,
-        },
-        {
-          path: 'settings',
           component: PupilsProfileView,
         },
         {

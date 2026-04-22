@@ -39,9 +39,6 @@ function openHint(): void {
         {{ title }}
       </div>
       <div>
-        <RouterLink to="/pupil/settings" class="nav-icon-parent transition">
-          <SettingsIcon />
-        </RouterLink>
         <RouterLink to="/pupil/profile" class="avatar-button transition">
           <img :src="profileAvatarUrl || '/api/avatar-assets/costume/detective.png'" />
           {{ tokenData?.legalName || tokenData?.email || "No name" }}

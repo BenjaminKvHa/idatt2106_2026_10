@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, type RouteLocationNormalizedLoaded } from 'vue-router'
 import HomeView from '../views/shared/HomeView.vue'
 import NotFoundView from '@/views/shared/NotFoundView.vue'
 import LeaderboardView from '@/views/shared/LeaderboardView.vue'
@@ -8,6 +8,7 @@ import TeacherView from '@/views/teacher/TeacherView.vue'
 import TeachersProfileView from '@/views/teacher/TeachersProfileView.vue'
 import TeachersNotificationsView from '@/views/teacher/TeachersNotificationsView.vue'
 import TeachersClassroomsView from '@/views/teacher/TeachersClassroomsView.vue'
+import TeachersCreateClassroomView from '@/views/teacher/TeachersCreateClassroomView.vue'
 import TeachersClassroomView from '@/views/teacher/TeachersClassroomView.vue'
 import TeachersPupilsView from '@/views/teacher/TeachersPupilsView.vue'
 import TeachersPupilView from '@/views/teacher/TeachersPupilView.vue'
@@ -73,33 +74,39 @@ const router = createRouter({
       ],
     },
     {
-      path: '/:teacherUsername',
+      path: '/teacher',
       component: TeacherView,
-      meta: {
-        isTeacherRoute: true,
-        breadcrumb: (route: { params: Record<string, string | string[]> }) =>
-          String(route.params.teacherUsername),
-      },
+      meta: { isTeacherRoute: true, breadcrumb: 'Klasserom' },
       children: [
         {
           path: 'profile',
+          meta: { isTeacherRoute: true },
           component: TeachersProfileView,
         },
         {
           path: 'notifications',
+          meta: { isTeacherRoute: true },
           component: TeachersNotificationsView,
         },
         {
           path: 'classrooms',
+          meta: { isTeacherRoute: true, breadcrumb: 'Klasserom' },
           children: [
             {
               path: '',
+              meta: { isTeacherRoute: true },
               component: TeachersClassroomsView,
+            },
+            {
+              path: 'new',
+              meta: { isTeacherRoute: true, breadcrumb: 'Nytt Klasserom' },
+              component: TeachersCreateClassroomView,
             },
             {
               path: ':classroomName',
               meta: {
-                breadcrumb: (route: { params: Record<string, string | string[]> }) =>
+                isTeacherRoute: true,
+                breadcrumb: (route: RouteLocationNormalizedLoaded) =>
                   String(route.params.classroomName)
                     .replace(/-/g, ' ')
                     .replace(/\b\w/g, (c) => c.toUpperCase()),
@@ -107,28 +114,35 @@ const router = createRouter({
               children: [
                 {
                   path: '',
+                  meta: { isTeacherRoute: true },
                   component: TeachersClassroomView,
                 },
                 {
                   path: 'edit-classroom',
+                  meta: { isTeacherRoute: true },
                   component: TeachersClassroomView,
                 },
                 {
                   path: 'pupils',
+                  meta: { isTeacherRoute: true },
                   component: TeachersPupilsView,
                   children: [
                     {
                       path: ':pupil_id',
+                      meta: { isTeacherRoute: true },
                       children: [
                         {
                           path: '',
+                          meta: { isTeacherRoute: true },
                           component: TeachersPupilView,
                         },
                         {
                           path: 'notebook',
+                          meta: { isTeacherRoute: true },
                           children: [
                             {
                               path: ':chapter_id',
+                              meta: { isTeacherRoute: true },
                               component: TeachersNotebookChapterView,
                             },
                           ],

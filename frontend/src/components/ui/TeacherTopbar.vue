@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute, useRouter, type RouteLocationNormalizedLoaded } from 'vue-router'
+import { useTeacherTopbar } from '@/composables/useTeacherTopbar'
 
 export interface TopbarTab {
   label: string
@@ -10,10 +11,12 @@ export interface TopbarTab {
 type Crumb = { label: string; to?: string }
 
 const props = defineProps<{
-  path?: Crumb[] 
+  path?: Crumb[]
   title?: string
   tabs?: TopbarTab[]
 }>()
+
+const { tabs: composableTabs } = useTeacherTopbar()
 
 const router = useRouter()
 const route = useRoute()
@@ -37,11 +40,21 @@ function fillParams(path: string, currentRoute: RouteLocationNormalizedLoaded) {
 }
 
 const autoPath = computed<Crumb[]>(() => {
-  if (!route.meta?.isTeacherRoute) return []
+  const isTeacherRoute = route.matched.some((r) => r.meta?.isTeacherRoute)
+  if (!isTeacherRoute) return []
+
+  // Deduplicate matched records by template path to avoid duplicate crumbs
+  // from empty-path children sharing the same resolved path as their parent.
+  const seen = new Set<string>()
+  const dedupedRecords = route.matched.filter((record) => {
+    if (seen.has(record.path)) return false
+    seen.add(record.path)
+    return true
+  })
 
   const crumbs: Crumb[] = []
 
-  route.matched.forEach((record, index) => {
+  dedupedRecords.forEach((record, index) => {
     let label: string | undefined
 
     const metaBreadcrumb = record.meta?.breadcrumb
@@ -58,7 +71,7 @@ const autoPath = computed<Crumb[]>(() => {
 
     if (!label) return
 
-    const isLast = index === route.matched.length - 1
+    const isLast = index === dedupedRecords.length - 1
     crumbs.push({
       label,
       to: isLast ? undefined : fillParams(record.path, route),
@@ -72,27 +85,37 @@ const effectivePath = computed<Crumb[]>(() => {
   if (props.path?.length) return props.path
   return autoPath.value
 })
+
+const effectiveTabs = computed<TopbarTab[]>(() => {
+  if (props.tabs?.length) return props.tabs
+  return composableTabs.value
+})
+
+const autoTitle = computed<string>(() => {
+  if (props.title) return props.title
+  const crumbs = effectivePath.value
+  return crumbs.at(-1)?.label ?? ''
+})
 </script>
 
 <template>
   <header class="topbar">
-    <nav v-if="effectivePath.length" class="topbar-path">
-      <template v-for="(crumb, i) in effectivePath" :key="i">
-        <router-link v-if="crumb.to" :to="crumb.to" class="crumb crumb-link">
-          {{ crumb.label }}
-        </router-link>
-        <span v-else class="crumb">{{ crumb.label }}</span>
-        <span v-if="i < effectivePath.length - 1" class="crumb-sep">/</span>
-      </template>
-    </nav>
+    <div class="topbar-top-row">
+      <nav v-if="effectivePath.length" class="topbar-path">
+        <template v-for="(crumb, i) in effectivePath" :key="i">
+          <router-link v-if="crumb.to" :to="crumb.to" class="crumb crumb-link">
+            {{ crumb.label }}
+          </router-link>
+          <span v-else class="crumb">{{ crumb.label }}</span>
+          <span v-if="i < effectivePath.length - 1" class="crumb-sep">/</span>
+        </template>
+      </nav>
+    </div>
 
-    <!-- title -->
-    <h1 v-if="title" class="topbar-title">{{ title }}</h1>
-
-    <!-- tabs -->
-    <div v-else-if="tabs?.length" class="topbar-tabs">
+    <!-- tabs take priority; fall back to title -->
+    <div v-if="effectiveTabs.length" class="topbar-tabs">
       <router-link
-        v-for="tab in tabs"
+        v-for="tab in effectiveTabs"
         :key="tab.to"
         :to="tab.to"
         class="topbar-tab"
@@ -101,6 +124,7 @@ const effectivePath = computed<Crumb[]>(() => {
         {{ tab.label }}
       </router-link>
     </div>
+    <h1 v-else-if="autoTitle" class="topbar-title">{{ autoTitle }}</h1>
   </header>
 </template>
 
@@ -113,16 +137,26 @@ const effectivePath = computed<Crumb[]>(() => {
   gap: 2px;
 }
 
+.topbar-top-row {
+  display: flex;
+  align-items: center;
+  min-height: 20px;
+}
+
 .topbar-path {
   display: flex;
   align-items: center;
   gap: 4px;
   font-size: 0.75rem;
   opacity: 0.75;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .crumb {
   color: var(--txt-sec);
+  white-space: nowrap;
 }
 
 .crumb-link {

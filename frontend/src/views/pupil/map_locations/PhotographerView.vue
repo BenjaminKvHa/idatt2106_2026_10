@@ -114,6 +114,12 @@
           </button>
         </div>
       </div>
+      <TaskGuide v-if="showGuidePopup" @close="showGuidePopup = false">
+        <h2>Velkommen til fotografen!</h2>
+        <p>I fotografen vil du få se et bilde, og oppgaven din er å finne ut om bildet er ekte,
+          KI-generert eller manipulert. Etter du har bestemt det, skal du si hvorfor du mener bildet er en av disse.
+          Er du klar for å løse oppgaver?</p>
+      </TaskGuide>
     </div>
   </div>
 </template>
@@ -121,10 +127,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-
 import TopBar from '@/components/TopBar.vue'
+import TaskGuide from "@/components/TaskGuide.vue";
 
 const router = useRouter()
+const showGuidePopup = ref(true);
 
 type AnswerOption = 'ekte' | 'ki' | 'manipulert'
 

@@ -22,8 +22,14 @@ import com.nettdet.backend.security.JwtUserPrincipal;
 import com.nettdet.backend.service.FileObjectAccessControlService;
 import com.nettdet.backend.service.FileObjectService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/objects")
+@Tag(name = "File Objects", description = "Authenticated endpoints for uploading, reading, and deleting stored files with classroom-aware access rules.")
+@SecurityRequirement(name = "bearerAuth")
 public class FileObjectController {
 
     private final FileObjectAccessControlService fileObjectAccessControlService;
@@ -33,6 +39,7 @@ public class FileObjectController {
     }
 
     @GetMapping("/{fileObjectId}")
+    @Operation(summary = "Read file object", description = "Returns a stored file by numeric file object id if the authenticated user has access according to the file access level and classroom membership rules.")
     public ResponseEntity<byte[]> read(
             @PathVariable Long fileObjectId,
             @AuthenticationPrincipal JwtUserPrincipal principal) {
@@ -50,6 +57,7 @@ public class FileObjectController {
 
     @DeleteMapping("/{fileObjectId}")
     @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Delete file object", description = "Deletes a stored file when the authenticated user is either the uploader or a teacher in the file's classroom.")
     public ResponseEntity<Void> delete(
             @PathVariable Long fileObjectId,
             @AuthenticationPrincipal JwtUserPrincipal principal) {
@@ -59,6 +67,7 @@ public class FileObjectController {
 
     @PostMapping
     @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Upload file object", description = "Uploads a new file with an optional classroom code and access level. Non-public files require classroom membership, and teacher-only files require the authenticated user to be a teacher in that classroom.")
     public ResponseEntity<Long> upload(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "classroomCode", required = false) String classroomCode,

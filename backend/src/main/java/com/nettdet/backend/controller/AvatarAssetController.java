@@ -16,8 +16,12 @@ import com.nettdet.backend.dto.AvatarAssetResponse;
 import com.nettdet.backend.service.AvatarAssetService;
 import com.nettdet.backend.service.FileObjectService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/avatar-assets")
+@Tag(name = "Avatar Assets", description = "Public endpoints for avatar asset metadata and asset files.")
 public class AvatarAssetController {
 
     private final AvatarAssetService avatarAssetService;
@@ -27,11 +31,13 @@ public class AvatarAssetController {
     }
 
     @GetMapping({"", "/"})
+    @Operation(summary = "List avatar assets", description = "Returns all available base avatar assets.")
     public ResponseEntity<List<AvatarAssetResponse>> getAssets() {
         return ResponseEntity.ok(avatarAssetService.getAllAssets());
     }
 
     @GetMapping("/{assetType}/{fileName:.+}")
+    @Operation(summary = "Get avatar asset image", description = "Returns a public avatar asset PNG by asset type and file name.")
     public ResponseEntity<byte[]> getAsset(
             @PathVariable String assetType,
             @PathVariable String fileName) {

@@ -67,7 +67,7 @@ public class AuthController {
         String jwtToken = jwtUtil.generateToken(logIn);
         ResponseCookie refCookie = refTokenService.createAndStoreRefreshToken(logIn);
 
-        logger.info("User logged in succesfully: {}", logIn.getEmail());
+        
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, refCookie.toString()).body(Map.of("accessToken", jwtToken));
     }
 
@@ -80,6 +80,7 @@ public class AuthController {
         ResponseCookie refCookie = refTokenService.createAndStoreRefreshToken(account);
 
         logger.info("Account registered and logged in: {}", account.getEmail());
+
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, refCookie.toString()).body(Map.of("accessToken", jwtToken));
     }
 

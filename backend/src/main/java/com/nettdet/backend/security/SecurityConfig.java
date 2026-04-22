@@ -80,6 +80,7 @@ public class SecurityConfig {
                     "/avatar-assets/**",
                     "/avatar-assets/",
                     "/avatar-assets",
+                    "/objects/**",
                     "/leaderboard/classrooms"
                 ).permitAll() // for this url endpoint, all requests are permitted
                 .anyRequest().authenticated()); // to any other requests to endpoints, authentication is needed

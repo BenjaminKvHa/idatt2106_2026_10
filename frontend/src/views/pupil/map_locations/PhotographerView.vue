@@ -305,7 +305,6 @@ function getCorrectReasonText(image: ImageTask) {
   min-height: 100vh;
 }
 
-/* Kun innhold sentreres */
 .content {
   display: flex;
   flex-direction: column;
@@ -323,15 +322,15 @@ function getCorrectReasonText(image: ImageTask) {
 }
 
 .task-box {
-  background: rgba(255, 255, 255, 0.8); /* hvit gjennomsiktig */
+  background: rgba(255, 255, 255, 0.8);
   padding: 15px 20px;
   border-radius: 12px;
 
-  display: inline-block; /* gjør at den kun blir like bred som teksten */
-  margin: 0 auto 20px auto; /* sentrerer boksen */
+  display: inline-block;
+  margin: 0 auto 20px auto;
   text-align: center;
 
-  max-width: 90%; /* hindrer at den blir for bred på små skjermer */
+  max-width: 90%;
 }
 
 .images-box {
@@ -395,13 +394,11 @@ button:hover {
   font-weight: 500;
 }
 
-/* Hover */
 .choices button:hover {
   background: #f4a259;
   transform: scale(1.05);
 }
 
-/* VALGT */
 .choices button.selected {
   background: #f4a259;
   border-color: #000;
@@ -429,19 +426,16 @@ button:hover {
   transform: scale(1.05);
 }
 
-/* RIKTIG */
 .correct {
   background: #a5d6a7 !important;
   border-color: #2e7d32 !important;
 }
 
-/* FEIL */
 .wrong {
   background: #ef9a9a !important;
   border-color: #c62828 !important;
 }
 
-/* Disabled */
 button:disabled {
   opacity: 0.6;
   cursor: not-allowed;

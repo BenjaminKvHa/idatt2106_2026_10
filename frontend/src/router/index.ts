@@ -139,6 +139,10 @@ const router = createRouter({
           component: PupilsProfileView,
         },
         {
+          path: 'settings',
+          component: PupilsProfileView,
+        },
+        {
           path: 'classroom',
           children: [
             {

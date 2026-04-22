@@ -2,18 +2,15 @@
 import { useRoute } from 'vue-router'
 import ProfileButton from '@/components/ProfileButton.vue'
 import SettingsButton from '@/components/SettingsButton.vue'
+import TopBar from '@/components/TopBar.vue';
 
 const route = useRoute()
 </script>
 
 <template>
-  <div v-if="route.path === '/pupil'" class="page">
+  <TopBar />
+  <div class="page">
     <div class="center-container">
-      <div class="top-bar">
-        <ProfileButton variant="home"
-        />
-        <SettingsButton />
-      </div>
       <div class="image-wrapper">
         <img src="/src/assets/korktavle.png" alt="Background" />
         <router-link to="/pupil/classroom/notebook" class="overlay-button notes">
@@ -42,11 +39,6 @@ const route = useRoute()
 </template>
 
 <style scoped>
-.page {
-  display: grid;
-  place-items: center;
-  height: 100%;
-}
 
 .center-container {
   display: flex;

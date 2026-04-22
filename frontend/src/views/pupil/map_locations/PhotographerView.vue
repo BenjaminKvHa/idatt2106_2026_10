@@ -5,100 +5,114 @@
     <div class="content">
       <h1 class="level">Nivå {{ currentLevel + 1 }}</h1>
 
-      <div class="task-box">
-        <p>Velg om bildet er ekte, KI-generert eller manipulert. Velg deretter en begrunnelse.</p>
-      </div>
+      <div v-if="currentLevelData" class="task-container">
+        <div class="task-box">
+          <p class="task-text">
+            Velg om bildet er ekte, KI-generert eller manipulert. Velg deretter en begrunnelse.
+          </p>
 
-      <div v-if="currentLevelData" class="images-box">
-        <div v-for="(image, index) in currentLevelData.images" :key="index" class="image-card">
-          <!-- Midlertidig plassholder -->
-          <div class="image-placeholder">Bilde {{ index + 1 }}</div>
+          <div class="image-card">
+            <!-- Midlertidig plassholder -->
+            <div class="image-placeholder">Bilde {{ currentLevel + 1 }}</div>
 
-          <div class="choices">
-            <button
-              @click="selectAnswer(index, 'ekte')"
-              :disabled="currentLevelData.completed"
-              :class="[
-                { selected: image.selectedAnswer === 'ekte' },
-                currentLevelData.completed && image.correctAnswer === 'ekte' ? 'correct' : '',
-                currentLevelData.completed &&
-                image.selectedAnswer === 'ekte' &&
-                image.correctAnswer !== 'ekte'
-                  ? 'wrong'
-                  : '',
-              ]"
-            >
-              Ekte
-            </button>
+            <div class="choices">
+              <button
+                @click="selectAnswer('ekte')"
+                :disabled="currentLevelData.completed"
+                :class="[
+                  { selected: currentLevelData.image.selectedAnswer === 'ekte' },
+                  currentLevelData.completed && currentLevelData.image.correctAnswer === 'ekte'
+                    ? 'correct'
+                    : '',
+                  currentLevelData.completed &&
+                  currentLevelData.image.selectedAnswer === 'ekte' &&
+                  currentLevelData.image.correctAnswer !== 'ekte'
+                    ? 'wrong'
+                    : '',
+                ]"
+              >
+                Ekte
+              </button>
 
-            <button
-              @click="selectAnswer(index, 'ki')"
-              :disabled="currentLevelData.completed"
-              :class="[
-                { selected: image.selectedAnswer === 'ki' },
-                currentLevelData.completed && image.correctAnswer === 'ki' ? 'correct' : '',
-                currentLevelData.completed &&
-                image.selectedAnswer === 'ki' &&
-                image.correctAnswer !== 'ki'
-                  ? 'wrong'
-                  : '',
-              ]"
-            >
-              KI-generert
-            </button>
+              <button
+                @click="selectAnswer('ki')"
+                :disabled="currentLevelData.completed"
+                :class="[
+                  { selected: currentLevelData.image.selectedAnswer === 'ki' },
+                  currentLevelData.completed && currentLevelData.image.correctAnswer === 'ki'
+                    ? 'correct'
+                    : '',
+                  currentLevelData.completed &&
+                  currentLevelData.image.selectedAnswer === 'ki' &&
+                  currentLevelData.image.correctAnswer !== 'ki'
+                    ? 'wrong'
+                    : '',
+                ]"
+              >
+                KI-generert
+              </button>
 
-            <button
-              @click="selectAnswer(index, 'manipulert')"
-              :disabled="currentLevelData.completed"
-              :class="[
-                { selected: image.selectedAnswer === 'manipulert' },
-                currentLevelData.completed && image.correctAnswer === 'manipulert' ? 'correct' : '',
-                currentLevelData.completed &&
-                image.selectedAnswer === 'manipulert' &&
-                image.correctAnswer !== 'manipulert'
-                  ? 'wrong'
-                  : '',
-              ]"
-            >
-              Manipulert
-            </button>
-          </div>
+              <button
+                @click="selectAnswer('manipulert')"
+                :disabled="currentLevelData.completed"
+                :class="[
+                  { selected: currentLevelData.image.selectedAnswer === 'manipulert' },
+                  currentLevelData.completed &&
+                  currentLevelData.image.correctAnswer === 'manipulert'
+                    ? 'correct'
+                    : '',
+                  currentLevelData.completed &&
+                  currentLevelData.image.selectedAnswer === 'manipulert' &&
+                  currentLevelData.image.correctAnswer !== 'manipulert'
+                    ? 'wrong'
+                    : '',
+                ]"
+              >
+                Manipulert
+              </button>
+            </div>
 
-          <div v-if="image.selected" class="reason-box">
-            <p>Hvorfor?</p>
+            <div v-if="currentLevelData.image.selected" class="reason-box">
+              <p>Hvorfor?</p>
 
-            <button
-              v-for="reason in image.reasons"
-              :key="reason.text"
-              @click="selectReason(index, reason)"
-              :disabled="currentLevelData.completed"
-              :class="{ selected: image.selectedReason?.text === reason.text }"
-            >
-              {{ reason.text }}
-            </button>
-          </div>
+              <button
+                v-for="reason in currentLevelData.image.reasons"
+                :key="reason.text"
+                @click="selectReason(reason)"
+                :disabled="currentLevelData.completed"
+                :class="{ selected: currentLevelData.image.selectedReason?.text === reason.text }"
+              >
+                {{ reason.text }}
+              </button>
+            </div>
 
-          <div v-if="currentLevelData.completed" class="answer-feedback">
-            <p><strong>Riktig svar:</strong> {{ getCorrectAnswerText(image) }}</p>
-            <p><strong>Riktig begrunnelse:</strong> {{ getCorrectReasonText(image) }}</p>
+            <div v-if="currentLevelData.completed" class="answer-feedback">
+              <p>
+                <strong>Riktig svar:</strong> {{ getCorrectAnswerText(currentLevelData.image) }}
+              </p>
+              <p>
+                <strong>Riktig begrunnelse:</strong>
+                {{ getCorrectReasonText(currentLevelData.image) }}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div v-if="currentLevelData" class="bottom-actions">
-        <button @click="prevLevel" :disabled="currentLevel === 0">← Forrige nivå</button>
+        <div class="bottom-actions">
+          <button @click="prevLevel" :disabled="currentLevel === 0">← Forrige nivå</button>
 
-        <button
-          v-if="!currentLevelData.completed"
-          @click="submitLevel"
-          :disabled="!canSubmitLevel()"
-        >
-          Svar
-        </button>
+          <button
+            v-if="!currentLevelData.completed"
+            @click="submitLevel"
+            :disabled="!canSubmitLevel()"
+          >
+            Svar
+          </button>
 
-        <button v-else @click="nextLevel">
-          {{ currentLevel === levels.length - 1 ? 'Til kartet' : 'Neste nivå →' }}
-        </button>
+          <button v-else @click="nextLevel">
+            {{ currentLevel === levels.length - 1 ? 'Til kartet' : 'Neste nivå →' }}
+          </button>
+        </div>
       </div>
       <TaskGuide v-if="showGuidePopup" @close="showGuidePopup = false">
         <h2>Velkommen til fotografen!</h2>
@@ -135,7 +149,7 @@ type ImageTask = {
 }
 
 type Level = {
-  images: ImageTask[]
+  image: ImageTask
   completed: boolean
   isCorrect: boolean
 }
@@ -146,80 +160,44 @@ const levels = ref<Level[]>([
   {
     completed: false,
     isCorrect: false,
-    images: [
-      {
-        correctAnswer: 'ekte',
-        selected: false,
-        selectedAnswer: null,
-        reasons: [
-          { text: 'Ser naturlig ut', correct: true },
-          { text: 'Rare skygger og detaljer', correct: false },
-        ],
-        selectedReason: null,
-      },
-      {
-        correctAnswer: 'ki',
-        selected: false,
-        selectedAnswer: null,
-        reasons: [
-          { text: 'Unaturlige detaljer i bildet', correct: true },
-          { text: 'Bildet har klare farger', correct: false },
-        ],
-        selectedReason: null,
-      },
-    ],
+    image: {
+      correctAnswer: 'ekte',
+      selected: false,
+      selectedAnswer: null,
+      reasons: [
+        { text: 'Ser naturlig ut', correct: true },
+        { text: 'Rare skygger og detaljer', correct: false },
+      ],
+      selectedReason: null,
+    },
   },
   {
     completed: false,
     isCorrect: false,
-    images: [
-      {
-        correctAnswer: 'manipulert',
-        selected: false,
-        selectedAnswer: null,
-        reasons: [
-          { text: 'Noe i bildet er endret eller lagt til', correct: true },
-          { text: 'Bildet er litt uklart', correct: false },
-        ],
-        selectedReason: null,
-      },
-      {
-        correctAnswer: 'ekte',
-        selected: false,
-        selectedAnswer: null,
-        reasons: [
-          { text: 'Lys, skygger og proporsjoner ser naturlige ut', correct: true },
-          { text: 'Bildet ser profesjonelt ut', correct: false },
-        ],
-        selectedReason: null,
-      },
-    ],
+    image: {
+      correctAnswer: 'manipulert',
+      selected: false,
+      selectedAnswer: null,
+      reasons: [
+        { text: 'Noe i bildet er endret eller lagt til', correct: true },
+        { text: 'Bildet er litt uklart', correct: false },
+      ],
+      selectedReason: null,
+    },
   },
   {
     completed: false,
     isCorrect: false,
-    images: [
-      {
-        correctAnswer: 'ki',
-        selected: false,
-        selectedAnswer: null,
-        reasons: [
-          { text: 'Detaljene ser unaturlige ut', correct: true },
-          { text: 'Bildet har høy kvalitet', correct: false },
-        ],
-        selectedReason: null,
-      },
-      {
-        correctAnswer: 'manipulert',
-        selected: false,
-        selectedAnswer: null,
-        reasons: [
-          { text: 'Bildet har blitt redigert i etterkant', correct: true },
-          { text: 'Fargene er sterke', correct: false },
-        ],
-        selectedReason: null,
-      },
-    ],
+    image: {
+      correctAnswer: 'ki',
+      selected: false,
+      selectedAnswer: null,
+      reasons: [
+        { text: 'Detaljene ser unaturlige ut', correct: true },
+        { text: 'Bildet har høy kvalitet', correct: false },
+      ],
+      selectedReason: null,
+    },
   },
 ])
 
@@ -231,48 +209,40 @@ const earnedStars = computed(() => {
   return levels.value.filter((level) => level.isCorrect).length
 })
 
-function selectAnswer(index: number, answer: AnswerOption) {
+function selectAnswer(answer: AnswerOption) {
   const level = currentLevelData.value
   if (!level || level.completed) return
 
-  const image = level.images[index]
-  if (!image) return
-
-  image.selected = true
-  image.selectedAnswer = answer
-  image.selectedReason = null
+  level.image.selected = true
+  level.image.selectedAnswer = answer
+  level.image.selectedReason = null
 }
 
-function selectReason(index: number, reason: Reason) {
+function selectReason(reason: Reason) {
   const level = currentLevelData.value
   if (!level || level.completed) return
+  if (!level.image.selectedAnswer) return
 
-  const image = level.images[index]
-  if (!image || !image.selectedAnswer) return
-
-  image.selectedReason = reason
+  level.image.selectedReason = reason
 }
 
 function canSubmitLevel() {
   const level = currentLevelData.value
   if (!level) return false
 
-  return level.images.every(
-    (image) => image.selectedAnswer !== null && image.selectedReason !== null,
-  )
+  return level.image.selectedAnswer !== null && level.image.selectedReason !== null
 }
 
 function submitLevel() {
   const level = currentLevelData.value
   if (!level || level.completed) return
 
-  const allCorrect = level.images.every(
-    (image) =>
-      image.selectedAnswer === image.correctAnswer && image.selectedReason?.correct === true,
-  )
+  const isCorrect =
+    level.image.selectedAnswer === level.image.correctAnswer &&
+    level.image.selectedReason?.correct === true
 
   level.completed = true
-  level.isCorrect = allCorrect
+  level.isCorrect = isCorrect
 }
 
 function nextLevel() {
@@ -312,7 +282,6 @@ function getCorrectReasonText(image: ImageTask) {
   min-height: 100vh;
 }
 
-/* Kun innhold sentreres */
 .content {
   display: flex;
   flex-direction: column;
@@ -320,79 +289,63 @@ function getCorrectReasonText(image: ImageTask) {
   padding: 20px;
 }
 
-.title {
-  text-align: center;
-}
-
 .level {
   text-align: center;
-  margin-bottom: 10px;
+  margin-bottom: 18px;
+}
+
+.task-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
 }
 
 .task-box {
-  background: rgba(255, 255, 255, 0.8); /* hvit gjennomsiktig */
-  padding: 15px 20px;
-  border-radius: 12px;
-
-  display: inline-block; /* gjør at den kun blir like bred som teksten */
-  margin: 0 auto 20px auto; /* sentrerer boksen */
-  text-align: center;
-
-  max-width: 90%; /* hindrer at den blir for bred på små skjermer */
+  width: 100%;
+  max-width: 760px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 3px solid #5c4033;
+  border-radius: 24px;
+  padding: 28px 28px 36px;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
 }
 
-.images-box {
-  display: flex;
-  gap: 20px;
-  justify-content: center;
-  flex-wrap: wrap;
+.task-text {
+  text-align: center;
+  margin: 0 0 24px 0;
+  font-size: 20px;
 }
 
 .image-card {
-  background: white;
-  padding: 10px;
-  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .image-placeholder {
-  width: 250px;
-  height: 150px;
+  width: 460px;
+  height: 280px;
   background: #ddd;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  margin-bottom: 10px;
+  border-radius: 14px;
+  margin-bottom: 20px;
+  border: 2px solid #999;
+  font-size: 20px;
+  font-weight: 600;
 }
 
-.choices button {
-  margin: 5px;
-}
-
-.reason-box {
-  margin-top: 10px;
-}
-
-.navigation {
-  margin-top: 20px;
+.choices {
   display: flex;
-  justify-content: space-between;
-}
-
-button {
-  background: #f4a259;
-  border: 2px solid #000;
-  border-radius: 20px;
-  padding: 8px 15px;
-  cursor: pointer;
-}
-
-button:hover {
-  background: #e38b3d;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
 }
 
 .choices button {
-  margin: 5px;
   padding: 10px 16px;
   border-radius: 20px;
   border: 2px solid #333;
@@ -402,18 +355,26 @@ button:hover {
   font-weight: 500;
 }
 
-/* Hover */
 .choices button:hover {
   background: #f4a259;
   transform: scale(1.05);
 }
 
-/* VALGT */
 .choices button.selected {
   background: #f4a259;
   border-color: #000;
-  transform: scale(1.1);
+  transform: scale(1.08);
   box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.2);
+}
+
+.reason-box {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.reason-box p {
+  margin-bottom: 10px;
+  font-weight: 600;
 }
 
 .reason-box button {
@@ -436,19 +397,47 @@ button:hover {
   transform: scale(1.05);
 }
 
-/* RIKTIG */
+.answer-feedback {
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 2px solid #5c4033;
+  width: 100%;
+  max-width: 500px;
+}
+
+.bottom-actions {
+  margin-top: 34px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.bottom-actions button {
+  background: #f4a259;
+  border: 2px solid #000;
+  border-radius: 20px;
+  padding: 10px 18px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.bottom-actions button:hover {
+  background: #e38b3d;
+}
+
 .correct {
   background: #a5d6a7 !important;
   border-color: #2e7d32 !important;
 }
 
-/* FEIL */
 .wrong {
   background: #ef9a9a !important;
   border-color: #c62828 !important;
 }
 
-/* Disabled */
 button:disabled {
   opacity: 0.6;
   cursor: not-allowed;

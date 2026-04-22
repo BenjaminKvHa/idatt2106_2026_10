@@ -42,8 +42,8 @@ function openHint(): void {
         <RouterLink to="/pupil/settings" class="nav-icon-parent transition">
           <SettingsIcon />
         </RouterLink>
-        <RouterLink to="/pupil/profile" class="avatar-button">
-          <img src="http://localhost:3000/api/avatar-assets/costume/detective.png" />
+        <RouterLink to="/pupil/profile" class="avatar-button transition">
+          <img :src="profileAvatarUrl || '/api/avatar-assets/costume/detective.png'" />
           {{ tokenData?.legalName || tokenData?.email || "No name" }}
         </RouterLink>
       </div>
@@ -80,6 +80,10 @@ function openHint(): void {
     background-color: white;
     border: 1px solid var(--brown-dark-40);
   }
+}
+.avatar-button:hover {
+  color: var(--beige-light);
+  background-color: var(--brown-dark);
 }
 
 .extras {

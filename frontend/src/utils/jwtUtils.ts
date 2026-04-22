@@ -25,8 +25,7 @@ export function decodeJwtPayload(token: string): JwtPayload | null {
 
 export function getDefaultRouteForRole(role?: BackendAccountRole, email?: string): string {
   if (role === 'TEACHER') {
-    const username = email?.split('@')[0]
-    return username ? `/${username}/classrooms` : '/classrooms'
+    return '/teacher'
   }
 
   if (role === 'PUPIL') {

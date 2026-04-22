@@ -2,6 +2,7 @@
 import { useRouter } from 'vue-router'
 import ProfileButton from '@/components/ProfileButton.vue'
 import { ChevronLeftIcon, HomeIcon, SettingsIcon } from '@lucide/vue';
+import { getJwtData } from '@/utils/jwtUtils';
 
 const props = defineProps<{
   title?: string
@@ -12,7 +13,7 @@ const props = defineProps<{
 
 }>()
 
-const router = useRouter()
+const tokenData = getJwtData();
 
 function openHelp(): void {
   alert(props.help || "No help")
@@ -43,7 +44,7 @@ function openHint(): void {
         </RouterLink>
         <RouterLink to="/pupil/profile" class="avatar-button">
           <img src="http://localhost:3000/api/avatar-assets/costume/detective.png" />
-          {{ profileName || "Jostein Bever" }}
+          {{ tokenData?.legalName || tokenData?.email || "No name" }}
         </RouterLink>
       </div>
     </div>

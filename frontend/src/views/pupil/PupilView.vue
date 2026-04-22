@@ -9,7 +9,7 @@ const route = useRoute()
 
 <template>
   <TopBar />
-  <div v-if="route.path === '/pupil'" class="page">
+  <div class="page">
     <div class="center-container">
       <div class="image-wrapper">
         <img src="/src/assets/korktavle.png" alt="Background" />

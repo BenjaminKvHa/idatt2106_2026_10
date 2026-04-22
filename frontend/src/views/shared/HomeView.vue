@@ -16,7 +16,6 @@
   display: grid;
   place-items: center;
   height: 100%;
-  background-color: var(--beige-light);
 }
 
 img {

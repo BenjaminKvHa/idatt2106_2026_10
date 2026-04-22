@@ -28,6 +28,7 @@ function confirm() {
   display: flex;
   justify-content: center;
   align-items: center;
+  background: rgba(0, 0, 0, 0.5);
 }
 .center-container {
   transform: translateY(-40px);

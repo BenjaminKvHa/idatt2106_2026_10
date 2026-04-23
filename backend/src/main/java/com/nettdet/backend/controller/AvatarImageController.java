@@ -13,8 +13,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.nettdet.backend.service.AvatarImageService;
 import com.nettdet.backend.service.FileObjectService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/avatar-images")
+@Tag(name = "Avatar Images", description = "Public endpoint for generated saved avatar images.")
 public class AvatarImageController {
 
     private final AvatarImageService avatarImageService;
@@ -24,6 +28,7 @@ public class AvatarImageController {
     }
 
     @GetMapping("/{fileName:.+}")
+    @Operation(summary = "Get generated avatar image", description = "Returns a saved generated avatar PNG by file name. Only public files under the avatar-images object-key prefix are served.")
     public ResponseEntity<byte[]> getAvatarImage(@PathVariable String fileName) {
         FileObjectService.StoredFile storedFile = avatarImageService.getAvatarImage(fileName);
 

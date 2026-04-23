@@ -278,7 +278,8 @@ function handleBlobbyClick() {
 }
 .notes {
   top: 52%;
-  right: 16%;
+  right: 10.75%;
+  width: 33.5%;
 }
 .help {
   top: 52%;

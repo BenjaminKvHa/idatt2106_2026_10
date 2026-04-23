@@ -91,6 +91,8 @@ CREATE TABLE pupil_chapter_bridge_progression (
     successful_runs INT NOT NULL DEFAULT 0,
     highscore INT NOT NULL DEFAULT 0,
     unsuccessful_streak INT NOT NULL DEFAULT 0,
+    current_run_attempts INT NOT NULL DEFAULT 0,
+    current_run_correct INT NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     PRIMARY KEY (email, chapter_id)

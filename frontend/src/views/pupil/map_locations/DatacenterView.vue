@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import TopBar from "@/components/TopBar.vue";
 import {ref} from "vue";
+import TopBar from "@/components/TopBar.vue";
+import TaskGuide from "@/components/TaskGuide.vue";
 
+const showHelpPopup = ref<boolean>(false);
+const showHintPopup = ref<boolean>(false);
+const showGuidePopup = ref(true);
 
 type TaskPicture = {
   id: number;
@@ -9,8 +13,6 @@ type TaskPicture = {
   imageUrl?: string;
 };
 
-const showHelpPopup = ref<boolean>(false);
-const showHintPopup = ref<boolean>(false);
 
 // Temporary placeholder-data, change later when connected to task bank
 const pictures: TaskPicture[] = [
@@ -85,6 +87,11 @@ function closeHintPopup(): void {
           </button>
         </div>
       </div>
+      <TaskGuide v-if="showGuidePopup" @close="showGuidePopup = false">
+        <h2>Velkommen til datasenteret!</h2>
+        <p>I datasenteret vil du få en blanding av oppgaver fra alle de tidligere nivåene. Dette er det siste nivået du må gjennomføre for å bekjempe datatyven
+          og gjennomføre spillet. Er du klar for å løse oppgaver, og slå datatyven en gang for alle?</p>
+      </TaskGuide>
       <div v-if="showHelpPopup" class="popup-overlay" @click="closeHelpPopup">
         <div class="hint-popup" @click.stop>
           <h2 class="popup-title">Trenger du hjelp?</h2>

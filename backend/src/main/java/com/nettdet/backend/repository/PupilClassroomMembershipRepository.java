@@ -5,6 +5,8 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.nettdet.backend.domain.PupilClassroomMembership;
 
@@ -32,4 +34,8 @@ public interface PupilClassroomMembershipRepository extends JpaRepository<PupilC
 
     @EntityGraph(attributePaths = "account")
     List<PupilClassroomMembership> findAllByClassroomClassroomCodeAndMembershipConfirmedByTeacherFalse(String classroomCode);
+
+    @Query("SELECT m.classroom.classroomCode FROM PupilClassroomMembership m " +
+           "WHERE m.account.email = :email AND m.membershipConfirmedByTeacher = true")
+    Optional<String> findConfirmedClassroomCodeByAccountEmail(@Param("email") String email);
 }

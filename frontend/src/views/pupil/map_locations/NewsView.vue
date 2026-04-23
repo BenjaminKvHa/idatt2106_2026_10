@@ -2,10 +2,25 @@
 import { ref } from "vue";
 import TopBar from "@/components/TopBar.vue";
 import TaskGuide from "@/components/TaskGuide.vue";
+import CompleteLevelPopup from "@/components/CompleteLevelPopup.vue";
+import completedSoundFile from "@/assets/completedSound.mp3";
+import tryAgainSoundFile from "@/assets/tryAgainSound.mp3";
 
 const showHelpPopup = ref<boolean>(false);
 const showHintPopup = ref<boolean>(false);
-const showGuidePopup = ref(true)
+const showGuidePopup = ref(true);
+const showCompletePopup = ref(false);
+
+const popupTitle = ref("");
+const popupMessage = ref("");
+const popupSubMessage = ref("");
+const popupSuccess = ref(true);
+
+const completedSound = new Audio(completedSoundFile);
+completedSound.volume = 0.5;
+
+const tryAgainSound = new Audio(tryAgainSoundFile);
+tryAgainSound.volume = 0.5;
 
 type TaskPicture = {
   id: number;
@@ -27,8 +42,47 @@ const pictures: TaskPicture[] = [
   },
 ];
 
+function stopAllSounds(): void {
+  completedSound.pause();
+  tryAgainSound.pause();
+
+  completedSound.currentTime = 0;
+  tryAgainSound.currentTime = 0;
+}
+
+function openSuccessPopup(): void {
+  popupSuccess.value = true;
+  popupTitle.value = "Du klarte det!";
+  popupMessage.value = "Gratulerer! Du har fullført Nyhetskvartalet.";
+  popupSubMessage.value = "Du har nå låst opp stoppestedet Fotografen.";
+  showCompletePopup.value = true;
+
+  stopAllSounds();
+  completedSound.play();
+}
+
+function openFailPopup(): void {
+  popupSuccess.value = false;
+  popupTitle.value = "Du klarte det ikke";
+  popupMessage.value = "Å nei! Du løste ikke oppgaven riktig denne gangen.";
+  popupSubMessage.value = "Prøv på nytt for å klare stoppestedet.";
+  showCompletePopup.value = true;
+
+  stopAllSounds();
+  tryAgainSound.play();
+}
+
 function chooseFakePicture(picture: TaskPicture) {
   console.log(`Valgte ${picture.label} som falsk`);
+
+  // Bytt ut dette med ekte logikk senere
+  const solvedCorrectly = true;
+
+  if (solvedCorrectly) {
+    openSuccessPopup();
+  } else {
+    openFailPopup();
+  }
 }
 
 function openHelpPopup(): void {
@@ -45,6 +99,11 @@ function openHintPopup(): void {
 
 function closeHintPopup(): void {
   showHintPopup.value = false;
+}
+
+function closeCompletePopup(): void {
+  showCompletePopup.value = false;
+  stopAllSounds();
 }
 </script>
 
@@ -143,14 +202,18 @@ function closeHintPopup(): void {
       </div>
     </div>
   </div>
+
+  <CompleteLevelPopup
+    :show="showCompletePopup"
+    :title="popupTitle"
+    :message="popupMessage"
+    :sub-message="popupSubMessage"
+    :success="popupSuccess"
+    @close="closeCompletePopup"
+  />
 </template>
 
 <style scoped>
-h2 {
-  margin: 0;
-  font-size: clamp(1.8rem, 4vw, 2.5rem);
-}
-
 .page {
   display: flex;
   justify-content: center;
@@ -158,13 +221,16 @@ h2 {
 }
 
 .center-container {
-  margin: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   width: 100%;
   max-width: 1100px;
+}
+
+h2 {
+  margin: 0;
 }
 
 .picture-wrapper {
@@ -194,7 +260,6 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(1rem, 2vw, 2rem);
   font-weight: 700;
 }
 
@@ -211,8 +276,6 @@ h2 {
   border-radius: 38px;
   border: 5px solid var(--brown-dark);
   background-color: var(--orange-medium);
-  font-size: clamp(1rem, 2vw, 1.2rem);
-  font-weight: 700;
   cursor: pointer;
   transition: background-color 0.2s ease, transform 0.2s ease, filter 0.2s ease;
 }
@@ -227,9 +290,7 @@ h2 {
 }
 
 .task-wrapper {
-  margin: 0;
   width: min(100%, 800px);
-  font-size: clamp(1rem, 2.5vw, 2rem);
   padding: 1rem 2rem;
   background: var(--orange-medium);
   border: 5px solid var(--brown-dark);
@@ -241,27 +302,6 @@ h2 {
   margin: 0;
 }
 
-/**Scaling for smaller screens*/
-@media (max-width: 768px) {
-  .page {
-    padding: 1rem;
-  }
-
-  .picture-wrapper {
-    gap: 1rem;
-  }
-
-  .task-wrapper {
-    padding: 1rem;
-    border-width: 3px;
-    border-radius: 24px;
-  }
-
-  .fake-button {
-    border-width: 3px;
-    border-radius: 24px;
-  }
-}
 .popup-overlay {
   position: fixed;
   inset: 0;
@@ -285,24 +325,15 @@ h2 {
 
 .popup-title {
   margin: 0 0 10px;
-  font-size: 2rem;
-  line-height: 1.15;
-  font-weight: 800;
-  color: var(--color-text);
 }
 
 .hint-text {
   margin-top: 10px;
-  font-size: 1.1rem;
-  line-height: 1.35;
-  font-weight: 700;
-  color: var(--color-text);
   text-align: left;
 }
 
 .hint-text p {
   margin: 0 0 8px;
-  font-size: 1.2rem;
 }
 
 .hint-text ul {
@@ -327,14 +358,32 @@ h2 {
   padding: 14px 24px;
   border-radius: 22px;
   border: 4px solid var(--brown-dark);
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: var(--color-text);
   cursor: pointer;
   box-shadow: 0 6px 12px rgb(0 0 0 / 18%);
 }
 
 .popup-btn-play {
   background: var(--green-confirm);
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 1rem;
+  }
+
+  .picture-wrapper {
+    gap: 1rem;
+  }
+
+  .task-wrapper {
+    padding: 1rem;
+    border-width: 3px;
+    border-radius: 24px;
+  }
+
+  .fake-button {
+    border-width: 3px;
+    border-radius: 24px;
+  }
 }
 </style>

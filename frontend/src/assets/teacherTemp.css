@@ -112,6 +112,8 @@
     gap: var(--card-body-gap);
     flex: 1;
     height: auto;
+    overflow: auto;
+    
 }
 
 
@@ -327,8 +329,7 @@
     margin: 0;
     height: 100%;
     box-sizing: border-box;
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow: hidden;
     min-height: 0;
 }
 

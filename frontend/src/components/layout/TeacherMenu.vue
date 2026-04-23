@@ -55,7 +55,7 @@ const isClassroomActive = (classroomCode: string) => {
     <div class="teacher-menu teacher-variant-2">
         <Logo />
 
-        <section class="teacher-card">
+        <section class="teacher-card teacher-card-menu">
             <button
                 type="button"
                 :class="['teacher-card-title', isClassroomsActive ? 'button-variant-2' : 'button-variant-1']"
@@ -63,7 +63,7 @@ const isClassroomActive = (classroomCode: string) => {
             >
                 Klasserom
             </button>
-            <div class="teacher-card-body">
+            <div class="teacher-card-body teacher-card-menu-body">
                 <button
                     v-for="classroom in classrooms"
                     :key="classroom.classroomCode"
@@ -102,3 +102,16 @@ const isClassroomActive = (classroomCode: string) => {
 
     <OptionsMenu v-if="settingsOpen" @close="settingsOpen = false" />
 </template>
+
+<style scoped>
+.teacher-card-menu {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 100%;
+}
+
+.teacher-card-menu-body {
+  min-height: 0;
+  overflow: auto;
+}
+</style>

@@ -109,5 +109,4 @@ public class AuthController {
                 .header(HttpHeaders.SET_COOKIE, refCookie.toString())
                 .body(new AuthTokenResponse(jwtToken));
     }
-
 }

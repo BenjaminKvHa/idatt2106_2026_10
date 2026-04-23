@@ -3,14 +3,21 @@ package com.nettdet.backend.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.nettdet.backend.domain.Account;
+import com.nettdet.backend.domain.PupilClassroomMembership;
 import com.nettdet.backend.domain.enums.AccountRole;
+import com.nettdet.backend.dto.AuthMeResponse;
 import com.nettdet.backend.dto.LoginRequest;
 import com.nettdet.backend.dto.RegisterRequest;
+import com.nettdet.backend.dto.UpdateMeRequest;
 import com.nettdet.backend.repository.AccountRepository;
+import com.nettdet.backend.repository.PupilClassroomMembershipRepository;
+import com.nettdet.backend.security.JwtUserPrincipal;
 
 @Service
 public class AccountService {
@@ -18,10 +25,15 @@ public class AccountService {
     private static final Logger logger = LoggerFactory.getLogger(AccountService.class);
 
     private final AccountRepository accountRepository;
+    private final PupilClassroomMembershipRepository pupilClassroomMembershipRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public AccountService(AccountRepository accountRepository, PasswordEncoder passwordEncoder) {
+    public AccountService(
+            AccountRepository accountRepository,
+            PupilClassroomMembershipRepository pupilClassroomMembershipRepository,
+            PasswordEncoder passwordEncoder) {
         this.accountRepository = accountRepository;
+        this.pupilClassroomMembershipRepository = pupilClassroomMembershipRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -60,5 +72,47 @@ public class AccountService {
 
         logger.info("Login successful for account: {}", account.getEmail());
         return account;
+    }
+
+    public Account getAccountFromEmail(String email ) {
+        return accountRepository.findByEmail(email).get();
+    }
+
+    @Transactional(readOnly = true)
+    public AuthMeResponse getAuthenticatedProfile(String email) {
+        Account account = getAccountFromEmail(email);
+        PupilClassroomMembership membership = pupilClassroomMembershipRepository.findByAccountEmail(email).orElse(null);
+        String username = membership != null ? membership.getUsername() : null;
+        String classroomCode = membership != null && membership.getClassroom() != null
+                ? membership.getClassroom().getClassroomCode()
+                : null;
+        Long avatarFileObjectId = membership != null && membership.getAvatarFileObject() != null
+                ? membership.getAvatarFileObject().getId()
+                : null;
+
+        return AuthMeResponse.from(account, username, classroomCode, avatarFileObjectId);
+    }
+
+    @Transactional
+    public AuthMeResponse updateAuthenticatedProfile(JwtUserPrincipal principal, UpdateMeRequest request) {
+        if (principal == null || principal.email() == null) {
+            throw new AccessDeniedException("Authenticated access is required");
+        }
+
+        if (!AccountRole.PUPIL.name().equals(principal.role())) {
+            throw new AccessDeniedException("Pupil access is required");
+        }
+
+        if (request == null || request.username() == null || request.username().trim().isEmpty()) {
+            throw new IllegalArgumentException("Username must not be blank");
+        }
+
+        PupilClassroomMembership membership = pupilClassroomMembershipRepository.findByAccountEmail(principal.email())
+                .orElseThrow(() -> new IllegalArgumentException("You are not currently in a classroom"));
+
+        membership.setUsername(request.username().trim());
+        pupilClassroomMembershipRepository.save(membership);
+
+        return getAuthenticatedProfile(principal.email());
     }
 }

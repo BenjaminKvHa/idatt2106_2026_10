@@ -92,6 +92,15 @@ public class ClassroomController {
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("/{classroomCode}/pupils/me")
+    @PreAuthorize("hasAuthority('PUPIL')")
+    public ResponseEntity<Void> leaveClassroomAsPupil(
+            @PathVariable String classroomCode,
+            @AuthenticationPrincipal JwtUserPrincipal principal) {
+        classroomService.leaveClassroomAsPupil(classroomCode, principal);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{classroomCode}/pupils/pending")
     @PreAuthorize("hasAuthority('TEACHER')")
     public ResponseEntity<List<PendingPupilRequestResponse>> getPendingPupilRequests(

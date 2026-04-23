@@ -11,6 +11,8 @@ import com.nettdet.backend.domain.PupilClassroomMembership;
 public interface PupilClassroomMembershipRepository extends JpaRepository<PupilClassroomMembership, String> {
 
     boolean existsByAccountEmailAndClassroomClassroomCode(String accountEmail, String classroomCode);
+    @EntityGraph(attributePaths = {"classroom", "avatarFileObject"})
+    Optional<PupilClassroomMembership> findByAccountEmail(String accountEmail);
     Optional<PupilClassroomMembership> findByAccountEmailAndClassroomClassroomCode(String accountEmail, String classroomCode);
     Optional<PupilClassroomMembership> findByAccountEmailAndMembershipConfirmedByTeacherTrue(String accountEmail);
     Optional<PupilClassroomMembership> findByAccountEmailAndClassroomClassroomCodeAndMembershipConfirmedByTeacherTrue(

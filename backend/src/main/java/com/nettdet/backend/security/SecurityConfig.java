@@ -70,6 +70,8 @@ public class SecurityConfig {
                     "/auth/login",
                     "/auth/signup",
                     "/auth/refresh",
+                    "/auth/me",
+                    "/auth/**",
                     "/actuator/health",
                     "/actuator/health/**",
                     "/swagger-ui/**",
@@ -80,6 +82,7 @@ public class SecurityConfig {
                     "/avatar-assets/**",
                     "/avatar-assets/",
                     "/avatar-assets",
+                    "/objects/**",
                     "/leaderboard/classrooms"
                 ).permitAll() // for this url endpoint, all requests are permitted
                 .anyRequest().authenticated()); // to any other requests to endpoints, authentication is needed

@@ -82,5 +82,4 @@ public class AuthController {
         logger.info("Account registered and logged in: {}", account.getEmail());
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, refCookie.toString()).body(Map.of("accessToken", jwtToken));
     }
-
 }

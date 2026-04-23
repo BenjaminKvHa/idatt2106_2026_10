@@ -41,6 +41,12 @@
     --card-body-gap: var(--thin-gap);
 
     /*
+    font weights
+    */
+    --fw-medium: 500;
+    --fw-semibold: 600;
+    --fw-bold: 700;
+    /*
     misc stuffs and things
     */
     --animation-time-1: 0.2s;
@@ -51,9 +57,9 @@
     background-color: var(--background-body);
     margin: 0;
     display: flex;
-    flex-direction: row;
-    justify-content: center;
-    
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
 }
 
 .teacher-card {
@@ -65,6 +71,7 @@
     display: flex;
     flex-direction: column;
     width: 100%;
+    min-height: 350px;
 }
 
 .teacher-card-header {
@@ -84,7 +91,7 @@
     justify-content: center;
     background-color: var(--accent);
     color: var(--txt-sec);
-    font-weight: 700;
+    font-weight: var(--fw-bold);
     width: 100%;
     box-sizing: border-box;
     padding: var(--thin-padding);
@@ -103,6 +110,8 @@
     display: flex;
     flex-direction: column;
     gap: var(--card-body-gap);
+    flex: 1;
+    height: auto;
 }
 
 
@@ -250,7 +259,7 @@
 
 .settings-modal-title {
     font-size: 1.3rem;
-    font-weight: 700;
+    font-weight: var(--fw-bold);
     text-align: center;
     color: var(--txt);
     margin: 0;
@@ -271,7 +280,7 @@
 
 .settings-field label {
     font-size: 0.85rem;
-    font-weight: 700;
+    font-weight: var(--fw-bold);
     color: var(--txt);
 }
 
@@ -302,7 +311,7 @@
     padding: var(--thin-padding) var(--medium-padding);
     cursor: pointer;
     font-size: 0.9rem;
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
 }
 
 .teacher-menu {
@@ -344,11 +353,12 @@
 
 .teacher-card-title {
     border: none;
+    border-radius: 0;
     cursor: pointer;
     width: 100%;
     padding: var(--thin-padding);
     text-align: center;
-    font-weight: 700;
+    font-weight: var(--fw-bold);
     transition: background-color var(--animation-time-1), color var(--animation-time-1);
 }
 
@@ -367,7 +377,7 @@
 
 .form-field label {
     color: var(--accent);
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
     font-size: 0.95rem;
 }
 
@@ -419,7 +429,7 @@
     font-size: 1.5rem;
     margin: 0 0 var(--thick-padding) 0;
     text-align: center;
-    font-weight: 700;
+    font-weight: var(--fw-bold);
 }
 
 .message-error {
@@ -428,7 +438,7 @@
     padding: var(--medium-padding);
     border-radius: var(--border-radius);
     margin-bottom: var(--medium-padding);
-    font-weight: 500;
+    font-weight: var(--fw-medium);
 }
 
 .message-success {
@@ -437,7 +447,7 @@
     padding: var(--medium-padding);
     border-radius: var(--border-radius);
     margin-bottom: var(--medium-padding);
-    font-weight: 500;
+    font-weight: var(--fw-medium);
     text-align: center;
 }
 
@@ -450,7 +460,7 @@
 .form-button {
     width: 100%;
     padding: 0.85rem 1rem;
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
     font-size: 1rem;
 }
 
@@ -468,7 +478,7 @@
     padding: var(--medium-padding);
     border-radius: var(--border-radius);
     margin-bottom: var(--medium-padding);
-    font-weight: 500;
+    font-weight: var(--fw-medium);
 }
 
 .message.error {
@@ -480,6 +490,16 @@
     background-color: #c8e6c9;
     color: #2e7d32;
     text-align: center;
+}
+
+.card-classroom-name {
+    font-size: 1.2rem;
+    font-weight: var(--fw-bold);
+}
+
+.card-classroom-code {
+    font-size: 0.8rem;
+    opacity: 0.9;
 }
 
 .card-grid {
@@ -496,9 +516,9 @@
     padding: var(--thin-padding) 0;
     border-bottom: 2px solid var(--background-sec);
     color: var(--accent);
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
 }
 
 .row .value {
-    font-weight: 700;
+    font-weight: var(--fw-bold);
 }

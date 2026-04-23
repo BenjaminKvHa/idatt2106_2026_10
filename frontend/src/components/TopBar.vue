@@ -10,7 +10,6 @@ const props = defineProps<{
   profileAvatarUrl?: string | null
   hint?: string
   help?: string
-
 }>()
 
 const tokenData = getJwtData();

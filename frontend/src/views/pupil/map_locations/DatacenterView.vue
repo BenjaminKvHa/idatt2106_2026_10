@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import {ref} from "vue";
+import { ref, computed } from "vue";
 import TopBar from "@/components/TopBar.vue";
 import TaskGuide from "@/components/TaskGuide.vue";
-
-const showHelpPopup = ref<boolean>(false);
-const showHintPopup = ref<boolean>(false);
-const showGuidePopup = ref(true);
+import VictoryImage from "@/assets/Victory.png";
+import DefeatImage from "@/assets/Defeat.png";
+import LeaderboardIcon from "@/assets/homescreen/icon_leaderboard.png";
+import victorySoundFile from "@/assets/victory-sound.mp3";
+import defeatSoundFile from "@/assets/evil-laugh.mp3";
 
 type TaskPicture = {
   id: number;
@@ -13,8 +14,19 @@ type TaskPicture = {
   imageUrl?: string;
 };
 
+type ResultType = "victory" | "defeat" | null;
 
-// Temporary placeholder-data, change later when connected to task bank
+const victorySound = new Audio(victorySoundFile);
+victorySound.volume = 0.3;
+const defeatSound = new Audio(defeatSoundFile);
+defeatSound.volume = 0.3;
+
+const showHelpPopup = ref<boolean>(false);
+const showHintPopup = ref<boolean>(false);
+const showGuidePopup = ref(true);
+const showResultPopup = ref(false);
+const resultType = ref<ResultType>(null);
+
 const pictures: TaskPicture[] = [
   {
     id: 1,
@@ -28,8 +40,54 @@ const pictures: TaskPicture[] = [
   },
 ];
 
+const resultImage = computed(() =>
+  resultType.value === "victory" ? VictoryImage : DefeatImage,
+);
+
+const resultAltText = computed(() =>
+  resultType.value === "victory" ? "Seier" : "Tap",
+);
+
+const resultKicker = computed(() =>
+  resultType.value === "victory" ? "Oppdrag fullført" : "Oppdrag mislyktes",
+);
+
+const resultTitle = computed(() =>
+  resultType.value === "victory" ? "Du klarte det!" : "Du tapte!",
+);
+
+const resultMessage = computed(() =>
+  resultType.value === "victory"
+    ? "Gratulerer! Du har fullført alle nivåene i spillet og slått datatyven."
+    : "Å nei! Du fikk ikke til alle oppgavene og datatyven slapp unna denne gangen.",
+);
+
+const resultSubmessage = computed(() =>
+  resultType.value === "victory"
+    ? "Nå har du vist at du kan tenke som en ekte nett-detektiv!"
+    : "Men ikke gi opp – prøv igjen og se om du klarer å slå datatyven neste gang!",
+);
+
+const resultHighlightTitle = computed(() =>
+  resultType.value === "victory" ? "🏆 Spill fullført" : "💥 Prøv igjen",
+);
+
+const resultHighlightText = computed(() =>
+  resultType.value === "victory"
+    ? "Du har kommet helt til toppen i Datasenteret. Nå kan du sjekke plasseringen din på topplisten."
+    : "Du kan gå tilbake og prøve oppgavene på nytt for å få en ny sjanse til å fullføre spillet.",
+);
+
 function chooseFakePicture(picture: TaskPicture) {
   console.log(`Valgte ${picture.label} som falsk`);
+
+  const allLevelsCompleted = true;
+
+  if (allLevelsCompleted) {
+    openResultPopup("victory");
+  } else {
+    openResultPopup("defeat");
+  }
 }
 
 function openHelpPopup(): void {
@@ -48,6 +106,33 @@ function closeHintPopup(): void {
   showHintPopup.value = false;
 }
 
+function openResultPopup(type: ResultType): void {
+  resultType.value = type;
+  showResultPopup.value = true;
+
+  if (type === "victory") {
+    victorySound.currentTime = 0;
+    victorySound.play();
+  } else if (type === "defeat") {
+    defeatSound.currentTime = 0;
+    defeatSound.play();
+  }
+}
+
+function closeResultPopup(): void {
+  showResultPopup.value = false;
+  resultType.value = null;
+
+  victorySound.pause();
+  defeatSound.pause();
+
+  victorySound.currentTime = 0;
+  defeatSound.currentTime = 0;
+}
+
+function openLeaderboard(): void {
+  console.log("Gå til toppliste");
+}
 </script>
 
 <template>
@@ -56,19 +141,20 @@ function closeHintPopup(): void {
     @help="openHelpPopup"
     @hint="openHintPopup"
   />
-  <div class = "page">
-    <div class = "center-container">
+  <div class="page">
+    <div class="center-container">
       <h2>Aktivitet 1</h2>
-      <div class = "task-wrapper">
+      <div class="task-wrapper">
         <p>To avisforsider ligger foran deg.</p>
         <p>Én er ekte og én er falsk.</p>
         <p>Kan du finne ut hvilken som er falsk?</p>
       </div>
 
-      <div class = "picture-wrapper">
-        <div v-for="picture in pictures"
-             :key="picture.id"
-             class="picture-card"
+      <div class="picture-wrapper">
+        <div
+          v-for="picture in pictures"
+          :key="picture.id"
+          class="picture-card"
         >
           <div class="picture-placeholder">
             <img
@@ -87,18 +173,25 @@ function closeHintPopup(): void {
           </button>
         </div>
       </div>
+
       <TaskGuide v-if="showGuidePopup" @close="showGuidePopup = false">
         <h2>Velkommen til datasenteret!</h2>
-        <p>I datasenteret vil du få en blanding av oppgaver fra alle de tidligere nivåene. Dette er det siste nivået du må gjennomføre for å bekjempe datatyven
-          og gjennomføre spillet. Er du klar for å løse oppgaver, og slå datatyven en gang for alle?</p>
+        <p>
+          I datasenteret vil du få en blanding av oppgaver fra alle de tidligere
+          nivåene. Dette er det siste nivået du må gjennomføre for å bekjempe
+          datatyven og gjennomføre spillet. Er du klar for å løse oppgaver, og
+          slå datatyven en gang for alle?
+        </p>
       </TaskGuide>
+
       <div v-if="showHelpPopup" class="popup-overlay" @click="closeHelpPopup">
         <div class="hint-popup" @click.stop>
           <h2 class="popup-title">Trenger du hjelp?</h2>
 
           <div class="hint-text">
             <p>
-              Inne på denne siden skal du løse oppgaver for å bekjempe datatyven.
+              Inne på denne siden skal du løse oppgaver for å bekjempe
+              datatyven.
             </p>
             <ul>
               <li>Begynn med oppgave 1</li>
@@ -114,6 +207,7 @@ function closeHintPopup(): void {
           </div>
         </div>
       </div>
+
       <div v-if="showHintPopup" class="popup-overlay" @click="closeHintPopup">
         <div class="hint-popup" @click.stop>
           <h2 class="popup-title">Tips 💡</h2>
@@ -136,15 +230,66 @@ function closeHintPopup(): void {
           </div>
         </div>
       </div>
-  </div>
-  </div>
 
+      <div
+        v-if="showResultPopup"
+        class="victory-overlay"
+        @click="closeResultPopup"
+      >
+        <div class="victory-popup" @click.stop>
+          <div class="victory-top">
+            <img
+              :src="resultImage"
+              :alt="resultAltText"
+              class="victory-image"
+            />
+          </div>
+
+          <div class="victory-content">
+            <p class="victory-kicker">{{ resultKicker }}</p>
+            <h2 class="victory-title">{{ resultTitle }}</h2>
+            <p class="victory-message">
+              {{ resultMessage }}
+            </p>
+            <p class="victory-submessage">
+              {{ resultSubmessage }}
+            </p>
+
+            <div class="victory-highlight">
+              <p class="victory-highlight-title">{{ resultHighlightTitle }}</p>
+              <p>
+                {{ resultHighlightText }}
+              </p>
+            </div>
+
+            <div class="victory-actions">
+              <button
+                v-if="resultType === 'victory'"
+                class="leaderboard-button"
+                @click="openLeaderboard"
+              >
+                <img
+                  :src="LeaderboardIcon"
+                  alt="Toppliste"
+                  class="leaderboard-icon"
+                />
+                <span>Se toppliste</span>
+              </button>
+
+              <button class="victory-close-button" @click="closeResultPopup">
+                Tilbake til kartet
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>
 h2 {
   margin: 0;
-  font-size: clamp(1.8rem, 4vw, 2.5rem);
 }
 
 .page {
@@ -190,7 +335,6 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(1rem, 2vw, 2rem);
   font-weight: 700;
 }
 
@@ -207,10 +351,12 @@ h2 {
   border-radius: 38px;
   border: 5px solid var(--brown-dark);
   background-color: var(--orange-medium);
-  font-size: clamp(1rem, 2vw, 1.2rem);
   font-weight: 700;
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.2s ease, filter 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    filter 0.2s ease;
 }
 
 .fake-button:hover {
@@ -225,7 +371,6 @@ h2 {
 .task-wrapper {
   margin: 0;
   width: min(100%, 800px);
-  font-size: clamp(1rem, 2.5vw, 2rem);
   padding: 1rem 2rem;
   background: var(--orange-medium);
   border: 5px solid var(--brown-dark);
@@ -235,28 +380,6 @@ h2 {
 
 .task-wrapper p {
   margin: 0;
-}
-
-/**Scaling for smaller screens*/
-@media (max-width: 768px) {
-  .page {
-    padding: 1rem;
-  }
-
-  .picture-wrapper {
-    gap: 1rem;
-  }
-
-  .task-wrapper {
-    padding: 1rem;
-    border-width: 3px;
-    border-radius: 24px;
-  }
-
-  .fake-button {
-    border-width: 3px;
-    border-radius: 24px;
-  }
 }
 
 .popup-overlay {
@@ -270,36 +393,27 @@ h2 {
 }
 
 .hint-popup {
-  width: min(560px, calc(100vw - 32px));
+  width: min(800px, calc(100vw - 32px));
   background: var(--orange-medium-80);
   border: 4px solid var(--brown-dark);
   border-radius: 28px;
   box-shadow: 0 10px 24px rgb(0 0 0 / 20%);
-  padding: 28px 24px 20px;
+  padding: 40px 32px 28px;
   text-align: center;
   backdrop-filter: blur(2px);
 }
 
 .popup-title {
-  margin: 0 0 10px;
-  font-size: 2rem;
-  line-height: 1.15;
-  font-weight: 800;
-  color: var(--color-text);
+  margin: 0 0 16px;
 }
 
 .hint-text {
-  margin-top: 10px;
-  font-size: 1.1rem;
-  line-height: 1.35;
-  font-weight: 700;
-  color: var(--color-text);
-  text-align: left;
+  margin-top: 16px;
+  text-align: center;
 }
 
 .hint-text p {
-  margin: 0 0 8px;
-  font-size: 1.2rem;
+  margin: 0 0 14px;
 }
 
 .hint-text ul {
@@ -320,18 +434,205 @@ h2 {
 }
 
 .popup-btn {
-  min-width: 130px;
-  padding: 14px 24px;
+  min-width: 180px;
+  padding: 18px 28px;
   border-radius: 22px;
   border: 4px solid var(--brown-dark);
-  font-size: 1.15rem;
   font-weight: 800;
-  color: var(--color-text);
   cursor: pointer;
   box-shadow: 0 6px 12px rgb(0 0 0 / 18%);
 }
 
 .popup-btn-play {
   background: var(--green-confirm);
+}
+
+/* Result popup */
+
+.victory-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 32%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  z-index: 2000;
+  backdrop-filter: blur(4px);
+}
+
+.victory-popup {
+  width: min(980px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  background:
+    linear-gradient(
+      180deg,
+      rgb(255 214 120 / 95%) 0%,
+      rgb(245 170 92 / 96%) 18%,
+      rgb(232 155 86 / 98%) 100%
+    );
+  border: 6px solid var(--brown-dark);
+  border-radius: 40px;
+  box-shadow:
+    0 22px 60px rgb(0 0 0 / 30%),
+    inset 0 3px 0 rgb(255 255 255 / 28%);
+  text-align: center;
+  position: relative;
+}
+
+.victory-top {
+  padding: 3rem 2rem 1.5rem;
+}
+
+.victory-image {
+  width: min(100%, 600px);
+  max-height: 400px;
+  object-fit: contain;
+  filter: drop-shadow(0 12px 20px rgb(0 0 0 / 20%));
+}
+
+.victory-content {
+  padding: 0 2.5rem 2.5rem;
+}
+
+.victory-kicker {
+  margin: 0 0 0.5rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.victory-title {
+  margin: 0;
+  font-size: clamp(2rem, 5.5vw, 4.2rem);
+  line-height: 1;
+}
+
+.victory-message {
+  margin: 1rem auto 0;
+  max-width: 700px;
+}
+
+.victory-submessage {
+  margin: 0.75rem auto 0;
+  max-width: 700px;
+}
+
+.victory-highlight {
+  margin: 2rem auto 0;
+  max-width: 700px;
+  padding: 1.2rem 1.4rem;
+  background: rgb(255 245 214 / 72%);
+  border: 4px solid var(--brown-dark);
+  border-radius: 28px;
+  box-shadow: 0 8px 20px rgb(0 0 0 / 12%);
+}
+
+.victory-highlight-title {
+  margin: 0 0 0.4rem;
+  font-weight: 800;
+}
+
+.victory-highlight p:last-child {
+  margin-bottom: 0;
+}
+
+.victory-actions {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.leaderboard-button,
+.victory-close-button {
+  min-width: 240px;
+  min-height: 72px;
+  padding: 1rem 1.4rem;
+  border: 4px solid var(--brown-dark);
+  border-radius: 24px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  box-shadow: 0 8px 18px rgb(0 0 0 / 18%);
+  transition:
+    transform 0.2s ease,
+    filter 0.2s ease;
+}
+
+.leaderboard-button {
+  background: #ffe08a;
+}
+
+.victory-close-button {
+  background: var(--green-confirm);
+}
+
+.leaderboard-button:hover,
+.victory-close-button:hover {
+  filter: brightness(1.05);
+  transform: translateY(-2px);
+}
+
+.leaderboard-button:active,
+.victory-close-button:active {
+  transform: translateY(0);
+}
+
+.leaderboard-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 1rem;
+  }
+
+  .picture-wrapper {
+    gap: 1rem;
+  }
+
+  .task-wrapper {
+    padding: 1rem;
+    border-width: 3px;
+    border-radius: 24px;
+  }
+
+  .fake-button {
+    border-width: 3px;
+    border-radius: 24px;
+  }
+
+  .victory-popup {
+    border-width: 4px;
+    border-radius: 28px;
+  }
+
+  .victory-top {
+    padding: 1.5rem 1rem 0.75rem;
+  }
+
+  .victory-content {
+    padding: 0 1rem 1.5rem;
+  }
+
+  .victory-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .leaderboard-button,
+  .victory-close-button {
+    width: 100%;
+    min-width: 0;
+  }
 }
 </style>

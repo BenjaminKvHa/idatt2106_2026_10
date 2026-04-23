@@ -17,7 +17,10 @@ export function decodeJwtPayload(token: string): JwtPayload | null {
     const padded = normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), '=')
     const decoded = atob(padded)
 
-    return JSON.parse(decoded) as JwtPayload
+    const parsedJwt = JSON.parse(decoded);
+    const jwtData: JwtPayload = { ...parsedJwt }
+    jwtData.email = jwtData.email ? jwtData.email : parsedJwt["sub"];
+    return jwtData;
   } catch {
     return null
   }

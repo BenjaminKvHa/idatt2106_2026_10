@@ -22,6 +22,7 @@ import com.nettdet.backend.domain.enums.TaskDifficulty;
 import com.nettdet.backend.domain.ids.PupilChapterBridgeProgressionId;
 import com.nettdet.backend.dto.ChapterProgressionResponse;
 import com.nettdet.backend.dto.ChapterResponse;
+import com.nettdet.backend.dto.ImageVerificationRequest;
 import com.nettdet.backend.dto.ImageVerificationResponse;
 import com.nettdet.backend.dto.ImageVerificationTask;
 import com.nettdet.backend.dto.NewsVerificationResponse;
@@ -131,6 +132,14 @@ public class ChapterService {
         boolean correct = invokeValidator(validator, request, stored);
         String feedback = invokeFeedback(validator, stored, correct);
 
+        Boolean categoryCorrect = null;
+        Boolean justificationCorrect = null;
+        if (stored instanceof ImageVerificationTask imgTask
+                && request instanceof ImageVerificationRequest imgReq) {
+            categoryCorrect = imgReq.selectedCategory() == imgTask.correctCategory();
+            justificationCorrect = imgTask.correctJustification().equals(imgReq.selectedJustification());
+        }
+
         RunStateAfterAttempt runState = recordAttempt(pupilEmail, task.getChapter().getId(), correct);
 
         logger.info("Validation result for task id {}: {}", taskId, correct ? "correct" : "incorrect");
@@ -139,7 +148,9 @@ public class ChapterService {
             feedback,
             runState.currentRunAttempts(),
             runState.currentRunCorrect(),
-            runState.runCompleted()
+            runState.runCompleted(),
+            categoryCorrect,
+            justificationCorrect
         );
     }
 

@@ -22,8 +22,14 @@ import com.nettdet.backend.dto.UpdatePupilClassroomMembershipRequest;
 import com.nettdet.backend.security.JwtUserPrincipal;
 import com.nettdet.backend.service.PupilService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/pupil")
+@Tag(name = "Pupil", description = "Pupil-only endpoints for joining classrooms, finishing membership setup, and reading pupil-specific classroom data.")
+@SecurityRequirement(name = "bearerAuth")
 public class PupilController {
 
     private final PupilService pupilService;
@@ -34,6 +40,7 @@ public class PupilController {
 
     @GetMapping("/classrooms/{classroomCode}")
     @PreAuthorize("hasAuthority('PUPIL')")
+    @Operation(summary = "Get pupil classroom information", description = "Returns the authenticated pupil's classroom membership details, including username, confirmation state, avatar file object id, and chapter progression.")
     public ResponseEntity<PupilResponse> getPupilInformation(
             @PathVariable String classroomCode,
             @AuthenticationPrincipal JwtUserPrincipal principal) {
@@ -42,6 +49,7 @@ public class PupilController {
 
     @GetMapping("/classrooms/{classroomCode}/progression")
     @PreAuthorize("hasAuthority('PUPIL')")
+    @Operation(summary = "Get pupil classroom progression", description = "Returns the authenticated pupil's chapter progression entries for one classroom membership.")
     public ResponseEntity<PupilProgressionResponse> getPupilProgression(
             @PathVariable String classroomCode,
             @AuthenticationPrincipal JwtUserPrincipal principal) {
@@ -50,6 +58,7 @@ public class PupilController {
 
     @GetMapping("/classrooms/{classroomCode}/membership")
     @PreAuthorize("hasAuthority('PUPIL')")
+    @Operation(summary = "Check pupil membership", description = "Checks whether the authenticated pupil has a membership row for the classroom. Returns 200 when present and 403 when not present.")
     public ResponseEntity<Void> checkMembership(
             @PathVariable String classroomCode,
             @AuthenticationPrincipal JwtUserPrincipal principal) {
@@ -63,6 +72,7 @@ public class PupilController {
 
     @PostMapping("/classrooms/{classroomCode}/join")
     @PreAuthorize("hasAuthority('PUPIL')")
+    @Operation(summary = "Request to join classroom", description = "Creates a classroom join request for the authenticated pupil. The membership starts unconfirmed and must later be accepted by a teacher.")
     public ResponseEntity<PupilResponse> requestToJoinClassroom(
             @PathVariable String classroomCode,
             @AuthenticationPrincipal JwtUserPrincipal principal) {
@@ -73,6 +83,7 @@ public class PupilController {
 
     @PutMapping("/classrooms/{classroomCode}/membership")
     @PreAuthorize("hasAuthority('PUPIL')")
+    @Operation(summary = "Update pupil classroom membership", description = "Sets the authenticated pupil's display username and avatar selection for a classroom membership. The avatar selection must use the format `<person>_<hair>_<costume>`.")
     public ResponseEntity<PupilClassroomMembershipResponse> setClassroomMembership(
             @PathVariable String classroomCode,
             @Valid @RequestBody UpdatePupilClassroomMembershipRequest request,

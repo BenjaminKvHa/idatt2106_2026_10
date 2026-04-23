@@ -1,5 +1,6 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+</script>
 
 <template>
-  <main>This is a view</main>
+  <main>Oversikt over klasserom</main>
 </template>

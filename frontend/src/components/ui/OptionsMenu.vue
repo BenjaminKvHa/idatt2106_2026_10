@@ -52,7 +52,6 @@ function close() {
 
 <style scoped>
 .settings-modal-box {
-    padding: var(--thick-padding);
     min-width: 320px;
     max-width: 500px;
     width: 90vw;

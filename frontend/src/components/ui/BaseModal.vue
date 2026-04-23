@@ -66,5 +66,8 @@ onBeforeUnmount(() => {
     width: min(90vw, 640px);
     max-height: 90vh;
     overflow: auto;
+    display: flex;
+    flex-direction: column;
+    padding: var(--thick-padding);
 }
 </style>

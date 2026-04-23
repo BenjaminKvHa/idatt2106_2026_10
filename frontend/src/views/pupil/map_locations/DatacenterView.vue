@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
+import { useRouter } from "vue-router";
 import TopBar from "@/components/TopBar.vue";
 import TaskGuide from "@/components/TaskGuide.vue";
 import VictoryImage from "@/assets/Victory.png";
 import DefeatImage from "@/assets/Defeat.png";
-import LeaderboardIcon from "@/assets/homescreen/icon_leaderboard.png";
 import victorySoundFile from "@/assets/victory-sound.mp3";
 import defeatSoundFile from "@/assets/evil-laugh.mp3";
+import confetti from "canvas-confetti";
 
 type TaskPicture = {
   id: number;
@@ -16,8 +17,11 @@ type TaskPicture = {
 
 type ResultType = "victory" | "defeat" | null;
 
+const router = useRouter();
+
 const victorySound = new Audio(victorySoundFile);
 victorySound.volume = 0.3;
+
 const defeatSound = new Audio(defeatSoundFile);
 defeatSound.volume = 0.3;
 
@@ -74,9 +78,66 @@ const resultHighlightTitle = computed(() =>
 
 const resultHighlightText = computed(() =>
   resultType.value === "victory"
-    ? "Du har kommet helt til toppen i Datasenteret. Nå kan du sjekke plasseringen din på topplisten."
+    ? "Du har kommet helt til toppen i Datasenteret."
     : "Du kan gå tilbake og prøve oppgavene på nytt for å få en ny sjanse til å fullføre spillet.",
 );
+
+function stopResultSounds(): void {
+  victorySound.pause();
+  defeatSound.pause();
+
+  victorySound.currentTime = 0;
+  defeatSound.currentTime = 0;
+}
+
+function fireVictoryConfetti(): void {
+  const duration = 2000;
+  const end = Date.now() + duration;
+
+  const defaults = {
+    zIndex: 3000,
+  };
+
+  const frame = () => {
+    confetti({
+      ...defaults,
+      particleCount: 8,
+      angle: 60,
+      spread: 60,
+      origin: { x: 0, y: 0.6 },
+    });
+
+    confetti({
+      ...defaults,
+      particleCount: 8,
+      angle: 120,
+      spread: 60,
+      origin: { x: 1, y: 0.6 },
+    });
+
+    if (Date.now() < end) {
+      requestAnimationFrame(frame);
+    }
+  };
+
+  frame();
+}
+
+watch(showResultPopup, (isOpen) => {
+  if (!isOpen) {
+    stopResultSounds();
+    return;
+  }
+
+  stopResultSounds();
+
+  if (resultType.value === "victory") {
+    victorySound.play();
+    fireVictoryConfetti();
+  } else if (resultType.value === "defeat") {
+    defeatSound.play();
+  }
+});
 
 function chooseFakePicture(picture: TaskPicture) {
   console.log(`Valgte ${picture.label} som falsk`);
@@ -109,29 +170,17 @@ function closeHintPopup(): void {
 function openResultPopup(type: ResultType): void {
   resultType.value = type;
   showResultPopup.value = true;
-
-  if (type === "victory") {
-    victorySound.currentTime = 0;
-    victorySound.play();
-  } else if (type === "defeat") {
-    defeatSound.currentTime = 0;
-    defeatSound.play();
-  }
 }
 
 function closeResultPopup(): void {
   showResultPopup.value = false;
   resultType.value = null;
-
-  victorySound.pause();
-  defeatSound.pause();
-
-  victorySound.currentTime = 0;
-  defeatSound.currentTime = 0;
+  stopResultSounds();
 }
 
-function openLeaderboard(): void {
-  console.log("Gå til toppliste");
+function goBackToMap(): void {
+  closeResultPopup();
+  router.push("/pupil/classroom/map");
 }
 </script>
 
@@ -263,20 +312,7 @@ function openLeaderboard(): void {
             </div>
 
             <div class="victory-actions">
-              <button
-                v-if="resultType === 'victory'"
-                class="leaderboard-button"
-                @click="openLeaderboard"
-              >
-                <img
-                  :src="LeaderboardIcon"
-                  alt="Toppliste"
-                  class="leaderboard-icon"
-                />
-                <span>Se toppliste</span>
-              </button>
-
-              <button class="victory-close-button" @click="closeResultPopup">
+              <button class="victory-close-button" @click="goBackToMap">
                 Tilbake til kartet
               </button>
             </div>
@@ -547,7 +583,6 @@ h2 {
   flex-wrap: wrap;
 }
 
-.leaderboard-button,
 .victory-close-button {
   min-width: 240px;
   min-height: 72px;
@@ -564,31 +599,16 @@ h2 {
   transition:
     transform 0.2s ease,
     filter 0.2s ease;
-}
-
-.leaderboard-button {
-  background: #ffe08a;
-}
-
-.victory-close-button {
   background: var(--green-confirm);
 }
 
-.leaderboard-button:hover,
 .victory-close-button:hover {
   filter: brightness(1.05);
   transform: translateY(-2px);
 }
 
-.leaderboard-button:active,
 .victory-close-button:active {
   transform: translateY(0);
-}
-
-.leaderboard-icon {
-  width: 32px;
-  height: 32px;
-  object-fit: contain;
 }
 
 @media (max-width: 768px) {
@@ -629,7 +649,6 @@ h2 {
     align-items: stretch;
   }
 
-  .leaderboard-button,
   .victory-close-button {
     width: 100%;
     min-width: 0;

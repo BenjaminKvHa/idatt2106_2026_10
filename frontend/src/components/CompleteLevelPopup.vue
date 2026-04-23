@@ -1,67 +1,126 @@
 <script setup lang="ts">
-import { watch } from "vue"
-import confetti from "canvas-confetti"
+import { computed, watch } from "vue";
+import confetti from "canvas-confetti";
+import completedSoundFile from "@/assets/completedSound.mp3";
+import tryAgainSoundFile from "@/assets/tryAgainSound.mp3";
 
 const props = defineProps<{
-  show: boolean
-  title?: string
-  message?: string
-  subMessage?: string
-  success?: boolean
-}>()
+  show: boolean;
+  title?: string;
+  message?: string;
+  subMessage?: string;
+  success?: boolean;
+  successImage?: string;
+  failImage?: string;
+}>();
 
 const emit = defineEmits<{
-  (e: 'close'): void
-}>()
+  (e: "close"): void;
+}>();
 
-function closePopup() {
-  emit('close')
+const completedSound = new Audio(completedSoundFile);
+completedSound.volume = 0.5;
+
+const tryAgainSound = new Audio(tryAgainSoundFile);
+tryAgainSound.volume = 0.5;
+
+const currentImage = computed(() =>
+    props.success ? props.successImage : props.failImage,
+);
+
+function stopAllSounds() {
+  completedSound.pause();
+  tryAgainSound.pause();
+
+  completedSound.currentTime = 0;
+  tryAgainSound.currentTime = 0;
 }
 
-watch(() => props.show, (isOpen) => {
-  if (isOpen) {
-    const duration = 2000
-    const end = Date.now() + duration
+function closePopup() {
+  stopAllSounds();
+  emit("close");
+}
 
-    const defaults = {
-      zIndex: 2000
-    }
-
-    const frame = () => {
-      confetti({
-        ...defaults,
-        particleCount: 8,
-        angle: 60,
-        spread: 60,
-        origin: { x: 0, y: 0.6 }
-      })
-
-      confetti({
-        ...defaults,
-        particleCount: 8,
-        angle: 120,
-        spread: 60,
-        origin: { x: 1, y: 0.6 }
-      })
-
-      if (Date.now() < end) {
-        requestAnimationFrame(frame)
+watch(
+    () => props.show,
+    (isOpen) => {
+      if (!isOpen) {
+        stopAllSounds();
+        return;
       }
-    }
 
-    frame()
-  }
-})
+      stopAllSounds();
+
+      if (props.success) {
+        completedSound.play();
+
+        const duration = 2000;
+        const end = Date.now() + duration;
+
+        const defaults = {
+          zIndex: 2000,
+        };
+
+        const frame = () => {
+          confetti({
+            ...defaults,
+            particleCount: 8,
+            angle: 60,
+            spread: 60,
+            origin: { x: 0, y: 0.6 },
+          });
+
+          confetti({
+            ...defaults,
+            particleCount: 8,
+            angle: 120,
+            spread: 60,
+            origin: { x: 1, y: 0.6 },
+          });
+
+          if (Date.now() < end) {
+            requestAnimationFrame(frame);
+          }
+        };
+
+        frame();
+      } else {
+        tryAgainSound.play();
+      }
+    },
+);
 </script>
 
 <template>
   <div v-if="show" class="popup-overlay" @click="closePopup">
-    <div class="complete-popup" @click.stop>
-      <h2 class="popup-title">{{ title || 'Du klarte det!' }}</h2>
+    <div
+        class="complete-popup"
+        :class="{ 'complete-popup-fail': success === false }"
+        @click.stop
+    >
+      <div v-if="currentImage" class="popup-image-wrapper">
+        <img
+            :src="currentImage"
+            :alt="success ? 'Riktig svar' : 'Feil svar'"
+            class="popup-image"
+        />
+      </div>
+
+      <h2 class="popup-title">
+        {{ title || (success ? "Du klarte det!" : "Du klarte det ikke") }}
+      </h2>
 
       <div class="popup-text">
-        <p>{{ message || 'Gratulerer! Du har fullført nivået.' }}</p>
-        <p>{{ subMessage || 'Nå har du vist at du kan tenke som en ekte nett-detektiv!' }}</p>
+        <p>
+          {{ message || (success
+            ? "Gratulerer! Du har fullført nivået."
+            : "Å nei! Du løste ikke oppgaven riktig denne gangen.") }}
+        </p>
+        <p>
+          {{ subMessage || (success
+            ? "Nå har du vist at du kan tenke som en ekte nett-detektiv!"
+            : "Prøv igjen for å klare nivået.") }}
+        </p>
       </div>
 
       <div class="popup-actions">
@@ -86,13 +145,30 @@ watch(() => props.show, (isOpen) => {
 
 .complete-popup {
   width: min(800px, calc(100vw - 32px));
-  background: var(--orange-medium-80);
+  background: var(--orange-medium);
   border: 4px solid var(--brown-dark);
   border-radius: 28px;
   box-shadow: 0 10px 24px rgb(0 0 0 / 20%);
   padding: 32px 24px;
   text-align: center;
   backdrop-filter: blur(2px);
+}
+
+.complete-popup-fail {
+  background: #ff4d4d;
+}
+
+.popup-image-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.popup-image {
+  max-width: 220px;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
 }
 
 .popup-actions {
@@ -119,11 +195,11 @@ watch(() => props.show, (isOpen) => {
   background: var(--green-confirm);
 }
 
-.popup-title{
+.popup-title {
   font-size: 2rem;
 }
 
-.popup-text{
+.popup-text {
   font-size: 1rem;
 }
 </style>

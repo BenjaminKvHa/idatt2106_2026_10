@@ -25,12 +25,6 @@ function isActive(to: string) {
   return router.currentRoute.value.path === to
 }
 
-function humanize(value: string) {
-  return value
-    .replace(/[-_]/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase())
-}
-
 function fillParams(path: string, currentRoute: RouteLocationNormalizedLoaded) {
   return path.replace(/:([A-Za-z0-9_]+)/g, (_, key: string) => {
     const v = currentRoute.params[key]
@@ -40,36 +34,22 @@ function fillParams(path: string, currentRoute: RouteLocationNormalizedLoaded) {
 }
 
 const autoPath = computed<Crumb[]>(() => {
-  const isTeacherRoute = route.matched.some((r) => r.meta?.isTeacherRoute)
-  if (!isTeacherRoute) return []
-
-  const seen = new Set<string>()
-  const dedupedRecords = route.matched.filter((record) => {
-    if (seen.has(record.path)) return false
-    seen.add(record.path)
-    return true
-  })
-
   const crumbs: Crumb[] = []
 
-  dedupedRecords.forEach((record, index) => {
-    let label: string | undefined
-
+  route.matched.forEach((record, index) => {
     const metaBreadcrumb = record.meta?.breadcrumb
+    if (!metaBreadcrumb) return
+
+    let label: string | undefined
     if (typeof metaBreadcrumb === 'string') {
       label = metaBreadcrumb
     } else if (typeof metaBreadcrumb === 'function') {
       label = metaBreadcrumb(route)
-    } else if (typeof record.name === 'string' && record.name.length) {
-      label = humanize(record.name)
-    } else {
-      const segment = record.path.split('/').filter(Boolean).at(-1) ?? ''
-      label = segment.startsWith(':') ? undefined : humanize(segment)
     }
 
     if (!label) return
 
-    const isLast = index === dedupedRecords.length - 1
+    const isLast = index === route.matched.length - 1
     crumbs.push({
       label,
       to: isLast ? undefined : fillParams(record.path, route),

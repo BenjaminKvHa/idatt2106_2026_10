@@ -73,36 +73,32 @@ const router = createRouter({
     {
       path: '/teacher',
       component: TeacherView,
-      meta: { isTeacherRoute: true, breadcrumb: '' },
+      meta: { breadcrumb: '' },
       children: [
         {
           path: 'profile',
-          meta: { isTeacherRoute: true },
           component: TeachersProfileView,
         },
         {
           path: 'notifications',
-          meta: { isTeacherRoute: true },
           component: TeachersNotificationsView,
         },
         {
           path: 'classrooms',
-          meta: { isTeacherRoute: true, breadcrumb: 'Klasserom' },
+          meta: { breadcrumb: 'Klasserom' },
           children: [
             {
               path: '',
-              meta: { isTeacherRoute: true },
               component: TeachersClassroomsView,
             },
             {
               path: 'new',
-              meta: { isTeacherRoute: true, breadcrumb: 'Nytt Klasserom' },
+              meta: { breadcrumb: 'Nytt Klasserom' },
               component: TeachersCreateClassroomView,
             },
             {
               path: ':classroomName',
               meta: {
-                isTeacherRoute: true,
                 breadcrumb: (route: RouteLocationNormalizedLoaded) =>
                   String(route.params.classroomName)
                     .replace(/-/g, ' ')
@@ -120,35 +116,31 @@ const router = createRouter({
               children: [
                 {
                   path: 'oversikt',
-                  meta: { isTeacherRoute: true, breadcrumb: 'Oversikt' },
+                  meta: { breadcrumb: 'Oversikt' },
                   component: TeachersClassroomView,
                 },
                 {
                   path: 'edit-classroom',
-                  meta: { isTeacherRoute: true, breadcrumb: 'Rediger Klasserom' },
+                  meta: { breadcrumb: 'Rediger Klasserom' },
                   component: TeachersClassroomView,
                 },
                 {
                   path: 'pupils',
-                  meta: { isTeacherRoute: true, breadcrumb: 'Elever' },
+                  meta: { breadcrumb: 'Elever' },
                   component: TeachersPupilsView,
                   children: [
                     {
                       path: ':pupil_id',
-                      meta: { isTeacherRoute: true },
                       children: [
                         {
                           path: '',
-                          meta: { isTeacherRoute: true },
                           component: TeachersPupilView,
                         },
                         {
                           path: 'notebook',
-                          meta: { isTeacherRoute: true },
                           children: [
                             {
                               path: ':chapter_id',
-                              meta: { isTeacherRoute: true },
                               component: TeachersNotebookChapterView,
                             },
                           ],

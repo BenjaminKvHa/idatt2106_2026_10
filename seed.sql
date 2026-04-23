@@ -16,7 +16,8 @@ INSERT INTO classroom (classroom_code, classroom_name, classroom_description)
 VALUES
     ('MAP001', 'Kart testklasse', 'Utviklingsklasse for kartvisning'),
     ('MAP002', 'Mellomklasse', 'Ekstra klasse for ranking og teacher-overview'),
-    ('MAP003', 'Sisteklasse', 'Ekstra klasse for ranking og teacher-overview')
+    ('MAP003', 'Sisteklasse', 'Ekstra klasse for ranking og teacher-overview'),
+    ('CHAP01', 'Kapitteltestklasse', 'Utviklingsklasse for kapittelvisning')
 ON CONFLICT (classroom_code) DO UPDATE
 SET
     classroom_name = EXCLUDED.classroom_name,
@@ -61,6 +62,12 @@ VALUES
         'PUPIL'
     ),
     (
+        'chapter.test@example.com',
+        '$2a$10$d8rn.gEcXxyXDGh6NTzF2uZTAlOI5m/T1x5Hh/8A7.BeLhGY232ym',
+        'Chapter Test',
+        'PUPIL'
+    ),
+    (
         'teacher.multi@example.com',
         '$2a$10$d8rn.gEcXxyXDGh6NTzF2uZTAlOI5m/T1x5Hh/8A7.BeLhGY232ym',
         'Teacher Multi',
@@ -96,7 +103,8 @@ VALUES
     ('map.partial@example.com', 'MAP001', 'map.partial', TRUE),
     ('map.complete@example.com', 'MAP001', 'map.complete', TRUE),
     ('rank.two@example.com', 'MAP002', 'rank.two', TRUE),
-    ('rank.three@example.com', 'MAP003', 'rank.three', TRUE)
+    ('rank.three@example.com', 'MAP003', 'rank.three', TRUE),
+    ('chapter.test@example.com', 'CHAP01', 'chapter.test', TRUE)
 ON CONFLICT (account_email) DO UPDATE
 SET
     classroom_code = EXCLUDED.classroom_code,
@@ -124,3 +132,41 @@ SET
     successful_runs = EXCLUDED.successful_runs,
     highscore = EXCLUDED.highscore,
     unsuccessful_streak = EXCLUDED.unsuccessful_streak;
+
+-- Nyhetskvartalet (chapter_id = 1) task bank.
+-- Pupil is asked which of the two files is the fake one; correctFileId = the fake one.
+-- fileId_1 / fileId_2 must reference existing rows in file_object.
+INSERT INTO task (id, difficulty, chapter_id, classroom_code, task_json)
+VALUES
+    (4, 'EASY', 1, 'CHAP01', '{
+        "taskDescription": "To avisforsider ligger foran deg. Én er ekte og én er falsk. Hvilken er falsk?",
+        "fileId_1": 1,
+        "fileId_2": 2,
+        "correctFileId": 2,
+        "correctDescription": "Riktig! Avisforsiden du valgte var den falske.",
+        "incorrectDescription": "Ikke helt. Den andre forsiden var faktisk den falske."
+    }'::jsonb),
+    (5, 'MEDIUM', 1, 'CHAP01', '{
+        "taskDescription": "To avisforsider ligger foran deg. Én er ekte og én er falsk. Hvilken er falsk?",
+        "fileId_1": 1,
+        "fileId_2": 2,
+        "correctFileId": 1,
+        "correctDescription": "Riktig! Avisforsiden du valgte var den falske.",
+        "incorrectDescription": "Ikke helt. Den andre forsiden var faktisk den falske."
+    }'::jsonb),
+    (6, 'HARD', 1, 'CHAP01', '{
+        "taskDescription": "To avisforsider ligger foran deg. Én er ekte og én er falsk. Hvilken er falsk?",
+        "fileId_1": 1,
+        "fileId_2": 2,
+        "correctFileId": 2,
+        "correctDescription": "Riktig! Avisforsiden du valgte var den falske.",
+        "incorrectDescription": "Ikke helt. Den andre forsiden var faktisk den falske."
+    }'::jsonb)
+ON CONFLICT (id) DO UPDATE
+SET
+    difficulty = EXCLUDED.difficulty,
+    chapter_id = EXCLUDED.chapter_id,
+    classroom_code = EXCLUDED.classroom_code,
+    task_json = EXCLUDED.task_json;
+
+SELECT setval('task_id_seq', GREATEST(COALESCE((SELECT MAX(id) FROM task), 0), 6), true);

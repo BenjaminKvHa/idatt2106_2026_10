@@ -20,7 +20,6 @@
           <p class="task-text">{{ currentTask.taskDescription }}</p>
 
           <div class="image-card">
-<<<<<<< HEAD
             <img
               v-if="imageUrl"
               :src="imageUrl"
@@ -28,9 +27,6 @@
               class="task-image"
             />
             <div v-else class="image-placeholder">Laster bilde…</div>
-=======
-            <div class="image-placeholder">Bilde {{ currentLevel + 1 }}</div>
->>>>>>> 5a3de504e92dc01ae923291ac46f239415fcfa20
 
             <div class="choices">
               <button
@@ -80,7 +76,6 @@
         </div>
       </div>
 
-<<<<<<< HEAD
       <div v-else-if="loading" class="task-container">
         <p>Laster oppgave…</p>
       </div>
@@ -89,19 +84,12 @@
         <p class="error">{{ error }}</p>
       </div>
 
-=======
->>>>>>> 5a3de504e92dc01ae923291ac46f239415fcfa20
       <TaskGuide v-if="showGuidePopup" @close="showGuidePopup = false">
         <h2>Velkommen til fotografen!</h2>
         <p>
           I fotografen vil du få se et bilde, og oppgaven din er å finne ut om bildet er ekte,
-<<<<<<< HEAD
           KI-generert eller manipulert. Etter du har bestemt det, skal du si hvorfor du mener
           bildet er en av disse. Er du klar for å løse oppgaver?
-=======
-          KI-generert eller manipulert. Etter du har bestemt det, skal du si hvorfor du mener bildet
-          er en av disse. Er du klar for å løse oppgaver?
->>>>>>> 5a3de504e92dc01ae923291ac46f239415fcfa20
         </p>
       </TaskGuide>
     </div>
@@ -113,7 +101,6 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/components/TopBar.vue'
 import TaskGuide from '@/components/TaskGuide.vue'
-<<<<<<< HEAD
 import { get, getBlob, post } from '@/utils/apiUtils'
 import type {
   ImageVerificationRequest,
@@ -121,8 +108,6 @@ import type {
   TaskDifficulty,
   ValidationResult,
 } from '@/types/chapter'
-=======
->>>>>>> 5a3de504e92dc01ae923291ac46f239415fcfa20
 
 const router = useRouter()
 const showGuidePopup = ref(true)

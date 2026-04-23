@@ -97,7 +97,7 @@ INSERT INTO pupil_classroom_membership (
     account_email,
     classroom_code,
     username,
-    membership_confirmed_by_teacherF
+    membership_confirmed_by_teacher
 )
 VALUES
     ('map.partial@example.com', 'MAP001', 'map.partial', TRUE),

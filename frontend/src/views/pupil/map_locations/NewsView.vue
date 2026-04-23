@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/components/TopBar.vue'
 import TaskGuide from '@/components/TaskGuide.vue'
+import CompleteLevelPopup from '@/components/CompleteLevelPopup.vue'
 import { get, getBlob, post } from '@/utils/apiUtils'
 import type {
   NewsVerificationRequest,
@@ -19,7 +20,6 @@ const DIFFICULTIES: TaskDifficulty[] = ['EASY', 'MEDIUM', 'HARD']
 const showHelpPopup = ref(false)
 const showHintPopup = ref(false)
 const showGuidePopup = ref(true)
-
 const stepIndex = ref(0)
 const currentTask = ref<NewsVerificationResponse | null>(null)
 const imageUrls = ref<string[]>([])
@@ -31,6 +31,12 @@ const runDone = ref(false)
 const loading = ref(false)
 const submitting = ref(false)
 const error = ref<string | null>(null)
+
+const showCompletePopup = ref(false)
+const popupTitle = ref('')
+const popupMessage = ref('')
+const popupSubMessage = ref('')
+const popupSuccess = ref(false)
 
 const difficultyLabel = computed(() => {
   const labels: Record<TaskDifficulty, string> = {
@@ -100,6 +106,14 @@ async function next() {
   if (!lastResult.value) return
   if (lastResult.value.runCompleted) {
     runDone.value = true
+    const success = runCorrect.value === runAttempts.value
+    popupSuccess.value = success
+    popupTitle.value = success ? 'Godt jobbet!' : 'Ferdig!'
+    popupMessage.value = `Du fikk ${runCorrect.value} av ${runAttempts.value} riktig.`
+    popupSubMessage.value = success
+      ? 'Du klarte alle nivåene uten feil.'
+      : 'Prøv igjen for å forbedre resultatet.'
+    showCompletePopup.value = true
     return
   }
   stepIndex.value++
@@ -108,7 +122,8 @@ async function next() {
   await loadTask()
 }
 
-function finish() {
+function closeCompletePopup() {
+  showCompletePopup.value = false
   revokeImageUrls()
   router.push('/pupil/classroom/map')
 }
@@ -126,13 +141,7 @@ onBeforeUnmount(revokeImageUrls)
 
   <div class="page">
     <div class="center-container">
-      <div v-if="runDone" class="end-screen">
-        <h2>Ferdig!</h2>
-        <p>Du fikk {{ runCorrect }} av {{ runAttempts }} riktig.</p>
-        <button class="primary-btn" @click="finish">Til kartet</button>
-      </div>
-
-      <template v-else-if="currentTask">
+      <template v-if="currentTask && !runDone">
         <h2>Nivå {{ stepIndex + 1 }} — {{ difficultyLabel }}</h2>
         <div class="task-wrapper">
           <p>{{ currentTask.taskDescription }}</p>
@@ -221,14 +230,18 @@ onBeforeUnmount(revokeImageUrls)
       </div>
     </div>
   </div>
+
+  <CompleteLevelPopup
+    :show="showCompletePopup"
+    :title="popupTitle"
+    :message="popupMessage"
+    :sub-message="popupSubMessage"
+    :success="popupSuccess"
+    @close="closeCompletePopup"
+  />
 </template>
 
 <style scoped>
-h2 {
-  margin: 0;
-  font-size: clamp(1.8rem, 4vw, 2.5rem);
-}
-
 .page {
   display: flex;
   justify-content: center;
@@ -236,7 +249,6 @@ h2 {
 }
 
 .center-container {
-  margin: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -244,6 +256,10 @@ h2 {
   width: 100%;
   max-width: 1100px;
   gap: 1.5rem;
+}
+
+h2 {
+  margin: 0;
 }
 
 .picture-wrapper {
@@ -290,7 +306,6 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(1rem, 2vw, 2rem);
   font-weight: 700;
   overflow: hidden;
 }
@@ -308,8 +323,6 @@ h2 {
   border-radius: 38px;
   border: 5px solid var(--brown-dark);
   background-color: var(--orange-medium);
-  font-size: clamp(1rem, 2vw, 1.2rem);
-  font-weight: 700;
   cursor: pointer;
   transition: background-color 0.2s ease, transform 0.2s ease, filter 0.2s ease;
 }
@@ -329,9 +342,7 @@ h2 {
 }
 
 .task-wrapper {
-  margin: 0;
   width: min(100%, 800px);
-  font-size: clamp(1rem, 2.5vw, 2rem);
   padding: 1rem 2rem;
   background: var(--orange-medium);
   border: 5px solid var(--brown-dark);
@@ -427,24 +438,15 @@ h2 {
 
 .popup-title {
   margin: 0 0 10px;
-  font-size: 2rem;
-  line-height: 1.15;
-  font-weight: 800;
-  color: var(--color-text);
 }
 
 .hint-text {
   margin-top: 10px;
-  font-size: 1.1rem;
-  line-height: 1.35;
-  font-weight: 700;
-  color: var(--color-text);
   text-align: left;
 }
 
 .hint-text p {
   margin: 0 0 8px;
-  font-size: 1.2rem;
 }
 
 .hint-text ul {
@@ -469,14 +471,32 @@ h2 {
   padding: 14px 24px;
   border-radius: 22px;
   border: 4px solid var(--brown-dark);
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: var(--color-text);
   cursor: pointer;
   box-shadow: 0 6px 12px rgb(0 0 0 / 18%);
 }
 
 .popup-btn-play {
   background: var(--green-confirm);
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 1rem;
+  }
+
+  .picture-wrapper {
+    gap: 1rem;
+  }
+
+  .task-wrapper {
+    padding: 1rem;
+    border-width: 3px;
+    border-radius: 24px;
+  }
+
+  .fake-button {
+    border-width: 3px;
+    border-radius: 24px;
+  }
 }
 </style>

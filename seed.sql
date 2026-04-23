@@ -169,4 +169,55 @@ SET
     classroom_code = EXCLUDED.classroom_code,
     task_json = EXCLUDED.task_json;
 
+-- Fotografen (chapter_id = 2) task bank.
+-- selectedCategory mapping: 1 = ekte, 2 = KI-generert, 3 = manipulert.
+-- fileId must reference an existing row in file_object (upload via POST /api/objects first).
+INSERT INTO task (id, difficulty, chapter_id, classroom_code, task_json)
+VALUES
+    (1, 'EASY', 2, 'CHAP01', '{
+        "taskDescription": "Er dette bildet ekte, KI-generert eller manipulert?",
+        "fileId": 1,
+        "correctCategory": 1,
+        "correctJustification": "Detaljer og skygger ser naturlige ut",
+        "justifications": [
+            "Detaljer og skygger ser naturlige ut",
+            "Ansikter ser litt rare ut",
+            "Bakgrunnen er kopiert inn"
+        ],
+        "correctDescription": "Riktig! Dette bildet er ekte.",
+        "falseDescription": "Ikke helt. Dette bildet er faktisk ekte."
+    }'::jsonb),
+    (2, 'MEDIUM', 2, 'CHAP01', '{
+        "taskDescription": "Er dette bildet ekte, KI-generert eller manipulert?",
+        "fileId": 2,
+        "correctCategory": 2,
+        "correctJustification": "Hender og små detaljer ser unaturlige ut",
+        "justifications": [
+            "Hender og små detaljer ser unaturlige ut",
+            "Bildet er tatt med dårlig lys",
+            "Et objekt er fjernet fra bakgrunnen"
+        ],
+        "correctDescription": "Riktig! Dette bildet er KI-generert.",
+        "falseDescription": "Ikke helt. Dette bildet er KI-generert."
+    }'::jsonb),
+    (3, 'HARD', 2, 'CHAP01', '{
+        "taskDescription": "Er dette bildet ekte, KI-generert eller manipulert?",
+        "fileId": 1,
+        "correctCategory": 3,
+        "correctJustification": "Et objekt er lagt til eller fjernet",
+        "justifications": [
+            "Et objekt er lagt til eller fjernet",
+            "Fargene er litt blasse",
+            "Hele bildet er KI-generert"
+        ],
+        "correctDescription": "Riktig! Dette bildet er manipulert.",
+        "falseDescription": "Ikke helt. Dette bildet er manipulert."
+    }'::jsonb)
+ON CONFLICT (id) DO UPDATE
+SET
+    difficulty = EXCLUDED.difficulty,
+    chapter_id = EXCLUDED.chapter_id,
+    classroom_code = EXCLUDED.classroom_code,
+    task_json = EXCLUDED.task_json;
+
 SELECT setval('task_id_seq', GREATEST(COALESCE((SELECT MAX(id) FROM task), 0), 6), true);

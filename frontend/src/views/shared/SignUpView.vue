@@ -246,6 +246,7 @@ h1 {
   font-size: 28px;
   font-weight: 600;
   color: #1f1f1f;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .subtitle {

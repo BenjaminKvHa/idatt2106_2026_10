@@ -24,8 +24,14 @@ import com.nettdet.backend.dto.ValidationResult;
 import com.nettdet.backend.security.JwtUserPrincipal;
 import com.nettdet.backend.service.ChapterService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/chapters")
+@Tag(name = "Chapters", description = "Chapter and task endpoints for pupils, including task fetch, answer validation, and chapter progression.")
+@SecurityRequirement(name = "bearerAuth")
 public class ChapterController {
 
     private final ChapterService chapterService;
@@ -36,12 +42,14 @@ public class ChapterController {
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "List chapters", description = "Returns all available chapters with id and chapter name for the authenticated user.")
     public ResponseEntity<List<ChapterResponse>> getAllChapters() {
         return ResponseEntity.ok(chapterService.getAllChapters());
     }
 
     @GetMapping("/{chapterId}/progression")
     @PreAuthorize("hasAuthority('PUPIL')")
+    @Operation(summary = "Get chapter progression", description = "Returns the authenticated pupil's current progression state for a single chapter, including current run counters and stored score data.")
     public ResponseEntity<ChapterProgressionResponse> getProgression(
             @AuthenticationPrincipal JwtUserPrincipal principal,
             @PathVariable Long chapterId) {
@@ -50,6 +58,7 @@ public class ChapterController {
 
     @GetMapping("/{chapterId}/fotografen")
     @PreAuthorize("hasAuthority('PUPIL')")
+    @Operation(summary = "Get Fotografen task", description = "Returns one image-verification task for the Fotografen chapter for the authenticated pupil. The difficulty is selected with the query parameter.")
     public ResponseEntity<ImageVerificationResponse> getImageVerificationTask(
             @AuthenticationPrincipal JwtUserPrincipal principal,
             @PathVariable Long chapterId,
@@ -60,6 +69,7 @@ public class ChapterController {
 
     @PostMapping("/fotografen/tasks/{taskId}/validate")
     @PreAuthorize("hasAuthority('PUPIL')")
+    @Operation(summary = "Validate Fotografen answer", description = "Validates the authenticated pupil's answer for one Fotografen task and returns correctness, feedback, and updated run state.")
     public ResponseEntity<ValidationResult> validateImageVerificationAnswer(
             @AuthenticationPrincipal JwtUserPrincipal principal,
             @PathVariable Long taskId,
@@ -70,6 +80,7 @@ public class ChapterController {
 
     @GetMapping("/{chapterId}/nyhetskvartalet")
     @PreAuthorize("hasAuthority('PUPIL')")
+    @Operation(summary = "Get Nyhetskvartalet task", description = "Returns one news-verification task for the Nyhetskvartalet chapter for the authenticated pupil. The difficulty is selected with the query parameter.")
     public ResponseEntity<NewsVerificationResponse> getNewsVerificationTask(
             @AuthenticationPrincipal JwtUserPrincipal principal,
             @PathVariable Long chapterId,
@@ -80,6 +91,7 @@ public class ChapterController {
 
     @PostMapping("/nyhetskvartalet/tasks/{taskId}/validate")
     @PreAuthorize("hasAuthority('PUPIL')")
+    @Operation(summary = "Validate Nyhetskvartalet answer", description = "Validates the authenticated pupil's answer for one Nyhetskvartalet task and returns correctness, feedback, and updated run state.")
     public ResponseEntity<ValidationResult> validateNewsVerificationAnswer(
             @AuthenticationPrincipal JwtUserPrincipal principal,
             @PathVariable Long taskId,

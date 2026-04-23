@@ -3,277 +3,247 @@
     <TopBar title="Fotografen" />
 
     <div class="content">
-      <h1 class="level">Nivå {{ currentLevel + 1 }}</h1>
-
-      <div v-if="currentLevelData" class="task-container">
-        <div class="task-box">
-          <p class="task-text">
-            Velg om bildet er ekte, KI-generert eller manipulert. Velg deretter en begrunnelse.
+      <div v-if="runDone" class="task-container">
+        <div class="task-box end-screen">
+          <h2>Ferdig!</h2>
+          <p>
+            Du fikk {{ runCorrect }} av {{ runAttempts }} riktig.
           </p>
+          <button class="primary-btn" @click="finish">Til kartet</button>
+        </div>
+      </div>
+
+      <div v-else-if="currentTask" class="task-container">
+        <h1 class="level">Nivå {{ stepIndex + 1 }} — {{ difficultyLabel }}</h1>
+
+        <div class="task-box">
+          <p class="task-text">{{ currentTask.taskDescription }}</p>
 
           <div class="image-card">
-            <!-- Midlertidig plassholder -->
-            <div class="image-placeholder">Bilde {{ currentLevel + 1 }}</div>
+            <img
+              v-if="imageUrl"
+              :src="imageUrl"
+              alt="Oppgavebilde"
+              class="task-image"
+            />
+            <div v-else class="image-placeholder">Laster bilde…</div>
 
             <div class="choices">
               <button
-                @click="selectAnswer('ekte')"
-                :disabled="currentLevelData.completed"
-                :class="[
-                  { selected: currentLevelData.image.selectedAnswer === 'ekte' },
-                  currentLevelData.completed && currentLevelData.image.correctAnswer === 'ekte'
-                    ? 'correct'
-                    : '',
-                  currentLevelData.completed &&
-                  currentLevelData.image.selectedAnswer === 'ekte' &&
-                  currentLevelData.image.correctAnswer !== 'ekte'
-                    ? 'wrong'
-                    : '',
-                ]"
+                v-for="cat in CATEGORIES"
+                :key="cat.value"
+                @click="selectCategory(cat.value)"
+                :disabled="!!lastResult"
+                :class="categoryClass(cat.value)"
               >
-                Ekte
-              </button>
-
-              <button
-                @click="selectAnswer('ki')"
-                :disabled="currentLevelData.completed"
-                :class="[
-                  { selected: currentLevelData.image.selectedAnswer === 'ki' },
-                  currentLevelData.completed && currentLevelData.image.correctAnswer === 'ki'
-                    ? 'correct'
-                    : '',
-                  currentLevelData.completed &&
-                  currentLevelData.image.selectedAnswer === 'ki' &&
-                  currentLevelData.image.correctAnswer !== 'ki'
-                    ? 'wrong'
-                    : '',
-                ]"
-              >
-                KI-generert
-              </button>
-
-              <button
-                @click="selectAnswer('manipulert')"
-                :disabled="currentLevelData.completed"
-                :class="[
-                  { selected: currentLevelData.image.selectedAnswer === 'manipulert' },
-                  currentLevelData.completed &&
-                  currentLevelData.image.correctAnswer === 'manipulert'
-                    ? 'correct'
-                    : '',
-                  currentLevelData.completed &&
-                  currentLevelData.image.selectedAnswer === 'manipulert' &&
-                  currentLevelData.image.correctAnswer !== 'manipulert'
-                    ? 'wrong'
-                    : '',
-                ]"
-              >
-                Manipulert
+                {{ cat.label }}
               </button>
             </div>
 
-            <div v-if="currentLevelData.image.selected" class="reason-box">
+            <div v-if="selectedCategory !== null" class="reason-box">
               <p>Hvorfor?</p>
-
               <button
-                v-for="reason in currentLevelData.image.reasons"
-                :key="reason.text"
-                @click="selectReason(reason)"
-                :disabled="currentLevelData.completed"
-                :class="{ selected: currentLevelData.image.selectedReason?.text === reason.text }"
+                v-for="j in currentTask.justifications"
+                :key="j"
+                @click="selectJustification(j)"
+                :disabled="!!lastResult"
+                :class="justificationClass(j)"
               >
-                {{ reason.text }}
+                {{ j }}
               </button>
             </div>
 
-            <div v-if="currentLevelData.completed" class="answer-feedback">
+            <div v-if="lastResult" class="answer-feedback">
               <p>
-                <strong>Riktig svar:</strong> {{ getCorrectAnswerText(currentLevelData.image) }}
+                <strong>{{ lastResult.correct ? 'Riktig!' : 'Feil.' }}</strong>
               </p>
-              <p>
-                <strong>Riktig begrunnelse:</strong>
-                {{ getCorrectReasonText(currentLevelData.image) }}
-              </p>
+              <p>{{ lastResult.feedback }}</p>
             </div>
           </div>
         </div>
 
         <div class="bottom-actions">
-          <button @click="prevLevel" :disabled="currentLevel === 0">← Forrige nivå</button>
-
           <button
-            v-if="!currentLevelData.completed"
-            @click="submitLevel"
-            :disabled="!canSubmitLevel()"
+            v-if="!lastResult"
+            @click="submit"
+            :disabled="!canSubmit || submitting"
           >
             Svar
           </button>
-
-          <button v-else @click="nextLevel">
-            {{ currentLevel === levels.length - 1 ? 'Til kartet' : 'Neste nivå →' }}
+          <button v-else @click="next">
+            {{ stepIndex === DIFFICULTIES.length - 1 ? 'Se resultat' : 'Neste nivå →' }}
           </button>
         </div>
       </div>
+
+      <div v-else-if="loading" class="task-container">
+        <p>Laster oppgave…</p>
+      </div>
+
+      <div v-else-if="error" class="task-container">
+        <p class="error">{{ error }}</p>
+      </div>
+
       <TaskGuide v-if="showGuidePopup" @close="showGuidePopup = false">
         <h2>Velkommen til fotografen!</h2>
-        <p>I fotografen vil du få se et bilde, og oppgaven din er å finne ut om bildet er ekte,
-          KI-generert eller manipulert. Etter du har bestemt det, skal du si hvorfor du mener bildet er en av disse.
-          Er du klar for å løse oppgaver?</p>
+        <p>
+          I fotografen vil du få se et bilde, og oppgaven din er å finne ut om bildet er ekte,
+          KI-generert eller manipulert. Etter du har bestemt det, skal du si hvorfor du mener
+          bildet er en av disse. Er du klar for å løse oppgaver?
+        </p>
       </TaskGuide>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/components/TopBar.vue'
-import TaskGuide from "@/components/TaskGuide.vue";
+import TaskGuide from '@/components/TaskGuide.vue'
+import { get, getBlob, post } from '@/utils/apiUtils'
+import type {
+  ImageVerificationRequest,
+  ImageVerificationResponse,
+  TaskDifficulty,
+  ValidationResult,
+} from '@/types/chapter'
 
 const router = useRouter()
-const showGuidePopup = ref(true);
+const showGuidePopup = ref(true)
 
-type AnswerOption = 'ekte' | 'ki' | 'manipulert'
+const FOTOGRAFEN_CHAPTER_ID = 2
+const DIFFICULTIES: TaskDifficulty[] = ['EASY', 'MEDIUM', 'HARD']
 
-type Reason = {
-  text: string
-  correct: boolean
-}
+const CATEGORIES = [
+  { value: 1, label: 'Ekte' },
+  { value: 2, label: 'KI-generert' },
+  { value: 3, label: 'Manipulert' },
+] as const
 
-type ImageTask = {
-  correctAnswer: AnswerOption
-  selected: boolean
-  selectedAnswer: AnswerOption | null
-  reasons: Reason[]
-  selectedReason: Reason | null
-}
+const stepIndex = ref(0)
+const currentTask = ref<ImageVerificationResponse | null>(null)
+const imageUrl = ref('')
+const selectedCategory = ref<number | null>(null)
+const selectedJustification = ref<string | null>(null)
+const lastResult = ref<ValidationResult | null>(null)
+const runCorrect = ref(0)
+const runAttempts = ref(0)
+const runDone = ref(false)
+const loading = ref(false)
+const submitting = ref(false)
+const error = ref<string | null>(null)
 
-type Level = {
-  image: ImageTask
-  completed: boolean
-  isCorrect: boolean
-}
-
-const currentLevel = ref(0)
-
-const levels = ref<Level[]>([
-  {
-    completed: false,
-    isCorrect: false,
-    image: {
-      correctAnswer: 'ekte',
-      selected: false,
-      selectedAnswer: null,
-      reasons: [
-        { text: 'Ser naturlig ut', correct: true },
-        { text: 'Rare skygger og detaljer', correct: false },
-      ],
-      selectedReason: null,
-    },
-  },
-  {
-    completed: false,
-    isCorrect: false,
-    image: {
-      correctAnswer: 'manipulert',
-      selected: false,
-      selectedAnswer: null,
-      reasons: [
-        { text: 'Noe i bildet er endret eller lagt til', correct: true },
-        { text: 'Bildet er litt uklart', correct: false },
-      ],
-      selectedReason: null,
-    },
-  },
-  {
-    completed: false,
-    isCorrect: false,
-    image: {
-      correctAnswer: 'ki',
-      selected: false,
-      selectedAnswer: null,
-      reasons: [
-        { text: 'Detaljene ser unaturlige ut', correct: true },
-        { text: 'Bildet har høy kvalitet', correct: false },
-      ],
-      selectedReason: null,
-    },
-  },
-])
-
-const currentLevelData = computed(() => {
-  return levels.value[currentLevel.value] ?? null
+const difficultyLabel = computed(() => {
+  const labels: Record<TaskDifficulty, string> = {
+    EASY: 'Lett',
+    MEDIUM: 'Middels',
+    HARD: 'Vanskelig',
+  }
+  return labels[DIFFICULTIES[stepIndex.value]!]
 })
 
-const earnedStars = computed(() => {
-  return levels.value.filter((level) => level.isCorrect).length
-})
+const canSubmit = computed(
+  () => selectedCategory.value !== null && selectedJustification.value !== null,
+)
 
-function selectAnswer(answer: AnswerOption) {
-  const level = currentLevelData.value
-  if (!level || level.completed) return
-
-  level.image.selected = true
-  level.image.selectedAnswer = answer
-  level.image.selectedReason = null
+function revokeImageUrl() {
+  if (imageUrl.value) {
+    URL.revokeObjectURL(imageUrl.value)
+    imageUrl.value = ''
+  }
 }
 
-function selectReason(reason: Reason) {
-  const level = currentLevelData.value
-  if (!level || level.completed) return
-  if (!level.image.selectedAnswer) return
-
-  level.image.selectedReason = reason
+async function loadTask() {
+  loading.value = true
+  error.value = null
+  revokeImageUrl()
+  currentTask.value = null
+  try {
+    const difficulty = DIFFICULTIES[stepIndex.value]!
+    const task = await get<ImageVerificationResponse>(
+      `/api/chapters/${FOTOGRAFEN_CHAPTER_ID}/fotografen?difficulty=${difficulty}`,
+    )
+    currentTask.value = task
+    const blob = await getBlob(`/api/objects/${task.fileId}`)
+    imageUrl.value = URL.createObjectURL(blob)
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'Kunne ikke laste oppgave'
+  } finally {
+    loading.value = false
+  }
 }
 
-function canSubmitLevel() {
-  const level = currentLevelData.value
-  if (!level) return false
-
-  return level.image.selectedAnswer !== null && level.image.selectedReason !== null
+function selectCategory(value: number) {
+  if (lastResult.value) return
+  selectedCategory.value = value
+  selectedJustification.value = null
 }
 
-function submitLevel() {
-  const level = currentLevelData.value
-  if (!level || level.completed) return
-
-  const isCorrect =
-    level.image.selectedAnswer === level.image.correctAnswer &&
-    level.image.selectedReason?.correct === true
-
-  level.completed = true
-  level.isCorrect = isCorrect
+function selectJustification(value: string) {
+  if (lastResult.value) return
+  selectedJustification.value = value
 }
 
-function nextLevel() {
-  const level = currentLevelData.value
-  if (!level || !level.completed) return
+function categoryClass(value: number) {
+  const selected = selectedCategory.value === value
+  if (!selected) return ''
+  if (!lastResult.value) return 'selected'
+  const ok = lastResult.value.categoryCorrect ?? lastResult.value.correct
+  return ok ? 'selected correct' : 'selected wrong'
+}
 
-  if (currentLevel.value < levels.value.length - 1) {
-    currentLevel.value++
+function justificationClass(value: string) {
+  const selected = selectedJustification.value === value
+  if (!selected) return ''
+  if (!lastResult.value) return 'selected'
+  const ok = lastResult.value.justificationCorrect ?? lastResult.value.correct
+  return ok ? 'selected correct' : 'selected wrong'
+}
+
+async function submit() {
+  if (!currentTask.value || !canSubmit.value) return
+  submitting.value = true
+  error.value = null
+  try {
+    const body: ImageVerificationRequest = {
+      selectedCategory: selectedCategory.value!,
+      selectedJustification: selectedJustification.value!,
+    }
+    const result = await post<ValidationResult>(
+      `/api/chapters/fotografen/tasks/${currentTask.value.taskId}/validate`,
+      body,
+    )
+    lastResult.value = result
+    runAttempts.value++
+    if (result.correct) runCorrect.value++
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'Kunne ikke sende svar'
+  } finally {
+    submitting.value = false
+  }
+}
+
+async function next() {
+  if (!lastResult.value) return
+  if (lastResult.value.runCompleted) {
+    runDone.value = true
     return
   }
+  stepIndex.value++
+  selectedCategory.value = null
+  selectedJustification.value = null
+  lastResult.value = null
+  await loadTask()
+}
 
-  localStorage.setItem('fotografenStars', JSON.stringify(earnedStars.value))
+function finish() {
+  revokeImageUrl()
   router.push('/pupil/classroom/map')
 }
 
-function prevLevel() {
-  if (currentLevel.value > 0) {
-    currentLevel.value--
-  }
-}
-
-function getCorrectAnswerText(image: ImageTask) {
-  return image.correctAnswer === 'ki'
-    ? 'KI-generert'
-    : image.correctAnswer.charAt(0).toUpperCase() + image.correctAnswer.slice(1)
-}
-
-function getCorrectReasonText(image: ImageTask) {
-  const correctReason = image.reasons.find((reason) => reason.correct)
-  return correctReason?.text ?? ''
-}
+onMounted(loadTask)
+onBeforeUnmount(revokeImageUrl)
 </script>
 
 <style scoped>
@@ -299,6 +269,7 @@ function getCorrectReasonText(image: ImageTask) {
   flex-direction: column;
   align-items: center;
   width: 100%;
+  position: relative;
 }
 
 .task-box {
@@ -309,6 +280,7 @@ function getCorrectReasonText(image: ImageTask) {
   border-radius: 24px;
   padding: 28px 28px 36px;
   box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
+  position: relative;
 }
 
 .task-text {
@@ -323,8 +295,19 @@ function getCorrectReasonText(image: ImageTask) {
   align-items: center;
 }
 
+.task-image {
+  width: 460px;
+  max-width: 100%;
+  height: 280px;
+  object-fit: cover;
+  border-radius: 14px;
+  margin-bottom: 20px;
+  border: 2px solid #999;
+}
+
 .image-placeholder {
   width: 460px;
+  max-width: 100%;
   height: 280px;
   background: #ddd;
   display: flex;
@@ -414,7 +397,8 @@ function getCorrectReasonText(image: ImageTask) {
   gap: 20px;
 }
 
-.bottom-actions button {
+.bottom-actions button,
+.primary-btn {
   background: #f4a259;
   border: 2px solid #000;
   border-radius: 20px;
@@ -424,8 +408,23 @@ function getCorrectReasonText(image: ImageTask) {
   transition: all 0.2s ease;
 }
 
-.bottom-actions button:hover {
+.bottom-actions button:hover,
+.primary-btn:hover {
   background: #e38b3d;
+}
+
+.end-screen {
+  text-align: center;
+}
+
+.end-screen .primary-btn {
+  margin-top: 20px;
+  padding: 10px 24px;
+}
+
+.error {
+  color: #c62828;
+  font-weight: 600;
 }
 
 .correct {

@@ -13,8 +13,14 @@ import com.nettdet.backend.dto.PupilChapterProgressResponse;
 import com.nettdet.backend.security.JwtUserPrincipal;
 import com.nettdet.backend.service.ProgressService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/pupil")
+@Tag(name = "Pupil Progress", description = "Pupil-only progress endpoints used for chapter unlock state and star display.")
+@SecurityRequirement(name = "bearerAuth")
 public class ProgressController {
 
     private final ProgressService progressService;
@@ -25,6 +31,7 @@ public class ProgressController {
 
     @GetMapping("/progress")
     @PreAuthorize("hasAuthority('PUPIL')")
+    @Operation(summary = "Get pupil chapter progress", description = "Returns the authenticated pupil's chapter progress list in chapter-id order, including current star count and whether each chapter is unlocked.")
     public ResponseEntity<List<PupilChapterProgressResponse>> getProgress(
             @AuthenticationPrincipal JwtUserPrincipal principal) {
         return ResponseEntity.ok(progressService.getPupilProgress(principal));

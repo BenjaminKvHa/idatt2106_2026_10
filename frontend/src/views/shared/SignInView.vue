@@ -240,6 +240,7 @@ h1 {
   font-size: 24px;
   line-height: 1.2;
   color: #2f2f2f;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 h2 {
@@ -247,6 +248,7 @@ h2 {
   font-size: 20px;
   font-weight: 600;
   color: #1f1f1f;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .intro {

@@ -165,6 +165,18 @@ public class ClassroomService {
         bridgeRepository.deleteByIdAccountEmailAndIdClassroomCode(principal.email(), classroomCode);
     }
 
+    @Transactional
+    public void leaveClassroomAsPupil(String classroomCode, JwtUserPrincipal principal) {
+        verifyPupilPrincipal(principal);
+        getRequiredClassroom(classroomCode);
+
+        PupilClassroomMembership membership = pupilClassroomMembershipRepository
+                .findByAccountEmailAndClassroomClassroomCode(principal.email(), classroomCode)
+                .orElseThrow(() -> new EntityNotFoundException("Pupil membership not found"));
+
+        pupilClassroomMembershipRepository.delete(membership);
+    }
+
     @Transactional(readOnly = true)
     public List<PendingPupilRequestResponse> getPendingPupilRequests(String classroomCode, JwtUserPrincipal principal) {
         verifyTeacherPrincipal(principal);
@@ -237,6 +249,16 @@ public class ClassroomService {
 
         if (!AccountRole.TEACHER.name().equals(principal.role())) {
             throw new AccessDeniedException("Teacher access is required");
+        }
+    }
+
+    private void verifyPupilPrincipal(JwtUserPrincipal principal) {
+        if (principal == null || principal.email() == null || principal.role() == null) {
+            throw new AccessDeniedException("Pupil access is required");
+        }
+
+        if (!AccountRole.PUPIL.name().equals(principal.role())) {
+            throw new AccessDeniedException("Pupil access is required");
         }
     }
 

@@ -28,8 +28,14 @@ import com.nettdet.backend.dto.UpdateClassroomRequest;
 import com.nettdet.backend.security.JwtUserPrincipal;
 import com.nettdet.backend.service.ClassroomService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/classrooms")
+@Tag(name = "Classrooms", description = "Teacher-managed endpoints for creating classrooms, managing teacher membership, and moderating pupil membership.")
+@SecurityRequirement(name = "bearerAuth")
 public class ClassroomController {
 
     private final ClassroomService classroomService;
@@ -40,6 +46,7 @@ public class ClassroomController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('TEACHER')")
+    @Operation(summary = "Create classroom", description = "Creates a classroom, generates a new 6-letter uppercase classroom code, and adds the authenticated teacher to the teacher bridge for that classroom.")
     public ResponseEntity<ClassroomResponse> createClassroom(
             @Valid @RequestBody CreateClassroomRequest request,
             @AuthenticationPrincipal JwtUserPrincipal principal) {
@@ -49,6 +56,7 @@ public class ClassroomController {
 
     @PostMapping("/{classroomCode}/teachers")
     @PreAuthorize("hasAuthority('TEACHER')")
+    @Operation(summary = "Invite teacher", description = "Adds another teacher account to a classroom the authenticated teacher already manages. The invited account must already exist and have the TEACHER role.")
     public ResponseEntity<Void> inviteTeacher(
             @PathVariable String classroomCode,
             @Valid @RequestBody InviteTeacherRequest request,
@@ -59,6 +67,7 @@ public class ClassroomController {
 
     @PutMapping("/{classroomCode}")
     @PreAuthorize("hasAuthority('TEACHER')")
+    @Operation(summary = "Update classroom", description = "Updates the name and description of a classroom the authenticated teacher belongs to.")
     public ResponseEntity<ClassroomResponse> updateClassroom(
             @PathVariable String classroomCode,
             @Valid @RequestBody UpdateClassroomRequest request,
@@ -68,6 +77,7 @@ public class ClassroomController {
 
     @DeleteMapping("/{classroomCode}")
     @PreAuthorize("hasAuthority('TEACHER')")
+    @Operation(summary = "Delete classroom", description = "Deletes a classroom the authenticated teacher belongs to. This removes the classroom and dependent bridge data.")
     public ResponseEntity<Void> deleteClassroom(
             @PathVariable String classroomCode,
             @AuthenticationPrincipal JwtUserPrincipal principal) {
@@ -77,6 +87,7 @@ public class ClassroomController {
 
     @GetMapping("/{classroomCode}/teachers/me/can-leave")
     @PreAuthorize("hasAuthority('TEACHER')")
+    @Operation(summary = "Check if teacher can leave classroom", description = "Returns whether the authenticated teacher can leave the classroom while still leaving at least one teacher attached to it.")
     public ResponseEntity<TeacherLeaveStatusResponse> canLeaveClassroom(
             @PathVariable String classroomCode,
             @AuthenticationPrincipal JwtUserPrincipal principal) {
@@ -85,6 +96,7 @@ public class ClassroomController {
 
     @DeleteMapping("/{classroomCode}/teachers/me")
     @PreAuthorize("hasAuthority('TEACHER')")
+    @Operation(summary = "Leave classroom", description = "Removes the authenticated teacher from the classroom if at least one other teacher remains.")
     public ResponseEntity<Void> leaveClassroom(
             @PathVariable String classroomCode,
             @AuthenticationPrincipal JwtUserPrincipal principal) {
@@ -92,8 +104,18 @@ public class ClassroomController {
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("/{classroomCode}/pupils/me")
+    @PreAuthorize("hasAuthority('PUPIL')")
+    public ResponseEntity<Void> leaveClassroomAsPupil(
+            @PathVariable String classroomCode,
+            @AuthenticationPrincipal JwtUserPrincipal principal) {
+        classroomService.leaveClassroomAsPupil(classroomCode, principal);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{classroomCode}/pupils/pending")
     @PreAuthorize("hasAuthority('TEACHER')")
+    @Operation(summary = "List pending pupil requests", description = "Returns pupils who have requested to join the classroom but have not yet been accepted by a teacher.")
     public ResponseEntity<List<PendingPupilRequestResponse>> getPendingPupilRequests(
             @PathVariable String classroomCode,
             @AuthenticationPrincipal JwtUserPrincipal principal) {
@@ -102,6 +124,7 @@ public class ClassroomController {
 
     @GetMapping("/{classroomCode}/pupils")
     @PreAuthorize("hasAuthority('TEACHER')")
+    @Operation(summary = "List accepted pupils", description = "Returns all accepted pupils in the classroom. Each entry includes the pupil email, display username, and the saved avatar object key when an avatar has been set.")
     public ResponseEntity<List<AcceptedClassroomPupilResponse>> getAcceptedPupils(
             @PathVariable String classroomCode,
             @AuthenticationPrincipal JwtUserPrincipal principal) {
@@ -110,6 +133,7 @@ public class ClassroomController {
 
     @PutMapping("/{classroomCode}/pupils/{pupilEmail}/accept")
     @PreAuthorize("hasAuthority('TEACHER')")
+    @Operation(summary = "Accept pupil request", description = "Approves a pending pupil join request for the classroom. The pupil must already have a pending membership row.")
     public ResponseEntity<AcceptedPupilMembershipResponse> acceptPupilRequest(
             @PathVariable String classroomCode,
             @PathVariable String pupilEmail,
@@ -119,6 +143,7 @@ public class ClassroomController {
 
     @DeleteMapping("/{classroomCode}/pupils/{pupilEmail}")
     @PreAuthorize("hasAuthority('TEACHER')")
+    @Operation(summary = "Kick pupil", description = "Removes a pupil membership from the classroom, regardless of whether it is pending or already confirmed.")
     public ResponseEntity<Void> kickPupil(
             @PathVariable String classroomCode,
             @PathVariable String pupilEmail,

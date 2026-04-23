@@ -6,6 +6,20 @@ export type ValidationResult = {
   currentRunAttempts: number
   currentRunCorrect: number
   runCompleted: boolean
+  categoryCorrect: boolean | null
+  justificationCorrect: boolean | null
+}
+
+export type ImageVerificationResponse = {
+  taskId: number
+  taskDescription: string
+  fileId: number
+  justifications: string[]
+}
+
+export type ImageVerificationRequest = {
+  selectedCategory: number
+  selectedJustification: string
 }
 
 export type NewsVerificationResponse = {

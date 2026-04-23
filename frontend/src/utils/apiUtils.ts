@@ -84,11 +84,11 @@ async function parseResponse(res: Response) {
   return res.text()
 }
 
-async function requestWithOptions<T = unknown>(
+async function rawRequest(
   endpoint: string,
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH',
   body?: unknown,
-): Promise<T> {
+): Promise<Response> {
   if (!hasAccessToken()) {
     await getNewTokens()
   }
@@ -133,7 +133,21 @@ async function requestWithOptions<T = unknown>(
     throw new Error(`Request failed with status ${res.status}`)
   }
 
+  return res
+}
+
+async function requestWithOptions<T = unknown>(
+  endpoint: string,
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH',
+  body?: unknown,
+): Promise<T> {
+  const res = await rawRequest(endpoint, method, body)
   return (await parseResponse(res)) as T
+}
+
+export async function getBlob(endpoint: string): Promise<Blob> {
+  const res = await rawRequest(endpoint, 'GET')
+  return await res.blob()
 }
 
 export async function get<T = unknown>(endpoint: string): Promise<T> {

@@ -13,5 +13,9 @@ public record ValidationResult(
     @Schema(description = "Updated number of correct answers in the current run.", example = "2")
     int currentRunCorrect,
     @Schema(description = "Whether the current run has now been completed.", example = "false")
-    boolean runCompleted
+    boolean runCompleted,
+    @Schema(description = "Fotografen-only: whether the submitted category was correct. Null for other chapter types.", example = "true", nullable = true)
+    Boolean categoryCorrect,
+    @Schema(description = "Fotografen-only: whether the submitted justification was correct. Null for other chapter types.", example = "false", nullable = true)
+    Boolean justificationCorrect
 ) {}

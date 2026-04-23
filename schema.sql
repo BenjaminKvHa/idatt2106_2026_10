@@ -3,6 +3,7 @@ DROP TABLE IF EXISTS
     task,
     chapter,
     refresh_token,
+    notification,
     pupil_classroom_membership,
     account_classroom_bridge_teacher,
     file_object,
@@ -12,6 +13,7 @@ CASCADE;
 
 DROP TYPE IF EXISTS
     task_difficulty_enum,
+    notification_status_enum,
     account_role_enum,
     classroom_access_enum
 CASCADE;
@@ -19,6 +21,7 @@ CASCADE;
 CREATE TYPE account_role_enum AS ENUM ('TEACHER', 'PUPIL');
 CREATE TYPE classroom_access_enum AS ENUM ('ONLY_TEACHERS_IN_CLASS', 'PUBLIC', 'ONLY_CLASS');
 CREATE TYPE task_difficulty_enum AS ENUM ('EASY', 'MEDIUM', 'HARD');
+CREATE TYPE notification_status_enum AS ENUM ('UNREAD', 'READ');
 
 CREATE TABLE classroom (
     classroom_code VARCHAR(6) PRIMARY KEY,
@@ -60,6 +63,21 @@ CREATE TABLE pupil_classroom_membership (
     membership_confirmed_by_teacher BOOLEAN NOT NULL DEFAULT FALSE, -- if false, then waiting else its confirmed and a part of classroom
     avatar_file_object_id BIGINT REFERENCES file_object(id) ON DELETE SET NULL
 );
+
+CREATE TABLE notification (
+    id BIGSERIAL PRIMARY KEY,
+    classroom_code VARCHAR(6) NOT NULL REFERENCES classroom(classroom_code) ON DELETE CASCADE,
+    account_email VARCHAR(255) NOT NULL REFERENCES pupil_classroom_membership(account_email) ON DELETE CASCADE,
+    notification_text TEXT NOT NULL,
+    status_notifications notification_status_enum NOT NULL DEFAULT 'UNREAD',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_notification_classroom_status_created_at
+    ON notification (classroom_code, status_notifications, created_at DESC);
+
+CREATE INDEX idx_notification_account_created_at
+    ON notification (account_email, created_at DESC);
 
 CREATE TABLE refresh_token (
     id BIGSERIAL PRIMARY KEY,

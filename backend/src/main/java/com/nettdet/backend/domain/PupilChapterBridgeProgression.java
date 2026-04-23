@@ -11,6 +11,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 @Entity
 @Table(name = "pupil_chapter_bridge_progression")
 public class PupilChapterBridgeProgression extends CreatedAtEntity {
@@ -42,8 +45,9 @@ public class PupilChapterBridgeProgression extends CreatedAtEntity {
 
     @Column(name = "current_run_correct", nullable = false)
     private Integer currentRunCorrect;
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "notebook_json", nullable = false, columnDefinition = "JSONB")
-    private String notebookJson;
+    private String notebookJson = "{\"tips\":[],\"ownNotes\":\"\"}";
 
     public PupilChapterBridgeProgression() {
     }

@@ -16,7 +16,8 @@ INSERT INTO classroom (classroom_code, classroom_name, classroom_description)
 VALUES
     ('MAP001', 'Kart testklasse', 'Utviklingsklasse for kartvisning'),
     ('MAP002', 'Mellomklasse', 'Ekstra klasse for ranking og teacher-overview'),
-    ('MAP003', 'Sisteklasse', 'Ekstra klasse for ranking og teacher-overview')
+    ('MAP003', 'Sisteklasse', 'Ekstra klasse for ranking og teacher-overview'),
+    ('CHAP01', 'Kapitteltestklasse', 'Utviklingsklasse for kapittelvisning')
 ON CONFLICT (classroom_code) DO UPDATE
 SET
     classroom_name = EXCLUDED.classroom_name,
@@ -61,6 +62,12 @@ VALUES
         'PUPIL'
     ),
     (
+        'chapter.test@example.com',
+        '$2a$10$d8rn.gEcXxyXDGh6NTzF2uZTAlOI5m/T1x5Hh/8A7.BeLhGY232ym',
+        'Chapter Test',
+        'PUPIL'
+    ),
+    (
         'teacher.multi@example.com',
         '$2a$10$d8rn.gEcXxyXDGh6NTzF2uZTAlOI5m/T1x5Hh/8A7.BeLhGY232ym',
         'Teacher Multi',
@@ -90,13 +97,14 @@ INSERT INTO pupil_classroom_membership (
     account_email,
     classroom_code,
     username,
-    membership_confirmed_by_teacher
+    membership_confirmed_by_teacherF
 )
 VALUES
     ('map.partial@example.com', 'MAP001', 'map.partial', TRUE),
     ('map.complete@example.com', 'MAP001', 'map.complete', TRUE),
     ('rank.two@example.com', 'MAP002', 'rank.two', TRUE),
-    ('rank.three@example.com', 'MAP003', 'rank.three', TRUE)
+    ('rank.three@example.com', 'MAP003', 'rank.three', TRUE),
+    ('chapter.test@example.com', 'CHAP01', 'chapter.test', TRUE)
 ON CONFLICT (account_email) DO UPDATE
 SET
     classroom_code = EXCLUDED.classroom_code,
@@ -124,3 +132,56 @@ SET
     successful_runs = EXCLUDED.successful_runs,
     highscore = EXCLUDED.highscore,
     unsuccessful_streak = EXCLUDED.unsuccessful_streak;
+
+-- Fotografen (chapter_id = 2) task bank.
+-- selectedCategory mapping: 1 = ekte, 2 = KI-generert, 3 = manipulert.
+-- fileId must reference an existing row in file_object (upload via POST /api/objects first).
+INSERT INTO task (id, difficulty, chapter_id, classroom_code, task_json)
+VALUES
+    (1, 'EASY', 2, 'CHAP01', '{
+        "taskDescription": "Er dette bildet ekte, KI-generert eller manipulert?",
+        "fileId": 1,
+        "correctCategory": 1,
+        "correctJustification": "Detaljer og skygger ser naturlige ut",
+        "justifications": [
+            "Detaljer og skygger ser naturlige ut",
+            "Ansikter ser litt rare ut",
+            "Bakgrunnen er kopiert inn"
+        ],
+        "correctDescription": "Riktig! Dette bildet er ekte.",
+        "falseDescription": "Ikke helt. Dette bildet er faktisk ekte."
+    }'::jsonb),
+    (2, 'MEDIUM', 2, 'CHAP01', '{
+        "taskDescription": "Er dette bildet ekte, KI-generert eller manipulert?",
+        "fileId": 2,
+        "correctCategory": 2,
+        "correctJustification": "Hender og små detaljer ser unaturlige ut",
+        "justifications": [
+            "Hender og små detaljer ser unaturlige ut",
+            "Bildet er tatt med dårlig lys",
+            "Et objekt er fjernet fra bakgrunnen"
+        ],
+        "correctDescription": "Riktig! Dette bildet er KI-generert.",
+        "falseDescription": "Ikke helt. Dette bildet er KI-generert."
+    }'::jsonb),
+    (3, 'HARD', 2, 'CHAP01', '{
+        "taskDescription": "Er dette bildet ekte, KI-generert eller manipulert?",
+        "fileId": 1,
+        "correctCategory": 3,
+        "correctJustification": "Et objekt er lagt til eller fjernet",
+        "justifications": [
+            "Et objekt er lagt til eller fjernet",
+            "Fargene er litt blasse",
+            "Hele bildet er KI-generert"
+        ],
+        "correctDescription": "Riktig! Dette bildet er manipulert.",
+        "falseDescription": "Ikke helt. Dette bildet er manipulert."
+    }'::jsonb)
+ON CONFLICT (id) DO UPDATE
+SET
+    difficulty = EXCLUDED.difficulty,
+    chapter_id = EXCLUDED.chapter_id,
+    classroom_code = EXCLUDED.classroom_code,
+    task_json = EXCLUDED.task_json;
+
+SELECT setval('task_id_seq', GREATEST(COALESCE((SELECT MAX(id) FROM task), 0), 3), true);

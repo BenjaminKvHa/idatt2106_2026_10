@@ -5,5 +5,7 @@ public record ValidationResult(
     String feedback,
     int currentRunAttempts,
     int currentRunCorrect,
-    boolean runCompleted
+    boolean runCompleted,
+    Boolean categoryCorrect,
+    Boolean justificationCorrect
 ) {}

@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Logo from '@/components/misc/Logo.vue'
 import OptionsMenu from '@/components/ui/OptionsMenu.vue'
-import gearIcon from '@/assets/icons/gear.svg'
+import gearIcon from '@/assets/icons/profile-cog.svg'
 import { useClassrooms } from '@/composables/useClassrooms'
 
 const settingsOpen = ref(false)

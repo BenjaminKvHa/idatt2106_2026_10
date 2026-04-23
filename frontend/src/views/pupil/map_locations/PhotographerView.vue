@@ -12,7 +12,6 @@
           </p>
 
           <div class="image-card">
-            <!-- Midlertidig plassholder -->
             <div class="image-placeholder">Bilde {{ currentLevel + 1 }}</div>
 
             <div class="choices">
@@ -114,11 +113,14 @@
           </button>
         </div>
       </div>
+
       <TaskGuide v-if="showGuidePopup" @close="showGuidePopup = false">
         <h2>Velkommen til fotografen!</h2>
-        <p>I fotografen vil du få se et bilde, og oppgaven din er å finne ut om bildet er ekte,
-          KI-generert eller manipulert. Etter du har bestemt det, skal du si hvorfor du mener bildet er en av disse.
-          Er du klar for å løse oppgaver?</p>
+        <p>
+          I fotografen vil du få se et bilde, og oppgaven din er å finne ut om bildet er ekte,
+          KI-generert eller manipulert. Etter du har bestemt det, skal du si hvorfor du mener bildet
+          er en av disse. Er du klar for å løse oppgaver?
+        </p>
       </TaskGuide>
     </div>
   </div>
@@ -128,10 +130,10 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/components/TopBar.vue'
-import TaskGuide from "@/components/TaskGuide.vue";
+import TaskGuide from '@/components/TaskGuide.vue'
 
 const router = useRouter()
-const showGuidePopup = ref(true);
+const showGuidePopup = ref(true)
 
 type AnswerOption = 'ekte' | 'ki' | 'manipulert'
 
@@ -299,6 +301,7 @@ function getCorrectReasonText(image: ImageTask) {
   flex-direction: column;
   align-items: center;
   width: 100%;
+  position: relative;
 }
 
 .task-box {
@@ -309,6 +312,7 @@ function getCorrectReasonText(image: ImageTask) {
   border-radius: 24px;
   padding: 28px 28px 36px;
   box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
+  position: relative;
 }
 
 .task-text {

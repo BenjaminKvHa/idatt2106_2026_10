@@ -75,7 +75,7 @@ const handleRegister = async (): Promise<void> => {
     confirmPassword.value = ''
     role.value = 'Lærer'
 
-    await router.push(getDefaultRouteForRole(payload?.role))
+    await router.push(getDefaultRouteForRole(payload?.role, payload?.email))
   } catch (caughtError) {
     error.value = caughtError instanceof Error ? caughtError.message : 'Kunne ikke opprette bruker.'
   } finally {

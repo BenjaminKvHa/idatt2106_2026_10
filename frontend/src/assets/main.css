@@ -1,4 +1,5 @@
 @import './base.css';
+@import './teacherStyle.css';
 
 .transition {
   transition: all 0.1s;

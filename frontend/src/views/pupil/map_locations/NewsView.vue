@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import TopBar from "@/components/TopBar.vue";
 import { ref } from "vue";
+import TopBar from "@/components/TopBar.vue";
+import TaskGuide from "@/components/TaskGuide.vue";
 
 const showHelpPopup = ref<boolean>(false);
 const showHintPopup = ref<boolean>(false);
+const showGuidePopup = ref(true)
 
 type TaskPicture = {
   id: number;
@@ -88,6 +90,13 @@ function closeHintPopup(): void {
       </div>
     </div>
   </div>
+
+  <TaskGuide v-if="showGuidePopup" @close="showGuidePopup = false">
+    <h2>Velkommen til nyhetskvartalet!</h2>
+    <p>I nyhetskvartalet vil du få oppgaver som handler om å skille ekte avisforsider og uekte avisforsider.
+      I hver oppgave vil du få én ekte avisforside, og en falsk, og du skal velge hvilken en av dem du tror er falsk.
+      Er du klar for å løse oppgaver?</p>
+  </TaskGuide>
 
   <div v-if="showHelpPopup" class="popup-overlay" @click="closeHelpPopup">
     <div class="hint-popup" @click.stop>

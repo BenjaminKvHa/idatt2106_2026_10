@@ -49,6 +49,7 @@ public class AuthController {
             description = "Requires the current user to be authenticated. Rotates the refresh cookie and returns a new short-lived JWT access token.",
             security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<AuthTokenResponse> grantRefreshToken(@CookieValue("refresh_token") String cookie) {
+
         logger.info("Refresh token request received");
 
         RefreshToken refToken = refTokenService.getStoredRefreshToken(cookie);
@@ -89,6 +90,7 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, refCookie.toString())
                 .body(new AuthTokenResponse(jwtToken));
+
     }
 
     @PostMapping("/signup")

@@ -12,23 +12,23 @@ import TeachersPupilsView from '@/views/teacher/TeachersPupilsView.vue'
 import TeachersPupilView from '@/views/teacher/TeachersPupilView.vue'
 import TeachersNotebookChapterView from '@/views/teacher/TeachersNotebookChapterView.vue'
 import PupilView from '@/views/pupil/PupilView.vue'
-import PupilsProfileView from '@/views/pupil/PupilsProfileView.vue'
 import PupilsClassroomView from '@/views/pupil/PupilsClassroomView.vue'
 import PupilsNotebookView from '@/views/pupil/PupilsNotebookView.vue'
 import PupilsNotebookChapterView from '@/views/pupil/PupilsNotebookChapterView.vue'
 import PupilsMysteryView from '@/views/pupil/PupilsMysteryView.vue'
 import PupilsMedalsView from '@/views/pupil/PupilsMedalsView.vue'
-import PupilsSettingsView from '@/views/pupil/PupilsSettingsView.vue'
 import PupilsHelpView from '@/views/pupil/PupilsHelpView.vue'
 import PupilsLeaderboardView from '@/views/pupil/PupilsLeaderboardView.vue'
 import PupilsMapView from '@/views/pupil/PupilsMapView.vue'
 import SignInView from '@/views/shared/SignInView.vue'
 import SignUpView from '@/views/shared/SignUpView.vue'
-import NewsView from '@/views/pupil/map_locations/NewsView.vue'
-import DatacenterView from '@/views/pupil/map_locations/DatacenterView.vue'
-import PostofficeView from '@/views/pupil/map_locations/PostofficeView.vue'
-import PhotographerView from '@/views/pupil/map_locations/PhotographerView.vue'
-import PupilsWelcomePageView from '@/views/pupil/PupilsWelcomePageView.vue'
+import NewsView from "@/views/pupil/map_locations/NewsView.vue";
+import DatacenterView from "@/views/pupil/map_locations/DatacenterView.vue";
+import PostofficeView from "@/views/pupil/map_locations/PostofficeView.vue";
+import PhotographerView from "@/views/pupil/map_locations/PhotographerView.vue";
+import PupilsWaitingPageView from "@/views/pupil/PupilsWaitingPageView.vue";
+import PupilsWelcomeGuideView from "@/views/pupil/PupilsWelcomeGuideView.vue";
+import PupilsProfileView from '@/views/pupil/PupilsProfileView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -37,10 +37,6 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: HomeView,
-    },
-    {
-      path: '/leaderboard',
-      component: LeaderboardView,
     },
     {
       path: '/sign-in',
@@ -62,9 +58,14 @@ const router = createRouter({
           component: CreateAvatarView,
         },
         {
-          path: 'welcome-classroom',
-          component: PupilsWelcomePageView,
+          path: 'waiting-classroom',
+          component: PupilsWaitingPageView,
         },
+        {
+          path: 'welcome-guide',
+          component: PupilsWelcomeGuideView,
+        },
+
       ],
     },
     {
@@ -142,6 +143,10 @@ const router = createRouter({
               path: '',
             },
             {
+              path: 'leaderboard',
+              component: LeaderboardView,
+            },
+            {
               path: 'notebook',
               children: [
                 {
@@ -181,10 +186,6 @@ const router = createRouter({
             {
               path: 'map/photographer',
               component: PhotographerView,
-            },
-            {
-              path: 'settings',
-              component: PupilsSettingsView,
             },
             {
               path: 'help',

@@ -3,10 +3,6 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
-function goToHome(): void {
-  router.push('/pupil');
-}
-
 function goBack(): void {
   router.push('/join-classroom/enter-classroom-code');
 }
@@ -22,7 +18,6 @@ function goBack(): void {
       <p>Hvis det tar veldig lang tid å slippe inn i klasserommet må du kontakte læreren din.</p>
       <div class="button-container">
         <button class="cancel-button" @click="goBack">Kanseller forespørsel</button>
-        <button class="next-button" @click="goToHome">Gå til hjemskjerm (kun for funksjonalitet, skal ikke være med)</button>
       </div>
     </div>
   </div>
@@ -69,19 +64,6 @@ function goBack(): void {
   max-width: 1400px;
 }
 
-.next-button{
-  margin: 00;
-  width: 100%;
-  max-width: 420px;
-  padding: 1rem 2rem;
-  border-radius: 38px;
-  border: 5px solid var(--brown-dark);
-  background-color: var(--orange-medium);
-  font-size: clamp(1rem, 2vw, 1.2rem);
-  font-weight: 700;
-  cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.2s ease, filter 0.2s ease;
-}
 .cancel-button{
   margin: 0;
   width: 100%;

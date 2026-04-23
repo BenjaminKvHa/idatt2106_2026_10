@@ -50,3 +50,21 @@ onBeforeUnmount(() => {
     </div>
   </Teleport>
 </template>
+
+<style scoped>
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: var(--obscure);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+}
+
+.modal-window {
+    width: min(90vw, 640px);
+    max-height: 90vh;
+    overflow: auto;
+}
+</style>

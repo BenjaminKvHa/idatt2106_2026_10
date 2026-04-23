@@ -61,3 +61,22 @@ const navigateToClassroom = (classroomCode: string) => {
     </div>
   </div>
 </template>
+
+<style scoped>
+
+.card-classroom-name {
+    font-size: 1.2rem;
+    font-weight: var(--fw-bold);
+}
+
+.card-classroom-code {
+    font-size: 0.8rem;
+    opacity: 0.9;
+}
+
+.teacher-menu-button {
+    width: 100%;
+    padding: 0.85rem 1rem;
+}
+
+</style>

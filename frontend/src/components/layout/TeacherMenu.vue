@@ -114,4 +114,48 @@ const isClassroomActive = (classroomCode: string) => {
   min-height: 0;
   overflow: auto;
 }
+
+.empty-message {
+    text-align: center;
+    color: var(--background-sec);
+    font-size: 0.85rem;
+    padding: var(--thin-padding);
+}
+
+
+.teacher-menu {
+    display: flex;
+    flex-direction: column;
+    border-radius: 0;
+    border: none;
+    outline-width: var(--border-width);
+    outline-color: var(--accent);
+    outline-style: solid;
+    padding: var(--medium-padding);
+    justify-content: flex-start;
+    margin: 0;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.teacher-menu-button {
+    width: 100%;
+    padding: 0.85rem 1rem;
+}
+
+.teacher-menu-bottom {
+    margin-top: auto;
+    display: flex;
+    gap: var(--thin-gap);
+    justify-content: center;
+    padding-top: var(--medium-padding);
+}
+
+.teacher-menu-icon {
+    width: 18px;
+    height: 18px;
+    display: block;
+}
 </style>

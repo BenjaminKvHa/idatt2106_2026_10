@@ -50,3 +50,70 @@ function close() {
   </BaseModal>
 </template>
 
+<style scoped>
+.settings-modal-box {
+    padding: var(--thick-padding);
+    min-width: 320px;
+    max-width: 500px;
+    width: 90vw;
+    gap: var(--medium-gap);
+}
+
+.settings-modal-title {
+    font-size: 1.3rem;
+    font-weight: var(--fw-bold);
+    text-align: center;
+    color: var(--txt);
+    margin: 0;
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--medium-gap);
+    align-items: start;
+}
+
+.settings-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.settings-field label {
+    font-size: 0.85rem;
+    font-weight: var(--fw-bold);
+    color: var(--txt);
+}
+
+.settings-field input {
+    padding: var(--thin-padding);
+    border-radius: var(--card-item-radius);
+    border: 2px solid var(--accent);
+    background: var(--background);
+    color: var(--txt);
+    font-size: 0.9rem;
+}
+
+.settings-field input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.settings-actions {
+    display: flex;
+    gap: var(--thin-gap);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.settings-actions button {
+    flex: 1;
+    min-width: 100px;
+    padding: var(--thin-padding) var(--medium-padding);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: var(--fw-semibold);
+}
+
+</style>

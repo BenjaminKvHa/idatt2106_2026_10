@@ -48,9 +48,7 @@ import { Lock, Search, Monitor, Shield, FileText, AlertCircle } from '@lucide/vu
 .float {
   position: absolute;
   background: var(--beige-light);
-  border: var(--border-wide) solid var(--brown-dark);
   border-radius: 20px;
-  box-shadow: -3px 3px 6px var(--brown-dark);
   width: 80px;
   height: 80px;
   display: flex;

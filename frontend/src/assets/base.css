@@ -100,7 +100,8 @@ body,
   font-family: 'Inter', sans-serif;
 }
 
-h1, h2 {
+h1,
+h2 {
   font-family: 'Inika', serif;
 }
 
@@ -113,4 +114,12 @@ p {
 .page {
   min-height: 100%;
   flex-grow: 1;
+}
+
+.inika {
+  font-family: 'Inika', serif !important;
+}
+
+.inter {
+  font-family: 'Inter', sans-serif;
 }

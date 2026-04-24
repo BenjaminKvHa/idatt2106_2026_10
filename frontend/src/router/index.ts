@@ -118,7 +118,7 @@ const router = createRouter({
                   ]
                 },
               },
-              redirect: (to) => `/teacher/classrooms/${to.params.classroomName}/oversikt`,
+              redirect: (to) => `/teacher/classrooms/${to.params.classroomName}/leaderboard`,
               children: [
                 {
                   path: 'edit-classroom',

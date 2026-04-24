@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
-import { useTeacherTopbar } from '@/composables/useTeacherTopbar'
+import { computed, ref, watch } from 'vue'
 
 type PupilStatus = 'APPROVED' | 'PENDING'
 type ActivePanel = 'NONE' | 'NOTES' | 'MYSTERY'
@@ -26,22 +24,6 @@ interface Pupil {
 }
 
 const STORAGE_KEY = 'teacher-pupils-test-data'
-
-const route = useRoute()
-const { setTabs, clearTabs } = useTeacherTopbar()
-
-onMounted(() => {
-  const classroomPath = `/teacher/classrooms/${route.params.classroomName}`
-  setTabs([
-    { label: 'Oversikt', to: `${classroomPath}/oversikt` },
-    { label: 'Elever', to: `${classroomPath}/pupils` },
-    { label: 'Innstillinger', to: `${classroomPath}/edit-classroom` },
-  ])
-})
-
-onUnmounted(() => {
-  clearTabs()
-})
 
 const classroomCode = ref('TESTAA')
 const selectedPupilEmail = ref('')

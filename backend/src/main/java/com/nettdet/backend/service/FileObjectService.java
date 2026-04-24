@@ -121,4 +121,53 @@ public class FileObjectService {
 
         return new StoredFile(fileObject, contentType, response.asByteArray());
     }
+
+    /**
+     * Gets an existing file object by its object key, or creates a new one if it doesn't exist.
+     * This is useful for production scenarios where files are pre-uploaded to MinIO and we need
+     * to reference them without relying on deterministic IDs.
+     *
+     * @param objectKey the S3/MinIO object key
+     * @param contentType the content type of the file (used if creating new)
+     * @param uploadedBy the account uploading the file (can be null for system uploads)
+     * @param classroom the classroom associated with the file (can be null)
+     * @param accessLevel the access level for the file
+     * @param fileName the original file name
+     * @return a record containing the file object and whether it was newly created
+     */
+    @Transactional
+    public FileObjectResult getOrCreateFileObject(
+            String objectKey,
+            String contentType,
+            Account uploadedBy,
+            Classroom classroom,
+            ClassroomAccess accessLevel,
+            String fileName) {
+
+        return repository.findByObjectKey(objectKey)
+                .map(fileObject -> new FileObjectResult(fileObject, false))
+                .orElseGet(() -> {
+                    byte[] bytes = s3Client.getObjectAsBytes(GetObjectRequest.builder()
+                            .bucket(bucket)
+                            .key(objectKey)
+                            .build()).asByteArray();
+
+                    FileObject fileObject = upload(
+                            objectKey,
+                            bytes,
+                            contentType,
+                            uploadedBy,
+                            classroom,
+                            accessLevel,
+                            fileName);
+                    return new FileObjectResult(fileObject, true);
+                });
+    }
+
+    public record FileObjectResult(FileObject fileObject, boolean newlyCreated) {}
+
+    @Transactional(readOnly = true)
+    public java.util.Optional<FileObject> findByObjectKey(String objectKey) {
+        return repository.findByObjectKey(objectKey);
+    }
 }

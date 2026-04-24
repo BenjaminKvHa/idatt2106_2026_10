@@ -43,7 +43,6 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "Refresh access token",
             description = "Requires the current user to be authenticated. Rotates the refresh cookie and returns a new short-lived JWT access token.",

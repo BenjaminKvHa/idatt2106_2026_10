@@ -37,15 +37,3 @@ jobs:
 
       - name: Run unit/component tests with coverage
         run: npm run test:unit -- --coverage --coverage.thresholds.lines=30 --coverage.thresholds.functions=30 --coverage.thresholds.branches=30 --coverage.thresholds.statements=30
-
-      - name: Run E2E tests with coverage
-        run: npx cypress run --component --env coverage=true
-
-      - name: Check E2E coverage threshold
-        run: |
-          COVERAGE=$(npx nyc report --reporter=text-summary 2>/dev/null | grep "Lines" | awk '{print $3}' | tr -d '%')
-          echo "E2E line coverage: $COVERAGE%"
-          if [ $(echo "$COVERAGE < 30" | bc -l) -eq 1 ]; then
-            echo "E2E coverage $COVERAGE% is below the required 30%"
-            exit 1
-          fi

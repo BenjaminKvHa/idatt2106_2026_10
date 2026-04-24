@@ -230,13 +230,14 @@ onBeforeUnmount(revokeImageUrls)
       </div>
     </div>
   </div>
-
   <CompleteLevelPopup
     :show="showCompletePopup"
     :title="popupTitle"
     :message="popupMessage"
     :sub-message="popupSubMessage"
     :success="popupSuccess"
+    :success-image="thumbsUpNews"
+    :fail-image="thumbsDownNews"
     @close="closeCompletePopup"
   />
 </template>

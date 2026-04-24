@@ -1,0 +1,358 @@
+:root {
+    /*
+    Colors!
+    */
+    --background-body: #eed2ad;
+    --background: #f5e2ca;
+    --background-sec: #cfb99c;
+    --accent: #5a402f;
+    --txt: #5a402f;
+    --txt-sec: #eed2ad;
+    --txt-contrast: white;
+    --warning: #de3333;
+    --warning-sec: #ae1f1f;
+    --obscure: #00000036;
+    /*
+    sizing
+    */
+    --border-radius: 30px;
+    --border-radius-2: 15px;
+    --border-width: 5px;
+
+    --button-diameter: 48px;
+
+    --mid-margin: 10px;
+    --tight-margin: 0px;
+    
+    --thick-padding: 30px;
+    --medium-padding: 20px;
+    --thin-padding: 10px;
+    
+    --thick-gap: 30px;
+    --medium-gap: 20px;
+    --thin-gap: 10px;
+
+    --card-header-padding: var(--medium-padding);
+    --card-title-padding: var(--thin-padding) var(--medium-padding);
+    --card-body-padding: var(--medium-padding);
+    --card-item-padding: var(--thin-padding) var(--medium-padding);
+    --card-item-radius: calc(var(--border-radius) / 2);
+    --card-header-gap: var(--medium-gap);
+    --card-body-gap: var(--thin-gap);
+
+    /*
+    font weights
+    */
+    --fw-medium: 500;
+    --fw-semibold: 600;
+    --fw-bold: 700;
+    /*
+    misc stuffs and things
+    */
+    --animation-time-1: 0.2s;
+}
+
+.teacher-content {
+    color: var(--accent);
+    background-color: var(--background-body);
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.teacher-card {
+    color: var(--accent);
+    background-color: var(--background-body);
+    border-radius: var(--border-radius);
+    border: var(--border-width) solid var(--accent);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 350px;
+}
+
+.teacher-card-header {
+    background-color: var(--accent);
+    color: var(--txt-sec);
+    padding: var(--card-header-padding);
+    display: flex;
+    flex-direction: column;
+    gap: var(--card-header-gap);
+    cursor: pointer;
+    text-align: center;
+}
+
+.teacher-card-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--accent);
+    color: var(--txt-sec);
+    font-weight: var(--fw-bold);
+    width: 100%;
+    box-sizing: border-box;
+    padding: var(--thin-padding);
+    margin: 0;
+}
+
+.teacher-card-header-actions {
+    display: flex;
+    justify-content: center;
+    gap: var(--thin-gap);
+}
+
+.teacher-card-body {
+    padding: var(--card-body-padding);
+    background-color: var(--background);
+    display: flex;
+    flex-direction: column;
+    gap: var(--card-body-gap);
+    flex: 1;
+    height: auto;
+    overflow: auto;
+    
+}
+
+
+.teacher-card-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--card-item-padding);
+    border-radius: var(--card-item-radius);
+    background-color: var(--background-sec);
+    color: var(--accent);
+}
+
+.teacher-card-header :where(button, a) {
+    cursor: pointer;
+}
+
+.teacher-variant-1 {
+    color: var(--accent);
+    background-color: var(--background);
+    
+    border-radius: var(--border-radius);
+    border-width: var(--border-width);
+    border-style: solid;
+    display: flex;
+    flex-direction: column;
+    gap: var(--medium-gap);
+}
+
+.teacher-variant-2 {
+    color: var(--accent);
+    background-color: var(--background-sec);
+    
+    border-radius: var(--border-radius);
+    border-width: var(--border-width);
+    border-style: solid;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: var(--thin-gap);
+}
+
+.button-variant-1 {
+    color: var(--accent);
+    background-color: var(--background);
+    
+    border-radius: var(--border-radius);
+    border-width: var(--border-width);
+    border-style: solid;
+    border-color: var(--accent);
+    transition: ease-in-out var(--animation-time-1);
+}
+
+.button-variant-1:hover, .button-variant-1::selection {
+    color: var(--txt-sec);
+    background-color: var(--accent);
+}
+
+.button-variant-2 {
+    color: var(--txt-sec);
+    background-color: var(--accent);
+    
+    border-radius: var(--border-radius);
+    border-width: var(--border-width);
+    border-style: solid;
+    border-color: var(--accent);
+    transition: ease-in-out var(--animation-time-1);
+}
+
+.button-variant-2:hover, .button-variant-2::selection {
+    color: var(--txt);
+    background-color: var(--background);
+}
+
+.button-warning {
+    color: var(--txt-contrast);
+    background-color: var(--warning);
+    
+    border-radius: var(--border-radius);
+    border-width: var(--border-width);
+    border-style: solid;
+    border-color: var(--warning);
+    transition: ease-in-out var(--animation-time-1);
+}
+
+.button-warning:hover, .button-warning::selection {
+    background-color: var(--warning-sec);
+}
+
+.teacher-card-body button {
+    border: none;
+    background-color: var(--background-body);
+    color: var(--accent);
+}
+
+.icon-btn-circle {
+    height: var(--button-diameter);
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    border: var(--border-width) solid var(--accent);
+    background: var(--background);
+    color: var(--accent);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+    transition:  var(--animation-time-1) ease-in-out;
+}
+
+.icon-btn-circle:hover {
+    background: var(--accent);
+    color: var(--txt-sec);
+}
+
+.icon-btn-circle:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+
+.teacher-card-title {
+    border: none;
+    border-radius: 0;
+    cursor: pointer;
+    width: 100%;
+    padding: var(--thin-padding);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    transition: background-color var(--animation-time-1), color var(--animation-time-1);
+}
+
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--thin-padding);
+}
+
+.form-field label {
+    color: var(--accent);
+    font-weight: var(--fw-semibold);
+    font-size: 0.95rem;
+}
+
+.form-field input,
+.form-field textarea {
+    background-color: var(--background-body);
+    color: var(--accent);
+    border: none;
+    border-bottom: 2px solid var(--accent);
+    padding: var(--medium-padding);
+    font-family: inherit;
+    font-size: 1rem;
+}
+
+.form-field input:focus,
+.form-field textarea:focus {
+    outline: none;
+    border-bottom-color: var(--background-sec);
+}
+
+.form-field input:disabled,
+.form-field textarea:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.form-field textarea {
+    resize: vertical;
+}
+
+.form-page-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--medium-padding);
+}
+
+.form-card {
+    width: 100%;
+    max-width: 600px;
+    background-color: var(--background);
+    border: var(--border-width) solid var(--accent);
+    border-radius: var(--border-radius);
+    padding: var(--thick-padding);
+}
+
+.form-title {
+    color: var(--accent);
+    font-size: 1.5rem;
+    margin: 0 0 var(--thick-padding) 0;
+    text-align: center;
+    font-weight: var(--fw-bold);
+}
+
+.form-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: var(--thick-gap);
+}
+
+.form-button {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    font-weight: var(--fw-semibold);
+    font-size: 1rem;
+}
+
+.state-message {
+    padding: var(--thick-padding);
+    text-align: center;
+    color: var(--accent);
+}
+
+.state-message.error {
+    color: var(--warning);
+}
+
+
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--thick-gap);
+    width: 100%;
+    max-width: 1200px;
+}
+
+.row {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--thin-padding) 0;
+    border-bottom: 2px solid var(--background-sec);
+    color: var(--accent);
+    font-weight: var(--fw-semibold);
+}
+
+.row .value {
+    font-weight: var(--fw-bold);
+}

@@ -1,12 +1,14 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, type RouteLocationNormalizedLoaded } from 'vue-router'
 import HomeView from '../views/shared/HomeView.vue'
 import NotFoundView from '@/views/shared/NotFoundView.vue'
 import LeaderboardView from '@/views/shared/LeaderboardView.vue'
 import EnterClassroomCodeView from '@/views/shared/EnterClassroomCodeView.vue'
 import CreateAvatarView from '@/views/shared/CreateAvatarView.vue'
+import TeacherView from '@/views/teacher/TeacherView.vue'
 import TeachersProfileView from '@/views/teacher/TeachersProfileView.vue'
 import TeachersNotificationsView from '@/views/teacher/TeachersNotificationsView.vue'
 import TeachersClassroomsView from '@/views/teacher/TeachersClassroomsView.vue'
+import TeachersCreateClassroomView from '@/views/teacher/TeachersCreateClassroomView.vue'
 import TeachersClassroomView from '@/views/teacher/TeachersClassroomView.vue'
 import TeachersPupilsView from '@/views/teacher/TeachersPupilsView.vue'
 import TeachersPupilView from '@/views/teacher/TeachersPupilView.vue'
@@ -70,6 +72,8 @@ const router = createRouter({
     },
     {
       path: '/teacher',
+      component: TeacherView,
+      meta: { breadcrumb: '' },
       children: [
         {
           path: 'profile',
@@ -81,21 +85,48 @@ const router = createRouter({
         },
         {
           path: 'classrooms',
+          meta: { breadcrumb: 'Klasserom' },
           children: [
             {
               path: '',
               component: TeachersClassroomsView,
             },
             {
-              path: ':classroom_id',
-              component: TeachersClassroomView,
+              path: 'new',
+              meta: { breadcrumb: 'Nytt Klasserom' },
+              component: TeachersCreateClassroomView,
+            },
+            {
+              path: ':classroomName',
+              meta: {
+                breadcrumb: (route: RouteLocationNormalizedLoaded) =>
+                  String(route.params.classroomName)
+                    .replace(/-/g, ' ')
+                    .replace(/\b\w/g, (c) => c.toUpperCase()),
+                tabs: (route: RouteLocationNormalizedLoaded) => {
+                  const base = `/teacher/classrooms/${route.params.classroomName}`
+                  return [
+                    { label: 'Oversikt', to: `${base}/oversikt` },
+                    { label: 'Elever', to: `${base}/pupils` },
+                    { label: 'Innstillinger', to: `${base}/edit-classroom` },
+                  ]
+                },
+              },
+              redirect: (to) => `/teacher/classrooms/${to.params.classroomName}/oversikt`,
               children: [
-                // {
-                //   path: 'censorship',
-                //   component: HomeView,
-                // },
+                {
+                  path: 'oversikt',
+                  meta: { breadcrumb: 'Oversikt' },
+                  component: TeachersClassroomView,
+                },
+                {
+                  path: 'edit-classroom',
+                  meta: { breadcrumb: 'Rediger Klasserom' },
+                  component: TeachersClassroomView,
+                },
                 {
                   path: 'pupils',
+                  meta: { breadcrumb: 'Elever' },
                   component: TeachersPupilsView,
                   children: [
                     {

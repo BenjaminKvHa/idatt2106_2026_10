@@ -157,6 +157,7 @@ public class LeaderboardService {
         return new ClassroomPupilLeaderboardResponse(
                 classroom.getClassroomCode(),
                 classroom.getClassroomName(),
+                classroom.getClassroomDescription(),
                 entries);
     }
 

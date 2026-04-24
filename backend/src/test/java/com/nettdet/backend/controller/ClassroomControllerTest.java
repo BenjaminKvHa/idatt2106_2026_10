@@ -39,6 +39,8 @@ import com.nettdet.backend.dto.AcceptedPupilMembershipResponse;
 import com.nettdet.backend.dto.ClassroomResponse;
 import com.nettdet.backend.dto.CreateClassroomRequest;
 import com.nettdet.backend.dto.TeacherLeaveStatusResponse;
+import com.nettdet.backend.dto.ValidateClassroomCodeRequest;
+import com.nettdet.backend.dto.ValidateClassroomCodeResponse;
 import com.nettdet.backend.security.JwtUserPrincipal;
 import com.nettdet.backend.service.ClassroomService;
 import com.nettdet.backend.util.JwtAuthFilter;
@@ -110,6 +112,41 @@ class ClassroomControllerTest {
         verifyNoInteractions(classroomService);
     }
 
+    @DisplayName("Allows authenticated pupils to validate classroom codes")
+    @Test
+    void validateClassroomCode_whenAuthenticatedPupil_returnsCodeExistence() throws Exception {
+        JwtUserPrincipal principal = new JwtUserPrincipal("Pupil Name", "pupil@example.com", "PUPIL");
+        when(classroomService.validateClassroomCode(
+                argThat(request -> request.classroomCode().equals("ABCABC")),
+                argThat(argument -> argument.email().equals("pupil@example.com"))))
+                .thenReturn(new ValidateClassroomCodeResponse(true));
+
+        mockMvc.perform(post("/classrooms/validate-code")
+                        .with(authentication(authenticationFor(principal, "PUPIL")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new ValidateClassroomCodeRequest("ABCABC"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exists").value(true));
+
+        verify(classroomService).validateClassroomCode(
+                argThat(request -> request.classroomCode().equals("ABCABC")),
+                argThat(argument -> argument.email().equals("pupil@example.com") && argument.role().equals("PUPIL")));
+    }
+
+    @DisplayName("Denies teachers from validating classroom codes through the pupil endpoint")
+    @Test
+    void validateClassroomCode_whenAuthenticatedTeacher_returnsForbidden() throws Exception {
+        JwtUserPrincipal principal = teacherPrincipal();
+
+        mockMvc.perform(post("/classrooms/validate-code")
+                        .with(authentication(authenticationFor(principal, "TEACHER")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new ValidateClassroomCodeRequest("ABCABC"))))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(classroomService);
+    }
+
     @DisplayName("Allows authenticated teachers to list accepted classroom pupils")
     @Test
     void getAcceptedPupils_whenAuthenticatedTeacher_returnsAcceptedPupilJson() throws Exception {
@@ -117,6 +154,7 @@ class ClassroomControllerTest {
         when(classroomService.getAcceptedPupils("ABCABC", principal)).thenReturn(List.of(
                 new AcceptedClassroomPupilResponse(
                         "pupil@example.com",
+                        "Pupil Name",
                         "detektiv1",
                         "avatar-images/boy_hair1_costume1.png")));
 
@@ -124,6 +162,7 @@ class ClassroomControllerTest {
                         .with(authentication(authenticationFor(principal, "TEACHER"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].accountEmail").value("pupil@example.com"))
+                .andExpect(jsonPath("$[0].legalName").value("Pupil Name"))
                 .andExpect(jsonPath("$[0].username").value("detektiv1"))
                 .andExpect(jsonPath("$[0].avatarObjectKey").value("avatar-images/boy_hair1_costume1.png"));
 

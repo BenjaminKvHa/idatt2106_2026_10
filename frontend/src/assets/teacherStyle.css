@@ -113,18 +113,26 @@
     flex: 1;
     height: auto;
     overflow: auto;
-    
+
 }
 
 
-.teacher-card-item {
+.teacher-card-item-var-1 {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     padding: var(--card-item-padding);
     border-radius: var(--card-item-radius);
-    background-color: var(--background-sec);
-    color: var(--accent);
+    transition: background-color var(--animation-time-1), color var(--animation-time-1);
+}
+
+.teacher-card-item-var-2 {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--card-item-padding);
+    border-radius: var(--card-item-radius);
+    transition: background-color var(--animation-time-1), color var(--animation-time-1);
 }
 
 .teacher-card-header :where(button, a) {
@@ -207,6 +215,26 @@
     border: none;
     background-color: var(--background-body);
     color: var(--accent);
+}
+
+.teacher-card-body .teacher-card-item-var-1 {
+    background-color: var(--background-body);
+    color: var(--txt);
+}
+
+.teacher-card-body .teacher-card-item-var-1:hover {
+    background-color: var(--accent);
+    color: var(--txt-sec);
+}
+
+.teacher-card-body .teacher-card-item-var-2 {
+    background-color: var(--accent);
+    color: var(--txt-sec);
+}
+
+.teacher-card-body .teacher-card-item-var-2:hover {
+    background-color: var(--accent);
+    color: var(--txt-sec);
 }
 
 .icon-btn-circle {

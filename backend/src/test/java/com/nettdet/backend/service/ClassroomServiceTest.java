@@ -38,6 +38,8 @@ import com.nettdet.backend.dto.CreateClassroomRequest;
 import com.nettdet.backend.dto.InviteTeacherRequest;
 import com.nettdet.backend.dto.TeacherLeaveStatusResponse;
 import com.nettdet.backend.dto.UpdateClassroomRequest;
+import com.nettdet.backend.dto.ValidateClassroomCodeRequest;
+import com.nettdet.backend.dto.ValidateClassroomCodeResponse;
 import com.nettdet.backend.repository.AccountClassroomBridgeTeacherRepository;
 import com.nettdet.backend.repository.AccountRepository;
 import com.nettdet.backend.repository.ClassroomRepository;
@@ -126,6 +128,54 @@ class ClassroomServiceTest {
                 () -> classroomService.createClassroom(new CreateClassroomRequest("8A", null), principal));
 
         verifyNoInteractions(accountRepository, classroomRepository, bridgeRepository);
+    }
+
+    @DisplayName("Returns true when a pupil validates an existing classroom code")
+    @Test
+    void validateClassroomCode_whenCodeExists_returnsTrue() {
+        when(classroomRepository.existsById(CLASSROOM_CODE)).thenReturn(true);
+
+        ValidateClassroomCodeResponse response = classroomService.validateClassroomCode(
+                new ValidateClassroomCodeRequest(" abcabc "),
+                pupilPrincipal());
+
+        assertTrue(response.exists());
+        verify(classroomRepository).existsById(CLASSROOM_CODE);
+    }
+
+    @DisplayName("Returns false when a pupil validates a missing classroom code")
+    @Test
+    void validateClassroomCode_whenCodeDoesNotExist_returnsFalse() {
+        when(classroomRepository.existsById("MISSING")).thenReturn(false);
+
+        ValidateClassroomCodeResponse response = classroomService.validateClassroomCode(
+                new ValidateClassroomCodeRequest("MISSING"),
+                pupilPrincipal());
+
+        assertFalse(response.exists());
+    }
+
+    @DisplayName("Returns false for blank classroom codes without querying the database")
+    @Test
+    void validateClassroomCode_whenCodeIsBlank_returnsFalse() {
+        ValidateClassroomCodeResponse response = classroomService.validateClassroomCode(
+                new ValidateClassroomCodeRequest("   "),
+                pupilPrincipal());
+
+        assertFalse(response.exists());
+        verify(classroomRepository, never()).existsById(any());
+    }
+
+    @DisplayName("Denies classroom code validation for non-pupil principals")
+    @Test
+    void validateClassroomCode_whenPrincipalIsNotPupil_throwsAccessDenied() {
+        assertThrows(
+                AccessDeniedException.class,
+                () -> classroomService.validateClassroomCode(
+                        new ValidateClassroomCodeRequest(CLASSROOM_CODE),
+                        teacherPrincipal()));
+
+        verifyNoInteractions(classroomRepository);
     }
 
     @DisplayName("Invites only existing teacher accounts to classrooms the authenticated teacher owns")

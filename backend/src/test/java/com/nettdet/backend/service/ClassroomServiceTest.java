@@ -311,6 +311,9 @@ class ClassroomServiceTest {
         assertEquals(List.of("alice@example.com", "bob@example.com", "no-username@example.com"), response.stream()
                 .map(AcceptedClassroomPupilResponse::accountEmail)
                 .toList());
+        assertEquals(List.of("Alice", "Bob", "No Username"), response.stream()
+                .map(AcceptedClassroomPupilResponse::legalName)
+                .toList());
         assertEquals("avatar-images/alice.png", response.getFirst().avatarObjectKey());
         assertNull(response.get(1).avatarObjectKey());
     }

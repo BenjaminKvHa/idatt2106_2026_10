@@ -2,6 +2,7 @@ package com.nettdet.backend.repository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.nettdet.backend.domain.AccountClassroomBridgeTeacher;
@@ -97,6 +99,13 @@ class ClassroomRepositoryTest {
 
         assertTrue(membership.isPresent());
         assertEquals("Pending Pupil", membership.orElseThrow().getAccount().getLegalName());
+    }
+
+    @DisplayName("Rejects classroom codes that contain numbers")
+    @Test
+    void classroomCodeConstraint_whenCodeContainsNumbers_rejectsInsert() {
+        assertThrows(DataIntegrityViolationException.class,
+                () -> insertClassroom("ABC123", "Invalid classroom"));
     }
 
     private void insertClassroomData() {

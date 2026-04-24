@@ -154,6 +154,7 @@ class ClassroomControllerTest {
         when(classroomService.getAcceptedPupils("ABCABC", principal)).thenReturn(List.of(
                 new AcceptedClassroomPupilResponse(
                         "pupil@example.com",
+                        "Pupil Name",
                         "detektiv1",
                         "avatar-images/boy_hair1_costume1.png")));
 
@@ -161,6 +162,7 @@ class ClassroomControllerTest {
                         .with(authentication(authenticationFor(principal, "TEACHER"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].accountEmail").value("pupil@example.com"))
+                .andExpect(jsonPath("$[0].legalName").value("Pupil Name"))
                 .andExpect(jsonPath("$[0].username").value("detektiv1"))
                 .andExpect(jsonPath("$[0].avatarObjectKey").value("avatar-images/boy_hair1_costume1.png"));
 

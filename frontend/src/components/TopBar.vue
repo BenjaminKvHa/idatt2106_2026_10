@@ -1,36 +1,80 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
-import ProfileButton from '@/components/ProfileButton.vue'
-import { ChevronLeftIcon, HomeIcon, SettingsIcon } from '@lucide/vue';
-import { getJwtData } from '@/utils/jwtUtils';
+import { computed, onMounted, ref } from 'vue'
+import { ChevronLeftIcon, HomeIcon } from '@lucide/vue'
+import { get, type BackendAccountRole } from '@/utils/apiUtils'
+import { useRoute, useRouter } from 'vue-router'
+
+
+const route = useRoute();
+const router = useRouter()
 
 const props = defineProps<{
   title?: string
-  profileName?: string | null
-  profileAvatarUrl?: string | null
   hint?: string
   help?: string
+  previousPageUrl?: string
 }>()
 
-const tokenData = getJwtData();
+type MeResponse = {
+  email: string
+  legalName: string
+  role: BackendAccountRole
+  username: string | null
+  avatarFileObjectId: number | null
+}
+
+const profile = ref<MeResponse | null>(null)
+
+const profileAvatarUrl = computed(() =>
+  profile.value?.avatarFileObjectId
+    ? `/api/objects/${profile.value.avatarFileObjectId}`
+    : '/api/avatar-assets/costume/detective.png',
+)
+
+const displayName = computed(() => profile.value?.username || profile.value?.legalName || profile.value?.email || 'No name')
+
+const homeRoute = computed(() => profile.value?.role === 'TEACHER' ? '/teacher/classrooms' : '/pupil')
+
+const profileRoute = computed(() => profile.value?.role === 'TEACHER' ? '/teacher/profile' : '/pupil/profile')
+
+async function loadProfile() {
+  try {
+    profile.value = await get<MeResponse>('/api/me')
+  } catch {
+    profile.value = null
+  }
+}
 
 function openHelp(): void {
-  alert(props.help || "No help")
+  alert(props.help || 'No help')
 }
 
 function openHint(): void {
-  alert(props.hint || "No hint")
+  alert(props.hint || 'No hint')
 }
+
+onMounted(async () => {
+  await loadProfile()
+})
+
+function goBack() {
+  if (typeof window !== 'undefined' && !props.previousPageUrl) window.history.back()
+  else router.push(props.previousPageUrl || '#');
+}
+
+console.log("route", route.fullPath)
+
+const isOnHome = computed(() => route.fullPath == '/pupil/' || route.fullPath == '/pupil' || route.fullPath == '/teacher/classrooms' || route.fullPath == '/teacher/classrooms/');
 </script>
 
 <template>
   <div class="mega-nav-container">
     <div class="nav-container heavy-shadow">
       <div>
-        <button @click="$router.go(-1)" class="nav-icon-parent transition">
+        <button @click="goBack" v-if="!isOnHome" class="nav-icon-parent transition">
           <ChevronLeftIcon />
         </button>
-        <RouterLink to="/pupil" class="nav-icon-parent transition">
+        <RouterLink :to="homeRoute" v-if="!isOnHome" class="nav-icon-parent transition">
           <HomeIcon />
         </RouterLink>
       </div>
@@ -38,9 +82,9 @@ function openHint(): void {
         {{ title }}
       </div>
       <div>
-        <RouterLink to="/pupil/profile" class="avatar-button transition">
-          <img :src="profileAvatarUrl || '/api/avatar-assets/costume/detective.png'" />
-          {{ tokenData?.legalName || tokenData?.email || "No name" }}
+        <RouterLink :to="profileRoute" class="avatar-button transition">
+          <img :src="profileAvatarUrl" />
+          {{ displayName }}
         </RouterLink>
       </div>
     </div>

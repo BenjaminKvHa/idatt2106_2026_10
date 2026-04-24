@@ -129,7 +129,6 @@ onMounted(async () => {
     <section class="layout-card">
       <section class="selectors-panel">
         <div class="copy-panel">
-        <p class="eyebrow">Bli med i klasserommet</p>
         <h1>Lag din karakter</h1>
         <p class="description">
           Velg hudfarge, hårstil og antrekk for figuren din. Du kan også skrive inn kallenavnet du vil bruke i klasserommet.
@@ -184,7 +183,7 @@ onMounted(async () => {
             :alt="asset.name"
           />
         </div>
-        <p class="preview-label">{{ username || "No username" }}</p>
+        <p class="preview-label">{{ username || "Du har ikke lagd et nytt brukernavn enda" }}</p>
         <div class="button-row">
           <button type="button" class="secondary-button" @click="goBack">Tilbake</button>
           <button type="button" class="primary-button" :disabled="!canSubmit" @click="saveMembership">
@@ -322,7 +321,7 @@ onMounted(async () => {
   width: min(18rem, 100%);
   aspect-ratio: 1;
   border-radius: 100%;
-  background: radial-gradient(circle at top, #fff8ec 0%, #f2d7a1 100%);
+  background: white;
   border: var(--border-thin) solid var(--brown-dark);
   overflow: hidden;
 }

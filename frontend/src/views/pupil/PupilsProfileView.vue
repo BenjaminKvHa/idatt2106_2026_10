@@ -147,7 +147,7 @@ async function saveNickname() {
 </script>
 
 <template>
-  <TopBar title="Profil" :profile-avatar-url="avatarUrl" />
+  <TopBar title="Profil" />
 
   <main class="page">
     <section class="profile-card">
@@ -159,7 +159,9 @@ async function saveNickname() {
           <img class="profile-img" :src="avatarUrl" alt="Profile avatar" />
           <p class="meta-text">{{ profile.legalName || "No name" }} - {{ profile.email }}</p>
           <p class="meta-text">{{ profile.role }}</p>
-          <button v-if="isInClassroom" class="secondary-button" type="button" disabled>Bytt avatar</button>
+          <RouterLink :to="`/join-classroom/set-avatar?classroomCode=${profile.classroomCode}`">
+            <button v-if="isInClassroom" class="secondary-button" type="button">Bytt avatar</button>
+          </RouterLink>
         </section>
 
         <section class="settings-panel">

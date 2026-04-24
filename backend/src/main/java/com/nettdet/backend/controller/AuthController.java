@@ -43,11 +43,9 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "Refresh access token",
-            description = "Requires the current user to be authenticated. Rotates the refresh cookie and returns a new short-lived JWT access token.",
-            security = @SecurityRequirement(name = "bearerAuth"))
+            description = "Rotates the refresh cookie and returns a new short-lived JWT access token when the refresh cookie is valid.")
     public ResponseEntity<AuthTokenResponse> grantRefreshToken(@CookieValue("refresh_token") String cookie) {
 
         logger.info("Refresh token request received");

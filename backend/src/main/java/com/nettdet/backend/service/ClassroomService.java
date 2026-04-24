@@ -25,6 +25,8 @@ import com.nettdet.backend.dto.InviteTeacherRequest;
 import com.nettdet.backend.dto.PendingPupilRequestResponse;
 import com.nettdet.backend.dto.TeacherLeaveStatusResponse;
 import com.nettdet.backend.dto.UpdateClassroomRequest;
+import com.nettdet.backend.dto.ValidateClassroomCodeRequest;
+import com.nettdet.backend.dto.ValidateClassroomCodeResponse;
 import com.nettdet.backend.repository.AccountClassroomBridgeTeacherRepository;
 import com.nettdet.backend.repository.AccountRepository;
 import com.nettdet.backend.repository.ClassroomRepository;
@@ -91,6 +93,20 @@ public class ClassroomService {
         }
 
         throw new IllegalStateException("Unable to generate a unique classroom code");
+    }
+
+    @Transactional(readOnly = true)
+    public ValidateClassroomCodeResponse validateClassroomCode(
+            ValidateClassroomCodeRequest request,
+            JwtUserPrincipal principal) {
+        verifyPupilPrincipal(principal);
+
+        String classroomCode = request == null || request.classroomCode() == null
+                ? ""
+                : request.classroomCode().trim().toUpperCase();
+
+        return new ValidateClassroomCodeResponse(!classroomCode.isBlank()
+                && classroomRepository.existsById(classroomCode));
     }
 
     @Transactional

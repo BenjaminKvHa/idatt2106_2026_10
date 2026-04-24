@@ -39,6 +39,8 @@ import com.nettdet.backend.dto.AcceptedPupilMembershipResponse;
 import com.nettdet.backend.dto.ClassroomResponse;
 import com.nettdet.backend.dto.CreateClassroomRequest;
 import com.nettdet.backend.dto.TeacherLeaveStatusResponse;
+import com.nettdet.backend.dto.ValidateClassroomCodeRequest;
+import com.nettdet.backend.dto.ValidateClassroomCodeResponse;
 import com.nettdet.backend.security.JwtUserPrincipal;
 import com.nettdet.backend.service.ClassroomService;
 import com.nettdet.backend.util.JwtAuthFilter;
@@ -105,6 +107,41 @@ class ClassroomControllerTest {
                         .with(authentication(authenticationFor(principal, "PUPIL")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new CreateClassroomRequest("8A", "Mandag"))))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(classroomService);
+    }
+
+    @DisplayName("Allows authenticated pupils to validate classroom codes")
+    @Test
+    void validateClassroomCode_whenAuthenticatedPupil_returnsCodeExistence() throws Exception {
+        JwtUserPrincipal principal = new JwtUserPrincipal("Pupil Name", "pupil@example.com", "PUPIL");
+        when(classroomService.validateClassroomCode(
+                argThat(request -> request.classroomCode().equals("ABCABC")),
+                argThat(argument -> argument.email().equals("pupil@example.com"))))
+                .thenReturn(new ValidateClassroomCodeResponse(true));
+
+        mockMvc.perform(post("/classrooms/validate-code")
+                        .with(authentication(authenticationFor(principal, "PUPIL")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new ValidateClassroomCodeRequest("ABCABC"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exists").value(true));
+
+        verify(classroomService).validateClassroomCode(
+                argThat(request -> request.classroomCode().equals("ABCABC")),
+                argThat(argument -> argument.email().equals("pupil@example.com") && argument.role().equals("PUPIL")));
+    }
+
+    @DisplayName("Denies teachers from validating classroom codes through the pupil endpoint")
+    @Test
+    void validateClassroomCode_whenAuthenticatedTeacher_returnsForbidden() throws Exception {
+        JwtUserPrincipal principal = teacherPrincipal();
+
+        mockMvc.perform(post("/classrooms/validate-code")
+                        .with(authentication(authenticationFor(principal, "TEACHER")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new ValidateClassroomCodeRequest("ABCABC"))))
                 .andExpect(status().isForbidden());
 
         verifyNoInteractions(classroomService);

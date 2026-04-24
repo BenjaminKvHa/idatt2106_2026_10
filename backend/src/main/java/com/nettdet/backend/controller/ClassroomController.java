@@ -25,6 +25,8 @@ import com.nettdet.backend.dto.InviteTeacherRequest;
 import com.nettdet.backend.dto.PendingPupilRequestResponse;
 import com.nettdet.backend.dto.TeacherLeaveStatusResponse;
 import com.nettdet.backend.dto.UpdateClassroomRequest;
+import com.nettdet.backend.dto.ValidateClassroomCodeRequest;
+import com.nettdet.backend.dto.ValidateClassroomCodeResponse;
 import com.nettdet.backend.security.JwtUserPrincipal;
 import com.nettdet.backend.service.ClassroomService;
 
@@ -52,6 +54,15 @@ public class ClassroomController {
             @AuthenticationPrincipal JwtUserPrincipal principal) {
         ClassroomResponse response = classroomService.createClassroom(request, principal);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/validate-code")
+    @PreAuthorize("hasAuthority('PUPIL')")
+    @Operation(summary = "Validate classroom code", description = "Checks whether the submitted classroom code exists. This endpoint is intended for authenticated pupils before they submit a join request.")
+    public ResponseEntity<ValidateClassroomCodeResponse> validateClassroomCode(
+            @RequestBody ValidateClassroomCodeRequest request,
+            @AuthenticationPrincipal JwtUserPrincipal principal) {
+        return ResponseEntity.ok(classroomService.validateClassroomCode(request, principal));
     }
 
     @PostMapping("/{classroomCode}/teachers")

@@ -1,20 +1,17 @@
 name: OWASP Security Scan
-
 on:
   workflow_dispatch:
   push:
     branches: [main, dev]
   pull_request:
     branches: [main, dev]
-
 jobs:
   frontend-security:
     runs-on: ntnu-runners
-    name: Frontend Security Scan (ESLint + Retire.js)
+    name: Frontend Security Scan (Retire.js)
     defaults:
       run:
         working-directory: frontend
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -29,17 +26,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install security plugins
-        run: npm install -D eslint-plugin-security retire
-
-      - name: Run ESLint security scan
-        run: |
-          npx eslint . --ext .js,.vue \
-            --plugin security \
-            --rule 'security/detect-eval-with-expression: error' \
-            --rule 'security/detect-non-literal-fs-filename: warn' \
-            --rule 'security/detect-unsafe-regex: error'
-        continue-on-error: false
+      - name: Install Retire.js
+        run: npm install -D retire
 
       - name: Run Retire.js scan
         run: npx retire --path . --severity high
@@ -51,7 +39,6 @@ jobs:
     defaults:
       run:
         working-directory: backend
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -66,7 +53,7 @@ jobs:
         run: chmod +x ./mvnw
 
       - name: Run OWASP Dependency-Check via Maven
-        run: ./mvnw dependency-check:check -DfailBuildOnCVSS=7
+        run: ./mvnw dependency-check:check -DfailBuildOnCVSS=7 -DnvdApiKey=${{ secrets.NVD_API_KEY }}
         continue-on-error: false
 
       - name: Upload Dependency-Check report

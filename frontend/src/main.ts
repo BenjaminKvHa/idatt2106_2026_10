@@ -4,11 +4,12 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import clickSoundFile from '@/assets/click-sound.mp3'
+import { useAudio } from '@/composables/useAudio'
 
 const app = createApp(App)
 
+const { volume, isMuted } = useAudio()
 const clickSound = new Audio(clickSoundFile)
-clickSound.volume = 1
 
 document.addEventListener('click', (e) => {
   const target = e.target as HTMLElement | null
@@ -20,6 +21,7 @@ document.addEventListener('click', (e) => {
 
   if (!clickableElement) return
 
+  clickSound.volume = isMuted.value ? 0 : volume.value / 100
   clickSound.pause()
   clickSound.currentTime = 0.9
   clickSound.play().catch(() => {})

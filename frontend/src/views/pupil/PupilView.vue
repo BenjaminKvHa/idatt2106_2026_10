@@ -11,6 +11,9 @@ import blobbySound4 from '@/assets/sounds/blobby-wow.mp3'
 import blobbySound5 from '@/assets/sounds/blobby-pop.mp3'
 
 import corkboardImage from '@/assets/korktavle.png'
+import { useAudio } from '@/composables/useAudio'
+
+const { playSound } = useAudio()
 
 const showBlobbyMessage = ref(false)
 const blobbyStep = ref(0)
@@ -31,11 +34,8 @@ function handleBlobbyClick() {
     showBlobbyMessage.value = false
 
     const soundIndex = blobbyStep.value - 1
-    const audio = new Audio(blobbySounds[soundIndex])
-
-    audio.play().catch((error) => {
-      console.error('Kunne ikke spille av lyd:', error)
-    })
+    const soundFile = blobbySounds[soundIndex]
+    if (soundFile) playSound(soundFile)
 
     blobbyStep.value++
     return

@@ -8,16 +8,15 @@ import DatatyvenImage from '@/assets/Datatyven.png'
 import victorySoundFile from "@/assets/victory-sound.mp3";
 import defeatSoundFile from "@/assets/evil-laugh.mp3";
 import confetti from "canvas-confetti";
+import { useAudio } from "@/composables/useAudio";
 
 type ResultType = "victory" | "defeat" | null;
 
 const router = useRouter();
+const { playSound } = useAudio();
 
-const victorySound = new Audio(victorySoundFile);
-victorySound.volume = 0.3;
-
-const defeatSound = new Audio(defeatSoundFile);
-defeatSound.volume = 0.3;
+let victorySoundRef: HTMLAudioElement | null = null;
+let defeatSoundRef: HTMLAudioElement | null = null;
 
 const showHelpPopup = ref<boolean>(false);
 const showHintPopup = ref<boolean>(false);
@@ -193,11 +192,8 @@ const resultHighlightText = computed(() =>
 );
 
 function stopResultSounds(): void {
-  victorySound.pause();
-  defeatSound.pause();
-
-  victorySound.currentTime = 0;
-  defeatSound.currentTime = 0;
+  if (victorySoundRef) { victorySoundRef.pause(); victorySoundRef.currentTime = 0; }
+  if (defeatSoundRef) { defeatSoundRef.pause(); defeatSoundRef.currentTime = 0; }
 }
 
 function fireVictoryConfetti(): void {
@@ -242,10 +238,10 @@ watch(showResultPopup, (isOpen) => {
   stopResultSounds();
 
   if (resultType.value === "victory") {
-    victorySound.play();
+    victorySoundRef = playSound(victorySoundFile, 0.3);
     fireVictoryConfetti();
   } else if (resultType.value === "defeat") {
-    defeatSound.play();
+    defeatSoundRef = playSound(defeatSoundFile, 0.3);
   }
 });
 
@@ -314,11 +310,7 @@ function closeResultPopup(): void {
   showResultPopup.value = false
   resultType.value = null
 
-  victorySound.pause()
-  defeatSound.pause()
-
-  victorySound.currentTime = 0
-  defeatSound.currentTime = 0
+  stopResultSounds()
 }
 
 function goBackToMap(): void {

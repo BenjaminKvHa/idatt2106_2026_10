@@ -14,16 +14,19 @@ import { onMounted, onBeforeUnmount, ref } from 'vue'
 import { RouterView } from 'vue-router'
 import { getJwtDataWithRefresh } from './utils/jwtUtils'
 import router from './router'
+import { useAudio } from './composables/useAudio'
 
 const backgroundMusic = ref<HTMLAudioElement | null>(null)
+const { registerAudioElement, volume, isMuted } = useAudio()
 
 const startMusic = async () => {
   if (!backgroundMusic.value) return
 
   const audio = backgroundMusic.value
+  registerAudioElement(audio)
   audio.volume = 0
 
-  const targetVolume = 0.3
+  const targetVolume = isMuted.value ? 0 : volume.value / 100
   const fadeDuration = 2000 // 2 sek
   const stepTime = 50
   const steps = fadeDuration / stepTime
@@ -32,17 +35,15 @@ const startMusic = async () => {
   try {
     await audio.play()
 
-    let currentStep = 0
+    if (targetVolume > 0) {
+      let currentStep = 0
 
-    const fade = setInterval(() => {
-      currentStep++
-
-      audio.volume = Math.min(audio.volume + volumeStep, targetVolume)
-
-      if (currentStep >= steps) {
-        clearInterval(fade)
-      }
-    }, stepTime)
+      const fade = setInterval(() => {
+        currentStep++
+        audio.volume = Math.min(audio.volume + volumeStep, targetVolume)
+        if (currentStep >= steps) clearInterval(fade)
+      }, stepTime)
+    }
 
     document.removeEventListener('click', startMusic)
   } catch (error) {

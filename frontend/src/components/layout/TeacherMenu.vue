@@ -4,13 +4,17 @@ import { useRoute, useRouter } from 'vue-router'
 import Logo from '@/components/misc/Logo.vue'
 import OptionsMenu from '@/components/ui/OptionsMenu.vue'
 import gearIcon from '@/assets/icons/profile-cog.svg'
+import volume2Icon from '@/assets/icons/volume-2.svg'
+import volumeXIcon from '@/assets/icons/volume-x.svg'
 import { useClassrooms } from '@/composables/useClassrooms'
 import { sanitizeClassroomName } from '@/composables/useClassroomName'
+import { useAudio } from '@/composables/useAudio'
 
 const settingsOpen = ref(false)
 const route = useRoute()
 const router = useRouter()
 const { classrooms, fetchClassrooms } = useClassrooms()
+const { isMuted, toggleMute } = useAudio()
 
 onMounted(() => {
   fetchClassrooms()
@@ -85,6 +89,14 @@ const isClassroomActive = (classroomCode: string) => {
         </button>
 
         <div class="teacher-menu-bottom">
+            <button
+                type="button"
+                class="icon-btn-circle"
+                :aria-label="isMuted ? 'Skru på lyd' : 'Demp lyd'"
+                @click="toggleMute"
+            >
+                <img :src="isMuted ? volumeXIcon : volume2Icon" alt="" class="teacher-menu-icon" aria-hidden="true" />
+            </button>
             <button type="button" class="icon-btn-circle" aria-label="Varsler"></button>
             <button
                 type="button"

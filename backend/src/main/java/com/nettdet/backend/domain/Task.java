@@ -38,6 +38,7 @@ public class Task extends CreatedAtEntity {
     @JoinColumn(name = "classroom_code")
     private Classroom classroom;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "task_json", nullable = false, columnDefinition = "JSONB")
     private String taskJson;
 

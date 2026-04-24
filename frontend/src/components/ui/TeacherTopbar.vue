@@ -82,7 +82,7 @@ const effectiveTabs = computed<TopbarTab[]>(() => {
 const autoTitle = computed<string>(() => {
   if (props.title) return props.title
   const crumbs = effectivePath.value
-  return crumbs.at(-1)?.label ?? ''
+  return crumbs[crumbs.length - 1]?.label ?? ''
 })
 </script>
 

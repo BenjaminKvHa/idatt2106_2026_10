@@ -340,6 +340,7 @@ public class ClassroomService {
 
         return new AcceptedClassroomPupilResponse(
                 membership.getAccountEmail(),
+                membership.getAccount().getLegalName(),
                 membership.getUsername(),
                 avatarFileObject != null ? avatarFileObject.getObjectKey() : null);
     }

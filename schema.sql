@@ -25,7 +25,8 @@ CREATE TYPE task_difficulty_enum AS ENUM ('EASY', 'MEDIUM', 'HARD');
 CREATE TYPE notification_status_enum AS ENUM ('UNREAD', 'READ');
 
 CREATE TABLE classroom (
-    classroom_code VARCHAR(6) PRIMARY KEY,
+    classroom_code VARCHAR(6) PRIMARY KEY
+        CONSTRAINT classroom_code_uppercase_letters CHECK (classroom_code ~ '^[A-Z]{6}$'),
     classroom_name VARCHAR(255) NOT NULL,
     classroom_description TEXT
 );

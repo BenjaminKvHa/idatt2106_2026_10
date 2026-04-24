@@ -14,10 +14,10 @@
 
 INSERT INTO classroom (classroom_code, classroom_name, classroom_description)
 VALUES
-    ('MAP001', 'Kart testklasse', 'Utviklingsklasse for kartvisning'),
-    ('MAP002', 'Mellomklasse', 'Ekstra klasse for ranking og teacher-overview'),
-    ('MAP003', 'Sisteklasse', 'Ekstra klasse for ranking og teacher-overview'),
-    ('CHAP01', 'Kapitteltestklasse', 'Utviklingsklasse for kapittelvisning')
+    ('MAPAAA', 'Kart testklasse', 'Utviklingsklasse for kartvisning'),
+    ('MAPAAB', 'Mellomklasse', 'Ekstra klasse for ranking og teacher-overview'),
+    ('MAPAAC', 'Sisteklasse', 'Ekstra klasse for ranking og teacher-overview'),
+    ('CHAPAA', 'Kapitteltestklasse', 'Utviklingsklasse for kapittelvisning')
 ON CONFLICT (classroom_code) DO UPDATE
 SET
     classroom_name = EXCLUDED.classroom_name,
@@ -87,10 +87,10 @@ SET
 
 INSERT INTO account_classroom_bridge_teacher (account_email, classroom_code)
 VALUES
-    ('teacher.multi@example.com', 'MAP001'),
-    ('teacher.multi@example.com', 'MAP002'),
-    ('teacher.shared@example.com', 'MAP002'),
-    ('teacher.shared@example.com', 'MAP003')
+    ('teacher.multi@example.com', 'MAPAAA'),
+    ('teacher.multi@example.com', 'MAPAAB'),
+    ('teacher.shared@example.com', 'MAPAAB'),
+    ('teacher.shared@example.com', 'MAPAAC')
 ON CONFLICT (account_email, classroom_code) DO NOTHING;
 
 INSERT INTO pupil_classroom_membership (
@@ -100,11 +100,11 @@ INSERT INTO pupil_classroom_membership (
     membership_confirmed_by_teacher
 )
 VALUES
-    ('map.partial@example.com', 'MAP001', 'map.partial', TRUE),
-    ('map.complete@example.com', 'MAP001', 'map.complete', TRUE),
-    ('rank.two@example.com', 'MAP002', 'rank.two', TRUE),
-    ('rank.three@example.com', 'MAP003', 'rank.three', TRUE),
-    ('chapter.test@example.com', 'CHAP01', 'chapter.test', TRUE)
+    ('map.partial@example.com', 'MAPAAA', 'map.partial', TRUE),
+    ('map.complete@example.com', 'MAPAAB', 'map.complete', TRUE),
+    ('rank.two@example.com', 'MAPAAB', 'rank.two', TRUE),
+    ('rank.three@example.com', 'MAPAAC', 'rank.three', TRUE),
+    ('chapter.test@example.com', 'CHAPAA', 'chapter.test', TRUE)
 ON CONFLICT (account_email) DO UPDATE
 SET
     classroom_code = EXCLUDED.classroom_code,
@@ -138,7 +138,7 @@ SET
 -- fileId must reference an existing row in file_object (upload via POST /api/objects first).
 INSERT INTO task (id, difficulty, chapter_id, classroom_code, task_json)
 VALUES
-    (1, 'EASY', 2, 'CHAP01', '{
+    (1, 'EASY', 2, 'CHAPAA', '{
         "taskDescription": "Er dette bildet ekte, KI-generert eller manipulert?",
         "fileId": 1,
         "correctCategory": 1,
@@ -151,7 +151,7 @@ VALUES
         "correctDescription": "Riktig! Dette bildet er ekte.",
         "falseDescription": "Ikke helt. Dette bildet er faktisk ekte."
     }'::jsonb),
-    (2, 'MEDIUM', 2, 'CHAP01', '{
+    (2, 'MEDIUM', 2, 'CHAPAA', '{
         "taskDescription": "Er dette bildet ekte, KI-generert eller manipulert?",
         "fileId": 2,
         "correctCategory": 2,
@@ -164,7 +164,7 @@ VALUES
         "correctDescription": "Riktig! Dette bildet er KI-generert.",
         "falseDescription": "Ikke helt. Dette bildet er KI-generert."
     }'::jsonb),
-    (3, 'HARD', 2, 'CHAP01', '{
+    (3, 'HARD', 2, 'CHAPAA', '{
         "taskDescription": "Er dette bildet ekte, KI-generert eller manipulert?",
         "fileId": 1,
         "correctCategory": 3,

@@ -135,7 +135,7 @@ public class ClassroomController {
 
     @GetMapping("/{classroomCode}/pupils")
     @PreAuthorize("hasAuthority('TEACHER')")
-    @Operation(summary = "List accepted pupils", description = "Returns all accepted pupils in the classroom. Each entry includes the pupil email, display username, and the saved avatar object key when an avatar has been set.")
+    @Operation(summary = "List accepted pupils", description = "Returns all accepted pupils in the classroom. Each entry includes the pupil email, legal name, display username, and the saved avatar object key when an avatar has been set.")
     public ResponseEntity<List<AcceptedClassroomPupilResponse>> getAcceptedPupils(
             @PathVariable String classroomCode,
             @AuthenticationPrincipal JwtUserPrincipal principal) {

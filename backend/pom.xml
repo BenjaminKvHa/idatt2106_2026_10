@@ -123,6 +123,12 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 
+			<plugin>
+    			<groupId>org.owasp</groupId>
+    			<artifactId>dependency-check-maven</artifactId>
+    			<version>9.2.0</version>
+			</plugin>
+
 			<!--Jacoco configured as plugin in the plugin classpath, checking and reporting test coverage at build time, verifying if coverage > 50% -->
 			<plugin>
 					<groupId>org.jacoco</groupId>

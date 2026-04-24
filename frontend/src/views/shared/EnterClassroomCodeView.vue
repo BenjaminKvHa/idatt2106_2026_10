@@ -10,11 +10,6 @@ const classroomCode = ref('')
 const waiting = ref(false)
 const errorMessage = ref('')
 
-type ValidateClassroomResponse = {
-  exists: boolean
-  message?: string
-}
-
 function handleInput(event: Event) {
   const target = event.target as HTMLInputElement
 
@@ -27,10 +22,6 @@ function handleInput(event: Event) {
   target.value = value
 }
 
-function handleLogout() {
-  console.log('Logg ut')
-}
-
 async function handleConfirm() {
   if (classroomCode.value.length !== 6) return
 
@@ -38,21 +29,10 @@ async function handleConfirm() {
   waiting.value = true
 
   try {
-  /*
-    const data = await post<ValidateClassroomResponse>(
-      '/classrooms/validate-code',
-      {
-        classroomCode: classroomCode.value,
-      },
-    )
+    await post(`/api/pupil/classrooms/${classroomCode.value}/join`, {})
 
-    if (!data?.exists) {
-      errorMessage.value = data?.message || 'Klasserommet finnes ikke, har du skrevet inn ' +
-        'riktig kode?'
-    }
-*/
-    router.push({
-      path: '/join-classroom/waiting-classroom',
+    await router.push({
+      path: '/join-classroom/set-avatar',
       query: {
         classroomCode: classroomCode.value,
       },
@@ -90,7 +70,6 @@ async function handleConfirm() {
     <p>WIP: Validerer ikke klasserom enda, alle 6 bokstaver lange koder redirecter</p>
 
     <div class="buttons">
-      <button class="btn btn-red" @click="handleLogout">Logg ut</button>
       <button
         class="btn btn-green"
         @click="handleConfirm()"

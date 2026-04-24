@@ -32,7 +32,7 @@ export function getDefaultRouteForRole(role?: BackendAccountRole, email?: string
   }
 
   if (role === 'PUPIL') {
-    return '/pupil'
+    return '/join-classroom/enter-classroom-code'
   }
 
   return '/'

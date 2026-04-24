@@ -50,8 +50,8 @@ const startMusic = async () => {
   }
 }
 
-onMounted(() => {
-  const tokenData = getJwtDataWithRefresh()
+onMounted(async () => {
+  const tokenData = await getJwtDataWithRefresh()
 
   document.addEventListener('click', startMusic)
 

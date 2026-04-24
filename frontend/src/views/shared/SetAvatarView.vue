@@ -101,7 +101,7 @@ async function saveMembership() {
     }
 
     await put(`/api/pupil/classrooms/${classroomCode.value}/membership`, payload)
-    await router.push('/pupil')
+    await router.push('/join-classroom/waiting-classroom')
   } catch (error) {
     saveError.value = error instanceof Error ? error.message : 'Kunne ikke lagre avatar og kallenavn'
   } finally {

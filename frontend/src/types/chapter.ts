@@ -17,8 +17,10 @@ export type ImageVerificationResponse = {
   justifications: string[]
 }
 
+export type ImageCategory = 'REAL' | 'AI_GENERATED' | 'MANIPULATED'
+
 export type ImageVerificationRequest = {
-  selectedCategory: number
+  selectedCategory: ImageCategory
   selectedJustification: string
 }
 

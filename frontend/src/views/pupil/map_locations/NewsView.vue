@@ -11,6 +11,8 @@ import type {
   TaskDifficulty,
   ValidationResult,
 } from '@/types/chapter'
+import thumbsUpNews from '@/assets/ThumbsUpNews.png'
+import thumbsDownNews from '@/assets/ThumbsDownNews.png'
 
 const router = useRouter()
 
@@ -314,7 +316,7 @@ h2 {
 .picture {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .fake-button {

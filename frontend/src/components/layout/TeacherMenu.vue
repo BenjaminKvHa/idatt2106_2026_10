@@ -31,10 +31,17 @@ const navigateToNewClassroom = () => {
   router.push(`/teacher/classrooms/new`)
 }
 
+const sanitizeClassroomName = (name: string) => {
+  return name
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w-]/g, '')
+}
+
 const navigateToClassroom = (classroomCode: string) => {
   const classroom = classrooms.value.find((c) => c.classroomCode === classroomCode)
   if (classroom) {
-    const classroomName = classroom.classroomName.toLowerCase().replace(/\s+/g, '-')
+    const classroomName = sanitizeClassroomName(classroom.classroomName)
     router.push(`/teacher/classrooms/${classroomName}/leaderboard`)
   }
 }
@@ -42,7 +49,7 @@ const navigateToClassroom = (classroomCode: string) => {
 const isClassroomActive = (classroomCode: string) => {
   const classroom = classrooms.value.find((c) => c.classroomCode === classroomCode)
   if (!classroom) return false
-  const kebabName = classroom.classroomName.toLowerCase().replace(/\s+/g, '-')
+  const kebabName = sanitizeClassroomName(classroom.classroomName)
   return route.path.includes(`/classrooms/${kebabName}`)
 }
 </script>

@@ -92,6 +92,17 @@
           bildet er en av disse. Er du klar for å løse oppgaver?
         </p>
       </TaskGuide>
+
+      <CompleteLevelPopup
+        :show="showCompletePopup"
+        :title="popupTitle"
+        :message="popupMessage"
+        :sub-message="popupSubMessage"
+        :success="popupSuccess"
+        :success-image="thumbsUpPhoto"
+        :fail-image="thumbsDownPhoto"
+        @close="closeCompletePopup"
+      />
     </div>
   </div>
 </template>
@@ -101,6 +112,9 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/components/TopBar.vue'
 import TaskGuide from '@/components/TaskGuide.vue'
+import CompleteLevelPopup from '@/components/CompleteLevelPopup.vue'
+import thumbsUpPhoto from "@/assets/ThumbsUpPhoto.png";
+import thumbsDownPhoto from "@/assets/ThumbsDownPhoto.png";
 import { get, getBlob, post } from '@/utils/apiUtils'
 import type {
   ImageVerificationRequest,
@@ -111,6 +125,12 @@ import type {
 
 const router = useRouter()
 const showGuidePopup = ref(true)
+
+const showCompletePopup = ref(false)
+const popupTitle = ref('')
+const popupMessage = ref('')
+const popupSubMessage = ref('')
+const popupSuccess = ref(true)
 
 const FOTOGRAFEN_CHAPTER_ID = 2
 const DIFFICULTIES: TaskDifficulty[] = ['EASY', 'MEDIUM', 'HARD']
@@ -159,6 +179,7 @@ async function loadTask() {
   error.value = null
   revokeImageUrl()
   currentTask.value = null
+
   try {
     const difficulty = DIFFICULTIES[stepIndex.value]!
     const task = await get<ImageVerificationResponse>(
@@ -205,18 +226,24 @@ async function submit() {
   if (!currentTask.value || !canSubmit.value) return
   submitting.value = true
   error.value = null
+
   try {
     const body: ImageVerificationRequest = {
       selectedCategory: selectedCategory.value!,
       selectedJustification: selectedJustification.value!,
     }
+
     const result = await post<ValidationResult>(
       `/api/chapters/fotografen/tasks/${currentTask.value.taskId}/validate`,
       body,
     )
+
     lastResult.value = result
     runAttempts.value++
-    if (result.correct) runCorrect.value++
+
+    if (result.correct) {
+      runCorrect.value++
+    }
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Kunne ikke sende svar'
   } finally {
@@ -224,17 +251,42 @@ async function submit() {
   }
 }
 
+function openResultPopup() {
+  const success = runCorrect.value === runAttempts.value
+
+  popupSuccess.value = success
+
+  if (success) {
+    popupTitle.value = 'Du klarte det!'
+    popupMessage.value = `Gratulerer! Du fikk ${runCorrect.value} av ${runAttempts.value} riktig.`
+    popupSubMessage.value = 'Du har nå fullført Fotografen og låst opp neste stoppested.'
+  } else {
+    popupTitle.value = 'Du klarte det ikke'
+    popupMessage.value = `Du fikk ${runCorrect.value} av ${runAttempts.value} riktig.`
+    popupSubMessage.value = 'Prøv igjen for å fullføre Fotografen.'
+  }
+
+  showCompletePopup.value = true
+}
+
 async function next() {
   if (!lastResult.value) return
+
   if (lastResult.value.runCompleted) {
     runDone.value = true
+    openResultPopup()
     return
   }
+
   stepIndex.value++
   selectedCategory.value = null
   selectedJustification.value = null
   lastResult.value = null
   await loadTask()
+}
+
+function closeCompletePopup() {
+  showCompletePopup.value = false
 }
 
 function finish() {

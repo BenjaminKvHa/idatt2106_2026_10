@@ -94,6 +94,50 @@ public class FileObjectAccessControlService {
         }
     }
 
+    @Transactional
+    public FileObject uploadWeeklyMysteryFile(
+            MultipartFile file,
+            String classroomCode,
+            JwtUserPrincipal principal) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("File must not be empty");
+        }
+
+        if (principal == null || principal.email() == null || principal.role() == null
+                || !"PUPIL".equals(principal.role())) {
+            throw new AccessDeniedException("Pupil access is required");
+        }
+
+        Classroom classroom = resolveClassroom(classroomCode);
+        if (classroom == null) {
+            throw new IllegalArgumentException("Classroom code is required for weekly mystery files");
+        }
+
+        Account actor = resolveActor(principal);
+        pupilMembershipRepository
+                .findByAccountEmailAndClassroomClassroomCodeAndMembershipConfirmedByTeacherTrue(
+                        actor.getEmail(),
+                        classroomCode)
+                .orElseThrow(() -> new AccessDeniedException("Confirmed classroom membership is required"));
+
+        String objectKey = generateObjectKey(file.getOriginalFilename());
+        String fileName = normalizeFileName(file.getOriginalFilename());
+        String contentType = normalizeContentType(file.getContentType());
+
+        try {
+            return fileObjectService.upload(
+                    objectKey,
+                    file.getBytes(),
+                    contentType,
+                    actor,
+                    classroom,
+                    ClassroomAccess.ONLY_TEACHERS_IN_CLASS,
+                    fileName);
+        } catch (IOException exception) {
+            throw new IllegalArgumentException("Could not read uploaded file bytes");
+        }
+    }
+
     @Transactional(readOnly = true)
     public FileObjectService.StoredFile read(Long fileObjectId, JwtUserPrincipal principal) {
         FileObject fileObject = fileObjectRepository.findById(fileObjectId)
@@ -147,7 +191,10 @@ public class FileObjectAccessControlService {
         }
 
         return isTeacherInClass(actorEmail, classroomCode)
-                || pupilMembershipRepository.existsByAccountEmailAndClassroomClassroomCode(actorEmail, classroomCode);
+                || pupilMembershipRepository.findByAccountEmailAndClassroomClassroomCodeAndMembershipConfirmedByTeacherTrue(
+                        actorEmail,
+                        classroomCode)
+                .isPresent();
     }
 
     private Account resolveActor(JwtUserPrincipal principal) {

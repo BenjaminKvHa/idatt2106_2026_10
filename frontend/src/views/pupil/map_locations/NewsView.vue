@@ -3,8 +3,8 @@ import { ref } from "vue";
 import TopBar from "@/components/TopBar.vue";
 import TaskGuide from "@/components/TaskGuide.vue";
 import CompleteLevelPopup from "@/components/CompleteLevelPopup.vue";
-import completedSoundFile from "@/assets/completedSound.mp3";
-import tryAgainSoundFile from "@/assets/tryAgainSound.mp3";
+import thumbsUpNews from "@/assets/ThumbsUpNews.png";
+import thumbsDownNews from "@/assets/ThumbsDownNews.png";
 
 const showHelpPopup = ref<boolean>(false);
 const showHintPopup = ref<boolean>(false);
@@ -16,19 +16,12 @@ const popupMessage = ref("");
 const popupSubMessage = ref("");
 const popupSuccess = ref(true);
 
-const completedSound = new Audio(completedSoundFile);
-completedSound.volume = 0.5;
-
-const tryAgainSound = new Audio(tryAgainSoundFile);
-tryAgainSound.volume = 0.5;
-
 type TaskPicture = {
   id: number;
   label: string;
   imageUrl?: string;
 };
 
-// Temporary placeholder-data, change later when connected to task bank
 const pictures: TaskPicture[] = [
   {
     id: 1,
@@ -42,23 +35,12 @@ const pictures: TaskPicture[] = [
   },
 ];
 
-function stopAllSounds(): void {
-  completedSound.pause();
-  tryAgainSound.pause();
-
-  completedSound.currentTime = 0;
-  tryAgainSound.currentTime = 0;
-}
-
 function openSuccessPopup(): void {
   popupSuccess.value = true;
   popupTitle.value = "Du klarte det!";
   popupMessage.value = "Gratulerer! Du har fullført Nyhetskvartalet.";
   popupSubMessage.value = "Du har nå låst opp stoppestedet Fotografen.";
   showCompletePopup.value = true;
-
-  stopAllSounds();
-  completedSound.play();
 }
 
 function openFailPopup(): void {
@@ -67,15 +49,12 @@ function openFailPopup(): void {
   popupMessage.value = "Å nei! Du løste ikke oppgaven riktig denne gangen.";
   popupSubMessage.value = "Prøv på nytt for å klare stoppestedet.";
   showCompletePopup.value = true;
-
-  stopAllSounds();
-  tryAgainSound.play();
 }
 
 function chooseFakePicture(picture: TaskPicture) {
   console.log(`Valgte ${picture.label} som falsk`);
 
-  // Bytt ut dette med ekte logikk senere
+  //Replace with backend later
   const solvedCorrectly = true;
 
   if (solvedCorrectly) {
@@ -103,7 +82,6 @@ function closeHintPopup(): void {
 
 function closeCompletePopup(): void {
   showCompletePopup.value = false;
-  stopAllSounds();
 }
 </script>
 
@@ -202,13 +180,14 @@ function closeCompletePopup(): void {
       </div>
     </div>
   </div>
-
   <CompleteLevelPopup
     :show="showCompletePopup"
     :title="popupTitle"
     :message="popupMessage"
     :sub-message="popupSubMessage"
     :success="popupSuccess"
+    :success-image="thumbsUpNews"
+    :fail-image="thumbsDownNews"
     @close="closeCompletePopup"
   />
 </template>

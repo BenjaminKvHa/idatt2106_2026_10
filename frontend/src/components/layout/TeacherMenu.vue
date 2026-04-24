@@ -3,8 +3,9 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Logo from '@/components/misc/Logo.vue'
 import OptionsMenu from '@/components/ui/OptionsMenu.vue'
-import gearIcon from '@/assets/icons/gear.svg'
+import gearIcon from '@/assets/icons/profile-cog.svg'
 import { useClassrooms } from '@/composables/useClassrooms'
+import { sanitizeClassroomName } from '@/composables/useClassroomName'
 
 const settingsOpen = ref(false)
 const route = useRoute()
@@ -34,20 +35,16 @@ const navigateToNewClassroom = () => {
 const navigateToClassroom = (classroomCode: string) => {
   const classroom = classrooms.value.find((c) => c.classroomCode === classroomCode)
   if (classroom) {
-    const classroomName = classroom.classroomName.toLowerCase().replace(/\s+/g, '-')
-    router.push(`/teacher/classrooms/${classroomName}/oversikt`)
+    const classroomName = sanitizeClassroomName(classroom.classroomName)
+    router.push(`/teacher/classrooms/${classroomName}/leaderboard`)
   }
 }
 
 const isClassroomActive = (classroomCode: string) => {
-  return route.query.classroomCode === classroomCode ||
-    route.path.includes(`/classrooms/`) && !route.path.includes('/classrooms/new') &&
-    classrooms.value.some(
-      (c) =>
-        c.classroomCode === classroomCode &&
-        c.classroomName.toLowerCase().replace(/\s+/g, '-') ===
-          route.params.classroomName,
-    )
+  const classroom = classrooms.value.find((c) => c.classroomCode === classroomCode)
+  if (!classroom) return false
+  const kebabName = sanitizeClassroomName(classroom.classroomName)
+  return route.path.includes(`/classrooms/${kebabName}`)
 }
 </script>
 
@@ -68,7 +65,7 @@ const isClassroomActive = (classroomCode: string) => {
                     v-for="classroom in classrooms"
                     :key="classroom.classroomCode"
                     type="button"
-                    :class="['button-variant-1', 'teacher-card-item', isClassroomActive(classroom.classroomCode) && 'button-variant-2']"
+                    :class="['button-variant-1 teacher-card-item-var-1', isClassroomActive(classroom.classroomCode) && 'button-variant-2 teacher-card-item-var-2']"
                     @click="navigateToClassroom(classroom.classroomCode)"
                 >
                     {{ classroom.classroomName }}

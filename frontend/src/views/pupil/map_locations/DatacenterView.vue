@@ -1,15 +1,30 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import TopBar from '@/components/TopBar.vue'
-import VictoryImage from '@/assets/Victory.png'
-import DefeatImage from '@/assets/Defeat.png'
+import { ref, computed, watch } from "vue";
+import { useRouter } from "vue-router";
+import TopBar from "@/components/TopBar.vue";
+import VictoryImage from "@/assets/Victory.png";
+import DefeatImage from "@/assets/Defeat.png";
 import DatatyvenImage from '@/assets/Datatyven.png'
-import LeaderboardIcon from '@/assets/homescreen/icon_leaderboard.png'
-import victorySoundFile from '@/assets/victory-sound.mp3'
-import defeatSoundFile from '@/assets/evil-laugh.mp3'
+import victorySoundFile from "@/assets/victory-sound.mp3";
+import defeatSoundFile from "@/assets/evil-laugh.mp3";
+import confetti from "canvas-confetti";
 
-type ResultType = 'victory' | 'defeat' | null
+type ResultType = "victory" | "defeat" | null;
+
+const router = useRouter();
+
+const victorySound = new Audio(victorySoundFile);
+victorySound.volume = 0.3;
+
+const defeatSound = new Audio(defeatSoundFile);
+defeatSound.volume = 0.3;
+
+const showHelpPopup = ref<boolean>(false);
+const showHintPopup = ref<boolean>(false);
+const showGuidePopup = ref(true);
+const showResultPopup = ref(false);
+const resultType = ref<ResultType>(null);
+
 
 type TaskOption = {
   id: number
@@ -33,23 +48,10 @@ type Level = {
   task: Task
 }
 
-const router = useRouter()
-
-const victorySound = new Audio(victorySoundFile)
-victorySound.volume = 0.3
-
-const defeatSound = new Audio(defeatSoundFile)
-defeatSound.volume = 0.3
-
-const showHelpPopup = ref<boolean>(false)
-const showHintPopup = ref<boolean>(false)
-const showGuidePopup = ref(true)
-const showResultPopup = ref<boolean>(false)
-const resultType = ref<ResultType>(null)
-
 const currentLevelIndex = ref<number>(0)
 
 const levels = ref<Level[]>([
+
   {
     id: 1,
     intro: 'Her møter du den første utfordringen fra datatyven.',
@@ -185,10 +187,67 @@ const resultHighlightTitle = computed(() =>
 )
 
 const resultHighlightText = computed(() =>
-  resultType.value === 'victory'
-    ? 'Du har kommet helt til toppen i Datasenteret. Nå kan du sjekke plasseringen din på topplisten.'
-    : 'Du må svare riktig på alle oppgavene i alle nivåene for å slå datatyven.',
-)
+  resultType.value === "victory"
+    ? "Du har kommet helt til toppen i Datasenteret."
+    : "Du kan gå tilbake og prøve oppgavene på nytt for å få en ny sjanse til å fullføre spillet.",
+);
+
+function stopResultSounds(): void {
+  victorySound.pause();
+  defeatSound.pause();
+
+  victorySound.currentTime = 0;
+  defeatSound.currentTime = 0;
+}
+
+function fireVictoryConfetti(): void {
+  const duration = 2000;
+  const end = Date.now() + duration;
+
+  const defaults = {
+    zIndex: 3000,
+  };
+
+  const frame = () => {
+    confetti({
+      ...defaults,
+      particleCount: 8,
+      angle: 60,
+      spread: 60,
+      origin: { x: 0, y: 0.6 },
+    });
+
+    confetti({
+      ...defaults,
+      particleCount: 8,
+      angle: 120,
+      spread: 60,
+      origin: { x: 1, y: 0.6 },
+    });
+
+    if (Date.now() < end) {
+      requestAnimationFrame(frame);
+    }
+  };
+
+  frame();
+}
+
+watch(showResultPopup, (isOpen) => {
+  if (!isOpen) {
+    stopResultSounds();
+    return;
+  }
+
+  stopResultSounds();
+
+  if (resultType.value === "victory") {
+    victorySound.play();
+    fireVictoryConfetti();
+  } else if (resultType.value === "defeat") {
+    defeatSound.play();
+  }
+});
 
 function selectOption(optionId: number): void {
   const task = currentLevel.value.task
@@ -215,6 +274,7 @@ function goToNextLevel(): void {
 
 function goToPreviousLevel(): void {
   if (currentLevelIndex.value === 0) return
+
 
   currentLevelIndex.value -= 1
 }
@@ -248,14 +308,6 @@ function closeHintPopup(): void {
 function openResultPopup(type: ResultType): void {
   resultType.value = type
   showResultPopup.value = true
-
-  if (type === 'victory') {
-    victorySound.currentTime = 0
-    void victorySound.play()
-  } else {
-    defeatSound.currentTime = 0
-    void defeatSound.play()
-  }
 }
 
 function closeResultPopup(): void {
@@ -459,15 +511,6 @@ function openLeaderboard(): void {
               </button>
 
               <button class="victory-close-button" @click="goBackToMap">Tilbake til kartet</button>
-
-              <button
-                v-if="resultType === 'victory'"
-                class="leaderboard-button"
-                @click="openLeaderboard"
-              >
-                <img :src="LeaderboardIcon" alt="Toppliste" class="leaderboard-icon" />
-                <span>Se toppliste</span>
-              </button>
             </div>
           </div>
         </div>
@@ -909,21 +952,18 @@ p {
 
 .retry-button:hover,
 .leaderboard-button:hover,
+
 .victory-close-button:hover {
   filter: brightness(1.05);
   transform: translateY(-2px);
 }
 
+
 .retry-button:active,
 .leaderboard-button:active,
+
 .victory-close-button:active {
   transform: translateY(0);
-}
-
-.leaderboard-icon {
-  width: 32px;
-  height: 32px;
-  object-fit: contain;
 }
 
 @media (max-width: 768px) {
@@ -986,5 +1026,11 @@ p {
   .victory-content {
     padding: 0 1rem 1.5rem;
   }
+
+  .victory-close-button {
+    width: 100%;
+    min-width: 0;
+  }
+
 }
 </style>

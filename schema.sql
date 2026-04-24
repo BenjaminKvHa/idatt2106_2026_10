@@ -4,6 +4,7 @@ DROP TABLE IF EXISTS
     chapter,
     refresh_token,
     notification,
+    weekly_mystery,
     pupil_classroom_membership,
     account_classroom_bridge_teacher,
     file_object,
@@ -78,6 +79,22 @@ CREATE INDEX idx_notification_classroom_status_created_at
 
 CREATE INDEX idx_notification_account_created_at
     ON notification (account_email, created_at DESC);
+
+CREATE TABLE weekly_mystery (
+    id BIGSERIAL PRIMARY KEY,
+    file_object_id BIGINT UNIQUE NOT NULL REFERENCES file_object(id) ON DELETE CASCADE,
+    classroom_code VARCHAR(6) NOT NULL REFERENCES classroom(classroom_code) ON DELETE CASCADE,
+    account_email VARCHAR(255) NOT NULL REFERENCES pupil_classroom_membership(account_email) ON DELETE CASCADE,
+    comment TEXT NOT NULL,
+    approved BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_weekly_mystery_classroom_approved_created_at
+    ON weekly_mystery (classroom_code, approved, created_at DESC);
+
+CREATE INDEX idx_weekly_mystery_account_created_at
+    ON weekly_mystery (account_email, created_at DESC);
 
 CREATE TABLE refresh_token (
     id BIGSERIAL PRIMARY KEY,

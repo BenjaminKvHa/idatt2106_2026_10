@@ -16,7 +16,7 @@ const navigateToClassroom = (classroomCode: string) => {
     ?.classroomName.toLowerCase()
     .replace(/\s+/g, '-')
   if (classroomName) {
-    router.push(`/teacher/classrooms/${classroomName}`)
+    router.push(`/teacher/classrooms/${classroomName}/leaderboard`)
   }
 }
 </script>

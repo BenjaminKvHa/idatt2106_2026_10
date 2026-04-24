@@ -13,6 +13,9 @@ import TeachersClassroomView from '@/views/teacher/TeachersClassroomView.vue'
 import TeachersPupilsView from '@/views/teacher/TeachersPupilsView.vue'
 import TeachersPupilView from '@/views/teacher/TeachersPupilView.vue'
 import TeachersNotebookChapterView from '@/views/teacher/TeachersNotebookChapterView.vue'
+import TeachersLeaderboardView from '@/views/teacher/TeachersLeaderboardView.vue'
+import TeachersEditTasksView from '@/views/teacher/TeachersEditTasksView.vue'
+import TeachersMysteryView from '@/views/teacher/TeachersMysteryView.vue'
 import PupilView from '@/views/pupil/PupilView.vue'
 import PupilsClassroomView from '@/views/pupil/PupilsClassroomView.vue'
 import PupilsNotebookView from '@/views/pupil/PupilsNotebookView.vue'
@@ -31,6 +34,7 @@ import PhotographerView from "@/views/pupil/map_locations/PhotographerView.vue";
 import PupilsWaitingPageView from "@/views/pupil/PupilsWaitingPageView.vue";
 import PupilsWelcomeGuideView from "@/views/pupil/PupilsWelcomeGuideView.vue";
 import PupilsProfileView from '@/views/pupil/PupilsProfileView.vue'
+import TeachersEditClassroom from '@/views/teacher/TeachersEditClassroom.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -106,23 +110,20 @@ const router = createRouter({
                 tabs: (route: RouteLocationNormalizedLoaded) => {
                   const base = `/teacher/classrooms/${route.params.classroomName}`
                   return [
-                    { label: 'Oversikt', to: `${base}/oversikt` },
+                    { label: 'Ledertavle', to: `${base}/leaderboard` },
                     { label: 'Elever', to: `${base}/pupils` },
-                    { label: 'Innstillinger', to: `${base}/edit-classroom` },
+                    { label: 'Rediger klasserom', to: `${base}/edit-classroom` },
+                    { label: 'Rediger oppgaver', to: `${base}/edit-tasks` },
+                    { label: 'Ukens mysterium', to: `${base}/mystery` },
                   ]
                 },
               },
               redirect: (to) => `/teacher/classrooms/${to.params.classroomName}/oversikt`,
               children: [
                 {
-                  path: 'oversikt',
-                  meta: { breadcrumb: 'Oversikt' },
-                  component: TeachersClassroomView,
-                },
-                {
                   path: 'edit-classroom',
                   meta: { breadcrumb: 'Rediger Klasserom' },
-                  component: TeachersClassroomView,
+                  component: TeachersEditClassroom,
                 },
                 {
                   path: 'pupils',
@@ -148,6 +149,21 @@ const router = createRouter({
                       ],
                     },
                   ],
+                },
+                {
+                  path: 'leaderboard',
+                  meta: { breadcrumb: 'Ledertavle' },
+                  component: TeachersLeaderboardView,
+                },
+                {
+                  path: 'edit-tasks',
+                  meta: { breadcrumb: 'Rediger oppgaver' },
+                  component: TeachersEditTasksView,
+                },
+                {
+                  path: 'mystery',
+                  meta: { breadcrumb: 'Ukens mysterium' },
+                  component: TeachersMysteryView,
                 },
               ],
             },

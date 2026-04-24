@@ -5,6 +5,7 @@ import Logo from '@/components/misc/Logo.vue'
 import OptionsMenu from '@/components/ui/OptionsMenu.vue'
 import gearIcon from '@/assets/icons/profile-cog.svg'
 import { useClassrooms } from '@/composables/useClassrooms'
+import { sanitizeClassroomName } from '@/composables/useClassroomName'
 
 const settingsOpen = ref(false)
 const route = useRoute()
@@ -29,13 +30,6 @@ const navigateToClassrooms = () => {
 
 const navigateToNewClassroom = () => {
   router.push(`/teacher/classrooms/new`)
-}
-
-const sanitizeClassroomName = (name: string) => {
-  return name
-    .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^\w-]/g, '')
 }
 
 const navigateToClassroom = (classroomCode: string) => {

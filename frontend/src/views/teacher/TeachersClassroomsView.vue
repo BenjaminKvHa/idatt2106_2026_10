@@ -2,6 +2,7 @@
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useClassrooms } from '@/composables/useClassrooms'
+import { sanitizeClassroomName } from '@/composables/useClassroomName'
 
 const router = useRouter()
 const { classrooms, loading, error, fetchClassrooms } = useClassrooms()
@@ -11,11 +12,9 @@ onMounted(() => {
 })
 
 const navigateToClassroom = (classroomCode: string) => {
-  const classroomName = classrooms.value
-    .find((c) => c.classroomCode === classroomCode)
-    ?.classroomName.toLowerCase()
-    .replace(/\s+/g, '-')
-  if (classroomName) {
+  const classroom = classrooms.value.find((c) => c.classroomCode === classroomCode)
+  if (classroom) {
+    const classroomName = sanitizeClassroomName(classroom.classroomName)
     router.push(`/teacher/classrooms/${classroomName}/leaderboard`)
   }
 }

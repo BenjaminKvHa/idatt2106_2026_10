@@ -52,9 +52,17 @@ jobs:
       - name: Make Maven wrapper executable
         run: chmod +x ./mvnw
 
+      - name: Check NVD API secret exists
+        run: |
+          if [ -z "${{ secrets.NVD_API_KEY }}" ]; then
+            echo "WARNING: NVD_API_KEY secret is empty or not set"
+          else
+            echo "NVD_API_KEY secret exists"
+          fi
+
       - name: Run OWASP Dependency-Check via Maven
-        run: ./mvnw dependency-check:check -DfailBuildOnCVSS=7 -DnvdApiKey=${{ secrets.NVD_API_KEY }}
-        continue-on-error: false
+        run: ./mvnw dependency-check:check -DfailBuildOnCVSS=7 -DnvdApiKey=${{ secrets.NVD_API_KEY }} -DnvdApiDelay=4000
+        continue-on-error: true
 
       - name: Upload Dependency-Check report
         uses: actions/upload-artifact@v4

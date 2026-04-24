@@ -2,9 +2,9 @@
 import { ref, computed, watch } from "vue";
 import { useRouter } from "vue-router";
 import TopBar from "@/components/TopBar.vue";
-import VictoryImage from "@/assets/Victory.png";
+import DatatyvenImage from "@/assets/Datatyven.png";
 import DefeatImage from "@/assets/Defeat.png";
-import DatatyvenImage from '@/assets/Datatyven.png'
+import VictoryImage from '@/assets/Victory.png'
 import victorySoundFile from "@/assets/victory-sound.mp3";
 import defeatSoundFile from "@/assets/evil-laugh.mp3";
 import confetti from "canvas-confetti";
@@ -336,10 +336,6 @@ function resetGame(): void {
   currentLevelIndex.value = 0
   closeResultPopup()
   showGuidePopup.value = true
-}
-
-function openLeaderboard(): void {
-  console.log('Gå til toppliste')
 }
 </script>
 

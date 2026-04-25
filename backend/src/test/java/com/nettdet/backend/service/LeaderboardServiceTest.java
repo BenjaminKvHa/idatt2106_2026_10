@@ -143,6 +143,7 @@ class LeaderboardServiceTest {
 
         assertEquals("ABCABC", response.classroomCode());
         assertEquals("8A", response.classroomName());
+        assertEquals("Classroom 8A description", response.classroomDescription());
         assertEquals("alpha", response.entries().get(0).username());
         assertEquals("zulu", response.entries().get(1).username());
         assertEquals(null, response.entries().get(2).username());
@@ -185,6 +186,7 @@ class LeaderboardServiceTest {
         Classroom classroom = new Classroom();
         classroom.setClassroomCode(code);
         classroom.setClassroomName(name);
+        classroom.setClassroomDescription("Classroom " + name + " description");
         return classroom;
     }
 

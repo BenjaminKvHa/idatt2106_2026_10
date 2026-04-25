@@ -117,6 +117,7 @@ import thumbsUpPhoto from "@/assets/ThumbsUpPhoto.png";
 import thumbsDownPhoto from "@/assets/ThumbsDownPhoto.png";
 import { get, getBlob, post } from '@/utils/apiUtils'
 import type {
+  ImageCategory,
   ImageVerificationRequest,
   ImageVerificationResponse,
   TaskDifficulty,
@@ -135,16 +136,16 @@ const popupSuccess = ref(true)
 const FOTOGRAFEN_CHAPTER_ID = 2
 const DIFFICULTIES: TaskDifficulty[] = ['EASY', 'MEDIUM', 'HARD']
 
-const CATEGORIES = [
-  { value: 1, label: 'Ekte' },
-  { value: 2, label: 'KI-generert' },
-  { value: 3, label: 'Manipulert' },
-] as const
+const CATEGORIES: { value: ImageCategory; label: string }[] = [
+  { value: 'REAL', label: 'Ekte' },
+  { value: 'AI_GENERATED', label: 'KI-generert' },
+  { value: 'MANIPULATED', label: 'Manipulert' },
+]
 
 const stepIndex = ref(0)
 const currentTask = ref<ImageVerificationResponse | null>(null)
 const imageUrl = ref('')
-const selectedCategory = ref<number | null>(null)
+const selectedCategory = ref<ImageCategory | null>(null)
 const selectedJustification = ref<string | null>(null)
 const lastResult = ref<ValidationResult | null>(null)
 const runCorrect = ref(0)
@@ -195,7 +196,7 @@ async function loadTask() {
   }
 }
 
-function selectCategory(value: number) {
+function selectCategory(value: ImageCategory) {
   if (lastResult.value) return
   selectedCategory.value = value
   selectedJustification.value = null
@@ -206,7 +207,7 @@ function selectJustification(value: string) {
   selectedJustification.value = value
 }
 
-function categoryClass(value: number) {
+function categoryClass(value: ImageCategory) {
   const selected = selectedCategory.value === value
   if (!selected) return ''
   if (!lastResult.value) return 'selected'
@@ -351,7 +352,8 @@ onBeforeUnmount(revokeImageUrl)
   width: 460px;
   max-width: 100%;
   height: 280px;
-  object-fit: cover;
+  object-fit: contain;
+  background: #f2f2f2;
   border-radius: 14px;
   margin-bottom: 20px;
   border: 2px solid #999;

@@ -1,5 +1,7 @@
 package com.nettdet.backend.service;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -99,10 +101,12 @@ public class ChapterService {
         NewsVerificationTask stored = readTaskJson(task, NewsVerificationTask.class);
 
         logger.info("Returning news verification task id {}", task.getId());
+        List<Long> fileIds = new ArrayList<>(List.of(stored.fileId_1(), stored.fileId_2()));
+        Collections.shuffle(fileIds);
         return new NewsVerificationResponse(
             task.getId(),
             stored.taskDescription(),
-            List.of(stored.fileId_1(), stored.fileId_2())
+            fileIds
         );
     }
 

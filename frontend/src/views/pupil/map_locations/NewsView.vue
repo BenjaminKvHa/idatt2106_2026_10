@@ -1,130 +1,194 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import TopBar from "@/components/TopBar.vue";
-import TaskGuide from "@/components/TaskGuide.vue";
-import CompleteLevelPopup from "@/components/CompleteLevelPopup.vue";
-import thumbsUpNews from "@/assets/ThumbsUpNews.png";
-import thumbsDownNews from "@/assets/ThumbsDownNews.png";
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import TopBar from '@/components/TopBar.vue'
+import TaskGuide from '@/components/TaskGuide.vue'
+import CompleteLevelPopup from '@/components/CompleteLevelPopup.vue'
+import { get, getBlob, post } from '@/utils/apiUtils'
+import type {
+  NewsVerificationRequest,
+  NewsVerificationResponse,
+  TaskDifficulty,
+  ValidationResult,
+} from '@/types/chapter'
+import thumbsUpNews from '@/assets/ThumbsUpNews.png'
+import thumbsDownNews from '@/assets/ThumbsDownNews.png'
 
-const showHelpPopup = ref<boolean>(false);
-const showHintPopup = ref<boolean>(false);
-const showGuidePopup = ref(true);
-const showCompletePopup = ref(false);
+const router = useRouter()
 
-const popupTitle = ref("");
-const popupMessage = ref("");
-const popupSubMessage = ref("");
-const popupSuccess = ref(true);
+const NYHETSKVARTALET_CHAPTER_ID = 1
+const DIFFICULTIES: TaskDifficulty[] = ['EASY', 'MEDIUM', 'HARD']
 
-type TaskPicture = {
-  id: number;
-  label: string;
-  imageUrl?: string;
-};
+const showHelpPopup = ref(false)
+const showHintPopup = ref(false)
+const showGuidePopup = ref(true)
+const stepIndex = ref(0)
+const currentTask = ref<NewsVerificationResponse | null>(null)
+const imageUrls = ref<string[]>([])
+const selectedFileId = ref<number | null>(null)
+const lastResult = ref<ValidationResult | null>(null)
+const runCorrect = ref(0)
+const runAttempts = ref(0)
+const runDone = ref(false)
+const loading = ref(false)
+const submitting = ref(false)
+const error = ref<string | null>(null)
 
-const pictures: TaskPicture[] = [
-  {
-    id: 1,
-    label: "Bilde 1",
-    imageUrl: "",
-  },
-  {
-    id: 2,
-    label: "Bilde 2",
-    imageUrl: "",
-  },
-];
+const showCompletePopup = ref(false)
+const popupTitle = ref('')
+const popupMessage = ref('')
+const popupSubMessage = ref('')
+const popupSuccess = ref(false)
 
-function openSuccessPopup(): void {
-  popupSuccess.value = true;
-  popupTitle.value = "Du klarte det!";
-  popupMessage.value = "Gratulerer! Du har fullført Nyhetskvartalet.";
-  popupSubMessage.value = "Du har nå låst opp stoppestedet Fotografen.";
-  showCompletePopup.value = true;
+const difficultyLabel = computed(() => {
+  const labels: Record<TaskDifficulty, string> = {
+    EASY: 'Lett',
+    MEDIUM: 'Middels',
+    HARD: 'Vanskelig',
+  }
+  return labels[DIFFICULTIES[stepIndex.value]!]
+})
+
+function revokeImageUrls() {
+  for (const url of imageUrls.value) URL.revokeObjectURL(url)
+  imageUrls.value = []
 }
 
-function openFailPopup(): void {
-  popupSuccess.value = false;
-  popupTitle.value = "Du klarte det ikke";
-  popupMessage.value = "Å nei! Du løste ikke oppgaven riktig denne gangen.";
-  popupSubMessage.value = "Prøv på nytt for å klare stoppestedet.";
-  showCompletePopup.value = true;
-}
-
-function chooseFakePicture(picture: TaskPicture) {
-  console.log(`Valgte ${picture.label} som falsk`);
-
-  //Replace with backend later
-  const solvedCorrectly = true;
-
-  if (solvedCorrectly) {
-    openSuccessPopup();
-  } else {
-    openFailPopup();
+async function loadTask() {
+  loading.value = true
+  error.value = null
+  revokeImageUrls()
+  currentTask.value = null
+  try {
+    const difficulty = DIFFICULTIES[stepIndex.value]!
+    const task = await get<NewsVerificationResponse>(
+      `/api/chapters/${NYHETSKVARTALET_CHAPTER_ID}/nyhetskvartalet?difficulty=${difficulty}`,
+    )
+    currentTask.value = task
+    const blobs = await Promise.all(
+      task.fileIds.map((id) => getBlob(`/api/objects/${id}`)),
+    )
+    imageUrls.value = blobs.map((b) => URL.createObjectURL(b))
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'Kunne ikke laste oppgave'
+  } finally {
+    loading.value = false
   }
 }
 
-function openHelpPopup(): void {
-  showHelpPopup.value = true;
+async function choose(fileId: number) {
+  if (!currentTask.value || lastResult.value || submitting.value) return
+  submitting.value = true
+  selectedFileId.value = fileId
+  error.value = null
+  try {
+    const body: NewsVerificationRequest = { selectedFileId: fileId }
+    const result = await post<ValidationResult>(
+      `/api/chapters/nyhetskvartalet/tasks/${currentTask.value.taskId}/validate`,
+      body,
+    )
+    lastResult.value = result
+    runAttempts.value++
+    if (result.correct) runCorrect.value++
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'Kunne ikke sende svar'
+    selectedFileId.value = null
+  } finally {
+    submitting.value = false
+  }
 }
 
-function closeHelpPopup(): void {
-  showHelpPopup.value = false;
+function cardClass(fileId: number) {
+  if (selectedFileId.value !== fileId) return ''
+  if (!lastResult.value) return 'selected'
+  return lastResult.value.correct ? 'selected correct' : 'selected wrong'
 }
 
-function openHintPopup(): void {
-  showHintPopup.value = true;
+async function next() {
+  if (!lastResult.value) return
+  if (lastResult.value.runCompleted) {
+    runDone.value = true
+    const success = runCorrect.value === runAttempts.value
+    popupSuccess.value = success
+    popupTitle.value = success ? 'Godt jobbet!' : 'Ferdig!'
+    popupMessage.value = `Du fikk ${runCorrect.value} av ${runAttempts.value} riktig.`
+    popupSubMessage.value = success
+      ? 'Du klarte alle nivåene uten feil.'
+      : 'Prøv igjen for å forbedre resultatet.'
+    showCompletePopup.value = true
+    return
+  }
+  stepIndex.value++
+  selectedFileId.value = null
+  lastResult.value = null
+  await loadTask()
 }
 
-function closeHintPopup(): void {
-  showHintPopup.value = false;
+function closeCompletePopup() {
+  showCompletePopup.value = false
+  revokeImageUrls()
+  router.push('/pupil/classroom/map')
 }
 
-function closeCompletePopup(): void {
-  showCompletePopup.value = false;
-}
+onMounted(loadTask)
+onBeforeUnmount(revokeImageUrls)
 </script>
 
 <template>
   <TopBar
     title="Nyhetskvartalet"
-    @help="openHelpPopup"
-    @hint="openHintPopup"
+    @help="showHelpPopup = true"
+    @hint="showHintPopup = true"
   />
 
   <div class="page">
     <div class="center-container">
-      <h2>Aktivitet 1</h2>
-      <div class="task-wrapper">
-        <p>To avisforsider ligger foran deg.</p>
-        <p>Én er ekte og én er falsk.</p>
-        <p>Kan du finne ut hvilken som er falsk?</p>
-      </div>
+      <template v-if="currentTask && !runDone">
+        <h2>Nivå {{ stepIndex + 1 }} — {{ difficultyLabel }}</h2>
+        <div class="task-wrapper">
+          <p>{{ currentTask.taskDescription }}</p>
+        </div>
 
-      <div class="picture-wrapper">
-        <div
-          v-for="picture in pictures"
-          :key="picture.id"
-          class="picture-card"
-        >
-          <div class="picture-placeholder">
-            <img
-              v-if="picture.imageUrl"
-              :src="picture.imageUrl"
-              :alt="picture.label"
-              class="picture"
-            />
-            <span v-else>{{ picture.label }}</span>
-          </div>
-
-          <button
-            class="fake-button"
-            @click="chooseFakePicture(picture)"
+        <div class="picture-wrapper">
+          <div
+            v-for="(fileId, idx) in currentTask.fileIds"
+            :key="fileId"
+            class="picture-card"
+            :class="cardClass(fileId)"
           >
-            Dette er den falske
+            <div class="picture-placeholder">
+              <img
+                v-if="imageUrls[idx]"
+                :src="imageUrls[idx]"
+                :alt="`Bilde ${Number(idx) + 1}`"
+                class="picture"
+              />
+              <span v-else>Laster…</span>
+            </div>
+
+            <button
+              class="fake-button"
+              :disabled="!!lastResult || submitting"
+              @click="choose(fileId)"
+            >
+              Dette er den falske
+            </button>
+          </div>
+        </div>
+
+        <div v-if="lastResult" class="answer-feedback">
+          <p>
+            <strong>{{ lastResult.correct ? 'Riktig!' : 'Feil.' }}</strong>
+          </p>
+          <p>{{ lastResult.feedback }}</p>
+          <button class="primary-btn" @click="next">
+            {{ stepIndex === DIFFICULTIES.length - 1 ? 'Se resultat' : 'Neste nivå →' }}
           </button>
         </div>
-      </div>
+      </template>
+
+      <p v-else-if="loading">Laster oppgave…</p>
+      <p v-else-if="error" class="error">{{ error }}</p>
     </div>
   </div>
 
@@ -135,48 +199,36 @@ function closeCompletePopup(): void {
       Er du klar for å løse oppgaver?</p>
   </TaskGuide>
 
-  <div v-if="showHelpPopup" class="popup-overlay" @click="closeHelpPopup">
+  <div v-if="showHelpPopup" class="popup-overlay" @click="showHelpPopup = false">
     <div class="hint-popup" @click.stop>
       <h2 class="popup-title">Trenger du hjelp?</h2>
-
       <div class="hint-text">
-        <p>
-          I Nyhetskvartalet skal du undersøke informasjon og finne ut hva som er ekte og falskt.
-        </p>
+        <p>I Nyhetskvartalet skal du undersøke informasjon og finne ut hva som er ekte og falskt.</p>
         <ul>
           <li>Les oppgaven nøye før du svarer</li>
           <li>Sammenlign bildene og se etter rare detaljer</li>
           <li>Velg det alternativet du mener er falskt</li>
         </ul>
       </div>
-
       <div class="popup-actions">
-        <button class="popup-btn popup-btn-play" @click="closeHelpPopup">
-          Ok
-        </button>
+        <button class="popup-btn popup-btn-play" @click="showHelpPopup = false">Ok</button>
       </div>
     </div>
   </div>
 
-  <div v-if="showHintPopup" class="popup-overlay" @click="closeHintPopup">
+  <div v-if="showHintPopup" class="popup-overlay" @click="showHintPopup = false">
     <div class="hint-popup" @click.stop>
       <h2 class="popup-title">Tips 💡</h2>
-
       <div class="hint-text">
-        <p>
-          Tenk som en detektiv.
-        </p>
+        <p>Tenk som en detektiv.</p>
         <ul>
           <li>Se etter detaljer som ikke passer inn</li>
           <li>Vær ekstra obs på tekst, bilder og overskrifter</li>
           <li>Det som virker litt rart, er ofte verdt å undersøke nærmere</li>
         </ul>
       </div>
-
       <div class="popup-actions">
-        <button class="popup-btn popup-btn-play" @click="closeHintPopup">
-          Ok
-        </button>
+        <button class="popup-btn popup-btn-play" @click="showHintPopup = false">Ok</button>
       </div>
     </div>
   </div>
@@ -206,6 +258,7 @@ function closeCompletePopup(): void {
   text-align: center;
   width: 100%;
   max-width: 1100px;
+  gap: 1.5rem;
 }
 
 h2 {
@@ -215,7 +268,7 @@ h2 {
 .picture-wrapper {
   display: flex;
   gap: 2rem;
-  margin-top: 2rem;
+  margin-top: 1rem;
   flex-wrap: wrap;
   justify-content: center;
   width: 100%;
@@ -229,6 +282,23 @@ h2 {
   flex: 1 1 300px;
   max-width: 420px;
   width: 100%;
+  padding: 0.5rem;
+  border-radius: 16px;
+  transition: all 0.2s ease;
+}
+
+.picture-card.selected {
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.2);
+}
+
+.picture-card.correct {
+  background: #a5d6a7;
+  box-shadow: 0 0 0 4px #2e7d32;
+}
+
+.picture-card.wrong {
+  background: #ef9a9a;
+  box-shadow: 0 0 0 4px #c62828;
 }
 
 .picture-placeholder {
@@ -240,12 +310,13 @@ h2 {
   align-items: center;
   justify-content: center;
   font-weight: 700;
+  overflow: hidden;
 }
 
 .picture {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .fake-button {
@@ -259,13 +330,18 @@ h2 {
   transition: background-color 0.2s ease, transform 0.2s ease, filter 0.2s ease;
 }
 
-.fake-button:hover {
+.fake-button:hover:not(:disabled) {
   filter: brightness(1.1);
   transform: scale(1.02);
 }
 
-.fake-button:active {
+.fake-button:active:not(:disabled) {
   transform: scale(0.97);
+}
+
+.fake-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .task-wrapper {
@@ -279,6 +355,67 @@ h2 {
 
 .task-wrapper p {
   margin: 0;
+}
+
+.answer-feedback {
+  width: min(100%, 800px);
+  padding: 1.25rem 1.5rem;
+  background: rgba(255, 255, 255, 0.85);
+  border: 3px solid var(--brown-dark);
+  border-radius: 24px;
+  text-align: center;
+}
+
+.answer-feedback p {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+}
+
+.primary-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 24px;
+  border: 3px solid var(--brown-dark);
+  background: var(--orange-medium);
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary-btn:hover {
+  filter: brightness(1.08);
+}
+
+.end-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.error {
+  color: #c62828;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 1rem;
+  }
+
+  .picture-wrapper {
+    gap: 1rem;
+  }
+
+  .task-wrapper {
+    padding: 1rem;
+    border-width: 3px;
+    border-radius: 24px;
+  }
+
+  .fake-button {
+    border-width: 3px;
+    border-radius: 24px;
+  }
 }
 
 .popup-overlay {

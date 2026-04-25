@@ -52,17 +52,12 @@ function goBack(): void {
       <div class="waiting-container">
         <div class="text-container">
           <h1>Venter på godkjenning</h1>
-          <p>
-            Du venter nå på at en lærer skal godkjenne forespørselen din om å
-            bli med i klasserommet.
-          </p>
-          <p>
-            I klasserommet skal dere kjempe om å få flere poeng enn andre klasserom, og
-          kjempe mot dem om å være de beste nett-detektivene.
-          </p>
-          <p>
-            Hvis det tar veldig lang tid å slippe inn i klasserommet må du kontakte læreren din.
-          </p>
+          <div class="divider"></div>
+          <div class="text">
+            <p>Du venter nå på at en lærer skal godkjenne forespørselen din om å bli med i klasserommet.</p>
+            <p> I klasserommet skal dere kjempe om å få flere poeng enn andre klasserom, og kjempe mot dem om å være de beste nettdetektivene.</p>
+            <p>Hvis det tar veldig lang tid å slippe inn i klasserommet må du kontakte læreren din.</p>
+          </div>
         </div>
         <div class="loading-container">
           <p>Venter på godkjenning...</p>
@@ -98,38 +93,67 @@ function goBack(): void {
 }
 
 .center-container {
-  width: min(760px, 100%);
-  padding: clamp(1.25rem, 4vw, 2rem);
+  position: relative;
+  width: min(540px, 100%);
+  padding: clamp(2rem, 5vw, 3rem) clamp(1.5rem, 5vw, 2.5rem) clamp(1.75rem, 5vw, 2.5rem);
   display: flex;
   flex-direction: column;
+  align-items: center;
+  gap: clamp(1rem, 3vw, 1.4rem);
   text-align: center;
-  background: var(--beige-light);
-  border: clamp(4px, 1vw, 7px) solid var(--brown-dark);
-  border-radius: clamp(24px, 5vw, 40px);
+  background: var(--beige-light-100);
+  border: var(--border-wide) solid var(--brown-dark);
+  border-radius: clamp(28px, 6vw, 40px);
+  box-shadow: -3px 3px 6px var(--brown-dark);
+  z-index: 2;
 }
 
 .text-container {
-  padding: clamp(0.5rem, 3vw, 2rem);
+  padding: 0;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  gap: clamp(0.9rem, 3vw, 1.4rem);
   text-align: center;
 }
 
 .text-container h1 {
-  margin: 0 0 2rem;
-  font-size: clamp(2rem, 6vw, 50px);
-  line-height: 1.1;
+  margin: 0;
+  font-size: clamp(1.9rem, 6vw, 2.2rem);
+  line-height: 1.2;
+}
+
+.text-container text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.divider {
+  width: 60%;
+  height: 3px;
+  background: var(--brown-medium);
+  border-radius: 5px;
+  opacity: 0.35;
 }
 
 .text-container p {
   margin: 0;
-  font-size: clamp(1rem, 3vw, 25px);
+  font-size: clamp(1.2rem, 3vw, 1rem);
   line-height: 1.6;
-  max-width: 600px;
+  max-width: 100%;
+}
+
+.loading-container {
+  margin-top: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
 }
 
 .button-container {
-  margin-top: clamp(1.5rem, 5vw, 40px);
+  margin-top: 0.4rem;
   display: flex;
   justify-content: center;
   width: 100%;
@@ -137,13 +161,26 @@ function goBack(): void {
 
 .cancel-button {
   width: min(420px, 100%);
-  padding: 1rem 1.5rem;
-  border-radius: 38px;
-  border: clamp(3px, 0.8vw, 5px) solid var(--brown-dark);
-  background-color: var(--red-danger);
-  font-size: clamp(1rem, 3vw, 1.2rem);
+  padding: 0.9rem 2rem;
+  background: var(--red-danger);
+  border: var(--border-wide) solid var(--brown-dark);
+  border-radius: 40px;
+  font-family: 'Inika', serif;
+  font-size: clamp(1rem, 4vw, 1.35rem);
   font-weight: 700;
   cursor: pointer;
+  box-shadow: -3px 3px 6px var(--brown-dark);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.cancel-button:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: -5px 5px 0 var(--brown-dark);
+}
+
+.cancel-button:active {
+  transform: translate(3px, 3px);
+  box-shadow: -1px 1px 0 var(--brown-dark);
 }
 
 .loading-container {

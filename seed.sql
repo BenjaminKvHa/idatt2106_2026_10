@@ -146,18 +146,12 @@ INSERT INTO pupil_classroom_membership (
     avatar_file_object_id
 )
 VALUES
-<<<<<<< HEAD
-    ('demo.alice@example.com', 'MAPAAA', 'demo.alice', TRUE, NULL),
-    ('demo.bob@example.com', 'MAPAAA', 'demo.bob', TRUE, NULL),
-    ('demo.carla@example.com', 'MAPAAA', 'demo.carla', TRUE, NULL),
-=======
     ('demo.alice@example.com', 'TESTAA', 'alice', TRUE, (SELECT id FROM file_object WHERE object_key = 'avatar-images/demo_alice.png')),
     ('demo.bob@example.com', 'TESTAA', 'bob', TRUE, (SELECT id FROM file_object WHERE object_key = 'avatar-images/demo_bob.png')),
     ('demo.carla@example.com', 'TESTBB', 'carla', TRUE, (SELECT id FROM file_object WHERE object_key = 'avatar-images/demo_carla.png')),
     ('demo.pending.one@example.com', 'TESTAA', 'pending.one', FALSE, NULL),
     ('demo.pending.two@example.com', 'TESTAA', 'pending.two', FALSE, NULL),
     ('demo.pending.three@example.com', 'TESTBB', 'pending.three', FALSE, NULL),
->>>>>>> 1230b6773f1d74e90158f742e23e9059420fab47
     ('map.partial@example.com', 'MAPAAA', 'map.partial', TRUE, NULL),
     ('map.complete@example.com', 'MAPAAB', 'map.complete', TRUE, NULL),
     ('rank.two@example.com', 'MAPAAB', 'rank.two', TRUE, NULL),

@@ -1,11 +1,380 @@
 <script setup lang="ts">
+import { onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { sanitizeClassroomName } from '@/composables/useClassroomName'
+import { useClassrooms } from '@/composables/useClassrooms'
+import { del, get, post } from '@/utils/apiUtils'
+
+type ClassroomDetailsResponse = {
+  classroomCode: string
+  classroomName: string
+  classroomDescription: string | null
+}
+
+type TeacherLeaveStatusResponse = {
+  canLeave: boolean
+}
+
+type ClassroomTeacherResponse = {
+  email: string
+  legalName: string
+}
+
+type InviteTeacherRequest = {
+  email: string
+}
+
+const route = useRoute()
+const router = useRouter()
+const { classrooms, fetchClassrooms } = useClassrooms()
+
+const classroom = ref<ClassroomDetailsResponse | null>(null)
+const loading = ref(true)
+const error = ref('')
+const actionError = ref('')
+const canLeave = ref(false)
+const deleting = ref(false)
+const leaving = ref(false)
+const teachers = ref<ClassroomTeacherResponse[]>([])
+const loadingTeachers = ref(false)
+const teachersError = ref('')
+const inviteTeacherEmail = ref('')
+const invitingTeacher = ref(false)
+
+function getRouteClassroomSlug(): string {
+  const classroomName = route.params.classroomName
+  return typeof classroomName === 'string' ? classroomName : ''
+}
+
+function resolveClassroomCode(): string | null {
+  const classroomSlug = getRouteClassroomSlug()
+  const matchedClassroom = classrooms.value.find(
+    (entry) => sanitizeClassroomName(entry.classroomName) === classroomSlug,
+  )
+
+  return matchedClassroom?.classroomCode ?? null
+}
+
+async function loadClassroom() {
+  loading.value = true
+  error.value = ''
+  actionError.value = ''
+  teachersError.value = ''
+
+  try {
+    if (classrooms.value.length === 0) {
+      await fetchClassrooms()
+    }
+
+    const classroomCode = resolveClassroomCode()
+    if (!classroomCode) {
+      throw new Error('Could not find classroom for this route')
+    }
+
+    const response = await get<{
+      classroomCode: string
+      classroomName: string
+      classroomDescription: string | null
+    }>(`/api/classrooms/${classroomCode}/leaderboard`)
+
+    classroom.value = {
+      classroomCode: response.classroomCode,
+      classroomName: response.classroomName,
+      classroomDescription: response.classroomDescription,
+    }
+
+    const leaveStatus = await get<TeacherLeaveStatusResponse>(
+      `/api/classrooms/${classroomCode}/teachers/me/can-leave`,
+    )
+    canLeave.value = leaveStatus.canLeave
+
+    await loadTeachers(classroomCode)
+  } catch (fetchError) {
+    classroom.value = null
+    canLeave.value = false
+    teachers.value = []
+    error.value = fetchError instanceof Error ? fetchError.message : 'Failed to load classroom'
+  } finally {
+    loading.value = false
+  }
+}
+
+async function loadTeachers(classroomCode: string) {
+  loadingTeachers.value = true
+  teachersError.value = ''
+
+  try {
+    teachers.value = await get<ClassroomTeacherResponse[]>(`/api/classrooms/${classroomCode}/teachers`)
+  } catch (fetchError) {
+    teachers.value = []
+    teachersError.value = fetchError instanceof Error ? fetchError.message : 'Failed to load teachers'
+  } finally {
+    loadingTeachers.value = false
+  }
+}
+
+async function inviteTeacher() {
+  if (!classroom.value || invitingTeacher.value || inviteTeacherEmail.value.trim().length === 0) return
+
+  invitingTeacher.value = true
+  actionError.value = ''
+
+  try {
+    const payload: InviteTeacherRequest = {
+      email: inviteTeacherEmail.value.trim(),
+    }
+
+    await post(`/api/classrooms/${classroom.value.classroomCode}/teachers`, payload)
+    inviteTeacherEmail.value = ''
+    await loadTeachers(classroom.value.classroomCode)
+  } catch (requestError) {
+    actionError.value = requestError instanceof Error ? requestError.message : 'Failed to invite teacher'
+  } finally {
+    invitingTeacher.value = false
+  }
+}
+
+async function deleteClassroom() {
+  if (!classroom.value || deleting.value) return
+
+  const confirmed = window.confirm('Er du sikker på at du vil slette klasserommet? Dette kan ikke angres.')
+  if (!confirmed) return
+
+  deleting.value = true
+  actionError.value = ''
+
+  try {
+    await del(`/api/classrooms/${classroom.value.classroomCode}`)
+    await router.push('/teacher/classrooms')
+  } catch (requestError) {
+    actionError.value = requestError instanceof Error ? requestError.message : 'Failed to delete classroom'
+  } finally {
+    deleting.value = false
+  }
+}
+
+async function leaveClassroom() {
+  if (!classroom.value || leaving.value) return
+
+  const confirmed = window.confirm('Er du sikker på at du vil forlate klasserommet?')
+  if (!confirmed) return
+
+  leaving.value = true
+  actionError.value = ''
+
+  try {
+    await del(`/api/classrooms/${classroom.value.classroomCode}/teachers/me`)
+    await router.push('/teacher/classrooms')
+  } catch (requestError) {
+    actionError.value = requestError instanceof Error ? requestError.message : 'Failed to leave classroom'
+  } finally {
+    leaving.value = false
+  }
+}
+
+onMounted(async () => {
+  await loadClassroom()
+})
+
+watch(
+  () => route.params.classroomName,
+  async () => {
+    await loadClassroom()
+  },
+)
 </script>
 
 <template>
-  <div>
-    <h1>Rediger klasserom</h1>
+  <div class="teacher-container-box edit-classroom-view">
+    <p v-if="loading" class="state-message">Laster klasserom...</p>
+    <p v-else-if="error" class="state-message error">{{ error }}</p>
+
+    <template v-else-if="classroom">
+      <h1>{{ classroom.classroomName }}</h1>
+      <p v-if="classroom.classroomDescription">{{ classroom.classroomDescription }}</p>
+      <p><b>Romkode:</b> {{ classroom.classroomCode }}</p>
+
+      <h2>Rediger klasserom</h2>
+
+      <section class="teacher-section">
+        <div class="teacher-section-header">
+          <h3>Lærere i klasserommet</h3>
+        </div>
+
+        <p v-if="loadingTeachers" class="helper-text">Laster lærere...</p>
+        <p v-else-if="teachersError" class="helper-text error-text">{{ teachersError }}</p>
+        <ul v-else-if="teachers.length > 0" class="teacher-list">
+          <li v-for="teacher in teachers" :key="teacher.email" class="teacher-list-item">
+            <span class="teacher-name">{{ teacher.legalName }}</span>
+            <span class="teacher-email">{{ teacher.email }}</span>
+          </li>
+        </ul>
+        <p v-else class="helper-text">Ingen lærere funnet for dette klasserommet.</p>
+      </section>
+
+      <section class="teacher-section">
+        <div class="invite-row">
+          <input
+            v-model="inviteTeacherEmail"
+            type="email"
+            class="teacher-input"
+            placeholder="other.teacher@example.com"
+          />
+          <button
+            type="button"
+            class="action-button"
+            :disabled="invitingTeacher || inviteTeacherEmail.trim().length === 0"
+            @click="inviteTeacher"
+          >
+            {{ invitingTeacher ? 'Inviterer...' : 'Legg til lærer' }}
+          </button>
+        </div>
+      </section>
+
+      <div class="action-grid">
+        <button v-if="canLeave" type="button" class="action-button destructive-button" :disabled="leaving" @click="leaveClassroom">
+          {{ leaving ? 'Forlater...' : 'Forlat klasserom' }}
+        </button>
+        <button type="button" class="action-button destructive-button" :disabled="deleting" @click="deleteClassroom">
+          {{ deleting ? 'Sletter...' : 'Slett klasserom' }}
+        </button>
+      </div>
+
+      <p v-if="actionError" class="helper-text error-text">{{ actionError }}</p>
+    </template>
   </div>
 </template>
 
 <style scoped>
+.edit-classroom-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.edit-classroom-view h1,
+.edit-classroom-view h2,
+.edit-classroom-view p {
+  margin: 0;
+}
+
+.teacher-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.teacher-section-header h3 {
+  margin: 0;
+}
+
+.teacher-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.teacher-list-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.9rem 1rem;
+  border-radius: 1rem;
+  background: rgba(255, 248, 235, 0.82);
+  border: 1px solid rgba(85, 50, 27, 0.18);
+}
+
+.teacher-name {
+  font-weight: 700;
+  color: var(--brown-dark);
+}
+
+.teacher-email {
+  color: var(--brown-dark);
+  word-break: break-word;
+  text-align: right;
+}
+
+.invite-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+}
+
+.teacher-input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 4.25rem;
+  border-radius: 999px;
+  border: 3px solid var(--brown-dark);
+  background: var(--beige-light);
+  padding: 0.75rem 1rem;
+  font: inherit;
+  color: var(--brown-dark);
+}
+
+.action-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1rem;
+}
+
+.action-button {
+  min-height: 4.25rem;
+  border-radius: 999px;
+  border: 3px solid var(--brown-dark);
+  background: var(--beige-light);
+  padding: 0.75rem 1rem;
+  font: inherit;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--brown-dark);
+  cursor: pointer;
+}
+
+.destructive-button {
+  background: var(--red-danger);
+}
+
+.action-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+.helper-text,
+.state-message {
+  color: var(--brown-dark);
+}
+
+.error-text {
+  color: #9f1d1d;
+}
+
+.state-message {
+  text-align: center;
+}
+
+.state-message.error {
+  color: #9f1d1d;
+}
+
+@media (max-width: 640px) {
+  .invite-row {
+    grid-template-columns: 1fr;
+  }
+
+  .teacher-list-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .teacher-email {
+    text-align: left;
+  }
+}
 </style>

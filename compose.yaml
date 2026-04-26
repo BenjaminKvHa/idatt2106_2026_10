@@ -43,6 +43,7 @@ services:
     volumes:
       - ./initial_avatar_assets:/app/initial_avatar_assets:ro
       - ./initial_taskImage_assets:/app/initial_taskImage_assets:ro
+      - ./initial_medal_assets:/app/initial_medal_assets:ro
     depends_on:
       db:
         condition: service_healthy

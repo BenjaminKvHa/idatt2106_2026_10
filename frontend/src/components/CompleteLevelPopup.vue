@@ -1,132 +1,134 @@
 <script setup lang="ts">
-import { computed, watch } from "vue";
-import confetti from "canvas-confetti";
-import completedSoundFile from "@/assets/completedSound.mp3";
-import tryAgainSoundFile from "@/assets/tryAgainSound.mp3";
+import { computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import confetti from 'canvas-confetti'
+import completedSoundFile from '@/assets/completedSound.mp3'
+import tryAgainSoundFile from '@/assets/tryAgainSound.mp3'
+
+const router = useRouter()
 
 const props = defineProps<{
-  show: boolean;
-  title?: string;
-  message?: string;
-  subMessage?: string;
-  success?: boolean;
-  successImage?: string;
-  failImage?: string;
-}>();
+  show: boolean
+  title?: string
+  message?: string
+  subMessage?: string
+  success?: boolean
+  successImage?: string
+  failImage?: string
+}>()
 
 const emit = defineEmits<{
-  (e: "close"): void;
-}>();
+  (e: 'close'): void
+}>()
 
-const completedSound = new Audio(completedSoundFile);
-completedSound.volume = 0.5;
+const completedSound = new Audio(completedSoundFile)
+completedSound.volume = 0.5
 
-const tryAgainSound = new Audio(tryAgainSoundFile);
-tryAgainSound.volume = 0.5;
+const tryAgainSound = new Audio(tryAgainSoundFile)
+tryAgainSound.volume = 0.5
 
-const currentImage = computed(() =>
-    props.success ? props.successImage : props.failImage,
-);
+const currentImage = computed(() => (props.success ? props.successImage : props.failImage))
 
 function stopAllSounds() {
-  completedSound.pause();
-  tryAgainSound.pause();
+  completedSound.pause()
+  tryAgainSound.pause()
 
-  completedSound.currentTime = 0;
-  tryAgainSound.currentTime = 0;
+  completedSound.currentTime = 0
+  tryAgainSound.currentTime = 0
 }
 
 function closePopup() {
-  stopAllSounds();
-  emit("close");
+  stopAllSounds()
+  emit('close')
+}
+
+function goToMap() {
+  stopAllSounds()
+  router.push('/pupil/classroom/map')
 }
 
 watch(
-    () => props.show,
-    (isOpen) => {
-      if (!isOpen) {
-        stopAllSounds();
-        return;
+  () => props.show,
+  (isOpen) => {
+    if (!isOpen) {
+      stopAllSounds()
+      return
+    }
+
+    stopAllSounds()
+
+    if (props.success) {
+      completedSound.play()
+
+      const duration = 2000
+      const end = Date.now() + duration
+
+      const defaults = {
+        zIndex: 2000,
       }
 
-      stopAllSounds();
+      const frame = () => {
+        confetti({
+          ...defaults,
+          particleCount: 8,
+          angle: 60,
+          spread: 60,
+          origin: { x: 0, y: 0.6 },
+        })
 
-      if (props.success) {
-        completedSound.play();
+        confetti({
+          ...defaults,
+          particleCount: 8,
+          angle: 120,
+          spread: 60,
+          origin: { x: 1, y: 0.6 },
+        })
 
-        const duration = 2000;
-        const end = Date.now() + duration;
-
-        const defaults = {
-          zIndex: 2000,
-        };
-
-        const frame = () => {
-          confetti({
-            ...defaults,
-            particleCount: 8,
-            angle: 60,
-            spread: 60,
-            origin: { x: 0, y: 0.6 },
-          });
-
-          confetti({
-            ...defaults,
-            particleCount: 8,
-            angle: 120,
-            spread: 60,
-            origin: { x: 1, y: 0.6 },
-          });
-
-          if (Date.now() < end) {
-            requestAnimationFrame(frame);
-          }
-        };
-
-        frame();
-      } else {
-        tryAgainSound.play();
+        if (Date.now() < end) {
+          requestAnimationFrame(frame)
+        }
       }
-    },
-);
+
+      frame()
+    } else {
+      tryAgainSound.play()
+    }
+  },
+)
 </script>
 
 <template>
   <div v-if="show" class="popup-overlay" @click="closePopup">
-    <div
-        class="complete-popup"
-        :class="{ 'complete-popup-fail': success === false }"
-        @click.stop
-    >
+    <div class="complete-popup" :class="{ 'complete-popup-fail': success === false }" @click.stop>
       <div v-if="currentImage" class="popup-image-wrapper">
-        <img
-            :src="currentImage"
-            :alt="success ? 'Riktig svar' : 'Feil svar'"
-            class="popup-image"
-        />
+        <img :src="currentImage" :alt="success ? 'Riktig svar' : 'Feil svar'" class="popup-image" />
       </div>
 
       <h2 class="popup-title">
-        {{ title || (success ? "Du klarte det!" : "Du klarte det ikke") }}
+        {{ title || (success ? 'Du klarte det!' : 'Du klarte det ikke') }}
       </h2>
 
       <div class="popup-text">
         <p>
-          {{ message || (success
-            ? "Gratulerer! Du har fullført nivået."
-            : "Å nei! Du løste ikke oppgaven riktig denne gangen.") }}
+          {{
+            message ||
+            (success
+              ? 'Gratulerer! Du har fullført nivået.'
+              : 'Å nei! Du løste ikke oppgaven riktig denne gangen.')
+          }}
         </p>
         <p>
-          {{ subMessage || (success
-            ? "Nå har du vist at du kan tenke som en ekte nett-detektiv!"
-            : "Prøv igjen for å klare nivået.") }}
+          {{
+            subMessage ||
+            (success
+              ? 'Nå har du vist at du kan tenke som en ekte nett-detektiv!'
+              : 'Prøv igjen for å klare nivået.')
+          }}
         </p>
       </div>
 
-      <div class="popup-actions">
-        <button class="popup-btn popup-btn-play" @click="closePopup">
-          Ok
-        </button>
+      <div v-if="success" class="popup-actions">
+        <button class="popup-btn popup-btn-map" @click="goToMap">Tilbake til kartet</button>
       </div>
     </div>
   </div>
@@ -191,7 +193,7 @@ watch(
   box-shadow: 0 6px 12px rgb(0 0 0 / 18%);
 }
 
-.popup-btn-play {
+.popup-btn-map {
   background: var(--green-confirm);
 }
 

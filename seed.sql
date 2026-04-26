@@ -18,23 +18,13 @@ VALUES
     ('MAPAAA', 'Kart testklasse', 'Utviklingsklasse for kartvisning'),
     ('MAPAAB', 'Mellomklasse', 'Ekstra klasse for ranking og teacher-overview'),
     ('MAPAAC', 'Sisteklasse', 'Ekstra klasse for ranking og teacher-overview'),
-    ('CHAPAA', 'Kapitteltestklasse', 'Utviklingsklasse for kapittelvisning')
+    ('CHAPAA', 'Kapitteltestklasse', 'Utviklingsklasse for kapittelvisning'),
+    ('TESTAA', 'Demo testklasse A', 'Utviklingsklasse for lærer- og varslingsvisning'),
+    ('TESTBB', 'Demo testklasse B', 'Ekstra utviklingsklasse for lærer- og varslingsvisning')
 ON CONFLICT (classroom_code) DO UPDATE
 SET
     classroom_name = EXCLUDED.classroom_name,
     classroom_description = EXCLUDED.classroom_description;
-
-INSERT INTO chapter (id, chapter_name, successful_runs_needed_for_completion)
-VALUES
-    (1, 'Nyhetskvartalet', 3),
-    (2, 'Fotografen', 3),
-    (3, 'Datasenteret', 5)
-ON CONFLICT (id) DO UPDATE
-SET
-    chapter_name = EXCLUDED.chapter_name,
-    successful_runs_needed_for_completion = EXCLUDED.successful_runs_needed_for_completion;
-
-SELECT setval('chapter_id_seq', GREATEST(COALESCE((SELECT MAX(id) FROM chapter), 0), 3), true);
 
 INSERT INTO account (email, password_data, legal_name, account_role)
 VALUES
@@ -156,14 +146,23 @@ INSERT INTO pupil_classroom_membership (
     avatar_file_object_id
 )
 VALUES
-    ('demo.alice@example.com', 'MAPAAA', 'demo.alice', TRUE, 1),
-    ('demo.bob@example.com', 'MAPAAA', 'demo.bob', TRUE, 2),
-    ('demo.carla@example.com', 'MAPAAB', 'demo.carla', TRUE, 3),
+<<<<<<< HEAD
+    ('demo.alice@example.com', 'MAPAAA', 'demo.alice', TRUE, NULL),
+    ('demo.bob@example.com', 'MAPAAA', 'demo.bob', TRUE, NULL),
+    ('demo.carla@example.com', 'MAPAAA', 'demo.carla', TRUE, NULL),
+=======
+    ('demo.alice@example.com', 'TESTAA', 'alice', TRUE, (SELECT id FROM file_object WHERE object_key = 'avatar-images/demo_alice.png')),
+    ('demo.bob@example.com', 'TESTAA', 'bob', TRUE, (SELECT id FROM file_object WHERE object_key = 'avatar-images/demo_bob.png')),
+    ('demo.carla@example.com', 'TESTBB', 'carla', TRUE, (SELECT id FROM file_object WHERE object_key = 'avatar-images/demo_carla.png')),
+    ('demo.pending.one@example.com', 'TESTAA', 'pending.one', FALSE, NULL),
+    ('demo.pending.two@example.com', 'TESTAA', 'pending.two', FALSE, NULL),
+    ('demo.pending.three@example.com', 'TESTBB', 'pending.three', FALSE, NULL),
+>>>>>>> 1230b6773f1d74e90158f742e23e9059420fab47
     ('map.partial@example.com', 'MAPAAA', 'map.partial', TRUE, NULL),
     ('map.complete@example.com', 'MAPAAB', 'map.complete', TRUE, NULL),
     ('rank.two@example.com', 'MAPAAB', 'rank.two', TRUE, NULL),
     ('rank.three@example.com', 'MAPAAC', 'rank.three', TRUE, NULL),
-    ('chapter.test@example.com', 'CHAPAA', 'chapter.test', TRUE, NULL)
+    ('chapter.test@example.com', 'CHAPAA', 'chapter.test', TRUE, 1)
 ON CONFLICT (account_email) DO UPDATE
 SET
     classroom_code = EXCLUDED.classroom_code,
@@ -200,7 +199,7 @@ SET
     unsuccessful_streak = EXCLUDED.unsuccessful_streak;
 
 DELETE FROM notification
-WHERE classroom_code IN ('MAPAAA', 'MAPAAB')
+WHERE classroom_code = 'MAPAAA'
   AND notification_text IN (
       'Alice Accepted har bedt om hjelp i Nyhetskvartalet',
       'Bob Accepted venter på tilbakemelding fra lærer',
@@ -227,67 +226,9 @@ VALUES
         'UNREAD'
     ),
     (
-        'MAPAAB',
+        'MAPAAA',
         'demo.carla@example.com',
         'Carla Accepted har fullført Fotografen',
         'READ'
     );
 
--- Fotografen (chapter_id = 2) task bank.
--- selectedCategory mapping: 1 = ekte, 2 = KI-generert, 3 = manipulert.
--- fileId must reference an existing row in file_object (upload via POST /api/objects first).
-INSERT INTO task (id, difficulty, chapter_id, classroom_code, task_json)
-VALUES
-    (1, 'EASY', 2, 'CHAPAA', '{
-        "taskDescription": "Er dette bildet ekte, KI-generert eller manipulert?",
-        "fileId": 1,
-        "correctCategory": 1,
-        "correctJustification": "Detaljer og skygger ser naturlige ut",
-        "justifications": [
-            "Detaljer og skygger ser naturlige ut",
-            "Ansikter ser litt rare ut",
-            "Bakgrunnen er kopiert inn"
-        ],
-        "correctDescription": "Riktig! Dette bildet er ekte.",
-        "falseDescription": "Ikke helt. Dette bildet er faktisk ekte."
-    }'::jsonb),
-    (2, 'MEDIUM', 2, 'CHAPAA', '{
-        "taskDescription": "Er dette bildet ekte, KI-generert eller manipulert?",
-        "fileId": 2,
-        "correctCategory": 2,
-        "correctJustification": "Hender og små detaljer ser unaturlige ut",
-        "justifications": [
-            "Hender og små detaljer ser unaturlige ut",
-            "Bildet er tatt med dårlig lys",
-            "Et objekt er fjernet fra bakgrunnen"
-        ],
-        "correctDescription": "Riktig! Dette bildet er KI-generert.",
-        "falseDescription": "Ikke helt. Dette bildet er KI-generert."
-    }'::jsonb),
-    (3, 'HARD', 2, 'CHAPAA', '{
-        "taskDescription": "Er dette bildet ekte, KI-generert eller manipulert?",
-        "fileId": 1,
-        "correctCategory": 3,
-        "correctJustification": "Et objekt er lagt til eller fjernet",
-        "justifications": [
-            "Et objekt er lagt til eller fjernet",
-            "Fargene er litt blasse",
-            "Hele bildet er KI-generert"
-        ],
-        "correctDescription": "Riktig! Dette bildet er manipulert.",
-        "falseDescription": "Ikke helt. Dette bildet er manipulert."
-    }'::jsonb)
-ON CONFLICT (id) DO UPDATE
-SET
-    difficulty = EXCLUDED.difficulty,
-    chapter_id = EXCLUDED.chapter_id,
-    classroom_code = EXCLUDED.classroom_code,
-    task_json = EXCLUDED.task_json;
-
-SELECT setval('task_id_seq', GREATEST(COALESCE((SELECT MAX(id) FROM task), 0), 3), true);
-
-INSERT INTO account_classroom_bridge_teacher (account_email, classroom_code)
-VALUES
-    ('demo.teacher@example.com', 'MAPAAA'),
-    ('demo.teacher@example.com', 'MAPAAB')
-ON CONFLICT (account_email, classroom_code) DO NOTHING;

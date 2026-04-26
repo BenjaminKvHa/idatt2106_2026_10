@@ -144,6 +144,9 @@ INSERT INTO pupil_classroom_membership (
     avatar_file_object_id
 )
 VALUES
+    ('demo.alice@example.com', 'MAPAAA', 'demo.alice', TRUE, NULL),
+    ('demo.bob@example.com', 'MAPAAA', 'demo.bob', TRUE, NULL),
+    ('demo.carla@example.com', 'MAPAAA', 'demo.carla', TRUE, NULL),
     ('map.partial@example.com', 'MAPAAA', 'map.partial', TRUE, NULL),
     ('map.complete@example.com', 'MAPAAB', 'map.complete', TRUE, NULL),
     ('rank.two@example.com', 'MAPAAB', 'rank.two', TRUE, NULL),
@@ -185,7 +188,7 @@ SET
     unsuccessful_streak = EXCLUDED.unsuccessful_streak;
 
 DELETE FROM notification
-WHERE classroom_code IN ('TESTAA', 'TESTBB')
+WHERE classroom_code = 'MAPAAA'
   AND notification_text IN (
       'Alice Accepted har bedt om hjelp i Nyhetskvartalet',
       'Bob Accepted venter på tilbakemelding fra lærer',
@@ -200,19 +203,19 @@ INSERT INTO notification (
 )
 VALUES
     (
-        'TESTAA',
+        'MAPAAA',
         'demo.alice@example.com',
         'Alice Accepted har bedt om hjelp i Nyhetskvartalet',
         'UNREAD'
     ),
     (
-        'TESTAA',
+        'MAPAAA',
         'demo.bob@example.com',
         'Bob Accepted venter på tilbakemelding fra lærer',
         'UNREAD'
     ),
     (
-        'TESTBB',
+        'MAPAAA',
         'demo.carla@example.com',
         'Carla Accepted har fullført Fotografen',
         'READ'

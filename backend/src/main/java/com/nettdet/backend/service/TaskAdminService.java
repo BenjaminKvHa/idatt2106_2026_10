@@ -11,9 +11,13 @@ import com.nettdet.backend.domain.Chapter;
 import com.nettdet.backend.domain.FileObject;
 import com.nettdet.backend.domain.Task;
 import com.nettdet.backend.domain.enums.ClassroomAccess;
+import com.nettdet.backend.domain.enums.DatacenterTaskFormat;
 import com.nettdet.backend.domain.enums.TaskDifficulty;
+import com.nettdet.backend.dto.CreateDatacenterImageTaskRequest;
+import com.nettdet.backend.dto.CreateDatacenterNewsTaskRequest;
 import com.nettdet.backend.dto.CreateImageVerificationTaskRequest;
 import com.nettdet.backend.dto.CreateNewsVerificationTaskRequest;
+import com.nettdet.backend.dto.DatacenterTask;
 import com.nettdet.backend.dto.ImageVerificationTask;
 import com.nettdet.backend.dto.NewsVerificationTask;
 import com.nettdet.backend.dto.FileReferenceResponse;
@@ -27,6 +31,7 @@ import jakarta.persistence.EntityNotFoundException;
 public class TaskAdminService {
 
     private static final Logger logger = LoggerFactory.getLogger(TaskAdminService.class);
+    private static final Long DATACENTER_CHAPTER_ID = 3L;
 
     private final TaskRepository taskRepository;
     private final ChapterRepository chapterRepository;
@@ -139,6 +144,67 @@ public class TaskAdminService {
         );
 
         return createTask(chapter, request.difficulty(), taskData);
+    }
+
+    // --------------------------------------------------
+    // TASK CREATION: DATASENTERET (final boss)
+    // --------------------------------------------------
+
+    /**
+     * Creates a Datasenteret task using the image-verification format.
+     * Always associated with the Datasenteret chapter at HARD difficulty.
+     */
+    @Transactional
+    public Task createDatacenterImageTask(CreateDatacenterImageTaskRequest request) {
+        Chapter chapter = chapterRepository.findById(DATACENTER_CHAPTER_ID)
+                .orElseThrow(() -> new EntityNotFoundException("Datasenteret chapter not found"));
+
+        validateFileExists(request.fileId());
+
+        ImageVerificationTask inner = new ImageVerificationTask(
+                request.taskDescription(),
+                request.fileId(),
+                request.correctCategory(),
+                request.correctJustification(),
+                request.justifications(),
+                request.correctDescription(),
+                request.falseDescription()
+        );
+        DatacenterTask wrapped = new DatacenterTask(
+                DatacenterTaskFormat.IMAGE_VERIFICATION, inner, null);
+
+        return createTask(chapter, TaskDifficulty.HARD, wrapped);
+    }
+
+    /**
+     * Creates a Datasenteret task using the news-verification format.
+     * Always associated with the Datasenteret chapter at HARD difficulty.
+     */
+    @Transactional
+    public Task createDatacenterNewsTask(CreateDatacenterNewsTaskRequest request) {
+        Chapter chapter = chapterRepository.findById(DATACENTER_CHAPTER_ID)
+                .orElseThrow(() -> new EntityNotFoundException("Datasenteret chapter not found"));
+
+        validateFileExists(request.fileId_1());
+        validateFileExists(request.fileId_2());
+
+        if (!request.correctFileId().equals(request.fileId_1())
+                && !request.correctFileId().equals(request.fileId_2())) {
+            throw new IllegalArgumentException("correctFileId must match either fileId_1 or fileId_2");
+        }
+
+        NewsVerificationTask inner = new NewsVerificationTask(
+                request.taskDescription(),
+                request.fileId_1(),
+                request.fileId_2(),
+                request.correctFileId(),
+                request.correctDescription(),
+                request.incorrectDescription()
+        );
+        DatacenterTask wrapped = new DatacenterTask(
+                DatacenterTaskFormat.NEWS_VERIFICATION, null, inner);
+
+        return createTask(chapter, TaskDifficulty.HARD, wrapped);
     }
 
     // --------------------------------------------------

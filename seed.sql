@@ -205,7 +205,7 @@ SET
     unsuccessful_streak = EXCLUDED.unsuccessful_streak;
 
 DELETE FROM notification
-WHERE classroom_code IN ('TESTAA', 'TESTBB')
+WHERE classroom_code IN ('MAPAAA', 'MAPAAB')
   AND notification_text IN (
       'Alice Accepted har bedt om hjelp i Nyhetskvartalet',
       'Bob Accepted venter på tilbakemelding fra lærer',
@@ -220,19 +220,19 @@ INSERT INTO notification (
 )
 VALUES
     (
-        'TESTAA',
+        'MAPAAA',
         'demo.alice@example.com',
         'Alice Accepted har bedt om hjelp i Nyhetskvartalet',
         'UNREAD'
     ),
     (
-        'TESTAA',
+        'MAPAAA',
         'demo.bob@example.com',
         'Bob Accepted venter på tilbakemelding fra lærer',
         'UNREAD'
     ),
     (
-        'TESTBB',
+        'MAPAAB',
         'demo.carla@example.com',
         'Carla Accepted har fullført Fotografen',
         'READ'
@@ -290,3 +290,9 @@ SET
     task_json = EXCLUDED.task_json;
 
 SELECT setval('task_id_seq', GREATEST(COALESCE((SELECT MAX(id) FROM task), 0), 3), true);
+
+INSERT INTO account_classroom_bridge_teacher (account_email, classroom_code)
+VALUES
+    ('demo.teacher@example.com', 'MAPAAA'),
+    ('demo.teacher@example.com', 'MAPAAB')
+ON CONFLICT (account_email, classroom_code) DO NOTHING;

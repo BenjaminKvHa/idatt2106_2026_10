@@ -39,7 +39,7 @@ const login = async (): Promise<void> => {
 
     const payload = decodeJwtPayload(accessToken)
     submitted.value = true
-    await router.push(payload?.role === "PUPIL" ? "/pupil" : "/join-classroom/enter-classroom-code")
+    await router.push(payload?.role === "PUPIL" ? "/pupil" : "/teacher/classrooms")
   } catch (caughtError) {
     error.value = caughtError instanceof Error ? caughtError.message : 'Kunne ikke logge inn.'
   } finally {

@@ -52,6 +52,14 @@
     --animation-time-1: 0.2s;
 }
 
+.teacher-container-box {
+    border: var(--border-width) solid var(--accent);
+    background-color: var(--background);
+    padding: var(--medium-padding);
+    border-radius: var(--border-radius);
+    width: min(40rem, 90%);
+}
+
 .teacher-content {
     color: var(--accent);
     background-color: var(--background-body);

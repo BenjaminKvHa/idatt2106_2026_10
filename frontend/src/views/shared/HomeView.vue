@@ -49,7 +49,7 @@
   background: var(--beige-light-100);
   border: var(--border-wide) solid var(--brown-dark);
   border-radius: 40px;
-  box-shadow: -3px 3px 6px var(--brown-dark);
+  box-shadow: -3px 3px 3px var(--brown-dark);
   max-width: 600px;
   width: 600px;
   padding: 3rem 3rem 2.5rem;
@@ -70,7 +70,6 @@ img {
   font-family: 'Inika', serif;
   font-size: 14px;
   font-weight: 700;
-  color: var(--brown-medium);
   letter-spacing: 2px;
   text-transform: uppercase;
   margin: 0;
@@ -93,9 +92,8 @@ img {
   font-family: 'Inika', serif;
   font-size: 1.35rem;
   font-weight: 700;
-  color: var(--brown-dark);
   cursor: pointer;
-  box-shadow: -3px 3px 6px var(--brown-dark);
+  box-shadow: -3px 3px 3px var(--brown-dark);
   transition: transform 0.1s, box-shadow 0.1s;
 }
 

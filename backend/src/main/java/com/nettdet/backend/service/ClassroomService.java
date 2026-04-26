@@ -212,6 +212,29 @@ public class ClassroomService {
     }
 
     @Transactional(readOnly = true)
+    public ClassroomResponse getClassroom(String classroomCode, JwtUserPrincipal principal) {
+        if (principal == null || principal.email() == null) {
+            throw new AccessDeniedException("Authentication required");
+        }
+
+        Classroom classroom = getRequiredClassroom(classroomCode);
+
+        boolean isTeacher = bridgeRepository
+                .existsByIdAccountEmailAndIdClassroomCode(principal.email(), classroomCode);
+        boolean isPupil = pupilClassroomMembershipRepository
+                .existsByAccountEmailAndClassroomClassroomCode(principal.email(), classroomCode);
+
+        if (!isTeacher && !isPupil) {
+            throw new AccessDeniedException("You do not belong to this classroom");
+        }
+
+        return new ClassroomResponse(
+                classroom.getClassroomCode(),
+                classroom.getClassroomName(),
+                classroom.getClassroomDescription());
+    }
+
+    @Transactional(readOnly = true)
     public List<ClassroomTeacherResponse> getClassroomTeachers(String classroomCode, JwtUserPrincipal principal) {
         verifyTeacherPrincipal(principal);
         getRequiredClassroom(classroomCode);

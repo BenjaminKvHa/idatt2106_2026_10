@@ -156,11 +156,14 @@ INSERT INTO pupil_classroom_membership (
     avatar_file_object_id
 )
 VALUES
-    ('map.partial@example.com', 'MAPAAA', 'map.partial', TRUE),
-    ('map.complete@example.com', 'MAPAAB', 'map.complete', TRUE),
-    ('rank.two@example.com', 'MAPAAB', 'rank.two', TRUE),
-    ('rank.three@example.com', 'MAPAAC', 'rank.three', TRUE),
-    ('chapter.test@example.com', 'CHAPAA', 'chapter.test', TRUE)
+    ('demo.alice@example.com', 'MAPAAA', 'demo.alice', TRUE, 1),
+    ('demo.bob@example.com', 'MAPAAA', 'demo.bob', TRUE, 2),
+    ('demo.carla@example.com', 'MAPAAB', 'demo.carla', TRUE, 3),
+    ('map.partial@example.com', 'MAPAAA', 'map.partial', TRUE, NULL),
+    ('map.complete@example.com', 'MAPAAB', 'map.complete', TRUE, NULL),
+    ('rank.two@example.com', 'MAPAAB', 'rank.two', TRUE, NULL),
+    ('rank.three@example.com', 'MAPAAC', 'rank.three', TRUE, NULL),
+    ('chapter.test@example.com', 'CHAPAA', 'chapter.test', TRUE, NULL)
 ON CONFLICT (account_email) DO UPDATE
 SET
     classroom_code = EXCLUDED.classroom_code,
@@ -197,7 +200,7 @@ SET
     unsuccessful_streak = EXCLUDED.unsuccessful_streak;
 
 DELETE FROM notification
-WHERE classroom_code IN ('TESTAA', 'TESTBB')
+WHERE classroom_code IN ('MAPAAA', 'MAPAAB')
   AND notification_text IN (
       'Alice Accepted har bedt om hjelp i Nyhetskvartalet',
       'Bob Accepted venter på tilbakemelding fra lærer',
@@ -212,19 +215,19 @@ INSERT INTO notification (
 )
 VALUES
     (
-        'TESTAA',
+        'MAPAAA',
         'demo.alice@example.com',
         'Alice Accepted har bedt om hjelp i Nyhetskvartalet',
         'UNREAD'
     ),
     (
-        'TESTAA',
+        'MAPAAA',
         'demo.bob@example.com',
         'Bob Accepted venter på tilbakemelding fra lærer',
         'UNREAD'
     ),
     (
-        'TESTBB',
+        'MAPAAB',
         'demo.carla@example.com',
         'Carla Accepted har fullført Fotografen',
         'READ'
@@ -282,3 +285,9 @@ SET
     task_json = EXCLUDED.task_json;
 
 SELECT setval('task_id_seq', GREATEST(COALESCE((SELECT MAX(id) FROM task), 0), 3), true);
+
+INSERT INTO account_classroom_bridge_teacher (account_email, classroom_code)
+VALUES
+    ('demo.teacher@example.com', 'MAPAAA'),
+    ('demo.teacher@example.com', 'MAPAAB')
+ON CONFLICT (account_email, classroom_code) DO NOTHING;

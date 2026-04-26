@@ -71,6 +71,9 @@ class WeeklyMysteryServiceTest {
     @Mock
     private FileObjectAccessControlService fileObjectAccessControlService;
 
+    @Mock
+    private NotificationService notificationService;
+
     private WeeklyMysteryService weeklyMysteryService;
 
     @BeforeEach
@@ -82,7 +85,8 @@ class WeeklyMysteryServiceTest {
                 teacherBridgeRepository,
                 fileObjectRepository,
                 fileObjectService,
-                fileObjectAccessControlService);
+                fileObjectAccessControlService,
+                notificationService);
     }
 
     @DisplayName("Creates pending weekly mystery for confirmed pupil and teacher-only file")
@@ -123,6 +127,10 @@ class WeeklyMysteryServiceTest {
         assertEquals(10L, response.fileObjectId());
         assertEquals("Min kommentar", response.comment());
         assertFalse(response.approved());
+        verify(notificationService).createNotification(
+                CLASSROOM_CODE,
+                PUPIL_EMAIL,
+                "Pupil Name har sendt inn et nytt bidrag til Ukens mysterium.");
     }
 
     @DisplayName("Rejects weekly mystery submission from unconfirmed pupil")
@@ -140,7 +148,7 @@ class WeeklyMysteryServiceTest {
                 "Comment",
                 pupilPrincipal()));
 
-        verifyNoInteractions(fileObjectAccessControlService, weeklyMysteryRepository);
+        verifyNoInteractions(fileObjectAccessControlService, weeklyMysteryRepository, notificationService);
     }
 
     @DisplayName("Returns only approved mysteries for confirmed pupils")

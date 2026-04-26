@@ -101,14 +101,14 @@ const router = createRouter({
               component: TeachersCreateClassroomView,
             },
             {
-              path: ':classroomName',
+              path: ':classroomCode',
               meta: {
                 breadcrumb: (route: RouteLocationNormalizedLoaded) =>
-                  String(route.params.classroomName)
+                  String(route.params.classroomCode)
                     .replace(/-/g, ' ')
                     .replace(/\b\w/g, (c) => c.toUpperCase()),
                 tabs: (route: RouteLocationNormalizedLoaded) => {
-                  const base = `/teacher/classrooms/${route.params.classroomName}`
+                  const base = `/teacher/classrooms/${route.params.classroomCode}`
                   return [
                     { label: 'Ledertavle', to: `${base}/leaderboard` },
                     { label: 'Elever', to: `${base}/pupils` },
@@ -118,7 +118,7 @@ const router = createRouter({
                   ]
                 },
               },
-              redirect: (to) => `/teacher/classrooms/${to.params.classroomName}/leaderboard`,
+              redirect: (to) => `/teacher/classrooms/${to.params.classroomCode}/leaderboard`,
               children: [
                 {
                   path: 'edit-classroom',

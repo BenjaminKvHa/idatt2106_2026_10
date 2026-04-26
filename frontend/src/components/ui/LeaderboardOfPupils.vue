@@ -58,7 +58,7 @@ function getDisplayName(username: string | null): string {
   padding: 0.9rem 1rem;
   border-radius: 1rem;
   background: rgba(255, 248, 235, 0.82);
-  border: 1px solid rgba(85, 50, 27, 0.18);
+  border: var(--border-wide) solid var(--brown-dark);
   color: var(--brown-dark);
 }
 

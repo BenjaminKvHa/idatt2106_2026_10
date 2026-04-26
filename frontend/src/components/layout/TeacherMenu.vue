@@ -6,7 +6,6 @@ import OptionsMenu from '@/components/ui/OptionsMenu.vue'
 import NotificationsMenu from '@/components/ui/NotificationsMenu.vue'
 import gearIcon from '@/assets/icons/profile-cog.svg'
 import { useClassrooms } from '@/composables/useClassrooms'
-import { sanitizeClassroomName } from '@/composables/useClassroomName'
 import { BellIcon, Settings } from '@lucide/vue'
 
 const settingsOpen = ref(false)
@@ -27,37 +26,17 @@ const isNewClassroomActive = computed(() => {
   return route.path.endsWith('/classrooms/new')
 })
 
-const navigateToClassrooms = () => {
-  router.push(`/teacher/classrooms`)
-}
-
-const navigateToNewClassroom = () => {
-  router.push(`/teacher/classrooms/new`)
-}
-
-const navigateToClassroom = (classroomCode: string) => {
-  const classroom = classrooms.value.find((c) => c.classroomCode === classroomCode)
-  if (classroom) {
-    const classroomName = sanitizeClassroomName(classroom.classroomName)
-    router.push(`/teacher/classrooms/${classroomName}/leaderboard`)
-  }
-}
-
 const isClassroomActive = (classroomCode: string) => {
-  const classroom = classrooms.value.find((c) => c.classroomCode === classroomCode)
-  if (!classroom) return false
-  const kebabName = sanitizeClassroomName(classroom.classroomName)
-  return route.path.includes(`/classrooms/${kebabName}`)
+  return route.path.includes(`/classrooms/${classroomCode}`)
 }
 
 const activeClassroomCode = computed(() => {
-  const classroomName = typeof route.params.classroomName === 'string' ? route.params.classroomName : ''
-  if (!classroomName) {
+  const classroomCodeSlug = typeof route.params.classroomCode === 'string' ? route.params.classroomCode : ''
+  if (!classroomCodeSlug) {
     return null
   }
 
-  const classroom = classrooms.value.find((entry) => sanitizeClassroomName(entry.classroomName) === classroomName)
-  return classroom?.classroomCode ?? null
+  return classroomCodeSlug
 })
 </script>
 
@@ -66,36 +45,36 @@ const activeClassroomCode = computed(() => {
         <Logo />
 
         <section class="teacher-card teacher-card-menu">
-            <button
+            <RouterLink
                 type="button"
                 :class="['teacher-card-title', isClassroomsActive ? 'button-variant-2' : 'button-variant-1']"
-                @click="navigateToClassrooms"
+                :to="`/teacher/classrooms`"
             >
                 Klasserom
-            </button>
+            </RouterLink>
             <div class="teacher-card-body teacher-card-menu-body">
-                <button
+                <RouterLink
                     v-for="classroom in classrooms"
                     :key="classroom.classroomCode"
                     type="button"
+                    :to="`/teacher/classrooms/${classroom.classroomCode}/leaderboard`"
                     :class="['button-variant-1 teacher-card-item-var-1', isClassroomActive(classroom.classroomCode) && 'button-variant-2 teacher-card-item-var-2']"
-                    @click="navigateToClassroom(classroom.classroomCode)"
                 >
                     {{ classroom.classroomName }}
-                </button>
+                </RouterLink>
                 <div v-if="classrooms.length === 0" class="empty-message">
                     Ingen klasserom
                 </div>
             </div>
         </section>
 
-        <button
+        <RouterLink
             type="button"
             :class="['button-variant-1', 'teacher-menu-button', isNewClassroomActive && 'button-variant-2']"
-            @click="navigateToNewClassroom"
+            :to="`/teacher/classrooms/new`"
         >
             Nytt klasserom
-        </button>
+        </RouterLink>
 
         <div class="teacher-menu-bottom">
             <button 
@@ -161,6 +140,7 @@ const activeClassroomCode = computed(() => {
 .teacher-menu-button {
     width: 100%;
     padding: 0.85rem 1rem;
+    text-align: center;
 }
 
 .teacher-menu-bottom {

@@ -42,7 +42,7 @@ function formatTimestamp(value: string): string {
   }).format(parsedDate)
 }
 
-async function loadNotifications() {
+async function loadNotifications(backgroundRefresh = false) {
   if (requestInFlight) {
     return
   }
@@ -55,8 +55,10 @@ async function loadNotifications() {
   }
 
   requestInFlight = true
-  loading.value = true
-  error.value = ''
+  if (!backgroundRefresh) {
+    loading.value = true
+    error.value = ''
+  }
 
   try {
     const response = await get<TeacherNotification[]>(`/api/teacher/classrooms/${props.classroomCode}/notifications`)
@@ -70,15 +72,19 @@ async function loadNotifications() {
       return
     }
 
-    notifications.value = []
-    error.value = fetchError instanceof Error ? fetchError.message : 'Kunne ikke hente varsler'
+    if (!backgroundRefresh || notifications.value.length === 0) {
+      notifications.value = []
+      error.value = fetchError instanceof Error ? fetchError.message : 'Kunne ikke hente varsler'
+    }
   } finally {
     requestInFlight = false
     if (disposed) {
       return
     }
 
-    loading.value = false
+    if (!backgroundRefresh) {
+      loading.value = false
+    }
   }
 }
 
@@ -92,7 +98,7 @@ function stopPolling() {
 function startPolling() {
   stopPolling()
   pollingHandle = window.setInterval(async () => {
-    await loadNotifications()
+    await loadNotifications(true)
   }, 2000)
 }
 

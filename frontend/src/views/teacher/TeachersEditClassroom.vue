@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { sanitizeClassroomName } from '@/composables/useClassroomName'
-import { useClassrooms } from '@/composables/useClassrooms'
 import { del, get, post } from '@/utils/apiUtils'
 
 type ClassroomDetailsResponse = {
@@ -26,7 +24,6 @@ type InviteTeacherRequest = {
 
 const route = useRoute()
 const router = useRouter()
-const { classrooms, fetchClassrooms } = useClassrooms()
 
 const classroom = ref<ClassroomDetailsResponse | null>(null)
 const loading = ref(true)
@@ -41,20 +38,6 @@ const teachersError = ref('')
 const inviteTeacherEmail = ref('')
 const invitingTeacher = ref(false)
 
-function getRouteClassroomSlug(): string {
-  const classroomName = route.params.classroomName
-  return typeof classroomName === 'string' ? classroomName : ''
-}
-
-function resolveClassroomCode(): string | null {
-  const classroomSlug = getRouteClassroomSlug()
-  const matchedClassroom = classrooms.value.find(
-    (entry) => sanitizeClassroomName(entry.classroomName) === classroomSlug,
-  )
-
-  return matchedClassroom?.classroomCode ?? null
-}
-
 async function loadClassroom() {
   loading.value = true
   error.value = ''
@@ -62,20 +45,16 @@ async function loadClassroom() {
   teachersError.value = ''
 
   try {
-    if (classrooms.value.length === 0) {
-      await fetchClassrooms()
-    }
-
-    const classroomCode = resolveClassroomCode()
-    if (!classroomCode) {
-      throw new Error('Could not find classroom for this route')
+    const classroomCodeSlug = typeof route.params.classroomCode === "string" ? route.params.classroomCode : "";
+    if (!classroomCodeSlug) {
+      throw new Error('Could not find classroom slug for this url')
     }
 
     const response = await get<{
       classroomCode: string
       classroomName: string
       classroomDescription: string | null
-    }>(`/api/classrooms/${classroomCode}/leaderboard`)
+    }>(`/api/classrooms/${classroomCodeSlug}/leaderboard`)
 
     classroom.value = {
       classroomCode: response.classroomCode,
@@ -84,11 +63,11 @@ async function loadClassroom() {
     }
 
     const leaveStatus = await get<TeacherLeaveStatusResponse>(
-      `/api/classrooms/${classroomCode}/teachers/me/can-leave`,
+      `/api/classrooms/${classroomCodeSlug}/teachers/me/can-leave`,
     )
     canLeave.value = leaveStatus.canLeave
 
-    await loadTeachers(classroomCode)
+    await loadTeachers(classroomCodeSlug)
   } catch (fetchError) {
     classroom.value = null
     canLeave.value = false
@@ -177,7 +156,7 @@ onMounted(async () => {
 })
 
 watch(
-  () => route.params.classroomName,
+  () => route.params.classroomCode,
   async () => {
     await loadClassroom()
   },
@@ -285,7 +264,8 @@ watch(
   padding: 0.9rem 1rem;
   border-radius: 1rem;
   background: rgba(255, 248, 235, 0.82);
-  border: 1px solid rgba(85, 50, 27, 0.18);
+  /* border: 1px solid rgba(85, 50, 27, 0.18); */
+  border: var(--border-wide) solid var(--brown-dark);
 }
 
 .teacher-name {
@@ -335,6 +315,10 @@ watch(
   font-size: 1rem;
   color: var(--brown-dark);
   cursor: pointer;
+}
+.action-button:focus, .action-button:hover {
+  color: var(--beige-light);
+  background-color: var(--brown-dark);
 }
 
 .destructive-button {

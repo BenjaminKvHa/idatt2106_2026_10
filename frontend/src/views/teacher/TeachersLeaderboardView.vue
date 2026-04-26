@@ -2,8 +2,6 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import LeaderboardOfPupils from '@/components/ui/LeaderboardOfPupils.vue'
-import { sanitizeClassroomName } from '@/composables/useClassroomName'
-import { useClassrooms } from '@/composables/useClassrooms'
 import { get } from '@/utils/apiUtils'
 
 type ClassroomPupilLeaderboardEntry = {
@@ -19,7 +17,6 @@ type ClassroomPupilLeaderboardResponse = {
 }
 
 const route = useRoute()
-const { classrooms, fetchClassrooms } = useClassrooms()
 
 const leaderboard = ref<ClassroomPupilLeaderboardResponse | null>(null)
 const loading = ref(true)
@@ -33,32 +30,17 @@ const sortedEntries = computed(() => {
   return [...leaderboard.value.entries].sort((a, b) => b.totalXp - a.totalXp)
 })
 
-function getRouteClassroomSlug(): string {
-  const classroomName = route.params.classroomName
-  return typeof classroomName === 'string' ? classroomName : ''
-}
-
-function resolveClassroomCode(): string | null {
-  const classroomSlug = getRouteClassroomSlug()
-  const classroom = classrooms.value.find((entry) => sanitizeClassroomName(entry.classroomName) === classroomSlug)
-  return classroom?.classroomCode ?? null
-}
-
 async function loadLeaderboard() {
   loading.value = true
   error.value = ''
 
   try {
-    if (classrooms.value.length === 0) {
-      await fetchClassrooms()
-    }
-
-    const classroomCode = resolveClassroomCode()
-    if (!classroomCode) {
+    const classroomCodeSlug = typeof route.params.classroomCode === 'string' ? route.params.classroomCode : ''
+    if (!classroomCodeSlug) {
       throw new Error('Could not find classroom for this route')
     }
 
-    leaderboard.value = await get<ClassroomPupilLeaderboardResponse>(`/api/classrooms/${classroomCode}/leaderboard`)
+    leaderboard.value = await get<ClassroomPupilLeaderboardResponse>(`/api/classrooms/${classroomCodeSlug}/leaderboard`)
   } catch (fetchError) {
     leaderboard.value = null
     error.value = fetchError instanceof Error ? fetchError.message : 'Failed to load leaderboard'
@@ -72,7 +54,7 @@ onMounted(async () => {
 })
 
 watch(
-  () => route.params.classroomName,
+  () => route.params.classroomCode,
   async () => {
     await loadLeaderboard()
   },

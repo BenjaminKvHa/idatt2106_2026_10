@@ -10,6 +10,8 @@ public record ClassroomPupilLeaderboardResponse(
     String classroomCode,
     @Schema(description = "Classroom display name.", example = "8A")
     String classroomName,
+    @Schema(description = "Optional classroom description shown with the classroom leaderboard.", example = "Mandagstime for 8A")
+    String classroomDescription,
     @Schema(description = "Sorted pupil leaderboard entries for the classroom.")
     List<ClassroomPupilLeaderboardEntryResponse> entries
 ) {

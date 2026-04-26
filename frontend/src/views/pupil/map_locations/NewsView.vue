@@ -1,154 +1,61 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-
 import TopBar from '@/components/TopBar.vue'
 import TaskGuide from '@/components/TaskGuide.vue'
 import CompleteLevelPopup from '@/components/CompleteLevelPopup.vue'
-
+import { get, getBlob, post } from '@/utils/apiUtils'
+import type {
+  NewsVerificationRequest,
+  NewsVerificationResponse,
+  TaskDifficulty,
+  ValidationResult,
+} from '@/types/chapter'
 import thumbsUpNews from '@/assets/ThumbsUpNews.png'
 import thumbsDownNews from '@/assets/ThumbsDownNews.png'
 
 const router = useRouter()
+
+const NYHETSKVARTALET_CHAPTER_ID = 1
+const DIFFICULTIES: TaskDifficulty[] = ['EASY', 'MEDIUM', 'HARD']
 
 const showHelpPopup = ref(false)
 const showHintPopup = ref(false)
 const showGuidePopup = ref(true)
 const showCompletePopup = ref(false)
 
-const selectedPictureId = ref<number | null>(null)
-const currentLevel = ref(0)
-const wrongAnswers = ref(0)
+const stepIndex = ref(0)
+const currentTask = ref<NewsVerificationResponse | null>(null)
+const imageUrls = ref<string[]>([])
+const selectedFileId = ref<number | null>(null)
+const lastResult = ref<ValidationResult | null>(null)
 
-const feedbackText = ref('')
-const feedbackSuccess = ref(true)
+const runCorrect = ref(0)
+const runAttempts = ref(0)
+const runDone = ref(false)
+
+const loading = ref(false)
+const submitting = ref(false)
+const error = ref<string | null>(null)
 
 const popupTitle = ref('')
 const popupMessage = ref('')
 const popupSubMessage = ref('')
-const popupSuccess = ref(true)
+const popupSuccess = ref(false)
 
-type TaskPicture = {
-  id: number
-  label: string
-  imageUrl?: string
-}
+const difficultyLabel = computed(() => {
+  const labels: Record<TaskDifficulty, string> = {
+    EASY: 'Lett',
+    MEDIUM: 'Middels',
+    HARD: 'Vanskelig',
+  }
 
-type Level = {
-  text: string[]
-  pictures: TaskPicture[]
-  correctFakeId: number
-}
-
-const levels: [Level, ...Level[]] = [
-  {
-    text: [
-      'To avisforsider ligger foran deg.',
-      'Én er ekte og én er falsk.',
-      'Kan du finne ut hvilken som er falsk?',
-    ],
-    correctFakeId: 2,
-    pictures: [
-      { id: 1, label: 'Bilde 1', imageUrl: '' },
-      { id: 2, label: 'Bilde 2', imageUrl: '' },
-    ],
-  },
-  {
-    text: [
-      'Se nøye på de to avisforsidene.',
-      'Hvilken av dem ser minst troverdig ut?',
-      'Velg den du tror er falsk.',
-    ],
-    correctFakeId: 1,
-    pictures: [
-      { id: 1, label: 'Bilde 1', imageUrl: '' },
-      { id: 2, label: 'Bilde 2', imageUrl: '' },
-    ],
-  },
-  {
-    text: [
-      'Dette er siste nivå.',
-      'Bruk det du har lært om ekte og falske nyheter.',
-      'Finn den falske avisforsiden.',
-    ],
-    correctFakeId: 2,
-    pictures: [
-      { id: 1, label: 'Bilde 1', imageUrl: '' },
-      { id: 2, label: 'Bilde 2', imageUrl: '' },
-    ],
-  },
-]
-
-const currentLevelData = computed<Level>(() => {
-  return levels[currentLevel.value] ?? levels[0]
+  return labels[DIFFICULTIES[stepIndex.value]!]
 })
-
-const isLastLevel = computed(() => currentLevel.value === levels.length - 1)
 
 const progressPercent = computed(() => {
-  return ((currentLevel.value + 1) / levels.length) * 100
+  return ((stepIndex.value + 1) / DIFFICULTIES.length) * 100
 })
-
-function chooseFakePicture(picture: TaskPicture): void {
-  if (selectedPictureId.value !== null) {
-    return
-  }
-
-  selectedPictureId.value = picture.id
-
-  const answeredCorrectly = picture.id === currentLevelData.value.correctFakeId
-
-  feedbackSuccess.value = answeredCorrectly
-  feedbackText.value = answeredCorrectly
-    ? 'Riktig! Du fant den falske avisforsiden.'
-    : 'Feil. Dette var ikke den falske avisforsiden.'
-
-  if (!answeredCorrectly) {
-    wrongAnswers.value += 1
-  }
-}
-
-function goToNextLevel(): void {
-  if (isLastLevel.value) {
-    showFinalResult()
-    return
-  }
-
-  currentLevel.value += 1
-  selectedPictureId.value = null
-  feedbackText.value = ''
-}
-
-function showFinalResult(): void {
-  const allCorrect = wrongAnswers.value === 0
-
-  popupSuccess.value = allCorrect
-  popupTitle.value = allCorrect ? 'Du klarte det!' : 'Du klarte det ikke'
-  popupMessage.value = allCorrect
-    ? 'Gratulerer! Du klarte alle nivåene i Nyhetskvartalet.'
-    : 'Du må ha rett på alle oppgavene for å bestå nyhetskvartalet.'
-  popupSubMessage.value = allCorrect
-    ? 'Du har nå fullført stoppestedet.'
-    : "Trykk 'prøv på nytt' for å prøve igjen, eller gå tilbake til kartet."
-
-  showCompletePopup.value = true
-}
-
-function retryLevel(): void {
-  currentLevel.value = 0
-  wrongAnswers.value = 0
-  selectedPictureId.value = null
-  feedbackText.value = ''
-  showCompletePopup.value = false
-}
-
-function goToMap(): void {
-  router.push('/pupil/classroom/map')
-}
-
-function closeCompletePopup(): void {
-  showCompletePopup.value = false
-}
 
 function openHelpPopup(): void {
   showHelpPopup.value = true
@@ -165,98 +72,228 @@ function openHintPopup(): void {
 function closeHintPopup(): void {
   showHintPopup.value = false
 }
+
+function revokeImageUrls(): void {
+  for (const url of imageUrls.value) URL.revokeObjectURL(url)
+  imageUrls.value = []
+}
+
+async function loadTask(): Promise<void> {
+  loading.value = true
+  error.value = null
+  revokeImageUrls()
+  currentTask.value = null
+
+  try {
+    const difficulty = DIFFICULTIES[stepIndex.value]!
+
+    const task = await get<NewsVerificationResponse>(
+      `/api/chapters/${NYHETSKVARTALET_CHAPTER_ID}/nyhetskvartalet?difficulty=${difficulty}`,
+    )
+
+    currentTask.value = task
+
+    const blobs = await Promise.all(
+      task.fileIds.map((id) => getBlob(`/api/objects/${id}`)),
+    )
+
+    imageUrls.value = blobs.map((blob) => URL.createObjectURL(blob))
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'Kunne ikke laste oppgave'
+  } finally {
+    loading.value = false
+  }
+}
+
+async function choose(fileId: number): Promise<void> {
+  if (!currentTask.value || lastResult.value || submitting.value) return
+
+  submitting.value = true
+  selectedFileId.value = fileId
+  error.value = null
+
+  try {
+    const body: NewsVerificationRequest = { selectedFileId: fileId }
+
+    const result = await post<ValidationResult>(
+      `/api/chapters/nyhetskvartalet/tasks/${currentTask.value.taskId}/validate`,
+      body,
+    )
+
+    lastResult.value = result
+    runAttempts.value += 1
+
+    if (result.correct) {
+      runCorrect.value += 1
+    }
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'Kunne ikke sende svar'
+    selectedFileId.value = null
+  } finally {
+    submitting.value = false
+  }
+}
+
+function cardClass(fileId: number): string {
+  if (selectedFileId.value !== fileId) return ''
+  if (!lastResult.value) return 'selected'
+
+  return lastResult.value.correct ? 'selected correct' : 'selected wrong'
+}
+
+async function next(): Promise<void> {
+  if (!lastResult.value) return
+
+  if (lastResult.value.runCompleted || stepIndex.value === DIFFICULTIES.length - 1) {
+    showFinalResult()
+    return
+  }
+
+  stepIndex.value += 1
+  selectedFileId.value = null
+  lastResult.value = null
+
+  await loadTask()
+}
+
+function showFinalResult(): void {
+  runDone.value = true
+
+  const success = runCorrect.value === runAttempts.value
+
+  popupSuccess.value = success
+  popupTitle.value = success ? 'Du klarte det!' : 'Du klarte det ikke'
+  popupMessage.value = success
+    ? 'Gratulerer! Du klarte alle nivåene i Nyhetskvartalet.'
+    : 'Du må ha rett på alle oppgavene for å bestå nyhetskvartalet.'
+  popupSubMessage.value = success
+    ? 'Du har nå fullført stoppestedet.'
+    : "Trykk 'prøv på nytt' for å prøve igjen, eller gå tilbake til kartet."
+
+  showCompletePopup.value = true
+}
+
+async function retryLevel(): Promise<void> {
+  stepIndex.value = 0
+  selectedFileId.value = null
+  lastResult.value = null
+  runCorrect.value = 0
+  runAttempts.value = 0
+  runDone.value = false
+  showCompletePopup.value = false
+
+  await loadTask()
+}
+
+function goToMap(): void {
+  revokeImageUrls()
+  router.push('/pupil/classroom/map')
+}
+
+function closeCompletePopup(): void {
+  showCompletePopup.value = false
+
+  if (popupSuccess.value) {
+    goToMap()
+  }
+}
+
+onMounted(loadTask)
+onBeforeUnmount(revokeImageUrls)
 </script>
 
 <template>
-  <TopBar title="Nyhetskvartalet" @help="openHelpPopup" @hint="openHintPopup" />
+  <TopBar
+    title="Nyhetskvartalet"
+    @help="openHelpPopup"
+    @hint="openHintPopup"
+  />
 
   <div class="page">
     <div class="center-container">
-      <div class="task-wrapper">
-        <p v-for="line in currentLevelData.text" :key="line">
-          {{ line }}
-        </p>
-      </div>
-
-      <div class="progress-container">
-        <div class="progress-bar">
-          <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
+      <template v-if="currentTask && !runDone">
+        <div class="task-wrapper">
+          <p>{{ currentTask.taskDescription }}</p>
         </div>
 
-        <p class="progress-text">Nivå {{ currentLevel + 1 }} / {{ levels.length }}</p>
-      </div>
-
-      <div
-        v-if="feedbackText"
-        class="mini-feedback"
-        :class="{ success: feedbackSuccess, fail: !feedbackSuccess }"
-      >
-        {{ feedbackText }}
-      </div>
-
-      <div class="picture-wrapper">
-        <div
-          v-for="picture in currentLevelData.pictures"
-          :key="picture.id"
-          class="picture-card"
-          :class="{
-            correct: selectedPictureId !== null && picture.id === currentLevelData.correctFakeId,
-            wrong:
-              selectedPictureId !== null &&
-              selectedPictureId === picture.id &&
-              picture.id !== currentLevelData.correctFakeId,
-          }"
-        >
-          <div class="picture-placeholder">
-            <img
-              v-if="picture.imageUrl"
-              :src="picture.imageUrl"
-              :alt="picture.label"
-              class="picture"
-            />
-            <span v-else>{{ picture.label }}</span>
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div
+              class="progress-fill"
+              :style="{ width: progressPercent + '%' }"
+            ></div>
           </div>
 
-          <p
-            v-if="selectedPictureId !== null && picture.id === currentLevelData.correctFakeId"
-            class="answer-label correct-label"
-          >
-            Riktig svar
+          <p class="progress-text">
+            Nivå {{ stepIndex + 1 }} / {{ DIFFICULTIES.length }} — {{ difficultyLabel }}
           </p>
-
-          <p
-            v-else-if="
-              selectedPictureId !== null &&
-              selectedPictureId === picture.id &&
-              picture.id !== currentLevelData.correctFakeId
-            "
-            class="answer-label wrong-label"
-          >
-            Ditt valg
-          </p>
-
-          <button
-            class="fake-button"
-            :disabled="selectedPictureId !== null"
-            @click="chooseFakePicture(picture)"
-          >
-            Velg dette bildet
-          </button>
         </div>
-      </div>
 
-      <button v-if="selectedPictureId !== null" class="next-level-button" @click="goToNextLevel">
-        {{ isLastLevel ? 'Se resultat' : 'Gå til neste nivå' }}
-      </button>
+        <div
+          v-if="lastResult"
+          class="mini-feedback"
+          :class="{ success: lastResult.correct, fail: !lastResult.correct }"
+        >
+          <strong>{{ lastResult.correct ? 'Riktig!' : 'Feil.' }}</strong>
+          <span v-if="lastResult.feedback"> {{ lastResult.feedback }}</span>
+        </div>
+
+        <div class="picture-wrapper">
+          <div
+            v-for="(fileId, idx) in currentTask.fileIds"
+            :key="fileId"
+            class="picture-card"
+            :class="cardClass(fileId)"
+          >
+            <div class="picture-placeholder">
+              <img
+                v-if="imageUrls[idx]"
+                :src="imageUrls[idx]"
+                :alt="`Bilde ${Number(idx) + 1}`"
+                class="picture"
+              />
+              <span v-else>Laster…</span>
+            </div>
+
+            <p
+              v-if="lastResult && selectedFileId === fileId"
+              class="answer-label"
+              :class="lastResult.correct ? 'correct-label' : 'wrong-label'"
+            >
+              {{ lastResult.correct ? 'Riktig svar' : 'Ditt valg' }}
+            </p>
+
+            <button
+              class="fake-button"
+              :disabled="!!lastResult || submitting"
+              @click="choose(fileId)"
+            >
+              Velg dette bildet
+            </button>
+          </div>
+        </div>
+
+        <button
+          v-if="lastResult"
+          class="next-level-button"
+          @click="next"
+        >
+          {{ stepIndex === DIFFICULTIES.length - 1 ? 'Se resultat' : 'Gå til neste nivå' }}
+        </button>
+      </template>
+
+      <p v-else-if="loading">Laster oppgave…</p>
+      <p v-else-if="error" class="error">{{ error }}</p>
     </div>
   </div>
 
   <TaskGuide v-if="showGuidePopup" @close="showGuidePopup = false">
     <h2>Velkommen til nyhetskvartalet!</h2>
     <p>
-      I nyhetskvartalet vil du få oppgaver som handler om å skille ekte avisforsider og uekte
-      avisforsider. I hver oppgave vil du få én ekte avisforside og én falsk. Du skal velge hvilken
-      du tror er falsk. Er du klar for å løse oppgaver?
+      I nyhetskvartalet vil du få oppgaver som handler om å skille ekte
+      avisforsider og uekte avisforsider. I hver oppgave vil du få én ekte
+      avisforside og én falsk. Du skal velge hvilken du tror er falsk.
+      Er du klar for å løse oppgaver?
     </p>
   </TaskGuide>
 
@@ -266,7 +303,8 @@ function closeHintPopup(): void {
 
       <div class="hint-text">
         <p>
-          I Nyhetskvartalet skal du undersøke informasjon og finne ut hva som er ekte og falskt.
+          I Nyhetskvartalet skal du undersøke informasjon og finne ut hva som er
+          ekte og falskt.
         </p>
         <ul>
           <li>Les oppgaven nøye før du svarer</li>
@@ -276,7 +314,9 @@ function closeHintPopup(): void {
       </div>
 
       <div class="popup-actions">
-        <button class="popup-btn popup-btn-play" @click="closeHelpPopup">Ok</button>
+        <button class="popup-btn popup-btn-play" @click="closeHelpPopup">
+          Ok
+        </button>
       </div>
     </div>
   </div>
@@ -295,7 +335,9 @@ function closeHintPopup(): void {
       </div>
 
       <div class="popup-actions">
-        <button class="popup-btn popup-btn-play" @click="closeHintPopup">Ok</button>
+        <button class="popup-btn popup-btn-play" @click="closeHintPopup">
+          Ok
+        </button>
       </div>
     </div>
   </div>
@@ -312,9 +354,13 @@ function closeHintPopup(): void {
   />
 
   <div v-if="showCompletePopup && !popupSuccess" class="popup-button-layer">
-    <button class="popup-btn popup-btn-play" @click="retryLevel">Prøv på nytt</button>
+    <button class="popup-btn popup-btn-play" @click="retryLevel">
+      Prøv på nytt
+    </button>
 
-    <button class="popup-btn popup-btn-map" @click="goToMap">Tilbake til kartet</button>
+    <button class="popup-btn popup-btn-map" @click="goToMap">
+      Tilbake til kartet
+    </button>
   </div>
 </template>
 
@@ -339,6 +385,7 @@ function closeHintPopup(): void {
   text-align: center;
   width: 100%;
   max-width: 1100px;
+  gap: 1.5rem;
 }
 
 .task-wrapper {
@@ -358,7 +405,6 @@ function closeHintPopup(): void {
 
 .progress-container {
   width: min(100%, 500px);
-  margin-top: 1.5rem;
   text-align: center;
 }
 
@@ -384,7 +430,6 @@ function closeHintPopup(): void {
 }
 
 .mini-feedback {
-  margin-top: 1rem;
   padding: 0.75rem 1.4rem;
   border: 4px solid var(--brown-dark);
   border-radius: 24px;
@@ -404,7 +449,7 @@ function closeHintPopup(): void {
 .picture-wrapper {
   display: flex;
   gap: 2rem;
-  margin-top: 2rem;
+  margin-top: 1rem;
   flex-wrap: wrap;
   justify-content: center;
   width: 100%;
@@ -433,6 +478,10 @@ function closeHintPopup(): void {
   transform: translateY(-4px);
 }
 
+.picture-card.selected {
+  box-shadow: 0 0 0 5px var(--orange-medium);
+}
+
 .picture-card.correct {
   box-shadow: 0 0 0 6px var(--green-confirm);
   background: rgb(120 190 120 / 22%);
@@ -459,7 +508,7 @@ function closeHintPopup(): void {
 .picture {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .answer-label {
@@ -497,19 +546,18 @@ function closeHintPopup(): void {
 }
 
 .next-level-button {
-  margin-top: 2rem;
   max-width: 360px;
   background: var(--green-confirm);
 }
 
-.fake-button:hover,
+.fake-button:hover:not(:disabled),
 .next-level-button:hover {
   filter: brightness(1.1);
   transform: translateY(-3px);
   box-shadow: 0 9px 0 var(--brown-dark);
 }
 
-.fake-button:active,
+.fake-button:active:not(:disabled),
 .next-level-button:active {
   transform: translateY(3px);
   box-shadow: 0 3px 0 var(--brown-dark);
@@ -521,6 +569,11 @@ function closeHintPopup(): void {
   transform: none;
   filter: none;
   box-shadow: 0 6px 0 var(--brown-dark);
+}
+
+.error {
+  color: #c62828;
+  font-weight: 600;
 }
 
 .popup-overlay {

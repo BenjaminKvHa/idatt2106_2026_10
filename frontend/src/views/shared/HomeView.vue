@@ -1,136 +1,120 @@
 <script setup lang="ts">
-import { Lock, Search, Monitor, Shield, FileText, AlertCircle } from '@lucide/vue'
+
 </script>
 
 <template>
-  <div class="page">
-    <div class="float f1"><Search /></div>
-    <div class="float f2"><Monitor /></div>
-    <div class="float f3"><Shield /></div>
-    <div class="float f4"><FileText /></div>
-    <div class="float f5"><AlertCircle /></div>
-    <div class="float f6"><Lock /></div>
+  <div class="center-container">
+    <div class="scene">
 
-    <div class="center-container">
-      <div class="logo-box">
-        <img src="/src/assets/nettdetektivene_logo.png" alt="Logo" />
+      <div class="card">
+        <img src="/src/assets/nettdetektivene_logo.png" alt="Nettdetektivene logo" />
         <p class="tagline">Er du klar for oppdraget?</p>
+        <router-link to="/sign-in" class="link">
+          <button class="ready-button">
+            Logg inn
+          </button>
+        </router-link>
       </div>
 
-      <router-link to="/sign-in" class="link">
-        <button class="button">
-          <Lock />
-          Logg inn
-        </button>
-      </router-link>
     </div>
   </div>
 </template>
 
 <style scoped>
-.page {
-  display: grid;
-  place-items: center;
-  min-height: 100vh;
-  position: relative;
-  overflow: hidden;
-}
-
 .center-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3rem;
-  position: relative;
-  z-index: 1;
-}
-
-.float {
-  position: absolute;
-  background: var(--beige-light);
-  border-radius: 20px;
-  width: 80px;
-  height: 80px;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--brown-dark);
+  position: relative;
+  padding: 3rem 1.5rem;
+  overflow: hidden;
+  background-image: url('/src/assets/welcomeBackground.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
-.float svg {
-  width: 50px;
-  height: 50px;
-  stroke-width: 1.75;
+.scene {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+  z-index: 1;
 }
 
-.button svg {
-  width: 32px;
-  height: 32px;
-  stroke-width: 2.2;
-}
-
-.f1 { top: 8%;     left: 8%;   transform: rotate(-8deg); }
-.f2 { top: 12%;    right: 8%;  transform: rotate(6deg); }
-.f3 { bottom: 20%; left: 6%;   transform: rotate(5deg); }
-.f4 { bottom: 18%; right: 7%;  transform: rotate(-7deg); }
-.f5 { top: 40%;    left: 4%;   transform: rotate(10deg);  width: 72px; height: 72px; background: var(--yellow-award); }
-.f6 { top: 38%;    right: 4%;  transform: rotate(-9deg);  width: 72px; height: 72px; background: var(--orange-medium); }
-
-.logo-box {
-  background: var(--beige-light);
+.card {
+  position: relative;
+  background: var(--beige-light-100);
   border: var(--border-wide) solid var(--brown-dark);
-  border-radius: 32px;
-  box-shadow: -3px 3px 6px var(--brown-dark);
-  padding: 2.5rem 3rem 2rem;
+  border-radius: 40px;
+  box-shadow: -3px 3px 3px var(--brown-dark);
+  max-width: 600px;
+  width: 600px;
+  padding: 3rem 3rem 2.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: 1.4rem;
+  z-index: 2;
 }
 
 img {
   width: 520px;
-  max-width: 75vw;
+  max-width: 85vw;
 }
+
 
 .tagline {
   font-family: 'Inika', serif;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
-  color: var(--brown-medium);
   letter-spacing: 2px;
   text-transform: uppercase;
   margin: 0;
+  text-align: center;
 }
 
 .link {
   text-decoration: none;
 }
 
-.button {
+.ready-button {
+  margin-top: 0.4rem;
   display: flex;
   align-items: center;
   gap: 12px;
+  padding: 0.9rem 3rem;
   background: var(--green-confirm);
-  color: var(--brown-dark);
   border: var(--border-wide) solid var(--brown-dark);
-  padding: 1.1rem 4rem;
   border-radius: 40px;
   font-family: 'Inika', serif;
+  font-size: 1.35rem;
   font-weight: 700;
-  font-size: 2rem;
   cursor: pointer;
-  box-shadow: -3px 3px 6px var(--brown-dark);
+  box-shadow: -3px 3px 3px var(--brown-dark);
   transition: transform 0.1s, box-shadow 0.1s;
 }
 
-.button:hover {
+.ready-button:hover {
   transform: translate(-2px, -2px);
-  box-shadow: -3px 3px 6px var(--brown-dark);
+  box-shadow: -5px 5px 0 var(--brown-dark);
 }
 
-.button:active {
-  transform: translate(2px, 2px);
-  box-shadow: -3px 3px 6px var(--brown-dark);
+.ready-button:active {
+  transform: translate(3px, 3px);
+  box-shadow: -1px 1px 0 var(--brown-dark);
+}
+
+@media (max-width: 700px) {
+  .card {
+    width: 100%;
+    padding: 2.5rem 1.5rem 2rem;
+  }
+
+  img {
+    width: 420px;
+  }
 }
 </style>

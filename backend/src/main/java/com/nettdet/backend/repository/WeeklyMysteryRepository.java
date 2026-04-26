@@ -18,4 +18,6 @@ public interface WeeklyMysteryRepository extends JpaRepository<WeeklyMystery, Lo
 
     @EntityGraph(attributePaths = {"fileObject", "classroom", "pupilClassroomMembership", "pupilClassroomMembership.account"})
     Optional<WeeklyMystery> findByIdAndClassroomClassroomCode(Long id, String classroomCode);
+
+    boolean existsByPupilClassroomMembershipAccountEmailAndApprovedTrue(String accountEmail);
 }

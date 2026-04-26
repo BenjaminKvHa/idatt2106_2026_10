@@ -17,8 +17,10 @@ export type ImageVerificationResponse = {
   justifications: string[]
 }
 
+export type ImageCategory = 'REAL' | 'AI_GENERATED' | 'MANIPULATED'
+
 export type ImageVerificationRequest = {
-  selectedCategory: number
+  selectedCategory: ImageCategory
   selectedJustification: string
 }
 
@@ -30,4 +32,23 @@ export type NewsVerificationResponse = {
 
 export type NewsVerificationRequest = {
   selectedFileId: number
+}
+
+export type DatacenterTaskFormat = 'IMAGE_VERIFICATION' | 'NEWS_VERIFICATION'
+
+export type DatacenterTaskResponse = {
+  taskId: number
+  format: DatacenterTaskFormat
+  imageTask: ImageVerificationResponse | null
+  newsTask: NewsVerificationResponse | null
+}
+
+export type DatacenterRunResponse = {
+  tasks: DatacenterTaskResponse[]
+}
+
+export type DatacenterAnswerRequest = {
+  format: DatacenterTaskFormat
+  imageAnswer: ImageVerificationRequest | null
+  newsAnswer: NewsVerificationRequest | null
 }

@@ -18,7 +18,9 @@ VALUES
     ('MAPAAA', 'Kart testklasse', 'Utviklingsklasse for kartvisning'),
     ('MAPAAB', 'Mellomklasse', 'Ekstra klasse for ranking og teacher-overview'),
     ('MAPAAC', 'Sisteklasse', 'Ekstra klasse for ranking og teacher-overview'),
-    ('CHAPAA', 'Kapitteltestklasse', 'Utviklingsklasse for kapittelvisning')
+    ('CHAPAA', 'Kapitteltestklasse', 'Utviklingsklasse for kapittelvisning'),
+    ('TESTAA', 'Demo testklasse A', 'Utviklingsklasse for lærer- og varslingsvisning'),
+    ('TESTBB', 'Demo testklasse B', 'Ekstra utviklingsklasse for lærer- og varslingsvisning')
 ON CONFLICT (classroom_code) DO UPDATE
 SET
     classroom_name = EXCLUDED.classroom_name,
@@ -156,11 +158,17 @@ INSERT INTO pupil_classroom_membership (
     avatar_file_object_id
 )
 VALUES
-    ('map.partial@example.com', 'MAPAAA', 'map.partial', TRUE),
-    ('map.complete@example.com', 'MAPAAB', 'map.complete', TRUE),
-    ('rank.two@example.com', 'MAPAAB', 'rank.two', TRUE),
-    ('rank.three@example.com', 'MAPAAC', 'rank.three', TRUE),
-    ('chapter.test@example.com', 'CHAPAA', 'chapter.test', TRUE)
+    ('demo.alice@example.com', 'TESTAA', 'alice', TRUE, (SELECT id FROM file_object WHERE object_key = 'avatar-images/demo_alice.png')),
+    ('demo.bob@example.com', 'TESTAA', 'bob', TRUE, (SELECT id FROM file_object WHERE object_key = 'avatar-images/demo_bob.png')),
+    ('demo.carla@example.com', 'TESTBB', 'carla', TRUE, (SELECT id FROM file_object WHERE object_key = 'avatar-images/demo_carla.png')),
+    ('demo.pending.one@example.com', 'TESTAA', 'pending.one', FALSE, NULL),
+    ('demo.pending.two@example.com', 'TESTAA', 'pending.two', FALSE, NULL),
+    ('demo.pending.three@example.com', 'TESTBB', 'pending.three', FALSE, NULL),
+    ('map.partial@example.com', 'MAPAAA', 'map.partial', TRUE, NULL),
+    ('map.complete@example.com', 'MAPAAB', 'map.complete', TRUE, NULL),
+    ('rank.two@example.com', 'MAPAAB', 'rank.two', TRUE, NULL),
+    ('rank.three@example.com', 'MAPAAC', 'rank.three', TRUE, NULL),
+    ('chapter.test@example.com', 'CHAPAA', 'chapter.test', TRUE, NULL)
 ON CONFLICT (account_email) DO UPDATE
 SET
     classroom_code = EXCLUDED.classroom_code,

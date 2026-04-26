@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.nettdet.backend.domain.Task;
+import com.nettdet.backend.dto.CreateDatacenterImageTaskRequest;
+import com.nettdet.backend.dto.CreateDatacenterNewsTaskRequest;
 import com.nettdet.backend.dto.CreateImageVerificationTaskRequest;
 import com.nettdet.backend.dto.CreateNewsVerificationTaskRequest;
 import com.nettdet.backend.dto.FileReferenceResponse;
@@ -77,6 +79,30 @@ public class TaskAdminController {
     public ResponseEntity<Task> createNewsVerificationTask(
             @Valid @RequestBody CreateNewsVerificationTaskRequest request) {
         Task task = taskAdminService.createNewsVerificationTask(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(task);
+    }
+
+    // --------------------------------------------------
+    // TASK CREATION: DATASENTERET
+    // --------------------------------------------------
+
+    @PostMapping("/datasenteret/image")
+    @Operation(summary = "Create Datasenteret image task",
+               description = "Creates a new Datasenteret task using the image-verification format. " +
+                            "Always associated with the Datasenteret chapter at HARD difficulty.")
+    public ResponseEntity<Task> createDatacenterImageTask(
+            @Valid @RequestBody CreateDatacenterImageTaskRequest request) {
+        Task task = taskAdminService.createDatacenterImageTask(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(task);
+    }
+
+    @PostMapping("/datasenteret/news")
+    @Operation(summary = "Create Datasenteret news task",
+               description = "Creates a new Datasenteret task using the news-verification format. " +
+                            "Always associated with the Datasenteret chapter at HARD difficulty.")
+    public ResponseEntity<Task> createDatacenterNewsTask(
+            @Valid @RequestBody CreateDatacenterNewsTaskRequest request) {
+        Task task = taskAdminService.createDatacenterNewsTask(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(task);
     }
 }

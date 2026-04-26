@@ -91,12 +91,6 @@ CREATE TABLE weekly_mystery (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_weekly_mystery_classroom_approved_created_at
-    ON weekly_mystery (classroom_code, approved, created_at DESC);
-
-CREATE INDEX idx_weekly_mystery_account_created_at
-    ON weekly_mystery (account_email, created_at DESC);
-
 CREATE TABLE refresh_token (
     id BIGSERIAL PRIMARY KEY,
     email VARCHAR(255) NOT NULL REFERENCES account(email) ON DELETE CASCADE,

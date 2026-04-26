@@ -340,7 +340,7 @@ input[type='range'] {
 .danger-button {
   border: var(--border-thin) solid var(--brown-dark);
   padding: 0.85rem 1rem;
-  color: black;
+  color: black !important;
   border-radius: 1rem;
   font-weight: 600;
 }

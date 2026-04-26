@@ -3,11 +3,14 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Logo from '@/components/misc/Logo.vue'
 import OptionsMenu from '@/components/ui/OptionsMenu.vue'
+import NotificationsMenu from '@/components/ui/NotificationsMenu.vue'
 import gearIcon from '@/assets/icons/profile-cog.svg'
 import { useClassrooms } from '@/composables/useClassrooms'
 import { sanitizeClassroomName } from '@/composables/useClassroomName'
+import { BellIcon, Settings } from '@lucide/vue'
 
 const settingsOpen = ref(false)
+const notificationsOpen = ref(false)
 const route = useRoute()
 const router = useRouter()
 const { classrooms, fetchClassrooms } = useClassrooms()
@@ -46,6 +49,16 @@ const isClassroomActive = (classroomCode: string) => {
   const kebabName = sanitizeClassroomName(classroom.classroomName)
   return route.path.includes(`/classrooms/${kebabName}`)
 }
+
+const activeClassroomCode = computed(() => {
+  const classroomName = typeof route.params.classroomName === 'string' ? route.params.classroomName : ''
+  if (!classroomName) {
+    return null
+  }
+
+  const classroom = classrooms.value.find((entry) => sanitizeClassroomName(entry.classroomName) === classroomName)
+  return classroom?.classroomCode ?? null
+})
 </script>
 
 <template>
@@ -85,19 +98,27 @@ const isClassroomActive = (classroomCode: string) => {
         </button>
 
         <div class="teacher-menu-bottom">
-            <button type="button" class="icon-btn-circle" aria-label="Varsler"></button>
+            <button 
+            type="button" 
+            class="icon-btn-circle" 
+            aria-label="Varsler"
+            @click="notificationsOpen = true"
+            >
+                <BellIcon class="teacher-menu-icon" />
+            </button>
             <button
                 type="button"
                 class="icon-btn-circle"
                 aria-label="Innstillinger"
                 @click="settingsOpen = true"
             >
-                <img :src="gearIcon" alt="" class="teacher-menu-icon" aria-hidden="true" />
+                <Settings class="teacher-menu-icon" />
             </button>
         </div>
     </div>
 
     <OptionsMenu v-if="settingsOpen" @close="settingsOpen = false" />
+    <NotificationsMenu v-if="notificationsOpen" :classroom-code="activeClassroomCode" @close="notificationsOpen = false" />
 </template>
 
 <style scoped>

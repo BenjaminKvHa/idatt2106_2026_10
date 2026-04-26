@@ -20,6 +20,7 @@ import com.nettdet.backend.domain.ids.AccountClassroomBridgeTeacherId;
 import com.nettdet.backend.dto.AcceptedClassroomPupilResponse;
 import com.nettdet.backend.dto.AcceptedPupilMembershipResponse;
 import com.nettdet.backend.dto.ClassroomResponse;
+import com.nettdet.backend.dto.ClassroomTeacherResponse;
 import com.nettdet.backend.dto.CreateClassroomRequest;
 import com.nettdet.backend.dto.InviteTeacherRequest;
 import com.nettdet.backend.dto.PendingPupilRequestResponse;
@@ -207,6 +208,22 @@ public class ClassroomService {
                                 String.CASE_INSENSITIVE_ORDER)
                         .thenComparing(PupilClassroomMembership::getAccountEmail))
                 .map(this::toPendingPupilRequestResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ClassroomTeacherResponse> getClassroomTeachers(String classroomCode, JwtUserPrincipal principal) {
+        verifyTeacherPrincipal(principal);
+        getRequiredClassroom(classroomCode);
+        verifyTeacherOwnership(principal.email(), classroomCode);
+
+        return bridgeRepository.findAllByIdClassroomCode(classroomCode).stream()
+                .map(AccountClassroomBridgeTeacher::getAccount)
+                .sorted(Comparator.comparing(
+                                Account::getLegalName,
+                                Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER))
+                        .thenComparing(Account::getEmail))
+                .map(account -> new ClassroomTeacherResponse(account.getEmail(), account.getLegalName()))
                 .toList();
     }
 

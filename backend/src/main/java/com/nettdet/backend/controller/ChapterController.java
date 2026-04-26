@@ -16,6 +16,8 @@ import java.util.List;
 import com.nettdet.backend.domain.enums.TaskDifficulty;
 import com.nettdet.backend.dto.ChapterProgressionResponse;
 import com.nettdet.backend.dto.ChapterResponse;
+import com.nettdet.backend.dto.DatacenterAnswerRequest;
+import com.nettdet.backend.dto.DatacenterRunResponse;
 import com.nettdet.backend.dto.ImageVerificationRequest;
 import com.nettdet.backend.dto.ImageVerificationResponse;
 import com.nettdet.backend.dto.NewsVerificationRequest;
@@ -98,5 +100,25 @@ public class ChapterController {
             @RequestBody NewsVerificationRequest request) {
         return ResponseEntity.ok(
             chapterService.validateAnswer(principal.email(), "NYHETSKVARTALET", taskId, request));
+    }
+
+    @GetMapping("/{chapterId}/datasenteret/run")
+    @PreAuthorize("hasAuthority('PUPIL')")
+    @Operation(summary = "Get Datasenteret run", description = "Returns the full Datasenteret final-boss run for the authenticated pupil: an ordered list of 5 HARD tasks (2 news-verification, 3 image-verification). Resets any abandoned in-progress run.")
+    public ResponseEntity<DatacenterRunResponse> getDatacenterRun(
+            @AuthenticationPrincipal JwtUserPrincipal principal,
+            @PathVariable Long chapterId) {
+        return ResponseEntity.ok(chapterService.fetchDatacenterRun(principal.email(), chapterId));
+    }
+
+    @PostMapping("/datasenteret/tasks/{taskId}/validate")
+    @PreAuthorize("hasAuthority('PUPIL')")
+    @Operation(summary = "Validate Datasenteret answer", description = "Validates the authenticated pupil's answer for one Datasenteret task. The request's format must match the served task's format. Run completes after 5 attempts; success requires all 5 correct.")
+    public ResponseEntity<ValidationResult> validateDatacenterAnswer(
+            @AuthenticationPrincipal JwtUserPrincipal principal,
+            @PathVariable Long taskId,
+            @RequestBody DatacenterAnswerRequest request) {
+        return ResponseEntity.ok(
+            chapterService.validateDatacenterAnswer(principal.email(), taskId, request));
     }
 }

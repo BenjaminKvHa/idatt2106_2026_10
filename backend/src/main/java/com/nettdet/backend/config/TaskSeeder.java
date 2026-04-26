@@ -19,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.nettdet.backend.domain.enums.ClassroomAccess;
 import com.nettdet.backend.domain.enums.ImageCategory;
 import com.nettdet.backend.domain.enums.TaskDifficulty;
+import com.nettdet.backend.dto.CreateDatacenterImageTaskRequest;
+import com.nettdet.backend.dto.CreateDatacenterNewsTaskRequest;
 import com.nettdet.backend.dto.CreateImageVerificationTaskRequest;
 import com.nettdet.backend.dto.CreateNewsVerificationTaskRequest;
 import com.nettdet.backend.repository.FileObjectRepository;
@@ -65,6 +67,7 @@ public class TaskSeeder implements ApplicationRunner {
         try {
             seedNyhetskvartalet(assetDirectory.resolve("chap1"));
             seedFotografen(assetDirectory.resolve("chap2"));
+            seedDatasenteret(assetDirectory.resolve("chap3"));
             logger.info("Task seeding completed successfully");
         } catch (Exception e) {
             logger.error("Task seeding failed", e);
@@ -193,6 +196,106 @@ public class TaskSeeder implements ApplicationRunner {
     }
 
     // --------------------------------------------------
+    // DATASENTERET (chap3 — final boss)
+    // --------------------------------------------------
+
+    private void seedDatasenteret(Path chapDir) throws IOException {
+        if (!Files.exists(chapDir)) {
+            logger.warn("Datasenteret directory not found: {}", chapDir);
+            return;
+        }
+
+        Path newsDir = chapDir.resolve("news");
+        if (Files.exists(newsDir)) {
+            try (Stream<Path> taskDirs = Files.list(newsDir).filter(Files::isDirectory).sorted()) {
+                taskDirs.forEach(this::seedDatasenteretNewsTask);
+            }
+        }
+
+        Path imageDir = chapDir.resolve("image");
+        if (Files.exists(imageDir)) {
+            try (Stream<Path> taskDirs = Files.list(imageDir).filter(Files::isDirectory).sorted()) {
+                taskDirs.forEach(this::seedDatasenteretImageTask);
+            }
+        }
+    }
+
+    private void seedDatasenteretNewsTask(Path taskDir) {
+        String taskName = taskDir.getFileName().toString();
+        try {
+            Path ekteFile = Files.list(taskDir)
+                    .filter(p -> p.getFileName().toString().contains("_ekte"))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("No ekte file in " + taskDir));
+            Path falskFile = Files.list(taskDir)
+                    .filter(p -> p.getFileName().toString().contains("_falsk"))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("No falsk file in " + taskDir));
+
+            String ekteObjectKey = buildObjectKey("chap3", "news", taskName, ekteFile.getFileName().toString());
+            String falskObjectKey = buildObjectKey("chap3", "news", taskName, falskFile.getFileName().toString());
+
+            Long ekteFileId = getOrUploadFile(ekteObjectKey, ekteFile);
+            Long falskFileId = getOrUploadFile(falskObjectKey, falskFile);
+
+            CreateDatacenterNewsTaskRequest request = new CreateDatacenterNewsTaskRequest(
+                    "To avisforsider ligger foran deg. Én er ekte og én er falsk. Hvilken er falsk?",
+                    ekteFileId,
+                    falskFileId,
+                    falskFileId,
+                    "Riktig! Avisforsiden du valgte var den falske.",
+                    "Ikke helt. Den andre forsiden var faktisk den falske."
+            );
+
+            taskAdminService.createDatacenterNewsTask(request);
+            logger.info("Created Datasenteret news task for {} (ekte={}, falsk={})", taskName, ekteFileId, falskFileId);
+
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to seed Datasenteret news task: " + taskDir, e);
+        }
+    }
+
+    private void seedDatasenteretImageTask(Path taskDir) {
+        String taskName = taskDir.getFileName().toString();
+        try {
+            List<Path> imageFiles = Files.list(taskDir)
+                    .filter(Files::isRegularFile)
+                    .filter(p -> {
+                        String name = p.getFileName().toString().toLowerCase();
+                        return name.endsWith(".png") || name.endsWith(".jpg") || name.endsWith(".jpeg");
+                    })
+                    .sorted(Comparator.comparing(p -> p.getFileName().toString()))
+                    .toList();
+
+            for (Path imageFile : imageFiles) {
+                String fileName = imageFile.getFileName().toString();
+                String objectKey = buildObjectKey("chap3", "image", taskName, fileName);
+                Long fileId = getOrUploadFile(objectKey, imageFile);
+
+                ImageCategory correctCategory = determineCategory(fileName);
+                List<String> justifications = getJustifications(fileName);
+                String correctJustification = getCorrectJustification(fileName, correctCategory);
+
+                CreateDatacenterImageTaskRequest request = new CreateDatacenterImageTaskRequest(
+                        "Er dette bildet ekte, KI-generert eller manipulert?",
+                        fileId,
+                        correctCategory,
+                        correctJustification,
+                        justifications,
+                        "Riktig! " + getCorrectDescription(correctCategory),
+                        "Ikke helt. " + getFalseDescription(correctCategory)
+                );
+
+                taskAdminService.createDatacenterImageTask(request);
+                logger.info("Created Datasenteret image task for {} {} (category={})", taskName, fileId, correctCategory);
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to seed Datasenteret image task: " + taskDir, e);
+        }
+    }
+
+    // --------------------------------------------------
     // HELPERS
     // --------------------------------------------------
 
@@ -236,11 +339,11 @@ public class TaskSeeder implements ApplicationRunner {
     private ImageCategory determineCategory(String fileName) {
         String lower = fileName.toLowerCase();
         if (lower.contains("_ekte")) return ImageCategory.REAL;
-        if (lower.contains("_falsk")) return ImageCategory.AI_GENERATED;
+        if (lower.contains("_falsk") || lower.contains("_ki")) return ImageCategory.AI_GENERATED;
         if (lower.contains("_manipulert")) return ImageCategory.MANIPULATED;
         throw new IllegalArgumentException(
                 "Could not determine ImageCategory for file: " + fileName
-                        + " (expected suffix _ekte, _falsk, or _manipulert before extension)");
+                        + " (expected suffix _ekte, _falsk, _ki, or _manipulert before extension)");
     }
 
     private String getCorrectDescription(ImageCategory category) {
@@ -334,7 +437,33 @@ public class TaskSeeder implements ApplicationRunner {
                 Map.entry("fotografen_ulykke_ekte.jpg", List.of(
                         "Detaljer, skygger og bevegelsessløring stemmer med hendelsen",
                         "Scenen ser for dramatisk ut til å være ekte",
-                        "Fargene er oppjustert i etterkant"))
+                        "Fargene er oppjustert i etterkant")),
+
+                // Datasenteret (chap3) image tasks
+                Map.entry("datasenteret_foto_maleri_ekte.jpg", List.of(
+                        "Penselstrøk og lerretstekstur ser autentiske ut",
+                        "Detaljene er for jevne og symmetriske til å være malt for hånd",
+                        "Maleriet er signert i feil hjørne")),
+                Map.entry("datasenteret_foto_maleri_ki.png", List.of(
+                        "Penselstrøk og lerretstekstur ser autentiske ut",
+                        "Detaljene er for jevne og symmetriske til å være malt for hånd",
+                        "Maleriet er signert i feil hjørne")),
+                Map.entry("datasenteret_foto_bygning_ekte.jpg", List.of(
+                        "Linjer, perspektiv og materialer ser realistiske ut",
+                        "Bygningens geometri og vinduer virker unaturlig perfekte",
+                        "Bygningen ligger i feil by")),
+                Map.entry("datasenteret_foto_bygning_ki.png", List.of(
+                        "Linjer, perspektiv og materialer ser realistiske ut",
+                        "Bygningens geometri og vinduer virker unaturlig perfekte",
+                        "Bygningen ligger i feil by")),
+                Map.entry("datasenteret_foto_dame_manipulert.png", List.of(
+                        "Hudtekstur og lys passer naturlig sammen",
+                        "Ansiktstrekk og bakgrunn er tydelig redigert i etterkant",
+                        "Bildet er tatt med mobilkamera")),
+                Map.entry("datasenteret_foto_mcdonalds_ki.png", List.of(
+                        "Skiltet og omgivelsene ser ekte og slitt ut",
+                        "Logo og typografi er litt forvrengt, typisk for KI-bilder",
+                        "Restauranten ligger på feil sted"))
         );
 
         return justifications.getOrDefault(key, List.of(

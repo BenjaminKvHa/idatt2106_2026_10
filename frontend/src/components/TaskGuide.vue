@@ -14,9 +14,7 @@ function confirm() {
       <div class="guide-text">
         <slot />
       </div>
-      <button class="confirm-button" @click="confirm">
-        Jeg er klar!
-      </button>
+      <button class="confirm-button" @click="confirm">Jeg er klar!</button>
     </div>
   </div>
 </template>
@@ -25,6 +23,7 @@ function confirm() {
 .overlay {
   position: fixed;
   inset: 0;
+  z-index: 9999;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -46,7 +45,7 @@ function confirm() {
   box-sizing: border-box;
 }
 
-.confirm-button{
+.confirm-button {
   margin-top: auto;
   padding: 0.5rem 1rem;
   background: var(--green-confirm);
@@ -56,7 +55,7 @@ function confirm() {
   min-width: 30%;
 }
 
-.guide-text{
+.guide-text {
   text-align: center;
   padding-top: 1.5rem;
   width: 90%;
@@ -65,7 +64,7 @@ function confirm() {
 }
 
 .guide-text h2 {
-  margin:0;
+  margin: 0;
 }
 
 .guide-text p {

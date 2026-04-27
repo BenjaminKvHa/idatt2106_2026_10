@@ -59,73 +59,81 @@ function handleBlobbyClick() {
 </script>
 
 <template>
-  <TopBar title="Detektivbyrået" />
+  <div class="screen">
+    <TopBar title="Detektivbyrået" />
+    <div class="page">
+      <div class="center-container">
+        <div class="image-wrapper">
+          <img :src="corkboardImage" alt="Background" />
 
-  <div class="page">
-    <div class="center-container">
-      <div class="image-wrapper">
-        <img :src="corkboardImage" alt="Background" />
+          <div class="blobby-wrapper">
+            <button
+              class="blobby-button"
+              :class="{ animate: isAnimatingBlobby }"
+              @click="handleBlobbyClick"
+              aria-label="Blobby"
+              data-no-click-sound
+            >
+              <img
+                :src="blobbyImage"
+                alt="Blobby"
+                class="blobby-image"
+                :class="{ wiggle: isAnimatingBlobby }"
+              />
+            </button>
 
-        <div class="blobby-wrapper">
-          <button
-            class="blobby-button"
-            :class="{ animate: isAnimatingBlobby }"
-            @click="handleBlobbyClick"
-            aria-label="Blobby"
-            data-no-click-sound
-          >
-            <img
-              :src="blobbyImage"
-              alt="Blobby"
-              class="blobby-image"
-              :class="{ wiggle: isAnimatingBlobby }"
-            />
-          </button>
-
-          <div v-if="showBlobbyMessage" class="blobby-message">
-            {{ blobbyMessage }}
+            <div v-if="showBlobbyMessage" class="blobby-message">
+              {{ blobbyMessage }}
+            </div>
           </div>
+
+          <router-link to="/pupil/classroom/notebook" class="overlay-button notes">
+            <img src="/src/assets/homescreen/icon_notes.png" />
+          </router-link>
+
+          <router-link to="/pupil/classroom/mystery" class="overlay-button mystery">
+            <img src="/src/assets/homescreen/icon_mystery.png" />
+          </router-link>
+
+          <router-link to="/pupil/classroom/medals" class="overlay-button medals">
+            <img src="/src/assets/homescreen/icon_medals.png" />
+          </router-link>
+
+          <router-link to="/pupil/classroom/map" class="overlay-button map">
+            <img src="/src/assets/homescreen/icon_map.png" />
+          </router-link>
+
+          <router-link to="/pupil/classroom/leaderboard" class="overlay-button leaderboard">
+            <img src="/src/assets/homescreen/icon_leaderboard.png" />
+          </router-link>
+
+          <router-link to="/pupil/classroom/help" class="overlay-button help">
+            <img src="/src/assets/homescreen/icon_help.png" />
+          </router-link>
         </div>
-
-        <router-link to="/pupil/classroom/notebook" class="overlay-button notes">
-          <img src="/src/assets/homescreen/icon_notes.png" />
-        </router-link>
-
-        <router-link to="/pupil/classroom/mystery" class="overlay-button mystery">
-          <img src="/src/assets/homescreen/icon_mystery.png" />
-        </router-link>
-
-        <router-link to="/pupil/classroom/medals" class="overlay-button medals">
-          <img src="/src/assets/homescreen/icon_medals.png" />
-        </router-link>
-
-        <router-link to="/pupil/classroom/map" class="overlay-button map">
-          <img src="/src/assets/homescreen/icon_map.png" />
-        </router-link>
-
-        <router-link to="/pupil/classroom/leaderboard" class="overlay-button leaderboard">
-          <img src="/src/assets/homescreen/icon_leaderboard.png" />
-        </router-link>
-
-        <router-link to="/pupil/classroom/help" class="overlay-button help">
-          <img src="/src/assets/homescreen/icon_help.png" />
-        </router-link>
       </div>
     </div>
   </div>
-
   <router-view />
 </template>
 
 <style scoped>
-.center-container {
+.screen {
+  height: 100dvh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  width: 100%;
+}
+.page {
   position: relative;
-  z-index: 1;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: url('@/assets/backgrounds/hjemskjerm-bg.png') no-repeat center center;
+  background-size: cover;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .page::before {
@@ -136,43 +144,33 @@ function handleBlobbyClick() {
   z-index: 0;
 }
 
-.page {
-  position: relative;
-  min-height: 100vh;
-
-  background: url('@/assets/backgrounds/hjemskjerm-bg.png') no-repeat center center;
-  background-size: cover;
-}
-
-.top-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.center-container {
   width: 100%;
-  max-width: 1100px;
-  padding: 0 0.5rem;
-}
-
-.top-bar .settings img {
-  width: 80px;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 1;
 }
 
 .image-wrapper {
   position: relative;
   width: min(96vw, 1400px);
+  max-height: 100%;
 }
 
 .image-wrapper > img {
   width: 100%;
-  height: auto;
+  max-height: 100%;
+  object-fit: contain;
   display: block;
 }
 
 .overlay-button {
   position: absolute;
   cursor: pointer;
-  width: 23%;
-  max-width: none;
+  width: clamp(200px, 20vw, 200px);
 }
 
 .overlay-button img {
@@ -192,7 +190,6 @@ function handleBlobbyClick() {
   right: 6%;
   width: 30%;
   z-index: 10;
-
   transform: translateY(-50%);
 }
 
@@ -279,30 +276,34 @@ function handleBlobbyClick() {
 
 /* Responsive positions */
 .medals {
-  top: 19.5%;
-  left: 16%;
+  top: 25%;
+  left: 20%;
+  transform: rotate(-5deg);
 }
 .map {
-  top: 17.5%;
-  left: 38.5%;
+  top: 25%;
+  left: 40%;
+  width: 290px;
 }
 .leaderboard {
-  top: 19.5%;
-  right: 16%;
+  top: 25%;
+  right: 20%;
+  transform: rotate(10deg);
 }
 
 .mystery {
-  top: 52%;
-  left: 16%;
+  top: 58%;
+  left: 20%;
+  transform: rotate(4deg);
 }
 .notes {
-  top: 52%;
-  right: 10.75%;
-  width: 33.5%;
+  top: 58%;
+  right: 20%;
+  transform: rotate(-2deg);
 }
 .help {
-  top: 52%;
-  left: 38.5%;
+  top: 60%;
+  left: 44%;
 }
 
 /* Medium screen */

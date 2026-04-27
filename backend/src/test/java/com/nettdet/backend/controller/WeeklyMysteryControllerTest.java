@@ -1,5 +1,6 @@
 package com.nettdet.backend.controller;
 
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -69,6 +70,7 @@ class WeeklyMysteryControllerTest {
                         10L,
                         "Mystery comment",
                         LocalDateTime.of(2026, 4, 23, 10, 15),
+                        null,
                         false));
 
         mockMvc.perform(multipart("/pupil/classrooms/ABCABC/weekly-mysteries")
@@ -79,6 +81,7 @@ class WeeklyMysteryControllerTest {
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.fileObjectId").value(10))
                 .andExpect(jsonPath("$.comment").value("Mystery comment"))
+                .andExpect(jsonPath("$.approvedAt").value(nullValue()))
                 .andExpect(jsonPath("$.approved").value(false));
     }
 
@@ -105,14 +108,16 @@ class WeeklyMysteryControllerTest {
                         2L,
                         20L,
                         "Approved mystery",
-                        LocalDateTime.of(2026, 4, 23, 10, 15))));
+                        LocalDateTime.of(2026, 4, 23, 10, 15),
+                        LocalDateTime.of(2026, 4, 24, 9, 30))));
 
         mockMvc.perform(get("/pupil/classrooms/ABCABC/weekly-mysteries")
                         .with(authentication(authenticationFor(principal, "PUPIL"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(2))
                 .andExpect(jsonPath("$[0].fileObjectId").value(20))
-                .andExpect(jsonPath("$[0].comment").value("Approved mystery"));
+                .andExpect(jsonPath("$[0].comment").value("Approved mystery"))
+                .andExpect(jsonPath("$[0].approvedAt").value("2026-04-24T09:30:00"));
 
         verify(weeklyMysteryService).getApprovedMysteries("ABCABC", principal);
     }
@@ -128,7 +133,8 @@ class WeeklyMysteryControllerTest {
                         "pupil@example.com",
                         "Pupil Name",
                         "Pending mystery",
-                        LocalDateTime.of(2026, 4, 23, 10, 15))));
+                        LocalDateTime.of(2026, 4, 23, 10, 15),
+                        null)));
 
         mockMvc.perform(get("/teacher/classrooms/ABCABC/weekly-mysteries/pending")
                         .with(authentication(authenticationFor(principal, "TEACHER"))))
@@ -136,7 +142,8 @@ class WeeklyMysteryControllerTest {
                 .andExpect(jsonPath("$[0].id").value(3))
                 .andExpect(jsonPath("$[0].fileObjectId").value(30))
                 .andExpect(jsonPath("$[0].pupilEmail").value("pupil@example.com"))
-                .andExpect(jsonPath("$[0].pupilLegalName").value("Pupil Name"));
+                .andExpect(jsonPath("$[0].pupilLegalName").value("Pupil Name"))
+                .andExpect(jsonPath("$[0].approvedAt").value(nullValue()));
     }
 
     @DisplayName("Allows authenticated teachers to accept weekly mysteries")
@@ -148,14 +155,16 @@ class WeeklyMysteryControllerTest {
                         4L,
                         40L,
                         "Approved mystery",
-                        LocalDateTime.of(2026, 4, 23, 10, 15)));
+                        LocalDateTime.of(2026, 4, 23, 10, 15),
+                        LocalDateTime.of(2026, 4, 24, 9, 30)));
 
         mockMvc.perform(put("/teacher/classrooms/ABCABC/weekly-mysteries/4/accept")
                         .with(authentication(authenticationFor(principal, "TEACHER"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(4))
                 .andExpect(jsonPath("$.fileObjectId").value(40))
-                .andExpect(jsonPath("$.comment").value("Approved mystery"));
+                .andExpect(jsonPath("$.comment").value("Approved mystery"))
+                .andExpect(jsonPath("$.approvedAt").value("2026-04-24T09:30:00"));
 
         verify(weeklyMysteryService).acceptMystery("ABCABC", 4L, principal);
     }

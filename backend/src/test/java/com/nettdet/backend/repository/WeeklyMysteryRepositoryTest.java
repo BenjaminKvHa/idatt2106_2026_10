@@ -2,6 +2,7 @@ package com.nettdet.backend.repository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -49,26 +50,29 @@ class WeeklyMysteryRepositoryTest {
         assertEquals("Pupil Name", mysteries.getFirst().getPupilClassroomMembership().getAccount().getLegalName());
     }
 
-    @DisplayName("Finds approved weekly mysteries for one classroom ordered newest first")
+    @DisplayName("Finds approved weekly mysteries for one classroom ordered by approval time newest first")
     @Test
-    void findAllByClassroomClassroomCodeAndApprovedTrueOrderByCreatedAtDesc_whenApprovedMysteriesExist_returnsApprovedForClassroomNewestFirst() {
+    void findAllByClassroomClassroomCodeAndApprovedTrueOrderByApprovedAtDescCreatedAtDesc_whenApprovedMysteriesExist_returnsApprovedForClassroomNewestFirst() {
         insertBaseData();
         Long olderFileId = insertFile("older-approved.png", "ABCABC", "ONLY_CLASS");
         Long pendingFileId = insertFile("pending.png", "ABCABC", "ONLY_TEACHERS_IN_CLASS");
         Long newerFileId = insertFile("newer-approved.png", "ABCABC", "ONLY_CLASS");
+        LocalDateTime olderApprovedAt = LocalDateTime.of(2026, 4, 25, 12, 0);
+        LocalDateTime newerApprovedAt = LocalDateTime.of(2026, 4, 26, 8, 0);
         insertMystery(olderFileId, "ABCABC", "pupil@example.com", "Older approved", true,
-                LocalDateTime.of(2026, 4, 23, 9, 0));
+                LocalDateTime.of(2026, 4, 23, 12, 0), olderApprovedAt);
         insertMystery(pendingFileId, "ABCABC", "pupil@example.com", "Pending", false,
                 LocalDateTime.of(2026, 4, 23, 10, 0));
         insertMystery(newerFileId, "ABCABC", "pupil@example.com", "Newer approved", true,
-                LocalDateTime.of(2026, 4, 23, 11, 0));
+                LocalDateTime.of(2026, 4, 23, 9, 0), newerApprovedAt);
 
         List<WeeklyMystery> mysteries = weeklyMysteryRepository
-                .findAllByClassroomClassroomCodeAndApprovedTrueOrderByCreatedAtDesc("ABCABC");
+                .findAllByClassroomClassroomCodeAndApprovedTrueOrderByApprovedAtDescCreatedAtDesc("ABCABC");
 
         assertEquals(List.of("Newer approved", "Older approved"), mysteries.stream()
                 .map(WeeklyMystery::getComment)
                 .toList());
+        assertEquals(newerApprovedAt, mysteries.getFirst().getApprovedAt());
     }
 
     @DisplayName("New weekly mystery rows default to pending when approved is omitted")
@@ -88,6 +92,7 @@ class WeeklyMysteryRepositoryTest {
                 .getFirst();
 
         assertFalse(mystery.isApproved());
+        assertNull(mystery.getApprovedAt());
     }
 
     private void insertBaseData() {
@@ -150,5 +155,24 @@ class WeeklyMysteryRepositoryTest {
                 comment,
                 approved,
                 createdAt);
+    }
+
+    private void insertMystery(Long fileId,
+                               String classroomCode,
+                               String pupilEmail,
+                               String comment,
+                               boolean approved,
+                               LocalDateTime createdAt,
+                               LocalDateTime approvedAt) {
+        jdbcTemplate.update(
+                "INSERT INTO weekly_mystery (file_object_id, classroom_code, account_email, comment, approved, created_at, approved_at) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                fileId,
+                classroomCode,
+                pupilEmail,
+                comment,
+                approved,
+                createdAt,
+                approvedAt);
     }
 }

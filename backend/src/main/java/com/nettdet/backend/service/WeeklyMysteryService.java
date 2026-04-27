@@ -1,5 +1,6 @@
 package com.nettdet.backend.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.security.access.AccessDeniedException;
@@ -94,7 +95,7 @@ public class WeeklyMysteryService {
         getConfirmedMembership(principal.email(), normalizedClassroomCode);
 
         return weeklyMysteryRepository
-                .findAllByClassroomClassroomCodeAndApprovedTrueOrderByCreatedAtDesc(normalizedClassroomCode)
+                .findAllByClassroomClassroomCodeAndApprovedTrueOrderByApprovedAtDescCreatedAtDesc(normalizedClassroomCode)
                 .stream()
                 .map(this::toPupilResponse)
                 .toList();
@@ -122,6 +123,9 @@ public class WeeklyMysteryService {
 
         WeeklyMystery mystery = getRequiredMystery(mysteryId, normalizedClassroomCode);
         mystery.setApproved(true);
+        if (mystery.getApprovedAt() == null) {
+            mystery.setApprovedAt(LocalDateTime.now());
+        }
         mystery.getFileObject().setAccessLevel(ClassroomAccess.ONLY_CLASS);
         fileObjectRepository.save(mystery.getFileObject());
 
@@ -193,6 +197,7 @@ public class WeeklyMysteryService {
                 mystery.getFileObject().getId(),
                 mystery.getComment(),
                 mystery.getCreatedAt(),
+                mystery.getApprovedAt(),
                 mystery.isApproved());
     }
 
@@ -201,7 +206,8 @@ public class WeeklyMysteryService {
                 mystery.getId(),
                 mystery.getFileObject().getId(),
                 mystery.getComment(),
-                mystery.getCreatedAt());
+                mystery.getCreatedAt(),
+                mystery.getApprovedAt());
     }
 
     private TeacherPendingWeeklyMysteryResponse toTeacherPendingResponse(WeeklyMystery mystery) {
@@ -211,7 +217,8 @@ public class WeeklyMysteryService {
                 mystery.getPupilClassroomMembership().getAccountEmail(),
                 mystery.getPupilClassroomMembership().getAccount().getLegalName(),
                 mystery.getComment(),
-                mystery.getCreatedAt());
+                mystery.getCreatedAt(),
+                mystery.getApprovedAt());
     }
 
     private String normalizeClassroomCode(String classroomCode) {

@@ -50,7 +50,7 @@ public class WeeklyMysteryController {
 
     @GetMapping("/pupil/classrooms/{classroomCode}/weekly-mysteries")
     @PreAuthorize("hasAuthority('PUPIL')")
-    @Operation(summary = "List approved weekly mysteries", description = "Returns all approved weekly mysteries for a classroom where the authenticated pupil has confirmed membership, ordered newest first.")
+    @Operation(summary = "List approved weekly mysteries", description = "Returns all approved weekly mysteries for a classroom where the authenticated pupil has confirmed membership, ordered by approvedAt descending.")
     public ResponseEntity<List<PupilWeeklyMysteryResponse>> getApprovedMysteries(
             @PathVariable String classroomCode,
             @AuthenticationPrincipal JwtUserPrincipal principal) {
@@ -68,7 +68,7 @@ public class WeeklyMysteryController {
 
     @PutMapping("/teacher/classrooms/{classroomCode}/weekly-mysteries/{mysteryId}/accept")
     @PreAuthorize("hasAuthority('TEACHER')")
-    @Operation(summary = "Accept weekly mystery", description = "Approves a pending weekly mystery and changes the linked file access to classroom-only.")
+    @Operation(summary = "Accept weekly mystery", description = "Approves a weekly mystery, records approvedAt when first approved, and changes the linked file access to classroom-only.")
     public ResponseEntity<PupilWeeklyMysteryResponse> acceptMystery(
             @PathVariable String classroomCode,
             @PathVariable Long mysteryId,

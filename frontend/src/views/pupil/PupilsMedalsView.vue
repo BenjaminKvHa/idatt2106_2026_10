@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
+import TopBar from '@/components/TopBar.vue'
+import blobbyImage from '@/assets/creaturePeaking.png'
+import boardBackground from '@/assets/korktavle.png'
+import medalsIcon from '@/assets/homescreen/icon_medals.png'
 import { get } from '@/utils/apiUtils'
 
 type PupilMedal = {
@@ -14,6 +18,8 @@ type PupilMedal = {
 const medals = ref<PupilMedal[]>([])
 const loading = ref(true)
 const errorMessage = ref('')
+
+const unlockedCount = computed(() => medals.value.filter((medal) => medal.unlocked).length)
 
 onMounted(async () => {
   try {
@@ -31,76 +37,342 @@ function medalImageUrl(medal: PupilMedal) {
 </script>
 
 <template>
-  <main class="medals-page">
-    <h1>Medaljer</h1>
+  <div class="medals-screen">
+    <TopBar title="Medaljer" previous-page-url="/pupil" />
 
-    <p v-if="loading">Laster medaljer...</p>
-    <p v-else-if="errorMessage" class="error">{{ errorMessage }}</p>
+    <main class="medals-page">
+      <section class="board-shell" aria-labelledby="medals-title">
+        <img class="board-image" :src="boardBackground" alt="" aria-hidden="true" />
+        <img class="blobby-image" :src="blobbyImage" alt="" aria-hidden="true" />
 
-    <ul v-else class="medal-list">
-      <li v-for="medal in medals" :key="medal.medalKey" class="medal-card">
-        <img
-          v-if="medal.imageFileObjectId !== null"
-          :src="medalImageUrl(medal)"
-          :alt="medal.name"
-          class="medal-image"
-        />
-        <div v-else class="missing-image">Mangler bilde</div>
+        <div class="board-content">
+          <header class="medals-header">
+            <img class="medals-icon" :src="medalsIcon" alt="" aria-hidden="true" />
+            <div>
+              <h1 id="medals-title">Medaljer</h1>
+              <p v-if="!loading && !errorMessage && medals.length" class="medal-progress">
+                {{ unlockedCount }} av {{ medals.length }} låst opp
+              </p>
+            </div>
+          </header>
 
-        <div>
-          <h2>{{ medal.name }}</h2>
-          <p>{{ medal.description }}</p>
-          <strong>{{ medal.unlocked ? 'Låst opp' : 'Låst' }}</strong>
+          <p v-if="loading" class="state-message" role="status">Laster medaljer...</p>
+          <p v-else-if="errorMessage" class="state-message error" role="alert">
+            {{ errorMessage }}
+          </p>
+          <p v-else-if="medals.length === 0" class="state-message">Ingen medaljer funnet enda.</p>
+
+          <ul v-else class="medal-grid">
+            <li
+              v-for="medal in medals"
+              :key="medal.medalKey"
+              class="medal-slot"
+              :class="{
+                'medal-slot--locked': !medal.unlocked,
+              }"
+            >
+              <article class="medal-card">
+                <span class="medal-status">{{ medal.unlocked ? 'Låst opp' : 'Låst' }}</span>
+                <div class="medal-art">
+                  <img
+                    v-if="medal.imageFileObjectId !== null"
+                    :src="medalImageUrl(medal)"
+                    :alt="medal.name"
+                    class="medal-image"
+                  />
+                  <span v-else class="missing-image">?</span>
+                </div>
+
+                <div class="medal-copy">
+                  <h2>{{ medal.name }}</h2>
+                  <p>{{ medal.description }}</p>
+                </div>
+              </article>
+            </li>
+          </ul>
         </div>
-      </li>
-    </ul>
-  </main>
+      </section>
+    </main>
+  </div>
 </template>
 
 <style scoped>
+.medals-screen {
+  min-height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
 .medals-page {
-  padding: 2rem;
-}
-
-.medal-list {
-  display: grid;
-  gap: 1rem;
-  list-style: none;
-  padding: 0;
-}
-
-.medal-card {
-  align-items: center;
-  border: 1px solid #d8c6a4;
-  border-radius: 12px;
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: url('@/assets/backgrounds/hjemskjerm-bg.png') no-repeat center center;
+  background-size: cover;
   display: flex;
-  gap: 1rem;
-  max-width: 560px;
-  padding: 1rem;
-}
-
-.medal-image,
-.missing-image {
   align-items: center;
-  display: flex;
-  height: 88px;
   justify-content: center;
-  width: 88px;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
 }
 
-.medal-image {
+.medals-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.38);
+}
+
+.board-shell {
+  position: relative;
+  z-index: 1;
+  width: min(96vw, calc((100dvh - 7rem) * 1.5), 1360px);
+  aspect-ratio: 3 / 2;
+}
+
+.board-image {
+  display: block;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
+  pointer-events: none;
+  user-select: none;
 }
 
-.missing-image {
-  background: #f5ead8;
-  border-radius: 8px;
-  color: #7a6446;
-  font-size: 0.8rem;
+.blobby-image {
+  position: absolute;
+  top: 12.7%;
+  right: 10.9%;
+  width: clamp(7.75rem, 14vw, 12.5rem);
+  transform: translateY(-50%);
+  filter: drop-shadow(0 0.25rem 0 rgba(0, 0, 0, 0.22));
+  pointer-events: none;
+  z-index: 2;
+}
+
+.board-content {
+  position: absolute;
+  inset: 20% 16% 20% 16%;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.65rem, 1.5vw, 1.25rem);
+  min-height: 0;
+}
+
+.medals-header {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.75rem, 2vw, 1.5rem);
+  min-height: clamp(3.5rem, 8vw, 7rem);
+}
+
+.medals-icon {
+  width: clamp(3.8rem, 8vw, 7rem);
+  height: clamp(3.8rem, 8vw, 7rem);
+  object-fit: contain;
+  object-position: center;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4.8vw, 4.2rem);
+  line-height: 1;
+}
+
+.medal-progress {
+  margin: 0.3rem 0 0;
+  color: var(--brown-dark);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.state-message {
+  width: min(32rem, 100%);
+  margin: auto;
+  padding: 1rem;
+  align-items: center;
+  border: var(--border-thin) solid var(--brown-dark);
+  border-radius: 0.75rem;
+  background: rgba(255, 248, 235, 0.82);
+  color: var(--brown-dark);
+  font-weight: 700;
   text-align: center;
 }
 
-.error {
+.state-message.error {
   color: #9b1c1c;
+}
+
+.medal-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0 auto;
+  width: min(100%, 46rem);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(clamp(10rem, 16vw, 12rem), 1fr));
+  align-content: start;
+  gap: clamp(0.55rem, 1.25vw, 0.9rem);
+  list-style: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 0.35rem 0.45rem 0;
+  scrollbar-color: var(--brown-dark-60) transparent;
+  scrollbar-width: thin;
+}
+
+.medal-grid::-webkit-scrollbar {
+  width: 0.55rem;
+}
+
+.medal-grid::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--brown-dark-60);
+}
+
+.medal-slot {
+  min-width: 0;
+}
+
+.medal-card {
+  position: relative;
+  min-height: clamp(8.75rem, 13.5vw, 10.25rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.25rem;
+  overflow: hidden;
+  border: var(--border-thin) solid var(--brown-dark);
+  border-radius: 1.1rem;
+  background: rgba(255, 238, 211, 0.74);
+  box-shadow: 0 0.35rem 0 rgba(72, 47, 31, 0.22);
+  padding: clamp(0.55rem, 1.2vw, 0.85rem);
+}
+
+.medal-slot--locked .medal-card {
+  background: rgba(232, 213, 188, 0.66);
+}
+
+.medal-art {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  width: clamp(4.6rem, 9.2vw, 7.25rem);
+  height: clamp(4.1rem, 8.2vw, 6.4rem);
+  flex: 0 0 auto;
+}
+
+.medal-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 0.2rem 0 rgba(0, 0, 0, 0.18));
+}
+
+.missing-image {
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  border-radius: 1rem;
+  background: rgba(245, 234, 216, 0.85);
+  color: var(--brown-dark);
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.medal-copy {
+  width: 100%;
+  text-align: center;
+  color: var(--brown-dark);
+}
+
+.medal-copy h2 {
+  margin: 0;
+  font-size: clamp(0.88rem, 1.3vw, 1.08rem);
+  line-height: 1.1;
+}
+
+.medal-copy p {
+  margin: 0.2rem 0 0;
+  color: var(--brown-dark-80);
+  font-size: clamp(0.62rem, 0.78vw, 0.74rem);
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.medal-status {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  border: 2px solid var(--brown-dark);
+  border-radius: 999px;
+  background: rgba(255, 248, 235, 0.94);
+  color: var(--brown-dark);
+  font-size: clamp(0.62rem, 0.85vw, 0.72rem);
+  font-weight: 800;
+  line-height: 1;
+  padding: 0.25rem 0.45rem;
+}
+
+@media (max-width: 900px) {
+  .board-shell {
+    width: min(98vw, calc((100dvh - 6.5rem) * 1.5));
+  }
+
+  .board-content {
+    inset: 19% 16% 20% 16%;
+  }
+
+  .medal-grid {
+    width: min(100%, 30rem);
+  }
+}
+
+@media (max-width: 560px) {
+  .medals-screen {
+    overflow-y: auto;
+  }
+
+  .medals-page {
+    overflow: visible;
+    align-items: flex-start;
+    padding-block: 0.75rem 1.25rem;
+  }
+
+  .board-shell {
+    width: min(42rem, 100%);
+    min-height: 46rem;
+    aspect-ratio: auto;
+  }
+
+  .board-image {
+    position: absolute;
+    inset: 0;
+    object-fit: fill;
+  }
+
+  .blobby-image {
+    top: 7.65rem;
+    right: 2.55rem;
+    width: 8rem;
+  }
+
+  .board-content {
+    inset: 8.75rem 3.25rem 6.5rem 3.25rem;
+  }
+
+  .medals-header {
+    justify-content: flex-start;
+  }
+
+  .medal-grid {
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
 }
 </style>

@@ -59,7 +59,7 @@ function handleBlobbyClick() {
 </script>
 
 <template>
-  <TopBar />
+  <TopBar title="Detektivbyrået" />
 
   <div class="page">
     <div class="center-container">
@@ -123,6 +123,24 @@ function handleBlobbyClick() {
   align-items: center;
   gap: 0.5rem;
   width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 0;
+}
+
+.page {
+  position: relative;
+  min-height: 100vh;
+
+  background: url('@/assets/backgrounds/hjemskjerm-bg.png') no-repeat center center;
+  background-size: cover;
 }
 
 .top-bar {

@@ -119,6 +119,7 @@ class LeaderboardControllerTest {
                 .thenReturn(new ClassroomPupilLeaderboardResponse(
                         "ABCABC",
                         "8A",
+                        "Mandagstime for 8A",
                         List.of(
                                 new ClassroomPupilLeaderboardEntryResponse("detektiv1", 240L),
                                 new ClassroomPupilLeaderboardEntryResponse("detektiv2", 120L))));
@@ -128,6 +129,7 @@ class LeaderboardControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.classroomCode").value("ABCABC"))
                 .andExpect(jsonPath("$.classroomName").value("8A"))
+                .andExpect(jsonPath("$.classroomDescription").value("Mandagstime for 8A"))
                 .andExpect(jsonPath("$.entries[0].username").value("detektiv1"))
                 .andExpect(jsonPath("$.entries[0].totalXp").value(240))
                 .andExpect(jsonPath("$.entries[1].username").value("detektiv2"));

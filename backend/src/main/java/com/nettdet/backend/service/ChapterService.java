@@ -1,5 +1,7 @@
 package com.nettdet.backend.service;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -18,13 +20,19 @@ import com.nettdet.backend.domain.Chapter;
 import com.nettdet.backend.domain.PupilChapterBridgeProgression;
 import com.nettdet.backend.domain.PupilClassroomMembership;
 import com.nettdet.backend.domain.Task;
+import com.nettdet.backend.domain.enums.DatacenterTaskFormat;
 import com.nettdet.backend.domain.enums.TaskDifficulty;
 import com.nettdet.backend.domain.ids.PupilChapterBridgeProgressionId;
 import com.nettdet.backend.dto.ChapterProgressionResponse;
 import com.nettdet.backend.dto.ChapterResponse;
+import com.nettdet.backend.dto.DatacenterAnswerRequest;
+import com.nettdet.backend.dto.DatacenterRunResponse;
+import com.nettdet.backend.dto.DatacenterTask;
+import com.nettdet.backend.dto.DatacenterTaskResponse;
 import com.nettdet.backend.dto.ImageVerificationRequest;
 import com.nettdet.backend.dto.ImageVerificationResponse;
 import com.nettdet.backend.dto.ImageVerificationTask;
+import com.nettdet.backend.dto.NewsVerificationRequest;
 import com.nettdet.backend.dto.NewsVerificationResponse;
 import com.nettdet.backend.dto.NewsVerificationTask;
 import com.nettdet.backend.dto.ValidationResult;
@@ -37,7 +45,17 @@ import com.nettdet.backend.validation.TaskValidator;
 @Service
 public class ChapterService {
 
-    private static final int TASKS_PER_RUN = 3;
+    private static final int DEFAULT_TASKS_PER_RUN = 3;
+    private static final long DATACENTER_CHAPTER_ID = 3L;
+    private static final int DATACENTER_TASKS_PER_RUN = 5;
+    private static final Map<Long, Integer> TASKS_PER_RUN_BY_CHAPTER = Map.of(
+        DATACENTER_CHAPTER_ID, DATACENTER_TASKS_PER_RUN);
+    private static final List<DatacenterTaskFormat> DATACENTER_RUN_SEQUENCE = List.of(
+        DatacenterTaskFormat.NEWS_VERIFICATION,
+        DatacenterTaskFormat.NEWS_VERIFICATION,
+        DatacenterTaskFormat.IMAGE_VERIFICATION,
+        DatacenterTaskFormat.IMAGE_VERIFICATION,
+        DatacenterTaskFormat.IMAGE_VERIFICATION);
 
     private static final Logger logger = LoggerFactory.getLogger(ChapterService.class);
 
@@ -47,13 +65,15 @@ public class ChapterService {
     private final ChapterRepository chapterRepository;
     private final ObjectMapper objectMapper;
     private final Map<String, TaskValidator<?, ?>> validators;
+    private final NotificationService notificationService;
 
     public ChapterService(TaskRepository taskRepository,
                           PupilClassroomMembershipRepository membershipRepository,
                           PupilChapterBridgeProgressionRepository progressionRepository,
                           ChapterRepository chapterRepository,
                           ObjectMapper objectMapper,
-                          List<TaskValidator<?, ?>> validatorList) {
+                          List<TaskValidator<?, ?>> validatorList,
+                          NotificationService notificationService) {
         this.taskRepository = taskRepository;
         this.membershipRepository = membershipRepository;
         this.progressionRepository = progressionRepository;
@@ -61,6 +81,7 @@ public class ChapterService {
         this.objectMapper = objectMapper;
         this.validators = validatorList.stream()
             .collect(Collectors.toMap(TaskValidator::getChapterType, v -> v));
+        this.notificationService = notificationService;
     }
 
     // -------------------------------------------
@@ -99,11 +120,199 @@ public class ChapterService {
         NewsVerificationTask stored = readTaskJson(task, NewsVerificationTask.class);
 
         logger.info("Returning news verification task id {}", task.getId());
+        List<Long> fileIds = new ArrayList<>(List.of(stored.fileId_1(), stored.fileId_2()));
+        Collections.shuffle(fileIds);
         return new NewsVerificationResponse(
             task.getId(),
             stored.taskDescription(),
-            List.of(stored.fileId_1(), stored.fileId_2())
+            fileIds
         );
+    }
+
+    // -------------------------------------------
+    // CHAPTER: DATASENTERET (final boss)
+    // -------------------------------------------
+
+    @Transactional
+    public DatacenterRunResponse fetchDatacenterRun(String pupilEmail, Long chapterId) {
+        logger.info("Fetching Datasenteret run for pupil {} chapter {}", pupilEmail, chapterId);
+
+        if (chapterId != DATACENTER_CHAPTER_ID) {
+            throw new IllegalArgumentException(
+                "Datasenteret run is only available for chapter " + DATACENTER_CHAPTER_ID);
+        }
+
+        resetRunIfStarting(pupilEmail, chapterId);
+
+        String classroomCode = requireConfirmedClassroom(pupilEmail);
+        List<Task> pool = taskRepository.findEligibleForPupil(
+            chapterId, TaskDifficulty.HARD, classroomCode);
+
+        Map<DatacenterTaskFormat, List<Task>> tasksByFormat = new java.util.EnumMap<>(DatacenterTaskFormat.class);
+        for (DatacenterTaskFormat format : DatacenterTaskFormat.values()) {
+            tasksByFormat.put(format, new ArrayList<>());
+        }
+        for (Task task : pool) {
+            DatacenterTask wrapper = readTaskJson(task, DatacenterTask.class);
+            if (wrapper.format() == null) {
+                logger.warn("Datasenteret task id {} has no format discriminator; skipping", task.getId());
+                continue;
+            }
+            tasksByFormat.get(wrapper.format()).add(task);
+        }
+
+        List<DatacenterTaskResponse> ordered = new ArrayList<>(DATACENTER_RUN_SEQUENCE.size());
+        Map<DatacenterTaskFormat, List<Task>> remaining = new java.util.EnumMap<>(DatacenterTaskFormat.class);
+        for (DatacenterTaskFormat format : DatacenterTaskFormat.values()) {
+            List<Task> shuffled = new ArrayList<>(tasksByFormat.get(format));
+            Collections.shuffle(shuffled);
+            remaining.put(format, shuffled);
+        }
+
+        for (DatacenterTaskFormat slotFormat : DATACENTER_RUN_SEQUENCE) {
+            List<Task> bucket = remaining.get(slotFormat);
+            if (bucket.isEmpty()) {
+                logger.warn("Not enough Datasenteret tasks for format {} (chapter {} classroom {})",
+                    slotFormat, chapterId, classroomCode);
+                throw new NoSuchElementException(
+                    "Not enough Datasenteret tasks of format " + slotFormat);
+            }
+            Task picked = bucket.remove(0);
+            ordered.add(buildDatacenterTaskResponse(picked));
+        }
+
+        logger.info("Returning Datasenteret run with {} tasks for pupil {}", ordered.size(), pupilEmail);
+        return new DatacenterRunResponse(ordered);
+    }
+
+    @Transactional
+    public ValidationResult validateDatacenterAnswer(String pupilEmail, Long taskId, DatacenterAnswerRequest request) {
+        logger.info("Validating Datasenteret answer for pupil {} task {}", pupilEmail, taskId);
+
+        Task task = taskRepository.findById(taskId)
+            .orElseThrow(() -> {
+                logger.warn("Datasenteret validation requested for unknown task id {}", taskId);
+                return new NoSuchElementException("Task not found: " + taskId);
+            });
+
+        if (task.getChapter() == null || task.getChapter().getId() != DATACENTER_CHAPTER_ID) {
+            throw new IllegalArgumentException(
+                "Task " + taskId + " is not a Datasenteret task");
+        }
+
+        verifyTaskBelongsToPupil(pupilEmail, task);
+
+        DatacenterTask stored = readTaskJson(task, DatacenterTask.class);
+        if (stored.format() != request.format()) {
+            throw new IllegalArgumentException(
+                "Answer format " + request.format() + " does not match task format " + stored.format());
+        }
+
+        boolean correct;
+        Boolean categoryCorrect = null;
+        Boolean justificationCorrect = null;
+        String feedback;
+
+        switch (stored.format()) {
+            case IMAGE_VERIFICATION -> {
+                ImageVerificationTask inner = stored.imageTask();
+                ImageVerificationRequest answer = request.imageAnswer();
+                if (inner == null || answer == null) {
+                    throw new IllegalArgumentException("Missing image-verification payload");
+                }
+                TaskValidator<ImageVerificationRequest, ImageVerificationTask> v =
+                    castValidator("FOTOGRAFEN");
+                correct = v.validate(answer, inner);
+                feedback = v.getFeedback(inner, correct);
+                categoryCorrect = answer.selectedCategory() == inner.correctCategory();
+                justificationCorrect = inner.correctJustification().equals(answer.selectedJustification());
+            }
+            case NEWS_VERIFICATION -> {
+                NewsVerificationTask inner = stored.newsTask();
+                NewsVerificationRequest answer = request.newsAnswer();
+                if (inner == null || answer == null) {
+                    throw new IllegalArgumentException("Missing news-verification payload");
+                }
+                TaskValidator<NewsVerificationRequest, NewsVerificationTask> v =
+                    castValidator("NYHETSKVARTALET");
+                correct = v.validate(answer, inner);
+                feedback = v.getFeedback(inner, correct);
+            }
+            default -> throw new IllegalArgumentException("Unsupported format: " + stored.format());
+        }
+
+        RunStateAfterAttempt runState = recordAttempt(pupilEmail, DATACENTER_CHAPTER_ID, correct);
+
+        logger.info("Datasenteret validation result for task {}: {}", taskId, correct ? "correct" : "incorrect");
+        return new ValidationResult(
+            correct,
+            feedback,
+            runState.currentRunAttempts(),
+            runState.currentRunCorrect(),
+            runState.runCompleted(),
+            categoryCorrect,
+            justificationCorrect
+        );
+    }
+
+    private DatacenterTaskResponse buildDatacenterTaskResponse(Task task) {
+        DatacenterTask stored = readTaskJson(task, DatacenterTask.class);
+        return switch (stored.format()) {
+            case IMAGE_VERIFICATION -> {
+                ImageVerificationTask inner = stored.imageTask();
+                yield new DatacenterTaskResponse(
+                    task.getId(),
+                    DatacenterTaskFormat.IMAGE_VERIFICATION,
+                    new ImageVerificationResponse(
+                        task.getId(),
+                        inner.taskDescription(),
+                        inner.fileId(),
+                        inner.justifications()
+                    ),
+                    null
+                );
+            }
+            case NEWS_VERIFICATION -> {
+                NewsVerificationTask inner = stored.newsTask();
+                List<Long> fileIds = new ArrayList<>(List.of(inner.fileId_1(), inner.fileId_2()));
+                Collections.shuffle(fileIds);
+                yield new DatacenterTaskResponse(
+                    task.getId(),
+                    DatacenterTaskFormat.NEWS_VERIFICATION,
+                    null,
+                    new NewsVerificationResponse(
+                        task.getId(),
+                        inner.taskDescription(),
+                        fileIds
+                    )
+                );
+            }
+        };
+    }
+
+    @SuppressWarnings("unchecked")
+    private <R, T> TaskValidator<R, T> castValidator(String chapterType) {
+        TaskValidator<?, ?> validator = validators.get(chapterType);
+        if (validator == null) {
+            throw new IllegalStateException("No validator registered for chapter type: " + chapterType);
+        }
+        return (TaskValidator<R, T>) validator;
+    }
+
+    private void resetRunIfStarting(String pupilEmail, Long chapterId) {
+        PupilChapterBridgeProgression progression = progressionRepository
+            .findById(new PupilChapterBridgeProgressionId(pupilEmail, chapterId))
+            .orElse(null);
+
+        if (progression == null || progression.getCurrentRunAttempts() == 0) {
+            return;
+        }
+
+        logger.info("Resetting abandoned Datasenteret run for pupil {} chapter {} (was {} attempts, {} correct)",
+            pupilEmail, chapterId, progression.getCurrentRunAttempts(), progression.getCurrentRunCorrect());
+        progression.setCurrentRunAttempts(0);
+        progression.setCurrentRunCorrect(0);
+        progressionRepository.save(progression);
     }
 
     // --------------------------------------------------
@@ -216,17 +425,26 @@ public class ChapterService {
 
     private RunStateAfterAttempt recordAttempt(String pupilEmail, Long chapterId, boolean correct) {
         PupilChapterBridgeProgression progression = getOrCreateProgression(pupilEmail, chapterId);
+        int tasksPerRun = tasksPerRun(chapterId);
+        int previousSuccessfulRuns = progression.getSuccessfulRuns();
+        int previousUnsuccessfulStreak = progression.getUnsuccessfulStreak();
 
         int attempts = progression.getCurrentRunAttempts() + 1;
         int correctCount = progression.getCurrentRunCorrect() + (correct ? 1 : 0);
-        boolean runCompleted = attempts >= TASKS_PER_RUN;
+        boolean runCompleted = attempts >= tasksPerRun;
 
         if (runCompleted) {
-            if (correctCount == TASKS_PER_RUN) {
+            if (correctCount == tasksPerRun) {
                 progression.setSuccessfulRuns(progression.getSuccessfulRuns() + 1);
                 progression.setUnsuccessfulStreak(0);
+                if (previousSuccessfulRuns == 0) {
+                    notifyFirstChapterCompletion(progression);
+                }
             } else {
                 progression.setUnsuccessfulStreak(progression.getUnsuccessfulStreak() + 1);
+                if (previousUnsuccessfulStreak == 4 && progression.getUnsuccessfulStreak() == 5) {
+                    notifyPupilStuckOnChapter(progression);
+                }
             }
 
             if (correctCount > progression.getHighscore()) {
@@ -236,7 +454,7 @@ public class ChapterService {
             progression.setCurrentRunAttempts(0);
             progression.setCurrentRunCorrect(0);
             logger.info("Run complete for pupil {} chapter {}: {}/{} correct",
-                pupilEmail, chapterId, correctCount, TASKS_PER_RUN);
+                pupilEmail, chapterId, correctCount, tasksPerRun);
         } else {
             progression.setCurrentRunAttempts(attempts);
             progression.setCurrentRunCorrect(correctCount);
@@ -249,6 +467,10 @@ public class ChapterService {
             progression.getCurrentRunCorrect(),
             runCompleted
         );
+    }
+
+    private int tasksPerRun(Long chapterId) {
+        return TASKS_PER_RUN_BY_CHAPTER.getOrDefault(chapterId, DEFAULT_TASKS_PER_RUN);
     }
 
     private PupilChapterBridgeProgression getOrCreateProgression(String pupilEmail, Long chapterId) {
@@ -327,5 +549,38 @@ public class ChapterService {
             logger.error("Corrupt task_json for task id {}", task.getId(), e);
             throw new IllegalStateException("Corrupt task_json for task id " + task.getId(), e);
         }
+    }
+
+    private void notifyFirstChapterCompletion(PupilChapterBridgeProgression progression) {
+        createNotificationIfClassroomContextExists(
+            progression,
+            "%s har fullført %s for første gang.");
+    }
+
+    private void notifyPupilStuckOnChapter(PupilChapterBridgeProgression progression) {
+        createNotificationIfClassroomContextExists(
+            progression,
+            "%s står fast på %s og kan trenge hjelp.");
+    }
+
+    private void createNotificationIfClassroomContextExists(PupilChapterBridgeProgression progression,
+                                                           String textTemplate) {
+        PupilClassroomMembership membership = progression.getPupilClassroomMembership();
+        Chapter chapter = progression.getChapter();
+
+        if (membership == null || membership.getClassroom() == null || chapter == null) {
+            logger.warn("Skipping chapter notification because progression lacks classroom or chapter context");
+            return;
+        }
+
+        String legalName = membership.getAccount() != null && membership.getAccount().getLegalName() != null
+            ? membership.getAccount().getLegalName()
+            : membership.getAccountEmail();
+        String text = String.format(textTemplate, legalName, chapter.getChapterName());
+
+        notificationService.createNotification(
+            membership.getClassroom().getClassroomCode(),
+            membership.getAccountEmail(),
+            text);
     }
 }

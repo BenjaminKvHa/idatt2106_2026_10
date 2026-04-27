@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.nettdet.backend.dto.AcceptedPupilMembershipResponse;
 import com.nettdet.backend.dto.AcceptedClassroomPupilResponse;
 import com.nettdet.backend.dto.ClassroomResponse;
+import com.nettdet.backend.dto.ClassroomTeacherResponse;
 import com.nettdet.backend.dto.CreateClassroomRequest;
 import com.nettdet.backend.dto.InviteTeacherRequest;
 import com.nettdet.backend.dto.PendingPupilRequestResponse;
@@ -122,6 +123,24 @@ public class ClassroomController {
             @AuthenticationPrincipal JwtUserPrincipal principal) {
         classroomService.leaveClassroomAsPupil(classroomCode, principal);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{classroomCode}")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get classroom info", description = "Returns the classroom code, name, and description. The authenticated user must be either a teacher attached to the classroom or a pupil with a membership for it.")
+    public ResponseEntity<ClassroomResponse> getClassroom(
+            @PathVariable String classroomCode,
+            @AuthenticationPrincipal JwtUserPrincipal principal) {
+        return ResponseEntity.ok(classroomService.getClassroom(classroomCode, principal));
+    }
+
+    @GetMapping("/{classroomCode}/teachers")
+    @PreAuthorize("hasAuthority('TEACHER')")
+    @Operation(summary = "List classroom teachers", description = "Returns all teachers attached to the classroom. The authenticated teacher must already belong to the classroom.")
+    public ResponseEntity<List<ClassroomTeacherResponse>> getClassroomTeachers(
+            @PathVariable String classroomCode,
+            @AuthenticationPrincipal JwtUserPrincipal principal) {
+        return ResponseEntity.ok(classroomService.getClassroomTeachers(classroomCode, principal));
     }
 
     @GetMapping("/{classroomCode}/pupils/pending")

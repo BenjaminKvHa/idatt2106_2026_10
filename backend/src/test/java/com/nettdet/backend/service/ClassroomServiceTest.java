@@ -22,6 +22,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 
@@ -29,6 +30,7 @@ import com.nettdet.backend.domain.Account;
 import com.nettdet.backend.domain.AccountClassroomBridgeTeacher;
 import com.nettdet.backend.domain.Classroom;
 import com.nettdet.backend.domain.FileObject;
+import com.nettdet.backend.domain.PupilChapterBridgeProgression;
 import com.nettdet.backend.domain.PupilClassroomMembership;
 import com.nettdet.backend.domain.enums.AccountRole;
 import com.nettdet.backend.dto.AcceptedClassroomPupilResponse;
@@ -68,6 +70,9 @@ class ClassroomServiceTest {
 
     @Mock
     private ClassroomCodeGenerator classroomCodeGenerator;
+
+    @Spy
+    private PupilXpService pupilXpService = new PupilXpService();
 
     @InjectMocks
     private ClassroomService classroomService;
@@ -285,18 +290,21 @@ class ClassroomServiceTest {
         assertTrue(response.canLeave());
     }
 
-    @DisplayName("Returns accepted pupils sorted by username with avatar object keys")
+    @DisplayName("Returns accepted pupils sorted by username with avatar object keys and XP")
     @Test
     void getAcceptedPupils_whenTeacherOwnsClassroom_returnsSortedAcceptedPupils() {
         Classroom classroom = classroom(CLASSROOM_CODE, "8A", null);
         PupilClassroomMembership bob = membership("bob@example.com", "Bob", "zulu", classroom, null);
+        bob.setChapterProgressions(List.of(progression(4, 0)));
         PupilClassroomMembership alice = membership(
                 "alice@example.com",
                 "Alice",
                 "alpha",
                 classroom,
                 avatar("avatar-images/alice.png"));
+        alice.setChapterProgressions(List.of(progression(3, 1)));
         PupilClassroomMembership noUsername = membership("no-username@example.com", "No Username", null, classroom, null);
+        noUsername.setChapterProgressions(List.of(progression(null, null)));
         when(classroomRepository.findById(CLASSROOM_CODE)).thenReturn(Optional.of(classroom));
         when(bridgeRepository.existsByIdAccountEmailAndIdClassroomCode(TEACHER_EMAIL, CLASSROOM_CODE))
                 .thenReturn(true);
@@ -314,8 +322,73 @@ class ClassroomServiceTest {
         assertEquals(List.of("Alice", "Bob", "No Username"), response.stream()
                 .map(AcceptedClassroomPupilResponse::legalName)
                 .toList());
+        assertEquals(List.of(120L, 120L, 0L), response.stream()
+                .map(AcceptedClassroomPupilResponse::totalXp)
+                .toList());
         assertEquals("avatar-images/alice.png", response.getFirst().avatarObjectKey());
         assertNull(response.get(1).avatarObjectKey());
+    }
+
+    @DisplayName("Updates confirmed pupil username for classrooms the teacher owns")
+    @Test
+    void updatePupilUsername_whenTeacherOwnsClassroomAndPupilIsConfirmed_savesTrimmedUsername() {
+        Classroom classroom = classroom(CLASSROOM_CODE, "8A", null);
+        PupilClassroomMembership membership = membership(PUPIL_EMAIL, "Pupil Name", "oldname", classroom, null);
+        membership.setChapterProgressions(List.of(progression(3, 1)));
+        when(classroomRepository.findById(CLASSROOM_CODE)).thenReturn(Optional.of(classroom));
+        when(bridgeRepository.existsByIdAccountEmailAndIdClassroomCode(TEACHER_EMAIL, CLASSROOM_CODE))
+                .thenReturn(true);
+        when(pupilClassroomMembershipRepository
+                .findByAccountEmailAndClassroomClassroomCodeAndMembershipConfirmedByTeacherTrue(PUPIL_EMAIL, CLASSROOM_CODE))
+                .thenReturn(Optional.of(membership));
+        when(pupilClassroomMembershipRepository.save(membership)).thenReturn(membership);
+
+        AcceptedClassroomPupilResponse response = classroomService.updatePupilUsername(
+                CLASSROOM_CODE,
+                "  pupil@example.com  ",
+                new com.nettdet.backend.dto.UpdatePupilUsernameRequest("  nydetektiv  "),
+                teacherPrincipal());
+
+        assertEquals("nydetektiv", membership.getUsername());
+        assertEquals("nydetektiv", response.username());
+        assertEquals(120L, response.totalXp());
+        verify(pupilClassroomMembershipRepository).save(membership);
+    }
+
+    @DisplayName("Rejects blank pupil username updates")
+    @Test
+    void updatePupilUsername_whenUsernameIsBlank_throwsIllegalArgumentException() {
+        when(classroomRepository.findById(CLASSROOM_CODE)).thenReturn(Optional.of(classroom(CLASSROOM_CODE, "8A", null)));
+        when(bridgeRepository.existsByIdAccountEmailAndIdClassroomCode(TEACHER_EMAIL, CLASSROOM_CODE))
+                .thenReturn(true);
+        when(pupilClassroomMembershipRepository
+                .findByAccountEmailAndClassroomClassroomCodeAndMembershipConfirmedByTeacherTrue(PUPIL_EMAIL, CLASSROOM_CODE))
+                .thenReturn(Optional.of(membership(PUPIL_EMAIL, "Pupil Name", "oldname", classroom(CLASSROOM_CODE, "8A", null), null)));
+
+        assertThrows(IllegalArgumentException.class, () -> classroomService.updatePupilUsername(
+                CLASSROOM_CODE,
+                PUPIL_EMAIL,
+                new com.nettdet.backend.dto.UpdatePupilUsernameRequest("   "),
+                teacherPrincipal()));
+
+        verify(pupilClassroomMembershipRepository, never()).save(any());
+    }
+
+    @DisplayName("Denies pupil username updates for teachers outside the classroom")
+    @Test
+    void updatePupilUsername_whenTeacherDoesNotOwnClassroom_throwsAccessDenied() {
+        when(classroomRepository.findById(CLASSROOM_CODE)).thenReturn(Optional.of(classroom(CLASSROOM_CODE, "8A", null)));
+        when(bridgeRepository.existsByIdAccountEmailAndIdClassroomCode(TEACHER_EMAIL, CLASSROOM_CODE))
+                .thenReturn(false);
+
+        assertThrows(AccessDeniedException.class, () -> classroomService.updatePupilUsername(
+                CLASSROOM_CODE,
+                PUPIL_EMAIL,
+                new com.nettdet.backend.dto.UpdatePupilUsernameRequest("nydetektiv"),
+                teacherPrincipal()));
+
+        verify(pupilClassroomMembershipRepository, never())
+                .findByAccountEmailAndClassroomClassroomCodeAndMembershipConfirmedByTeacherTrue(any(), any());
     }
 
     @DisplayName("Accepts only pending pupil requests for classrooms the teacher owns")
@@ -419,5 +492,12 @@ class ClassroomServiceTest {
         fileObject.setObjectKey(objectKey);
         fileObject.setFileName(objectKey.substring(objectKey.lastIndexOf('/') + 1));
         return fileObject;
+    }
+
+    private PupilChapterBridgeProgression progression(Integer highscore, Integer successfulRuns) {
+        PupilChapterBridgeProgression progression = new PupilChapterBridgeProgression();
+        progression.setHighscore(highscore);
+        progression.setSuccessfulRuns(successfulRuns);
+        return progression;
     }
 }

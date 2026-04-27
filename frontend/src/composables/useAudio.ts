@@ -40,9 +40,10 @@ export function useAudio() {
     applyVolume()
   }
 
-  function playSound(src: string, relVol = 1): HTMLAudioElement {
+  function playSound(src: string, relVol = 1, startTime = 0): HTMLAudioElement {
     const audio = new Audio(src)
     audio.volume = isMuted.value ? 0 : (volume.value / 100) * relVol
+    if (startTime > 0) audio.currentTime = startTime
     audio.play().catch(() => {})
     return audio
   }

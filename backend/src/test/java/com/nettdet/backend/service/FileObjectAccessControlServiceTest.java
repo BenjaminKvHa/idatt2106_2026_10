@@ -19,6 +19,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.access.AccessDeniedException;
 
+import jakarta.persistence.EntityNotFoundException;
+
 import com.nettdet.backend.domain.Account;
 import com.nettdet.backend.domain.Classroom;
 import com.nettdet.backend.domain.FileObject;
@@ -293,6 +295,103 @@ class FileObjectAccessControlServiceTest {
                 .thenReturn(false);
 
         assertThrows(AccessDeniedException.class, () -> service.delete(12L, principal("Other", "other@example.com")));
+
+        verifyNoInteractions(fileObjectService);
+    }
+
+    @DisplayName("Read throws EntityNotFoundException when the file object does not exist")
+    @Test
+    void read_whenFileObjectMissing_throwsEntityNotFound() {
+        when(fileObjectRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class,
+                () -> service.read(999L, principal("Teacher", "teacher@example.com")));
+        verifyNoInteractions(fileObjectService);
+    }
+
+    @DisplayName("Allows teacher-only file reads for teachers in the classroom")
+    @Test
+    void read_whenFileIsTeacherOnlyAndActorIsTeacherInClass_allowsRead() {
+        FileObject fileObject = fileObject(15L, ClassroomAccess.ONLY_TEACHERS_IN_CLASS, classroom(), null);
+        FileObjectService.StoredFile storedFile = new FileObjectService.StoredFile(
+                fileObject, "image/png", new byte[] {6});
+        when(fileObjectRepository.findById(15L)).thenReturn(Optional.of(fileObject));
+        when(teacherBridgeRepository.existsByIdAccountEmailAndIdClassroomCode("teacher@example.com", CLASSROOM_CODE))
+                .thenReturn(true);
+        when(fileObjectService.read(15L)).thenReturn(storedFile);
+
+        FileObjectService.StoredFile response = service.read(15L, principal("Teacher", "teacher@example.com"));
+
+        assertEquals(storedFile, response);
+    }
+
+    @DisplayName("Read denies non-public files when the file has no classroom attached")
+    @Test
+    void read_whenFileIsNonPublicAndHasNoClassroom_deniesAccess() {
+        FileObject fileObject = fileObject(16L, ClassroomAccess.ONLY_CLASS, null, null);
+        when(fileObjectRepository.findById(16L)).thenReturn(Optional.of(fileObject));
+
+        assertThrows(AccessDeniedException.class,
+                () -> service.read(16L, principal("Pupil", "pupil@example.com")));
+        verifyNoInteractions(fileObjectService);
+    }
+
+    @DisplayName("Allows classroom teachers (not the uploader) to delete a file")
+    @Test
+    void delete_whenActorIsClassroomTeacher_deletesFile() {
+        Account uploader = account("uploader@example.com");
+        FileObject fileObject = fileObject(17L, ClassroomAccess.ONLY_CLASS, classroom(), uploader);
+        when(fileObjectRepository.findById(17L)).thenReturn(Optional.of(fileObject));
+        when(teacherBridgeRepository.existsByIdAccountEmailAndIdClassroomCode("teacher@example.com", CLASSROOM_CODE))
+                .thenReturn(true);
+
+        service.delete(17L, principal("Teacher", "teacher@example.com"));
+
+        verify(fileObjectService).delete(17L);
+    }
+
+    @DisplayName("Delete throws EntityNotFoundException when the file object does not exist")
+    @Test
+    void delete_whenFileObjectMissing_throwsEntityNotFound() {
+        when(fileObjectRepository.findById(404L)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class,
+                () -> service.delete(404L, principal("Teacher", "teacher@example.com")));
+        verifyNoInteractions(fileObjectService);
+    }
+
+    @DisplayName("Upload rejects empty multipart files")
+    @Test
+    void upload_whenFileIsEmpty_rejectsRequest() {
+        MockMultipartFile empty = new MockMultipartFile("file", "x.txt", "text/plain", new byte[0]);
+
+        assertThrows(IllegalArgumentException.class, () -> service.upload(
+                empty, null, ClassroomAccess.PUBLIC,
+                principal("Teacher", "teacher@example.com")));
+
+        verifyNoInteractions(fileObjectService, accountRepository);
+    }
+
+    @DisplayName("Weekly mystery upload rejects non-pupil principals")
+    @Test
+    void uploadWeeklyMysteryFile_whenPrincipalIsNotPupil_deniesUpload() {
+        MockMultipartFile file = new MockMultipartFile("file", "m.png", "image/png", new byte[] {1});
+
+        assertThrows(AccessDeniedException.class,
+                () -> service.uploadWeeklyMysteryFile(file, CLASSROOM_CODE,
+                        new JwtUserPrincipal("Teacher", "teacher@example.com", "TEACHER")));
+
+        verifyNoInteractions(fileObjectService);
+    }
+
+    @DisplayName("Weekly mystery upload requires a classroom code")
+    @Test
+    void uploadWeeklyMysteryFile_whenClassroomCodeMissing_rejectsRequest() {
+        MockMultipartFile file = new MockMultipartFile("file", "m.png", "image/png", new byte[] {1});
+
+        assertThrows(IllegalArgumentException.class,
+                () -> service.uploadWeeklyMysteryFile(file, null,
+                        new JwtUserPrincipal("Pupil", "pupil@example.com", "PUPIL")));
 
         verifyNoInteractions(fileObjectService);
     }

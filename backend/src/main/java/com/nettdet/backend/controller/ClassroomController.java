@@ -125,6 +125,15 @@ public class ClassroomController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/{classroomCode}")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get classroom info", description = "Returns the classroom code, name, and description. The authenticated user must be either a teacher attached to the classroom or a pupil with a membership for it.")
+    public ResponseEntity<ClassroomResponse> getClassroom(
+            @PathVariable String classroomCode,
+            @AuthenticationPrincipal JwtUserPrincipal principal) {
+        return ResponseEntity.ok(classroomService.getClassroom(classroomCode, principal));
+    }
+
     @GetMapping("/{classroomCode}/teachers")
     @PreAuthorize("hasAuthority('TEACHER')")
     @Operation(summary = "List classroom teachers", description = "Returns all teachers attached to the classroom. The authenticated teacher must already belong to the classroom.")

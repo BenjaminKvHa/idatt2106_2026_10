@@ -22,19 +22,22 @@ const DIFFICULTIES: TaskDifficulty[] = ['EASY', 'MEDIUM', 'HARD']
 const showHelpPopup = ref(false)
 const showHintPopup = ref(false)
 const showGuidePopup = ref(true)
+const showCompletePopup = ref(false)
+
 const stepIndex = ref(0)
 const currentTask = ref<NewsVerificationResponse | null>(null)
 const imageUrls = ref<string[]>([])
 const selectedFileId = ref<number | null>(null)
 const lastResult = ref<ValidationResult | null>(null)
+
 const runCorrect = ref(0)
 const runAttempts = ref(0)
 const runDone = ref(false)
+
 const loading = ref(false)
 const submitting = ref(false)
 const error = ref<string | null>(null)
 
-const showCompletePopup = ref(false)
 const popupTitle = ref('')
 const popupMessage = ref('')
 const popupSubMessage = ref('')
@@ -46,29 +49,55 @@ const difficultyLabel = computed(() => {
     MEDIUM: 'Middels',
     HARD: 'Vanskelig',
   }
+
   return labels[DIFFICULTIES[stepIndex.value]!]
 })
 
-function revokeImageUrls() {
+const progressPercent = computed(() => {
+  return ((stepIndex.value + 1) / DIFFICULTIES.length) * 100
+})
+
+function openHelpPopup(): void {
+  showHelpPopup.value = true
+}
+
+function closeHelpPopup(): void {
+  showHelpPopup.value = false
+}
+
+function openHintPopup(): void {
+  showHintPopup.value = true
+}
+
+function closeHintPopup(): void {
+  showHintPopup.value = false
+}
+
+function revokeImageUrls(): void {
   for (const url of imageUrls.value) URL.revokeObjectURL(url)
   imageUrls.value = []
 }
 
-async function loadTask() {
+async function loadTask(): Promise<void> {
   loading.value = true
   error.value = null
   revokeImageUrls()
   currentTask.value = null
+
   try {
     const difficulty = DIFFICULTIES[stepIndex.value]!
+
     const task = await get<NewsVerificationResponse>(
       `/api/chapters/${NYHETSKVARTALET_CHAPTER_ID}/nyhetskvartalet?difficulty=${difficulty}`,
     )
+
     currentTask.value = task
+
     const blobs = await Promise.all(
       task.fileIds.map((id) => getBlob(`/api/objects/${id}`)),
     )
-    imageUrls.value = blobs.map((b) => URL.createObjectURL(b))
+
+    imageUrls.value = blobs.map((blob) => URL.createObjectURL(blob))
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Kunne ikke laste oppgave'
   } finally {
@@ -76,20 +105,27 @@ async function loadTask() {
   }
 }
 
-async function choose(fileId: number) {
+async function choose(fileId: number): Promise<void> {
   if (!currentTask.value || lastResult.value || submitting.value) return
+
   submitting.value = true
   selectedFileId.value = fileId
   error.value = null
+
   try {
     const body: NewsVerificationRequest = { selectedFileId: fileId }
+
     const result = await post<ValidationResult>(
       `/api/chapters/nyhetskvartalet/tasks/${currentTask.value.taskId}/validate`,
       body,
     )
+
     lastResult.value = result
-    runAttempts.value++
-    if (result.correct) runCorrect.value++
+    runAttempts.value += 1
+
+    if (result.correct) {
+      runCorrect.value += 1
+    }
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Kunne ikke sende svar'
     selectedFileId.value = null
@@ -98,36 +134,68 @@ async function choose(fileId: number) {
   }
 }
 
-function cardClass(fileId: number) {
+function cardClass(fileId: number): string {
   if (selectedFileId.value !== fileId) return ''
   if (!lastResult.value) return 'selected'
+
   return lastResult.value.correct ? 'selected correct' : 'selected wrong'
 }
 
-async function next() {
+async function next(): Promise<void> {
   if (!lastResult.value) return
-  if (lastResult.value.runCompleted) {
-    runDone.value = true
-    const success = runCorrect.value === runAttempts.value
-    popupSuccess.value = success
-    popupTitle.value = success ? 'Godt jobbet!' : 'Ferdig!'
-    popupMessage.value = `Du fikk ${runCorrect.value} av ${runAttempts.value} riktig.`
-    popupSubMessage.value = success
-      ? 'Du klarte alle nivåene uten feil.'
-      : 'Prøv igjen for å forbedre resultatet.'
-    showCompletePopup.value = true
+
+  if (lastResult.value.runCompleted || stepIndex.value === DIFFICULTIES.length - 1) {
+    showFinalResult()
     return
   }
-  stepIndex.value++
+
+  stepIndex.value += 1
   selectedFileId.value = null
   lastResult.value = null
+
   await loadTask()
 }
 
-function closeCompletePopup() {
+function showFinalResult(): void {
+  runDone.value = true
+
+  const success = runCorrect.value === runAttempts.value
+
+  popupSuccess.value = success
+  popupTitle.value = success ? 'Du klarte det!' : 'Du klarte det ikke'
+  popupMessage.value = success
+    ? 'Gratulerer! Du klarte alle nivåene i Nyhetskvartalet.'
+    : 'Du må ha rett på alle oppgavene for å bestå nyhetskvartalet.'
+  popupSubMessage.value = success
+    ? 'Du har nå fullført stoppestedet.'
+    : "Trykk 'prøv på nytt' for å prøve igjen, eller gå tilbake til kartet."
+
+  showCompletePopup.value = true
+}
+
+async function retryLevel(): Promise<void> {
+  stepIndex.value = 0
+  selectedFileId.value = null
+  lastResult.value = null
+  runCorrect.value = 0
+  runAttempts.value = 0
+  runDone.value = false
   showCompletePopup.value = false
+
+  await loadTask()
+}
+
+function goToMap(): void {
   revokeImageUrls()
   router.push('/pupil/classroom/map')
+}
+
+function closeCompletePopup(): void {
+  showCompletePopup.value = false
+
+  if (popupSuccess.value) {
+    goToMap()
+  }
 }
 
 onMounted(loadTask)
@@ -137,16 +205,37 @@ onBeforeUnmount(revokeImageUrls)
 <template>
   <TopBar
     title="Nyhetskvartalet"
-    @help="showHelpPopup = true"
-    @hint="showHintPopup = true"
+    @help="openHelpPopup"
+    @hint="openHintPopup"
   />
 
   <div class="page">
     <div class="center-container">
       <template v-if="currentTask && !runDone">
-        <h2>Nivå {{ stepIndex + 1 }} — {{ difficultyLabel }}</h2>
         <div class="task-wrapper">
           <p>{{ currentTask.taskDescription }}</p>
+        </div>
+
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div
+              class="progress-fill"
+              :style="{ width: progressPercent + '%' }"
+            ></div>
+          </div>
+
+          <p class="progress-text">
+            Nivå {{ stepIndex + 1 }} / {{ DIFFICULTIES.length }} — {{ difficultyLabel }}
+          </p>
+        </div>
+
+        <div
+          v-if="lastResult"
+          class="mini-feedback"
+          :class="{ success: lastResult.correct, fail: !lastResult.correct }"
+        >
+          <strong>{{ lastResult.correct ? 'Riktig!' : 'Feil.' }}</strong>
+          <span v-if="lastResult.feedback"> {{ lastResult.feedback }}</span>
         </div>
 
         <div class="picture-wrapper">
@@ -166,25 +255,31 @@ onBeforeUnmount(revokeImageUrls)
               <span v-else>Laster…</span>
             </div>
 
+            <p
+              v-if="lastResult && selectedFileId === fileId"
+              class="answer-label"
+              :class="lastResult.correct ? 'correct-label' : 'wrong-label'"
+            >
+              {{ lastResult.correct ? 'Riktig svar' : 'Ditt valg' }}
+            </p>
+
             <button
               class="fake-button"
               :disabled="!!lastResult || submitting"
               @click="choose(fileId)"
             >
-              Dette er den falske
+              Velg dette bildet
             </button>
           </div>
         </div>
 
-        <div v-if="lastResult" class="answer-feedback">
-          <p>
-            <strong>{{ lastResult.correct ? 'Riktig!' : 'Feil.' }}</strong>
-          </p>
-          <p>{{ lastResult.feedback }}</p>
-          <button class="primary-btn" @click="next">
-            {{ stepIndex === DIFFICULTIES.length - 1 ? 'Se resultat' : 'Neste nivå →' }}
-          </button>
-        </div>
+        <button
+          v-if="lastResult"
+          class="next-level-button"
+          @click="next"
+        >
+          {{ stepIndex === DIFFICULTIES.length - 1 ? 'Se resultat' : 'Gå til neste nivå' }}
+        </button>
       </template>
 
       <p v-else-if="loading">Laster oppgave…</p>
@@ -194,31 +289,42 @@ onBeforeUnmount(revokeImageUrls)
 
   <TaskGuide v-if="showGuidePopup" @close="showGuidePopup = false">
     <h2>Velkommen til nyhetskvartalet!</h2>
-    <p>I nyhetskvartalet vil du få oppgaver som handler om å skille ekte avisforsider og uekte avisforsider.
-      I hver oppgave vil du få én ekte avisforside, og en falsk, og du skal velge hvilken en av dem du tror er falsk.
-      Er du klar for å løse oppgaver?</p>
+    <p>
+      I nyhetskvartalet vil du få oppgaver som handler om å skille ekte
+      avisforsider og uekte avisforsider. I hver oppgave vil du få én ekte
+      avisforside og én falsk. Du skal velge hvilken du tror er falsk.
+      Er du klar for å løse oppgaver?
+    </p>
   </TaskGuide>
 
-  <div v-if="showHelpPopup" class="popup-overlay" @click="showHelpPopup = false">
+  <div v-if="showHelpPopup" class="popup-overlay" @click="closeHelpPopup">
     <div class="hint-popup" @click.stop>
       <h2 class="popup-title">Trenger du hjelp?</h2>
+
       <div class="hint-text">
-        <p>I Nyhetskvartalet skal du undersøke informasjon og finne ut hva som er ekte og falskt.</p>
+        <p>
+          I Nyhetskvartalet skal du undersøke informasjon og finne ut hva som er
+          ekte og falskt.
+        </p>
         <ul>
           <li>Les oppgaven nøye før du svarer</li>
           <li>Sammenlign bildene og se etter rare detaljer</li>
           <li>Velg det alternativet du mener er falskt</li>
         </ul>
       </div>
+
       <div class="popup-actions">
-        <button class="popup-btn popup-btn-play" @click="showHelpPopup = false">Ok</button>
+        <button class="popup-btn popup-btn-play" @click="closeHelpPopup">
+          Ok
+        </button>
       </div>
     </div>
   </div>
 
-  <div v-if="showHintPopup" class="popup-overlay" @click="showHintPopup = false">
+  <div v-if="showHintPopup" class="popup-overlay" @click="closeHintPopup">
     <div class="hint-popup" @click.stop>
       <h2 class="popup-title">Tips 💡</h2>
+
       <div class="hint-text">
         <p>Tenk som en detektiv.</p>
         <ul>
@@ -227,11 +333,15 @@ onBeforeUnmount(revokeImageUrls)
           <li>Det som virker litt rart, er ofte verdt å undersøke nærmere</li>
         </ul>
       </div>
+
       <div class="popup-actions">
-        <button class="popup-btn popup-btn-play" @click="showHintPopup = false">Ok</button>
+        <button class="popup-btn popup-btn-play" @click="closeHintPopup">
+          Ok
+        </button>
       </div>
     </div>
   </div>
+
   <CompleteLevelPopup
     :show="showCompletePopup"
     :title="popupTitle"
@@ -242,13 +352,30 @@ onBeforeUnmount(revokeImageUrls)
     :fail-image="thumbsDownNews"
     @close="closeCompletePopup"
   />
+
+  <div v-if="showCompletePopup && !popupSuccess" class="popup-button-layer">
+    <button class="popup-btn popup-btn-play" @click="retryLevel">
+      Prøv på nytt
+    </button>
+
+    <button class="popup-btn popup-btn-map" @click="goToMap">
+      Tilbake til kartet
+    </button>
+  </div>
 </template>
 
 <style scoped>
 .page {
+  min-height: calc(100vh - 80px);
   display: flex;
   justify-content: center;
   padding: 2rem 1rem;
+  background:
+    linear-gradient(rgb(255 255 255 / 60%), rgb(255 255 255 / 60%)),
+    url('@/assets/backgrounds/nyhetskvartalet-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
 }
 
 .center-container {
@@ -261,8 +388,62 @@ onBeforeUnmount(revokeImageUrls)
   gap: 1.5rem;
 }
 
-h2 {
+.task-wrapper {
+  position: relative;
+  width: min(100%, 800px);
+  padding: 1.4rem 2rem;
+  background: var(--orange-medium);
+  border: 5px solid var(--brown-dark);
+  border-radius: 38px;
+  box-sizing: border-box;
+  box-shadow: 0 8px 0 var(--brown-dark);
+}
+
+.task-wrapper p {
   margin: 0;
+}
+
+.progress-container {
+  width: min(100%, 500px);
+  text-align: center;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 18px;
+  background: rgb(0 0 0 / 15%);
+  border: 3px solid var(--brown-dark);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--green-confirm);
+  transition: width 0.4s ease;
+}
+
+.progress-text {
+  margin-top: 0.4rem;
+  margin-bottom: 0;
+  font-weight: 700;
+}
+
+.mini-feedback {
+  padding: 0.75rem 1.4rem;
+  border: 4px solid var(--brown-dark);
+  border-radius: 24px;
+  font-weight: 700;
+  box-shadow: 0 5px 0 var(--brown-dark);
+}
+
+.mini-feedback.success {
+  background: var(--green-confirm);
+}
+
+.mini-feedback.fail {
+  background: #d95b43;
+  color: white;
 }
 
 .picture-wrapper {
@@ -282,30 +463,41 @@ h2 {
   flex: 1 1 300px;
   max-width: 420px;
   width: 100%;
-  padding: 0.5rem;
-  border-radius: 16px;
-  transition: all 0.2s ease;
+  padding: 1rem;
+  border-radius: 30px;
+  background: rgb(255 255 255 / 35%);
+  border: 3px solid rgb(91 62 43 / 25%);
+  box-shadow: 0 10px 20px rgb(0 0 0 / 10%);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.picture-card:hover {
+  transform: translateY(-4px);
 }
 
 .picture-card.selected {
-  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 0 5px var(--orange-medium);
 }
 
 .picture-card.correct {
-  background: #a5d6a7;
-  box-shadow: 0 0 0 4px #2e7d32;
+  box-shadow: 0 0 0 6px var(--green-confirm);
+  background: rgb(120 190 120 / 22%);
 }
 
 .picture-card.wrong {
-  background: #ef9a9a;
-  box-shadow: 0 0 0 4px #c62828;
+  box-shadow: 0 0 0 6px #d95b43;
+  background: rgb(217 91 67 / 18%);
 }
 
 .picture-placeholder {
   width: min(100%, 420px);
   aspect-ratio: 420 / 320;
   background-color: var(--beige-light);
-  border: 2px solid var(--brown-dark);
+  border: 4px solid var(--brown-dark);
+  border-radius: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -319,7 +511,25 @@ h2 {
   object-fit: contain;
 }
 
-.fake-button {
+.answer-label {
+  margin: 0;
+  padding: 0.45rem 1.2rem;
+  border: 3px solid var(--brown-dark);
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.correct-label {
+  background: var(--green-confirm);
+}
+
+.wrong-label {
+  background: #d95b43;
+  color: white;
+}
+
+.fake-button,
+.next-level-button {
   width: 100%;
   max-width: 420px;
   padding: 1rem 2rem;
@@ -327,95 +537,43 @@ h2 {
   border: 5px solid var(--brown-dark);
   background-color: var(--orange-medium);
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.2s ease, filter 0.2s ease;
+  font-weight: 700;
+  box-shadow: 0 6px 0 var(--brown-dark);
+  transition:
+    transform 0.2s ease,
+    filter 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.fake-button:hover:not(:disabled) {
+.next-level-button {
+  max-width: 360px;
+  background: var(--green-confirm);
+}
+
+.fake-button:hover:not(:disabled),
+.next-level-button:hover {
   filter: brightness(1.1);
-  transform: scale(1.02);
+  transform: translateY(-3px);
+  box-shadow: 0 9px 0 var(--brown-dark);
 }
 
-.fake-button:active:not(:disabled) {
-  transform: scale(0.97);
+.fake-button:active:not(:disabled),
+.next-level-button:active {
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 var(--brown-dark);
 }
 
 .fake-button:disabled {
-  opacity: 0.6;
   cursor: not-allowed;
-}
-
-.task-wrapper {
-  width: min(100%, 800px);
-  padding: 1rem 2rem;
-  background: var(--orange-medium);
-  border: 5px solid var(--brown-dark);
-  border-radius: 38px;
-  box-sizing: border-box;
-}
-
-.task-wrapper p {
-  margin: 0;
-}
-
-.answer-feedback {
-  width: min(100%, 800px);
-  padding: 1.25rem 1.5rem;
-  background: rgba(255, 255, 255, 0.85);
-  border: 3px solid var(--brown-dark);
-  border-radius: 24px;
-  text-align: center;
-}
-
-.answer-feedback p {
-  margin: 0 0 0.75rem;
-  font-size: 1.1rem;
-}
-
-.primary-btn {
-  padding: 0.75rem 1.5rem;
-  border-radius: 24px;
-  border: 3px solid var(--brown-dark);
-  background: var(--orange-medium);
-  font-size: 1.1rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.primary-btn:hover {
-  filter: brightness(1.08);
-}
-
-.end-screen {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
+  opacity: 0.75;
+  transform: none;
+  filter: none;
+  box-shadow: 0 6px 0 var(--brown-dark);
 }
 
 .error {
   color: #c62828;
   font-weight: 600;
-}
-
-@media (max-width: 768px) {
-  .page {
-    padding: 1rem;
-  }
-
-  .picture-wrapper {
-    gap: 1rem;
-  }
-
-  .task-wrapper {
-    padding: 1rem;
-    border-width: 3px;
-    border-radius: 24px;
-  }
-
-  .fake-button {
-    border-width: 3px;
-    border-radius: 24px;
-  }
 }
 
 .popup-overlay {
@@ -461,30 +619,60 @@ h2 {
   margin-bottom: 6px;
 }
 
-.popup-actions {
-  margin-top: 26px;
+.popup-actions,
+.popup-button-layer {
   display: flex;
   justify-content: center;
   gap: 22px;
   flex-wrap: wrap;
 }
 
+.popup-actions {
+  margin-top: 26px;
+}
+
+.popup-button-layer {
+  position: fixed;
+  left: 50%;
+  bottom: 16vh;
+  transform: translateX(-50%);
+  z-index: 2000;
+}
+
 .popup-btn {
-  min-width: 130px;
+  min-width: 150px;
   padding: 14px 24px;
   border-radius: 22px;
   border: 4px solid var(--brown-dark);
   cursor: pointer;
+  font-weight: 700;
   box-shadow: 0 6px 12px rgb(0 0 0 / 18%);
+  transition:
+    transform 0.2s ease,
+    filter 0.2s ease;
+}
+
+.popup-btn:hover {
+  transform: scale(1.04);
+  filter: brightness(1.08);
+}
+
+.popup-btn:active {
+  transform: scale(0.97);
 }
 
 .popup-btn-play {
   background: var(--green-confirm);
 }
 
+.popup-btn-map {
+  background: var(--orange-medium);
+}
+
 @media (max-width: 768px) {
   .page {
     padding: 1rem;
+    background-attachment: scroll;
   }
 
   .picture-wrapper {
@@ -497,9 +685,15 @@ h2 {
     border-radius: 24px;
   }
 
-  .fake-button {
+  .fake-button,
+  .next-level-button {
     border-width: 3px;
     border-radius: 24px;
+  }
+
+  .popup-button-layer {
+    bottom: 8vh;
+    width: calc(100vw - 32px);
   }
 }
 </style>

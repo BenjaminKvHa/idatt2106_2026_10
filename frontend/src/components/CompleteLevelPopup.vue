@@ -7,7 +7,7 @@ import tryAgainSoundFile from '@/assets/tryAgainSound.mp3'
 import { useAudio } from '@/composables/useAudio'
 
 const router = useRouter()
-const { playSound } = useAudio()
+const { playSound, stopSound } = useAudio()
 
 const props = defineProps<{
   show: boolean
@@ -29,14 +29,10 @@ let tryAgainSoundRef: HTMLAudioElement | null = null
 const currentImage = computed(() => (props.success ? props.successImage : props.failImage))
 
 function stopAllSounds() {
-  if (completedSoundRef) {
-    completedSoundRef.pause()
-    completedSoundRef.currentTime = 0
-  }
-  if (tryAgainSoundRef) {
-    tryAgainSoundRef.pause()
-    tryAgainSoundRef.currentTime = 0
-  }
+  stopSound(completedSoundRef)
+  stopSound(tryAgainSoundRef)
+  completedSoundRef = null
+  tryAgainSoundRef = null
 }
 
 function closePopup() {

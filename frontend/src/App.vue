@@ -26,21 +26,20 @@ const startMusic = async () => {
   registerAudioElement(audio)
   audio.volume = 0
 
-  const targetVolume = isMuted.value ? 0 : volume.value / 100
   const fadeDuration = 2000 // 2 sek
   const stepTime = 50
   const steps = fadeDuration / stepTime
-  const volumeStep = targetVolume / steps
 
   try {
     await audio.play()
 
-    if (targetVolume > 0) {
+    if (!isMuted.value && volume.value > 0) {
       let currentStep = 0
 
       const fade = setInterval(() => {
         currentStep++
-        audio.volume = Math.min(audio.volume + volumeStep, targetVolume)
+        const target = isMuted.value ? 0 : volume.value / 100
+        audio.volume = Math.min(audio.volume + target / steps, target)
         if (currentStep >= steps) clearInterval(fade)
       }, stepTime)
     }

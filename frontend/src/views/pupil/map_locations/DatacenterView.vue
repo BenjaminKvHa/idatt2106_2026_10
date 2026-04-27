@@ -39,7 +39,7 @@ const CATEGORIES: { value: ImageCategory; label: string }[] = [
   { value: 'MANIPULATED', label: 'Manipulert' },
 ]
 
-const { playSound } = useAudio()
+const { playSound, stopSound } = useAudio()
 let victorySoundRef: HTMLAudioElement | null = null
 let defeatSoundRef: HTMLAudioElement | null = null
 
@@ -273,8 +273,10 @@ function finishGame() {
 }
 
 function stopResultSounds() {
-  if (victorySoundRef) { victorySoundRef.pause(); victorySoundRef.currentTime = 0 }
-  if (defeatSoundRef) { defeatSoundRef.pause(); defeatSoundRef.currentTime = 0 }
+  stopSound(victorySoundRef)
+  stopSound(defeatSoundRef)
+  victorySoundRef = null
+  defeatSoundRef = null
 }
 
 function fireVictoryConfetti() {

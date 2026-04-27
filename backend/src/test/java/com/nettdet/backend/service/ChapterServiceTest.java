@@ -80,6 +80,9 @@ class ChapterServiceTest {
     @Mock
     private NotificationService notificationService;
 
+    @Mock
+    private TipService tipService;
+
     private ObjectMapper objectMapper;
     private ChapterService chapterService;
 
@@ -96,7 +99,8 @@ class ChapterServiceTest {
                 chapterRepository,
                 objectMapper,
                 validators,
-                notificationService);
+                notificationService,
+                tipService);
     }
 
     @DisplayName("Returns all chapters in repository order as chapter responses")
@@ -298,6 +302,7 @@ class ChapterServiceTest {
         assertEquals(0, progression.getUnsuccessfulStreak());
         assertEquals(0, progression.getCurrentRunAttempts());
         assertEquals(0, progression.getCurrentRunCorrect());
+        verify(tipService).addAllConfiguredTipsToNotebook(progression);
     }
 
     @DisplayName("Datasenteret partially-correct run increments unsuccessful streak when the 5th attempt is wrong")
@@ -320,6 +325,7 @@ class ChapterServiceTest {
         assertTrue(result.runCompleted());
         assertEquals(2, progression.getSuccessfulRuns());
         assertEquals(1, progression.getUnsuccessfulStreak());
+        verify(tipService, never()).addAllConfiguredTipsToNotebook(any());
     }
 
     @DisplayName("Creates notification when pupil completes a chapter for the first time")
@@ -339,6 +345,7 @@ class ChapterServiceTest {
 
         assertTrue(result.runCompleted());
         assertEquals(1, progression.getSuccessfulRuns());
+        verify(tipService).addAllConfiguredTipsToNotebook(progression);
         verify(notificationService).createNotification(
                 CLASSROOM_CODE,
                 PUPIL_EMAIL,
@@ -362,6 +369,7 @@ class ChapterServiceTest {
 
         assertTrue(result.runCompleted());
         assertEquals(2, progression.getSuccessfulRuns());
+        verify(tipService).addAllConfiguredTipsToNotebook(progression);
         verifyNoInteractions(notificationService);
     }
 
@@ -426,6 +434,7 @@ class ChapterServiceTest {
 
         assertFalse(result.runCompleted());
         verifyNoInteractions(notificationService);
+        verifyNoInteractions(tipService);
     }
 
     @DisplayName("Creates stuck notification again after a successful run resets the streak")

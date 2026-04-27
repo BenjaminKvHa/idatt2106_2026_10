@@ -43,7 +43,9 @@ function medalImageUrl(medal: PupilMedal) {
     <main class="medals-page">
       <section class="board-shell" aria-labelledby="medals-title">
         <img class="board-image" :src="boardBackground" alt="" aria-hidden="true" />
-        <img class="blobby-image" :src="blobbyImage" alt="" aria-hidden="true" />
+        <div class="blobby-wrapper" aria-hidden="true">
+          <img class="blobby-image" :src="blobbyImage" alt="" />
+        </div>
 
         <div class="board-content">
           <header class="medals-header">
@@ -98,7 +100,7 @@ function medalImageUrl(medal: PupilMedal) {
 
 <style scoped>
 .medals-screen {
-  min-height: 100dvh;
+  height: 100dvh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -114,41 +116,46 @@ function medalImageUrl(medal: PupilMedal) {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: clamp(0.75rem, 2vw, 1.5rem);
 }
 
 .medals-page::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.38);
+  background: rgba(0, 0, 0, 0.4);
 }
 
 .board-shell {
   position: relative;
   z-index: 1;
-  width: min(96vw, calc((100dvh - 7rem) * 1.5), 1360px);
-  aspect-ratio: 3 / 2;
+  width: min(96vw, 1400px);
+  max-height: 100%;
 }
 
 .board-image {
   display: block;
   width: 100%;
-  height: 100%;
+  max-height: 100%;
   object-fit: contain;
   pointer-events: none;
   user-select: none;
 }
 
-.blobby-image {
+.blobby-wrapper {
   position: absolute;
-  top: 12.7%;
-  right: 10.9%;
-  width: clamp(7.75rem, 14vw, 12.5rem);
+  top: 10.5%;
+  right: 6%;
+  width: 30%;
+  z-index: 10;
   transform: translateY(-50%);
-  filter: drop-shadow(0 0.25rem 0 rgba(0, 0, 0, 0.22));
   pointer-events: none;
-  z-index: 2;
+}
+
+.blobby-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.2));
 }
 
 .board-content {
@@ -320,10 +327,6 @@ h1 {
 }
 
 @media (max-width: 900px) {
-  .board-shell {
-    width: min(98vw, calc((100dvh - 6.5rem) * 1.5));
-  }
-
   .board-content {
     inset: 19% 16% 20% 16%;
   }
@@ -333,35 +336,18 @@ h1 {
   }
 }
 
-@media (max-width: 560px) {
-  .medals-screen {
-    overflow-y: auto;
-  }
-
-  .medals-page {
-    overflow: visible;
-    align-items: flex-start;
-    padding-block: 0.75rem 1.25rem;
-  }
-
-  .board-shell {
-    width: min(42rem, 100%);
-    min-height: 46rem;
-    aspect-ratio: auto;
-  }
-
-  .board-image {
-    position: absolute;
-    inset: 0;
-    object-fit: fill;
+@media (max-width: 768px) {
+  .blobby-wrapper {
+    top: -40px;
+    right: 20px;
   }
 
   .blobby-image {
-    top: 7.65rem;
-    right: 2.55rem;
-    width: 8rem;
+    width: 105px;
   }
+}
 
+@media (max-width: 560px) {
   .board-content {
     inset: 8.75rem 3.25rem 6.5rem 3.25rem;
   }

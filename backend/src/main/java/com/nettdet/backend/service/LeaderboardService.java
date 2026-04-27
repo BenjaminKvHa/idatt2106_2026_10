@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.nettdet.backend.domain.Classroom;
-import com.nettdet.backend.domain.PupilChapterBridgeProgression;
 import com.nettdet.backend.domain.PupilClassroomMembership;
 import com.nettdet.backend.domain.enums.AccountRole;
 import com.nettdet.backend.dto.ClassroomLeaderboardEntryResponse;
@@ -28,19 +27,19 @@ import com.nettdet.backend.security.JwtUserPrincipal;
 @Service
 public class LeaderboardService {
 
-    private static final int XP_PER_HIGHSCORE_POINT = 30;
-    private static final int XP_PER_COMPLETED_CHAPTER = 30;
-
     private final ClassroomRepository classroomRepository;
     private final PupilClassroomMembershipRepository pupilClassroomMembershipRepository;
     private final AccountClassroomBridgeTeacherRepository bridgeRepository;
+    private final PupilXpService pupilXpService;
 
     public LeaderboardService(ClassroomRepository classroomRepository,
                               PupilClassroomMembershipRepository pupilClassroomMembershipRepository,
-                              AccountClassroomBridgeTeacherRepository bridgeRepository) {
+                              AccountClassroomBridgeTeacherRepository bridgeRepository,
+                              PupilXpService pupilXpService) {
         this.classroomRepository = classroomRepository;
         this.pupilClassroomMembershipRepository = pupilClassroomMembershipRepository;
         this.bridgeRepository = bridgeRepository;
+        this.pupilXpService = pupilXpService;
     }
 
     @Transactional(readOnly = true)
@@ -95,7 +94,7 @@ public class LeaderboardService {
 
             ClassroomScore score = scoresByClassroom.get(classroom.getClassroomCode());
             if (score != null) {
-                score.totalXp += calculateMembershipXp(membership);
+                score.totalXp += pupilXpService.calculateMembershipXp(membership);
             }
         }
 
@@ -144,7 +143,7 @@ public class LeaderboardService {
             pupilScores.add(new PupilScore(
                     membership.getAccountEmail(),
                     membership.getUsername(),
-                    calculateMembershipXp(membership)));
+                    pupilXpService.calculateMembershipXp(membership)));
         }
 
         List<ClassroomPupilLeaderboardEntryResponse> entries = pupilScores.stream()
@@ -175,22 +174,6 @@ public class LeaderboardService {
         if (!bridgeRepository.existsByIdAccountEmailAndIdClassroomCode(email, classroomCode)) {
             throw new AccessDeniedException("You do not have access to manage this classroom");
         }
-    }
-
-    private long calculateMembershipXp(PupilClassroomMembership membership) {
-        long totalXp = 0L;
-
-        for (PupilChapterBridgeProgression progression : membership.getChapterProgressions()) {
-            int highscore = progression.getHighscore() == null ? 0 : progression.getHighscore();
-            int successfulRuns = progression.getSuccessfulRuns() == null ? 0 : progression.getSuccessfulRuns();
-
-            totalXp += (long) highscore * XP_PER_HIGHSCORE_POINT;
-            if (successfulRuns >= 1) {
-                totalXp += XP_PER_COMPLETED_CHAPTER;
-            }
-        }
-
-        return totalXp;
     }
 
     private record PupilScore(String accountEmail, String username, long totalXp) {

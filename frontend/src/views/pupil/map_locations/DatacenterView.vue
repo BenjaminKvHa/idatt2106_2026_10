@@ -59,60 +59,54 @@ const currentLevel = computed<LevelState | null>(
   () => levels.value[currentLevelIndex.value] ?? null,
 )
 
-const isLastLevel = computed(
-  () => currentLevelIndex.value === levels.value.length - 1,
-)
+const isLastLevel = computed(() => currentLevelIndex.value === levels.value.length - 1)
 
-const isCurrentLevelAnswered = computed(
-  () => currentLevel.value?.result != null,
-)
+const isCurrentLevelAnswered = computed(() => currentLevel.value?.result != null)
 
-const correctCount = computed(
-  () => levels.value.filter((l) => l.result?.correct).length,
-)
+const correctCount = computed(() => levels.value.filter((l) => l.result?.correct).length)
 
 const allAnswersCorrect = computed(
-  () =>
-    levels.value.length > 0 &&
-    levels.value.every((l) => l.result?.correct === true),
+  () => levels.value.length > 0 && levels.value.every((l) => l.result?.correct === true),
 )
 
 const canSubmit = computed(() => {
   const level = currentLevel.value
   if (!level || level.result || submitting.value) return false
+
   if (level.task.format === 'IMAGE_VERIFICATION') {
-    return (
-      level.selectedCategory !== null && level.selectedJustification !== null
-    )
+    return level.selectedCategory !== null && level.selectedJustification !== null
   }
+
   return level.selectedFileId !== null
 })
 
-const resultImage = computed(() =>
-  resultType.value === 'victory' ? VictoryImage : DefeatImage,
-)
-const resultAltText = computed(() =>
-  resultType.value === 'victory' ? 'Seier' : 'Tap',
-)
+const resultImage = computed(() => (resultType.value === 'victory' ? VictoryImage : DefeatImage))
+const resultAltText = computed(() => (resultType.value === 'victory' ? 'Seier' : 'Tap'))
+
 const resultKicker = computed(() =>
   resultType.value === 'victory' ? 'Oppdrag fullført' : 'Oppdrag mislyktes',
 )
+
 const resultTitle = computed(() =>
   resultType.value === 'victory' ? 'Du klarte det!' : 'Du tapte!',
 )
+
 const resultMessage = computed(() =>
   resultType.value === 'victory'
     ? `Gratulerer! Du svarte riktig på alle ${levels.value.length} oppgavene og slo datatyven.`
     : `Du fikk ${correctCount.value} av ${levels.value.length} riktig. Datatyven slapp unna denne gangen.`,
 )
+
 const resultSubmessage = computed(() =>
   resultType.value === 'victory'
     ? 'Nå har du vist at du kan tenke som en ekte nett-detektiv!'
     : 'Men ikke gi opp – prøv igjen og se om du klarer å slå datatyven neste gang!',
 )
+
 const resultHighlightTitle = computed(() =>
   resultType.value === 'victory' ? '🏆 Spill fullført' : '💥 Prøv igjen',
 )
+
 const resultHighlightText = computed(() =>
   resultType.value === 'victory'
     ? 'Du har kommet helt til toppen i Datasenteret.'
@@ -139,6 +133,7 @@ async function loadRun() {
     )
 
     const built: LevelState[] = []
+
     for (const task of run.tasks) {
       const fileIds =
         task.format === 'IMAGE_VERIFICATION'
@@ -147,9 +142,7 @@ async function loadRun() {
             : []
           : (task.newsTask?.fileIds ?? [])
 
-      const blobs = await Promise.all(
-        fileIds.map((id) => getBlob(`/api/objects/${id}`)),
-      )
+      const blobs = await Promise.all(fileIds.map((id) => getBlob(`/api/objects/${id}`)))
       const urls = blobs.map((b) => URL.createObjectURL(b))
 
       built.push({
@@ -161,6 +154,7 @@ async function loadRun() {
         result: null,
       })
     }
+
     levels.value = built
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Kunne ikke laste oppgavene'
@@ -172,6 +166,7 @@ async function loadRun() {
 function selectCategory(value: ImageCategory) {
   const level = currentLevel.value
   if (!level || level.result) return
+
   level.selectedCategory = value
   level.selectedJustification = null
 }
@@ -179,21 +174,25 @@ function selectCategory(value: ImageCategory) {
 function selectJustification(value: string) {
   const level = currentLevel.value
   if (!level || level.result) return
+
   level.selectedJustification = value
 }
 
 function selectFileId(value: number) {
   const level = currentLevel.value
   if (!level || level.result) return
+
   level.selectedFileId = value
 }
 
 function categoryClass(value: ImageCategory) {
   const level = currentLevel.value
   if (!level) return ''
+
   const selected = level.selectedCategory === value
   if (!selected) return ''
   if (!level.result) return 'selected'
+
   const ok = level.result.categoryCorrect ?? level.result.correct
   return ok ? 'selected correct' : 'selected wrong'
 }
@@ -201,9 +200,11 @@ function categoryClass(value: ImageCategory) {
 function justificationClass(value: string) {
   const level = currentLevel.value
   if (!level) return ''
+
   const selected = level.selectedJustification === value
   if (!selected) return ''
   if (!level.result) return 'selected'
+
   const ok = level.result.justificationCorrect ?? level.result.correct
   return ok ? 'selected correct' : 'selected wrong'
 }
@@ -211,19 +212,23 @@ function justificationClass(value: string) {
 function newsCardClass(fileId: number) {
   const level = currentLevel.value
   if (!level) return ''
+
   if (level.selectedFileId !== fileId) return ''
   if (!level.result) return 'selected'
+
   return level.result.correct ? 'selected correct' : 'selected wrong'
 }
 
 async function submit() {
   const level = currentLevel.value
   if (!level || !canSubmit.value) return
+
   submitting.value = true
   error.value = null
 
   try {
     let body: DatacenterAnswerRequest
+
     if (level.task.format === 'IMAGE_VERIFICATION') {
       body = {
         format: 'IMAGE_VERIFICATION',
@@ -245,6 +250,7 @@ async function submit() {
       `/api/chapters/datasenteret/tasks/${level.task.taskId}/validate`,
       body,
     )
+
     level.result = result
 
     if (!result.correct) {
@@ -292,6 +298,7 @@ function fireVictoryConfetti() {
       spread: 60,
       origin: { x: 0, y: 0.6 },
     })
+
     confetti({
       ...defaults,
       particleCount: 8,
@@ -299,8 +306,10 @@ function fireVictoryConfetti() {
       spread: 60,
       origin: { x: 1, y: 0.6 },
     })
+
     if (Date.now() < end) requestAnimationFrame(frame)
   }
+
   frame()
 }
 
@@ -309,7 +318,9 @@ watch(showResultPopup, (isOpen) => {
     stopResultSounds()
     return
   }
+
   stopResultSounds()
+
   if (resultType.value === 'victory') {
     victorySoundRef = playSound(victorySoundFile, 0.3)
     fireVictoryConfetti()
@@ -345,11 +356,7 @@ onBeforeUnmount(revokeAllImageUrls)
 </script>
 
 <template>
-  <TopBar
-    title="Datasenteret"
-    @help="showHelpPopup = true"
-    @hint="showHintPopup = true"
-  />
+  <TopBar title="Datasenteret" @help="showHelpPopup = true" @hint="showHintPopup = true" />
 
   <div class="page">
     <div class="center-container">
@@ -376,10 +383,8 @@ onBeforeUnmount(revokeAllImageUrls)
             <div
               class="image-card"
               :class="{
-                correct:
-                  currentLevel.result && currentLevel.result.correct,
-                wrong:
-                  currentLevel.result && currentLevel.result.correct === false,
+                correct: currentLevel.result && currentLevel.result.correct,
+                wrong: currentLevel.result && currentLevel.result.correct === false,
               }"
             >
               <img
@@ -405,6 +410,7 @@ onBeforeUnmount(revokeAllImageUrls)
 
             <div v-if="currentLevel.selectedCategory !== null" class="reason-box">
               <p>Hvorfor?</p>
+
               <button
                 v-for="j in currentLevel.task.imageTask?.justifications ?? []"
                 :key="j"
@@ -434,6 +440,7 @@ onBeforeUnmount(revokeAllImageUrls)
                   />
                   <span v-else>Laster…</span>
                 </div>
+
                 <button
                   class="fake-button"
                   :disabled="!!currentLevel.result || submitting"
@@ -470,9 +477,7 @@ onBeforeUnmount(revokeAllImageUrls)
           <div
             v-if="currentLevel.result"
             class="feedback-box"
-            :class="
-              currentLevel.result.correct ? 'feedback-correct' : 'feedback-wrong'
-            "
+            :class="currentLevel.result.correct ? 'feedback-correct' : 'feedback-wrong'"
           >
             <p class="feedback-title">
               {{ currentLevel.result.correct ? 'Riktig!' : 'Feil!' }}
@@ -513,21 +518,13 @@ onBeforeUnmount(revokeAllImageUrls)
       <div v-if="showGuidePopup" class="intro-overlay">
         <div class="intro-popup">
           <h2 class="intro-title">Velkommen til datasenteret!</h2>
-          <p class="intro-text">
-            Klarer du å svare riktig på alle oppgavene og slå datatyven?
-          </p>
+          <p class="intro-text">Klarer du å svare riktig på alle oppgavene og slå datatyven?</p>
           <img :src="DatatyvenImage" alt="Datatyven" class="intro-image" />
-          <button class="intro-button" @click="showGuidePopup = false">
-            Jeg er klar!
-          </button>
+          <button class="intro-button" @click="showGuidePopup = false">Jeg er klar!</button>
         </div>
       </div>
 
-      <div
-        v-if="showHelpPopup"
-        class="popup-overlay"
-        @click="showHelpPopup = false"
-      >
+      <div v-if="showHelpPopup" class="popup-overlay" @click="showHelpPopup = false">
         <div class="hint-popup" @click.stop>
           <h2 class="popup-title">Trenger du hjelp?</h2>
           <div class="hint-text">
@@ -539,18 +536,12 @@ onBeforeUnmount(revokeAllImageUrls)
             </ul>
           </div>
           <div class="popup-actions">
-            <button class="popup-btn popup-btn-play" @click="showHelpPopup = false">
-              Ok
-            </button>
+            <button class="popup-btn popup-btn-play" @click="showHelpPopup = false">Ok</button>
           </div>
         </div>
       </div>
 
-      <div
-        v-if="showHintPopup"
-        class="popup-overlay"
-        @click="showHintPopup = false"
-      >
+      <div v-if="showHintPopup" class="popup-overlay" @click="showHintPopup = false">
         <div class="hint-popup" @click.stop>
           <h2 class="popup-title">Tips 💡</h2>
           <div class="hint-text">
@@ -562,22 +553,17 @@ onBeforeUnmount(revokeAllImageUrls)
             </ul>
           </div>
           <div class="popup-actions">
-            <button class="popup-btn popup-btn-play" @click="showHintPopup = false">
-              Ok
-            </button>
+            <button class="popup-btn popup-btn-play" @click="showHintPopup = false">Ok</button>
           </div>
         </div>
       </div>
 
-      <div
-        v-if="showResultPopup"
-        class="victory-overlay"
-        @click="closeResultPopup"
-      >
+      <div v-if="showResultPopup" class="victory-overlay" @click="closeResultPopup">
         <div class="victory-popup" @click.stop>
           <div class="victory-top">
             <img :src="resultImage" :alt="resultAltText" class="victory-image" />
           </div>
+
           <div class="victory-content">
             <p class="victory-kicker">{{ resultKicker }}</p>
             <h2 class="victory-title">{{ resultTitle }}</h2>
@@ -590,16 +576,11 @@ onBeforeUnmount(revokeAllImageUrls)
             </div>
 
             <div class="victory-actions">
-              <button
-                v-if="resultType === 'defeat'"
-                class="retry-button"
-                @click="resetGame"
-              >
+              <button v-if="resultType === 'defeat'" class="retry-button" @click="resetGame">
                 Prøv på nytt
               </button>
-              <button class="victory-close-button" @click="goBackToMap">
-                Tilbake til kartet
-              </button>
+
+              <button class="victory-close-button" @click="goBackToMap">Tilbake til kartet</button>
             </div>
           </div>
         </div>
@@ -615,9 +596,16 @@ p {
 }
 
 .page {
+  min-height: 100vh;
   display: flex;
   justify-content: center;
-  padding: 2rem 1rem 3rem;
+  padding: 20px;
+  background:
+    linear-gradient(rgb(255 255 255 / 45%), rgb(255 255 255 / 45%)),
+    url('@/assets/backgrounds/datasenteret-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
 }
 
 .center-container {
@@ -638,51 +626,57 @@ p {
 .progress-box {
   width: min(100%, 700px);
   padding: 1rem 1.4rem;
-  background: var(--beige-light);
-  border: 4px solid var(--brown-dark);
+  background: rgba(255, 255, 255, 0.65);
+  border: 3px solid #5c4033;
   border-radius: 24px;
   font-weight: 700;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
 }
 
 .task-wrapper {
-  width: min(100%, 700px);
-  padding: 1rem 2rem;
-  background: var(--orange-medium);
-  border: 5px solid var(--brown-dark);
-  border-radius: 38px;
+  width: min(100%, 760px);
+  padding: 1.2rem 2rem;
+  background: rgba(255, 255, 255, 0.65);
+  border: 3px solid #5c4033;
+  border-radius: 24px;
   box-sizing: border-box;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
 }
 
 .task-card {
-  width: min(100%, 760px);
-  background: #fff7e9;
-  border: 5px solid var(--brown-dark);
-  border-radius: 32px;
-  padding: 1.75rem;
-  text-align: left;
+  width: min(100%, 900px);
+  background: rgba(255, 255, 255, 0.65);
+  border: 3px solid #5c4033;
+  border-radius: 24px;
+  padding: 28px 28px 36px;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.25rem;
   box-sizing: border-box;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
 }
 
 .image-card {
   display: flex;
   justify-content: center;
-  padding: 0.75rem;
+  width: 100%;
+  padding: 0;
   border-radius: 18px;
   border: 3px solid transparent;
   transition: all 0.2s ease;
 }
 
 .task-image {
-  width: 460px;
-  max-width: 100%;
-  height: 280px;
+  width: 100%;
+  max-width: 620px;
+  height: auto;
+  max-height: 520px;
   object-fit: contain;
+  display: block;
   background: #f2f2f2;
   border-radius: 14px;
   border: 2px solid #999;
+  margin: 0 auto;
 }
 
 .image-placeholder {
@@ -759,21 +753,19 @@ p {
 
 .picture-wrapper {
   display: flex;
-  gap: 1.5rem;
+  gap: 28px;
   flex-wrap: wrap;
   justify-content: center;
+  width: 100%;
 }
 
 .picture-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
-  flex: 1 1 280px;
-  max-width: 380px;
-  padding: 0.5rem;
-  border-radius: 16px;
-  transition: all 0.2s ease;
+  gap: 14px;
+  flex: 1 1 320px;
+  max-width: 460px;
 }
 
 .picture-card.selected {
@@ -783,46 +775,47 @@ p {
 .picture-card.correct {
   background: #a5d6a7;
   box-shadow: 0 0 0 4px #2e7d32;
+  border-radius: 16px;
 }
 
 .picture-card.wrong {
   background: #ef9a9a;
   box-shadow: 0 0 0 4px #c62828;
+  border-radius: 16px;
 }
 
 .picture-placeholder {
   width: 100%;
-  aspect-ratio: 4 / 3;
-  background-color: var(--beige-light);
-  border: 2px solid var(--brown-dark);
+  background-color: #f2f2f2;
+  border: 2px solid #999;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
   overflow: hidden;
-  border-radius: 8px;
 }
 
 .picture {
   width: 100%;
-  height: 100%;
+  height: auto;
+  max-height: 520px;
   object-fit: contain;
+  display: block;
 }
 
 .fake-button {
   width: 100%;
-  padding: 0.75rem 1.25rem;
+  padding: 10px 18px;
   border-radius: 20px;
-  border: 4px solid var(--brown-dark);
-  background-color: var(--orange-medium);
-  font-weight: 700;
+  border: 2px solid #000;
+  background: #f4a259;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .fake-button:hover:not(:disabled) {
-  filter: brightness(1.1);
-  transform: scale(1.02);
+  background: #e38b3d;
 }
 
 .fake-button:disabled {
@@ -832,18 +825,17 @@ p {
 
 .submit-button {
   width: 100%;
-  padding: 1rem;
-  border-radius: 22px;
-  border: 4px solid var(--brown-dark);
-  background: var(--orange-medium);
-  font-weight: 800;
+  padding: 10px 18px;
+  border-radius: 20px;
+  border: 2px solid #000;
+  background: #f4a259;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .submit-button:hover:not(:disabled) {
-  transform: scale(1.01);
-  filter: brightness(1.05);
+  background: #e38b3d;
 }
 
 .submit-button:disabled {
@@ -853,8 +845,8 @@ p {
 
 .feedback-box {
   padding: 1rem;
-  border-radius: 22px;
-  border: 4px solid var(--brown-dark);
+  border-radius: 16px;
+  border: 2px solid #5c4033;
 }
 
 .feedback-correct {
@@ -879,17 +871,17 @@ p {
 
 .nav-button {
   min-width: 200px;
-  min-height: 68px;
-  padding: 1rem 1.5rem;
-  border-radius: 24px;
-  border: 4px solid var(--brown-dark);
-  font-weight: 800;
+  min-height: 58px;
+  padding: 10px 18px;
+  border-radius: 20px;
+  border: 2px solid #000;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .nav-button.primary {
-  background: var(--green-confirm);
+  background: #f4a259;
 }
 
 .nav-button.secondary {
@@ -897,8 +889,7 @@ p {
 }
 
 .nav-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  filter: brightness(1.05);
+  background: #e38b3d;
 }
 
 .nav-button:disabled {
@@ -928,7 +919,7 @@ button:disabled {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 3000;
+  z-index: 9999;
 }
 
 .intro-popup {
@@ -1049,7 +1040,7 @@ button:disabled {
   justify-content: center;
   align-items: center;
   padding: 24px;
-  z-index: 2000;
+  z-index: 9999;
   backdrop-filter: blur(4px);
 }
 
@@ -1180,6 +1171,10 @@ button:disabled {
   .task-wrapper,
   .task-card {
     padding: 1rem;
+  }
+
+  .picture-wrapper {
+    gap: 1rem;
   }
 
   .navigation-bar,

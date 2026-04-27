@@ -21,6 +21,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void
+  (e: 'retry'): void
+  (e: 'map'): void
 }>()
 
 let completedSoundRef: HTMLAudioElement | null = null
@@ -42,7 +44,18 @@ function closePopup() {
 
 function goToMap() {
   stopAllSounds()
-  router.push('/pupil/classroom/map')
+
+  if (props.success) {
+    router.push('/pupil/classroom/map')
+    return
+  }
+
+  emit('map')
+}
+
+function retry() {
+  stopAllSounds()
+  emit('retry')
 }
 
 watch(
@@ -125,14 +138,26 @@ watch(
         </p>
       </div>
 
-      <div v-if="success" class="popup-actions">
-        <button class="popup-btn popup-btn-map" @click="goToMap">Tilbake til kartet</button>
+      <div class="popup-actions">
+        <template v-if="success">
+          <button class="popup-btn popup-btn-success" @click="goToMap">Tilbake til kartet</button>
+        </template>
+
+        <template v-else>
+          <button class="popup-btn popup-btn-play" @click="retry">Prøv på nytt</button>
+
+          <button class="popup-btn popup-btn-map" @click="goToMap">Tilbake til kartet</button>
+        </template>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
+.popup-btn-success {
+  background: var(--green-confirm);
+}
+
 .popup-overlay {
   position: fixed;
   inset: 0;
@@ -171,6 +196,20 @@ watch(
   object-fit: contain;
 }
 
+.popup-title {
+  font-size: 2rem;
+  margin: 0 0 1.2rem;
+}
+
+.popup-text {
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.popup-text p {
+  margin: 0 0 0.75rem;
+}
+
 .popup-actions {
   margin-top: 26px;
   display: flex;
@@ -189,17 +228,49 @@ watch(
   color: var(--color-text);
   cursor: pointer;
   box-shadow: 0 6px 12px rgb(0 0 0 / 18%);
+  transition:
+    transform 0.2s ease,
+    filter 0.2s ease;
 }
 
-.popup-btn-map {
+.popup-btn:hover {
+  transform: scale(1.04);
+  filter: brightness(1.08);
+}
+
+.popup-btn:active {
+  transform: scale(0.97);
+}
+
+.popup-btn-play {
   background: var(--green-confirm);
 }
 
-.popup-title {
-  font-size: 2rem;
+.popup-btn-map {
+  background: var(--orange-medium);
 }
 
-.popup-text {
-  font-size: 1rem;
+@media (max-width: 768px) {
+  .complete-popup {
+    padding: 24px 18px;
+  }
+
+  .popup-image {
+    max-width: 180px;
+  }
+
+  .popup-title {
+    font-size: 1.7rem;
+  }
+
+  .popup-actions {
+    gap: 14px;
+  }
+
+  .popup-btn {
+    width: 100%;
+    min-width: unset;
+    font-size: 1.1rem;
+  }
 }
 </style>

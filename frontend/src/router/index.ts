@@ -23,16 +23,15 @@ import PupilsNotebookChapterView from '@/views/pupil/PupilsNotebookChapterView.v
 import PupilsMysteryView from '@/views/pupil/PupilsMysteryView.vue'
 import PupilsMedalsView from '@/views/pupil/PupilsMedalsView.vue'
 import PupilsHelpView from '@/views/pupil/PupilsHelpView.vue'
-import PupilsLeaderboardView from '@/views/pupil/PupilsLeaderboardView.vue'
 import PupilsMapView from '@/views/pupil/PupilsMapView.vue'
 import SignInView from '@/views/shared/SignInView.vue'
 import SignUpView from '@/views/shared/SignUpView.vue'
-import NewsView from "@/views/pupil/map_locations/NewsView.vue";
-import DatacenterView from "@/views/pupil/map_locations/DatacenterView.vue";
-import PostofficeView from "@/views/pupil/map_locations/PostofficeView.vue";
-import PhotographerView from "@/views/pupil/map_locations/PhotographerView.vue";
-import PupilsWaitingPageView from "@/views/pupil/PupilsWaitingPageView.vue";
-import PupilsWelcomeGuideView from "@/views/pupil/PupilsWelcomeGuideView.vue";
+import NewsView from '@/views/pupil/map_locations/NewsView.vue'
+import DatacenterView from '@/views/pupil/map_locations/DatacenterView.vue'
+import PostofficeView from '@/views/pupil/map_locations/PostofficeView.vue'
+import PhotographerView from '@/views/pupil/map_locations/PhotographerView.vue'
+import PupilsWaitingPageView from '@/views/pupil/PupilsWaitingPageView.vue'
+import PupilsWelcomeGuideView from '@/views/pupil/PupilsWelcomeGuideView.vue'
 import PupilsProfileView from '@/views/pupil/PupilsProfileView.vue'
 import TeachersEditClassroom from '@/views/teacher/TeachersEditClassroom.vue'
 
@@ -71,7 +70,6 @@ const router = createRouter({
           path: 'welcome-guide',
           component: PupilsWelcomeGuideView,
         },
-
       ],
     },
     {
@@ -240,7 +238,7 @@ const router = createRouter({
             },
             {
               path: 'leaderboard',
-              component: PupilsLeaderboardView,
+              component: LeaderboardView,
             },
           ],
         },

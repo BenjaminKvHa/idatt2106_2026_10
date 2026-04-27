@@ -1,14 +1,16 @@
 <template>
   <div class="page">
-    <TopBar title="Fotografen" />
+    <TopBar
+      title="Fotografen"
+      help="Du skal trykke på om du tror bildet er ekte, KI eller manipulert. Så velger du begrunnelse under."
+      hint="Manipulert vil si at et ekte bilde er endret på. KI har ofte mer urealistiske trekk."
+    />
 
     <div class="content">
       <div v-if="runDone" class="task-container">
         <div class="task-box end-screen">
           <h2>Ferdig!</h2>
-          <p>
-            Du fikk {{ runCorrect }} av {{ runAttempts }} riktig.
-          </p>
+          <p>Du fikk {{ runCorrect }} av {{ runAttempts }} riktig.</p>
           <button class="primary-btn" @click="finish">Til kartet</button>
         </div>
       </div>
@@ -20,12 +22,7 @@
           <p class="task-text">{{ currentTask.taskDescription }}</p>
 
           <div class="image-card">
-            <img
-              v-if="imageUrl"
-              :src="imageUrl"
-              alt="Oppgavebilde"
-              class="task-image"
-            />
+            <img v-if="imageUrl" :src="imageUrl" alt="Oppgavebilde" class="task-image" />
             <div v-else class="image-placeholder">Laster bilde…</div>
 
             <div class="choices">
@@ -63,11 +60,7 @@
         </div>
 
         <div class="bottom-actions">
-          <button
-            v-if="!lastResult"
-            @click="submit"
-            :disabled="!canSubmit || submitting"
-          >
+          <button v-if="!lastResult" @click="submit" :disabled="!canSubmit || submitting">
             Svar
           </button>
           <button v-else @click="next">
@@ -88,8 +81,8 @@
         <h2>Velkommen til fotografen!</h2>
         <p>
           I fotografen vil du få se et bilde, og oppgaven din er å finne ut om bildet er ekte,
-          KI-generert eller manipulert. Etter du har bestemt det, skal du si hvorfor du mener
-          bildet er en av disse. Er du klar for å løse oppgaver?
+          KI-generert eller manipulert. Etter du har bestemt det, skal du si hvorfor du mener bildet
+          er en av disse. Er du klar for å løse oppgaver?
         </p>
       </TaskGuide>
 
@@ -113,8 +106,8 @@ import { useRouter } from 'vue-router'
 import TopBar from '@/components/TopBar.vue'
 import TaskGuide from '@/components/TaskGuide.vue'
 import CompleteLevelPopup from '@/components/CompleteLevelPopup.vue'
-import thumbsUpPhoto from "@/assets/ThumbsUpPhoto.png";
-import thumbsDownPhoto from "@/assets/ThumbsDownPhoto.png";
+import thumbsUpPhoto from '@/assets/ThumbsUpPhotographer.png'
+import thumbsDownPhoto from '@/assets/ThumbsDownPhotographer.png'
 import { get, getBlob, post } from '@/utils/apiUtils'
 import type {
   ImageCategory,
@@ -161,6 +154,7 @@ const difficultyLabel = computed(() => {
     MEDIUM: 'Middels',
     HARD: 'Vanskelig',
   }
+
   return labels[DIFFICULTIES[stepIndex.value]!]
 })
 
@@ -183,10 +177,13 @@ async function loadTask() {
 
   try {
     const difficulty = DIFFICULTIES[stepIndex.value]!
+
     const task = await get<ImageVerificationResponse>(
       `/api/chapters/${FOTOGRAFEN_CHAPTER_ID}/fotografen?difficulty=${difficulty}`,
     )
+
     currentTask.value = task
+
     const blob = await getBlob(`/api/objects/${task.fileId}`)
     imageUrl.value = URL.createObjectURL(blob)
   } catch (e) {
@@ -211,6 +208,7 @@ function categoryClass(value: ImageCategory) {
   const selected = selectedCategory.value === value
   if (!selected) return ''
   if (!lastResult.value) return 'selected'
+
   const ok = lastResult.value.categoryCorrect ?? lastResult.value.correct
   return ok ? 'selected correct' : 'selected wrong'
 }
@@ -219,12 +217,14 @@ function justificationClass(value: string) {
   const selected = selectedJustification.value === value
   if (!selected) return ''
   if (!lastResult.value) return 'selected'
+
   const ok = lastResult.value.justificationCorrect ?? lastResult.value.correct
   return ok ? 'selected correct' : 'selected wrong'
 }
 
 async function submit() {
   if (!currentTask.value || !canSubmit.value) return
+
   submitting.value = true
   error.value = null
 
@@ -273,7 +273,7 @@ function openResultPopup() {
 async function next() {
   if (!lastResult.value) return
 
-  if (lastResult.value.runCompleted) {
+  if (lastResult.value.runCompleted || stepIndex.value === DIFFICULTIES.length - 1) {
     runDone.value = true
     openResultPopup()
     return
@@ -283,6 +283,7 @@ async function next() {
   selectedCategory.value = null
   selectedJustification.value = null
   lastResult.value = null
+
   await loadTask()
 }
 
@@ -301,8 +302,13 @@ onBeforeUnmount(revokeImageUrl)
 
 <style scoped>
 .page {
-  background: #e6c8a8;
   min-height: 100vh;
+  background:
+    linear-gradient(rgb(255 255 255 / 45%), rgb(255 255 255 / 45%)),
+    url('@/assets/backgrounds/fotografen-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
 }
 
 .content {
@@ -349,10 +355,12 @@ onBeforeUnmount(revokeImageUrl)
 }
 
 .task-image {
-  width: 460px;
-  max-width: 100%;
-  height: 280px;
+  width: 100%;
+  max-width: 620px;
+  height: auto;
+  max-height: 520px;
   object-fit: contain;
+  display: block;
   background: #f2f2f2;
   border-radius: 14px;
   margin-bottom: 20px;
@@ -392,7 +400,7 @@ onBeforeUnmount(revokeImageUrl)
   font-weight: 500;
 }
 
-.choices button:hover {
+.choices button:hover:not(:disabled) {
   background: #f4a259;
   transform: scale(1.05);
 }
@@ -424,7 +432,7 @@ onBeforeUnmount(revokeImageUrl)
   transition: all 0.2s ease;
 }
 
-.reason-box button:hover {
+.reason-box button:hover:not(:disabled) {
   background: #ddd;
 }
 

@@ -73,6 +73,7 @@ class WeeklyMysteryRepositoryTest {
                 .map(WeeklyMystery::getComment)
                 .toList());
         assertEquals(newerApprovedAt, mysteries.getFirst().getApprovedAt());
+        assertEquals("Pupil Name", mysteries.getFirst().getPupilClassroomMembership().getAccount().getLegalName());
     }
 
     @DisplayName("New weekly mystery rows default to pending when approved is omitted")

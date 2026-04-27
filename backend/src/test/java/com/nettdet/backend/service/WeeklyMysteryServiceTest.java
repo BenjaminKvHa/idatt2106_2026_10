@@ -35,6 +35,7 @@ import com.nettdet.backend.domain.enums.AccountRole;
 import com.nettdet.backend.domain.enums.ClassroomAccess;
 import com.nettdet.backend.dto.CreateWeeklyMysteryResponse;
 import com.nettdet.backend.dto.PupilWeeklyMysteryResponse;
+import com.nettdet.backend.dto.TeacherApprovedWeeklyMysteryResponse;
 import com.nettdet.backend.dto.TeacherPendingWeeklyMysteryResponse;
 import com.nettdet.backend.repository.AccountClassroomBridgeTeacherRepository;
 import com.nettdet.backend.repository.ClassroomRepository;
@@ -228,6 +229,52 @@ class WeeklyMysteryServiceTest {
 
         verify(weeklyMysteryRepository, org.mockito.Mockito.never())
                 .findAllByClassroomClassroomCodeAndApprovedFalseOrderByCreatedAtDesc(CLASSROOM_CODE);
+    }
+
+    @DisplayName("Returns approved mysteries with pupil legal name for teachers in the classroom")
+    @Test
+    void getApprovedMysteriesForTeacher_whenTeacherHasAccess_returnsApprovedMysteriesWithPupilName() {
+        Classroom classroom = classroom();
+        WeeklyMystery approved = weeklyMystery(
+                6L,
+                fileObject(60L, ClassroomAccess.ONLY_CLASS, classroom),
+                classroom,
+                membership(PUPIL_EMAIL, "Pupil Name", classroom),
+                "Approved mystery",
+                true);
+        LocalDateTime approvedAt = LocalDateTime.of(2026, 4, 24, 9, 30);
+        approved.setApprovedAt(approvedAt);
+        when(classroomRepository.findById(CLASSROOM_CODE)).thenReturn(Optional.of(classroom));
+        when(teacherBridgeRepository.existsByIdAccountEmailAndIdClassroomCode(TEACHER_EMAIL, CLASSROOM_CODE))
+                .thenReturn(true);
+        when(weeklyMysteryRepository.findAllByClassroomClassroomCodeAndApprovedTrueOrderByApprovedAtDescCreatedAtDesc(CLASSROOM_CODE))
+                .thenReturn(List.of(approved));
+
+        List<TeacherApprovedWeeklyMysteryResponse> response = weeklyMysteryService.getApprovedMysteriesForTeacher(
+                CLASSROOM_CODE,
+                teacherPrincipal());
+
+        assertEquals(1, response.size());
+        assertEquals(6L, response.getFirst().id());
+        assertEquals(60L, response.getFirst().fileObjectId());
+        assertEquals("Pupil Name", response.getFirst().pupilLegalName());
+        assertEquals("Approved mystery", response.getFirst().comment());
+        assertEquals(approvedAt, response.getFirst().approvedAt());
+    }
+
+    @DisplayName("Denies approved mystery listing for teachers outside the classroom")
+    @Test
+    void getApprovedMysteriesForTeacher_whenTeacherDoesNotBelongToClassroom_deniesAccess() {
+        when(classroomRepository.findById(CLASSROOM_CODE)).thenReturn(Optional.of(classroom()));
+        when(teacherBridgeRepository.existsByIdAccountEmailAndIdClassroomCode(TEACHER_EMAIL, CLASSROOM_CODE))
+                .thenReturn(false);
+
+        assertThrows(AccessDeniedException.class, () -> weeklyMysteryService.getApprovedMysteriesForTeacher(
+                CLASSROOM_CODE,
+                teacherPrincipal()));
+
+        verify(weeklyMysteryRepository, org.mockito.Mockito.never())
+                .findAllByClassroomClassroomCodeAndApprovedTrueOrderByApprovedAtDescCreatedAtDesc(CLASSROOM_CODE);
     }
 
     @DisplayName("Approves mystery and changes linked file access to classroom-only")

@@ -17,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.nettdet.backend.dto.CreateWeeklyMysteryResponse;
 import com.nettdet.backend.dto.PupilWeeklyMysteryResponse;
+import com.nettdet.backend.dto.TeacherApprovedWeeklyMysteryResponse;
 import com.nettdet.backend.dto.TeacherPendingWeeklyMysteryResponse;
 import com.nettdet.backend.security.JwtUserPrincipal;
 import com.nettdet.backend.service.WeeklyMysteryService;
@@ -64,6 +65,15 @@ public class WeeklyMysteryController {
             @PathVariable String classroomCode,
             @AuthenticationPrincipal JwtUserPrincipal principal) {
         return ResponseEntity.ok(weeklyMysteryService.getPendingMysteries(classroomCode, principal));
+    }
+
+    @GetMapping("/teacher/classrooms/{classroomCode}/weekly-mysteries/approved")
+    @PreAuthorize("hasAuthority('TEACHER')")
+    @Operation(summary = "List approved weekly mysteries for teacher", description = "Returns approved weekly mysteries for a classroom the authenticated teacher belongs to, ordered by approvedAt descending and including the submitting pupil's legal name.")
+    public ResponseEntity<List<TeacherApprovedWeeklyMysteryResponse>> getApprovedMysteriesForTeacher(
+            @PathVariable String classroomCode,
+            @AuthenticationPrincipal JwtUserPrincipal principal) {
+        return ResponseEntity.ok(weeklyMysteryService.getApprovedMysteriesForTeacher(classroomCode, principal));
     }
 
     @PutMapping("/teacher/classrooms/{classroomCode}/weekly-mysteries/{mysteryId}/accept")

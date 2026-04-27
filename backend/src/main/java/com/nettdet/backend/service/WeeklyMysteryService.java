@@ -16,6 +16,7 @@ import com.nettdet.backend.domain.enums.AccountRole;
 import com.nettdet.backend.domain.enums.ClassroomAccess;
 import com.nettdet.backend.dto.CreateWeeklyMysteryResponse;
 import com.nettdet.backend.dto.PupilWeeklyMysteryResponse;
+import com.nettdet.backend.dto.TeacherApprovedWeeklyMysteryResponse;
 import com.nettdet.backend.dto.TeacherPendingWeeklyMysteryResponse;
 import com.nettdet.backend.repository.AccountClassroomBridgeTeacherRepository;
 import com.nettdet.backend.repository.ClassroomRepository;
@@ -111,6 +112,19 @@ public class WeeklyMysteryService {
                 .findAllByClassroomClassroomCodeAndApprovedFalseOrderByCreatedAtDesc(normalizedClassroomCode)
                 .stream()
                 .map(this::toTeacherPendingResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<TeacherApprovedWeeklyMysteryResponse> getApprovedMysteriesForTeacher(String classroomCode,
+                                                                                     JwtUserPrincipal principal) {
+        String normalizedClassroomCode = normalizeClassroomCode(classroomCode);
+        verifyTeacherAccess(principal, normalizedClassroomCode);
+
+        return weeklyMysteryRepository
+                .findAllByClassroomClassroomCodeAndApprovedTrueOrderByApprovedAtDescCreatedAtDesc(normalizedClassroomCode)
+                .stream()
+                .map(this::toTeacherApprovedResponse)
                 .toList();
     }
 
@@ -215,6 +229,16 @@ public class WeeklyMysteryService {
                 mystery.getId(),
                 mystery.getFileObject().getId(),
                 mystery.getPupilClassroomMembership().getAccountEmail(),
+                mystery.getPupilClassroomMembership().getAccount().getLegalName(),
+                mystery.getComment(),
+                mystery.getCreatedAt(),
+                mystery.getApprovedAt());
+    }
+
+    private TeacherApprovedWeeklyMysteryResponse toTeacherApprovedResponse(WeeklyMystery mystery) {
+        return new TeacherApprovedWeeklyMysteryResponse(
+                mystery.getId(),
+                mystery.getFileObject().getId(),
                 mystery.getPupilClassroomMembership().getAccount().getLegalName(),
                 mystery.getComment(),
                 mystery.getCreatedAt(),

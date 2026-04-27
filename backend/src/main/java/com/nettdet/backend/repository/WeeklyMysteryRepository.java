@@ -13,7 +13,7 @@ public interface WeeklyMysteryRepository extends JpaRepository<WeeklyMystery, Lo
     @EntityGraph(attributePaths = {"fileObject", "classroom", "pupilClassroomMembership", "pupilClassroomMembership.account"})
     List<WeeklyMystery> findAllByClassroomClassroomCodeAndApprovedFalseOrderByCreatedAtDesc(String classroomCode);
 
-    @EntityGraph(attributePaths = {"fileObject", "classroom"})
+    @EntityGraph(attributePaths = {"fileObject", "classroom", "pupilClassroomMembership", "pupilClassroomMembership.account"})
     List<WeeklyMystery> findAllByClassroomClassroomCodeAndApprovedTrueOrderByApprovedAtDescCreatedAtDesc(String classroomCode);
 
     @EntityGraph(attributePaths = {"fileObject", "classroom", "pupilClassroomMembership", "pupilClassroomMembership.account"})

@@ -37,6 +37,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.nettdet.backend.dto.CreateWeeklyMysteryResponse;
 import com.nettdet.backend.dto.PupilWeeklyMysteryResponse;
+import com.nettdet.backend.dto.TeacherApprovedWeeklyMysteryResponse;
 import com.nettdet.backend.dto.TeacherPendingWeeklyMysteryResponse;
 import com.nettdet.backend.security.JwtUserPrincipal;
 import com.nettdet.backend.service.WeeklyMysteryService;
@@ -146,6 +147,32 @@ class WeeklyMysteryControllerTest {
                 .andExpect(jsonPath("$[0].approvedAt").value(nullValue()));
     }
 
+    @DisplayName("Allows authenticated teachers to list approved weekly mysteries")
+    @Test
+    void getApprovedMysteriesForTeacher_whenAuthenticatedTeacher_returnsApprovedMysteries() throws Exception {
+        JwtUserPrincipal principal = teacherPrincipal();
+        when(weeklyMysteryService.getApprovedMysteriesForTeacher("ABCABC", principal)).thenReturn(List.of(
+                new TeacherApprovedWeeklyMysteryResponse(
+                        6L,
+                        60L,
+                        "Pupil Name",
+                        "Approved mystery",
+                        LocalDateTime.of(2026, 4, 23, 10, 15),
+                        LocalDateTime.of(2026, 4, 24, 9, 30))));
+
+        mockMvc.perform(get("/teacher/classrooms/ABCABC/weekly-mysteries/approved")
+                        .with(authentication(authenticationFor(principal, "TEACHER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(6))
+                .andExpect(jsonPath("$[0].fileObjectId").value(60))
+                .andExpect(jsonPath("$[0].pupilLegalName").value("Pupil Name"))
+                .andExpect(jsonPath("$[0].comment").value("Approved mystery"))
+                .andExpect(jsonPath("$[0].createdAt").value("2026-04-23T10:15:00"))
+                .andExpect(jsonPath("$[0].approvedAt").value("2026-04-24T09:30:00"));
+
+        verify(weeklyMysteryService).getApprovedMysteriesForTeacher("ABCABC", principal);
+    }
+
     @DisplayName("Allows authenticated teachers to accept weekly mysteries")
     @Test
     void acceptMystery_whenAuthenticatedTeacher_returnsApprovedMystery() throws Exception {
@@ -185,6 +212,16 @@ class WeeklyMysteryControllerTest {
     @Test
     void getPendingMysteries_whenAuthenticatedPupil_returnsForbidden() throws Exception {
         mockMvc.perform(get("/teacher/classrooms/ABCABC/weekly-mysteries/pending")
+                        .with(authentication(authenticationFor(pupilPrincipal(), "PUPIL"))))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(weeklyMysteryService);
+    }
+
+    @DisplayName("Denies pupils from teacher approved weekly mystery endpoint")
+    @Test
+    void getApprovedMysteriesForTeacher_whenAuthenticatedPupil_returnsForbidden() throws Exception {
+        mockMvc.perform(get("/teacher/classrooms/ABCABC/weekly-mysteries/approved")
                         .with(authentication(authenticationFor(pupilPrincipal(), "PUPIL"))))
                 .andExpect(status().isForbidden());
 

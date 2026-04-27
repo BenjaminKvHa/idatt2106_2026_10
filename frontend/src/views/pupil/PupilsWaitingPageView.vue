@@ -86,7 +86,7 @@ function goBack(): void {
   justify-content: center;
   padding: clamp(1rem, 4vw, 3rem);
   overflow-y: auto;
-  background-image: url('/src/assets/welcomeBackground.png');
+  background-image: url('/src/assets/backgrounds/welcomeBackground.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

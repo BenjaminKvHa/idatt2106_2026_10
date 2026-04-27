@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import TopBar from '@/components/TopBar.vue'
+import TopBar from '@/components/pupil/TopBar.vue'
 import { get, put } from '@/utils/apiUtils'
 
 type Chapter = {

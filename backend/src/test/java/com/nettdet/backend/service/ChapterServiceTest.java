@@ -477,6 +477,7 @@ class ChapterServiceTest {
                 "Pupil Name står fast på Datasenteret og kan trenge hjelp.");
     }
 
+
     // --------------------------------------------------
     // helpers
     // --------------------------------------------------

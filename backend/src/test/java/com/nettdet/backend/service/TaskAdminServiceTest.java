@@ -36,11 +36,13 @@ import com.nettdet.backend.dto.CreateDatacenterNewsTaskRequest;
 import com.nettdet.backend.dto.CreateImageVerificationTaskRequest;
 import com.nettdet.backend.dto.CreateNewsVerificationTaskRequest;
 import com.nettdet.backend.dto.FileReferenceResponse;
+import com.nettdet.backend.repository.AccountClassroomBridgeTeacherRepository;
 import com.nettdet.backend.repository.ChapterRepository;
 import com.nettdet.backend.repository.FileObjectRepository;
 import com.nettdet.backend.repository.TaskRepository;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.security.access.AccessDeniedException;
 
 @ExtendWith(MockitoExtension.class)
 class TaskAdminServiceTest {
@@ -57,6 +59,8 @@ class TaskAdminServiceTest {
     private FileObjectRepository fileObjectRepository;
     @Mock
     private FileObjectService fileObjectService;
+    @Mock
+    private AccountClassroomBridgeTeacherRepository teacherBridgeRepository;
 
     private ObjectMapper objectMapper;
     private TaskAdminService taskAdminService;
@@ -66,7 +70,7 @@ class TaskAdminServiceTest {
         objectMapper = new ObjectMapper();
         taskAdminService = new TaskAdminService(
                 taskRepository, chapterRepository, fileObjectRepository,
-                fileObjectService, objectMapper);
+                fileObjectService, teacherBridgeRepository, objectMapper);
     }
 
     @DisplayName("Image-verification task creation persists chapter, difficulty, and serialized payload")
@@ -262,6 +266,57 @@ class TaskAdminServiceTest {
         assertEquals(77L, response.fileId());
         assertEquals("task-assets/x.png", response.objectKey());
         assertTrue(response.newlyCreated());
+    }
+
+    @DisplayName("Listing tasks for a classroom returns tasks scoped to that chapter and classroom when teacher is authorized")
+    @Test
+    void listFotografenTasksForClassroom_whenTeacherAuthorized_returnsScopedTasks() {
+        String email = "teacher@example.com";
+        String code = "ABCABC";
+        Task t = new Task();
+        when(teacherBridgeRepository.existsByIdAccountEmailAndIdClassroomCode(email, code)).thenReturn(true);
+        when(taskRepository.findByChapterIdAndClassroomClassroomCode(FOTOGRAFEN_ID, code))
+                .thenReturn(List.of(t));
+
+        List<Task> result = taskAdminService.listFotografenTasksForClassroom(email, code);
+
+        assertEquals(1, result.size());
+        assertSame(t, result.get(0));
+    }
+
+    @DisplayName("Listing tasks for a classroom rejects callers who do not teach that classroom")
+    @Test
+    void listFotografenTasksForClassroom_whenTeacherNotInClassroom_throwsAccessDenied() {
+        when(teacherBridgeRepository.existsByIdAccountEmailAndIdClassroomCode("intruder@example.com", "ABCABC"))
+                .thenReturn(false);
+
+        assertThrows(AccessDeniedException.class,
+                () -> taskAdminService.listFotografenTasksForClassroom("intruder@example.com", "ABCABC"));
+        verify(taskRepository, never()).findByChapterIdAndClassroomClassroomCode(any(), any());
+    }
+
+    @DisplayName("Listing Nyhetskvartalet tasks queries chapter id 1")
+    @Test
+    void listNyhetskvartaletTasksForClassroom_queriesNyhetskvartaletChapter() {
+        when(teacherBridgeRepository.existsByIdAccountEmailAndIdClassroomCode("t@e", "XYZXYZ")).thenReturn(true);
+        when(taskRepository.findByChapterIdAndClassroomClassroomCode(NYHETSKVARTALET_ID, "XYZXYZ"))
+                .thenReturn(List.of());
+
+        taskAdminService.listNyhetskvartaletTasksForClassroom("t@e", "XYZXYZ");
+
+        verify(taskRepository).findByChapterIdAndClassroomClassroomCode(NYHETSKVARTALET_ID, "XYZXYZ");
+    }
+
+    @DisplayName("Listing Datasenteret tasks queries chapter id 3")
+    @Test
+    void listDatasenteretTasksForClassroom_queriesDatacenterChapter() {
+        when(teacherBridgeRepository.existsByIdAccountEmailAndIdClassroomCode("t@e", "XYZXYZ")).thenReturn(true);
+        when(taskRepository.findByChapterIdAndClassroomClassroomCode(DATACENTER_ID, "XYZXYZ"))
+                .thenReturn(List.of());
+
+        taskAdminService.listDatasenteretTasksForClassroom("t@e", "XYZXYZ");
+
+        verify(taskRepository).findByChapterIdAndClassroomClassroomCode(DATACENTER_ID, "XYZXYZ");
     }
 
     private Chapter chapter(Long id, String name) {

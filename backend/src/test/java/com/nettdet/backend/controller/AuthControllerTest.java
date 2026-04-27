@@ -4,6 +4,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -27,6 +29,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nettdet.backend.domain.Account;
+import com.nettdet.backend.domain.RefreshToken;
 import com.nettdet.backend.domain.enums.AccountRole;
 import com.nettdet.backend.dto.LoginRequest;
 import com.nettdet.backend.dto.RegisterRequest;
@@ -110,6 +113,42 @@ class AuthControllerTest {
                         && argument.password().equals("Test1234")
                         && argument.legalName().equals("Pupil Name")
                         && argument.role() == AccountRole.PUPIL));
+    }
+
+    @DisplayName("Refresh rotates the refresh cookie and returns a new access token")
+    @Test
+    void refresh_whenCookieIsValid_returnsAccessTokenAndRotatedCookie() throws Exception {
+        Account account = account("teacher@example.com", "Teacher Name", AccountRole.TEACHER);
+        RefreshToken token = new RefreshToken();
+        token.setAccount(account);
+        ResponseCookie rotatedCookie = ResponseCookie.from("refresh_token", "rotated").httpOnly(true).path("/api/auth").build();
+        when(refreshTokenService.getStoredRefreshToken("old-token")).thenReturn(token);
+        when(refreshTokenService.rotateRefreshToken(token)).thenReturn(rotatedCookie);
+        when(jwtUtil.generateToken(account)).thenReturn("new-access-token");
+
+        mockMvc.perform(post("/auth/refresh").cookie(new jakarta.servlet.http.Cookie("refresh_token", "old-token")))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Set-Cookie", rotatedCookie.toString()))
+                .andExpect(jsonPath("$.accessToken").value("new-access-token"));
+
+        verify(refreshTokenService).getStoredRefreshToken("old-token");
+        verify(refreshTokenService).rotateRefreshToken(token);
+    }
+
+    @DisplayName("Logout invalidates the refresh cookie")
+    @Test
+    void logout_whenCookieProvided_returnsExpiredCookie() throws Exception {
+        ResponseCookie expired = ResponseCookie.from("refresh_token", "").maxAge(0).path("/api/auth").build();
+        when(refreshTokenService.logout("token")).thenReturn(expired);
+
+        mockMvc.perform(post("/auth/logout").cookie(new jakarta.servlet.http.Cookie("refresh_token", "token")))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Set-Cookie", allOf(
+                        containsString("refresh_token="),
+                        containsString("Path=/api/auth"),
+                        containsString("Max-Age=0"))));
+
+        verify(refreshTokenService).logout("token");
     }
 
     private Account account(String email, String legalName, AccountRole role) {

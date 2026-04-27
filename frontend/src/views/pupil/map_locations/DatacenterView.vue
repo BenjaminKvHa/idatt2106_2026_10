@@ -1,18 +1,15 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/components/pupil/TopBar.vue'
+import TaskGuide from '@/components/pupil/TaskGuide.vue'
+import PupilImageTask from '@/components/pupil/task/PupilImageTask.vue'
+import PupilNewsTask from '@/components/pupil/task/PupilNewsTask.vue'
+import CompleteGamePopup from '@/components/pupil/CompleteGamePopup.vue'
 import VictoryImage from '@/assets/icons/detectives_and_thief/Victory.png'
 import DefeatImage from '@/assets/icons/detectives_and_thief/Defeat.png'
 import DatatyvenImage from '@/assets/icons/detectives_and_thief/Datatyven.png'
-import victorySoundFile from '@/assets/sounds/levels/victory-sound.mp3'
-import defeatSoundFile from '@/assets/sounds/levels/evil-laugh.mp3'
-import confetti from 'canvas-confetti'
-import DatacenterIntroPopup from '@/components/pupil/datacenter/DatacenterIntroPopup.vue'
-import DatacenterResultPopup from '@/components/pupil/datacenter/DatacenterResultPopup.vue'
-import DatacenterImageTask from '@/components/pupil/task/PupilImageTask.vue'
-import DatacenterNewsTask from '@/components/pupil/task/PupilNewsTask.vue'
-import DatacenterNavigation from '@/components/pupil/datacenter/DatacenterNavigation.vue'
+import datacenterBg from '@/assets/backgrounds/datasenteret-bg.png'
 import { get, getBlob, post } from '@/utils/apiUtils'
 import type {
   DatacenterAnswerRequest,
@@ -43,14 +40,9 @@ const CATEGORIES: { value: ImageCategory; label: string }[] = [
   { value: 'MANIPULATED', label: 'Manipulert' },
 ]
 
-const victorySound = new Audio(victorySoundFile)
-victorySound.volume = 0.3
-const defeatSound = new Audio(defeatSoundFile)
-defeatSound.volume = 0.3
-
+const showGuidePopup = ref(true)
 const showHelpPopup = ref(false)
 const showHintPopup = ref(false)
-const showGuidePopup = ref(true)
 const showResultPopup = ref(false)
 const resultType = ref<ResultType>(null)
 
@@ -60,45 +52,38 @@ const loading = ref(false)
 const submitting = ref(false)
 const error = ref<string | null>(null)
 
-const currentLevel = computed<LevelState | null>(
-  () => levels.value[currentLevelIndex.value] ?? null,
-)
-
-const isLastLevel = computed(
-  () => currentLevelIndex.value === levels.value.length - 1,
-)
-
-const isCurrentLevelAnswered = computed(
-  () => currentLevel.value?.result != null,
-)
-
-const correctCount = computed(
-  () => levels.value.filter((l) => l.result?.correct).length,
-)
+const currentLevel = computed(() => levels.value[currentLevelIndex.value] ?? null)
+const isLastLevel = computed(() => currentLevelIndex.value === levels.value.length - 1)
+const isCurrentLevelAnswered = computed(() => currentLevel.value?.result != null)
+const correctCount = computed(() => levels.value.filter((level) => level.result?.correct).length)
 
 const allAnswersCorrect = computed(
-  () =>
-    levels.value.length > 0 &&
-    levels.value.every((l) => l.result?.correct === true),
+  () => levels.value.length > 0 && levels.value.every((level) => level.result?.correct === true),
 )
 
 const canSubmit = computed(() => {
   const level = currentLevel.value
   if (!level || level.result || submitting.value) return false
+
   if (level.task.format === 'IMAGE_VERIFICATION') {
-    return (
-      level.selectedCategory !== null && level.selectedJustification !== null
-    )
+    return level.selectedCategory !== null && level.selectedJustification !== null
   }
+
   return level.selectedFileId !== null
 })
 
-const resultImage = computed(() =>
-  resultType.value === 'victory' ? VictoryImage : DefeatImage,
-)
-const resultAltText = computed(() =>
-  resultType.value === 'victory' ? 'Seier' : 'Tap',
-)
+const pageStyle = computed(() => ({
+  background: `
+    linear-gradient(rgb(255 255 255 / 45%), rgb(255 255 255 / 45%)),
+    url(${datacenterBg})
+  `,
+  backgroundSize: 'cover',
+  backgroundPosition: 'center',
+  backgroundAttachment: 'fixed',
+}))
+
+const resultImage = computed(() => (resultType.value === 'victory' ? VictoryImage : DefeatImage))
+const resultAltText = computed(() => (resultType.value === 'victory' ? 'Seier' : 'Tap'))
 const resultKicker = computed(() =>
   resultType.value === 'victory' ? 'Oppdrag fullført' : 'Oppdrag mislyktes',
 )
@@ -143,30 +128,27 @@ async function loadRun() {
       `/api/chapters/${DATASENTERET_CHAPTER_ID}/datasenteret/run`,
     )
 
-    const built: LevelState[] = []
-    for (const task of run.tasks) {
-      const fileIds =
-        task.format === 'IMAGE_VERIFICATION'
-          ? task.imageTask
-            ? [task.imageTask.fileId]
-            : []
-          : (task.newsTask?.fileIds ?? [])
+    levels.value = await Promise.all(
+      run.tasks.map(async (task) => {
+        const fileIds =
+          task.format === 'IMAGE_VERIFICATION'
+            ? task.imageTask
+              ? [task.imageTask.fileId]
+              : []
+            : (task.newsTask?.fileIds ?? [])
 
-      const blobs = await Promise.all(
-        fileIds.map((id) => getBlob(`/api/objects/${id}`)),
-      )
-      const urls = blobs.map((b) => URL.createObjectURL(b))
+        const blobs = await Promise.all(fileIds.map((id) => getBlob(`/api/objects/${id}`)))
 
-      built.push({
-        task,
-        imageUrls: urls,
-        selectedCategory: null,
-        selectedJustification: null,
-        selectedFileId: null,
-        result: null,
-      })
-    }
-    levels.value = built
+        return {
+          task,
+          imageUrls: blobs.map((blob) => URL.createObjectURL(blob)),
+          selectedCategory: null,
+          selectedJustification: null,
+          selectedFileId: null,
+          result: null,
+        }
+      }),
+    )
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Kunne ikke laste oppgavene'
   } finally {
@@ -177,6 +159,7 @@ async function loadRun() {
 function selectCategory(value: ImageCategory) {
   const level = currentLevel.value
   if (!level || level.result) return
+
   level.selectedCategory = value
   level.selectedJustification = null
 }
@@ -184,49 +167,45 @@ function selectCategory(value: ImageCategory) {
 function selectJustification(value: string) {
   const level = currentLevel.value
   if (!level || level.result) return
+
   level.selectedJustification = value
 }
 
 function selectFileId(value: number) {
   const level = currentLevel.value
   if (!level || level.result) return
+
   level.selectedFileId = value
 }
 
 async function submit() {
   const level = currentLevel.value
   if (!level || !canSubmit.value) return
+
   submitting.value = true
   error.value = null
 
   try {
-    let body: DatacenterAnswerRequest
-    if (level.task.format === 'IMAGE_VERIFICATION') {
-      body = {
-        format: 'IMAGE_VERIFICATION',
-        imageAnswer: {
-          selectedCategory: level.selectedCategory!,
-          selectedJustification: level.selectedJustification!,
-        },
-        newsAnswer: null,
-      }
-    } else {
-      body = {
-        format: 'NEWS_VERIFICATION',
-        imageAnswer: null,
-        newsAnswer: { selectedFileId: level.selectedFileId! },
-      }
-    }
+    const body: DatacenterAnswerRequest =
+      level.task.format === 'IMAGE_VERIFICATION'
+        ? {
+          format: 'IMAGE_VERIFICATION',
+          imageAnswer: {
+            selectedCategory: level.selectedCategory!,
+            selectedJustification: level.selectedJustification!,
+          },
+          newsAnswer: null,
+        }
+        : {
+          format: 'NEWS_VERIFICATION',
+          imageAnswer: null,
+          newsAnswer: { selectedFileId: level.selectedFileId! },
+        }
 
-    const result = await post<ValidationResult>(
+    level.result = await post<ValidationResult>(
       `/api/chapters/datasenteret/tasks/${level.task.taskId}/validate`,
       body,
     )
-    level.result = result
-
-    if (!result.correct) {
-      openResultPopup('defeat')
-    }
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Kunne ikke sende svar'
   } finally {
@@ -246,64 +225,13 @@ function goToPreviousLevel() {
 
 function finishGame() {
   if (!isCurrentLevelAnswered.value) return
-  openResultPopup(allAnswersCorrect.value ? 'victory' : 'defeat')
-}
-
-function stopResultSounds() {
-  victorySound.pause()
-  defeatSound.pause()
-  victorySound.currentTime = 0
-  defeatSound.currentTime = 0
-}
-
-function fireVictoryConfetti() {
-  const duration = 2000
-  const end = Date.now() + duration
-  const defaults = { zIndex: 3000 }
-
-  const frame = () => {
-    confetti({
-      ...defaults,
-      particleCount: 8,
-      angle: 60,
-      spread: 60,
-      origin: { x: 0, y: 0.6 },
-    })
-    confetti({
-      ...defaults,
-      particleCount: 8,
-      angle: 120,
-      spread: 60,
-      origin: { x: 1, y: 0.6 },
-    })
-    if (Date.now() < end) requestAnimationFrame(frame)
-  }
-  frame()
-}
-
-watch(showResultPopup, (isOpen) => {
-  if (!isOpen) {
-    stopResultSounds()
-    return
-  }
-  stopResultSounds()
-  if (resultType.value === 'victory') {
-    victorySound.play()
-    fireVictoryConfetti()
-  } else if (resultType.value === 'defeat') {
-    defeatSound.play()
-  }
-})
-
-function openResultPopup(type: ResultType) {
-  resultType.value = type
+  resultType.value = allAnswersCorrect.value ? 'victory' : 'defeat'
   showResultPopup.value = true
 }
 
 function closeResultPopup() {
   showResultPopup.value = false
   resultType.value = null
-  stopResultSounds()
 }
 
 function goBackToMap() {
@@ -322,23 +250,19 @@ onBeforeUnmount(revokeAllImageUrls)
 </script>
 
 <template>
-  <TopBar
-    title="Datasenteret"
-    @help="showHelpPopup = true"
-    @hint="showHintPopup = true"
-  />
+  <TopBar title="Datasenteret" @help="showHelpPopup = true" @hint="showHintPopup = true" />
 
-  <div class="page pupil-task-page">
-    <div class="center-container pupil-task-center">
+  <div class="pupil-task-page" :style="pageStyle">
+    <div class="pupil-center-container datacenter-container">
       <p v-if="loading">Laster oppgaver…</p>
-      <p v-else-if="error" class="error pupil-task-error">{{ error }}</p>
+      <p v-else-if="error" class="pupil-error">{{ error }}</p>
 
       <template v-else-if="currentLevel">
-        <div class="progress-box">
+        <div class="progress-box pupil-panel">
           <p>Nivå {{ currentLevelIndex + 1 }}/{{ levels.length }}</p>
         </div>
 
-        <div class="task-wrapper pupil-task-wrapper">
+        <div class="pupil-panel pupil-task-text-box">
           <p>
             {{
               currentLevel.task.format === 'IMAGE_VERIFICATION'
@@ -348,65 +272,133 @@ onBeforeUnmount(revokeAllImageUrls)
           </p>
         </div>
 
-        <div class="task-card pupil-task-card">
-          <DatacenterImageTask
+        <div class="pupil-panel pupil-task-card task-card">
+          <PupilImageTask
             v-if="currentLevel.task.format === 'IMAGE_VERIFICATION'"
-            :level="currentLevel"
+            :image-url="currentLevel.imageUrls[0]"
             :categories="CATEGORIES"
-            :can-submit="canSubmit"
+            :justifications="currentLevel.task.imageTask?.justifications ?? []"
+            :selected-category="currentLevel.selectedCategory"
+            :selected-justification="currentLevel.selectedJustification"
+            :result="currentLevel.result"
+            :submitting="submitting"
             @select-category="selectCategory"
             @select-justification="selectJustification"
-            @submit="submit"
           />
 
-          <DatacenterNewsTask
+          <PupilNewsTask
             v-else
-            :level="currentLevel"
+            :file-ids="currentLevel.task.newsTask?.fileIds ?? []"
+            :image-urls="currentLevel.imageUrls"
+            :selected-file-id="currentLevel.selectedFileId"
+            :result="currentLevel.result"
             :submitting="submitting"
-            :can-submit="canSubmit"
-            @select-file-id="selectFileId"
-            @submit="submit"
+            select-button-text="Dette er den falske"
+            @select-file="selectFileId"
           />
+
+          <button
+            v-if="currentLevel.task.format === 'IMAGE_VERIFICATION'"
+            class="submit-button pupil-orange-button"
+            :disabled="!canSubmit"
+            @click="submit"
+          >
+            Svar
+          </button>
+
+          <button
+            v-else-if="
+              currentLevel.task.format === 'NEWS_VERIFICATION' &&
+              currentLevel.selectedFileId !== null &&
+              !currentLevel.result
+            "
+            class="submit-button pupil-orange-button"
+            :disabled="!canSubmit"
+            @click="submit"
+          >
+            Bekreft svar
+          </button>
 
           <div
             v-if="currentLevel.result"
-            class="feedback-box pupil-feedback-box"
-            :class="currentLevel.result.correct ? 'correct' : 'wrong'"
+            class="pupil-feedback-box"
+            :class="
+              currentLevel.result.correct ? 'pupil-feedback-correct' : 'pupil-feedback-wrong'
+            "
           >
-            <p class="feedback-title">
+            <p class="pupil-feedback-title">
               {{ currentLevel.result.correct ? 'Riktig!' : 'Feil!' }}
             </p>
             <p>{{ currentLevel.result.feedback }}</p>
           </div>
         </div>
 
-        <DatacenterNavigation
-          :is-first="currentLevelIndex === 0"
-          :is-last="isLastLevel"
-          :is-answered="isCurrentLevelAnswered"
-          @previous="goToPreviousLevel"
-          @next="goToNextLevel"
-          @finish="finishGame"
-        />
+        <div class="navigation-bar">
+          <button
+            class="nav-button nav-button-secondary"
+            :disabled="currentLevelIndex === 0"
+            @click="goToPreviousLevel"
+          >
+            Forrige
+          </button>
+
+          <button
+            v-if="!isLastLevel"
+            class="nav-button nav-button-primary"
+            :disabled="!isCurrentLevelAnswered"
+            @click="goToNextLevel"
+          >
+            Neste
+          </button>
+
+          <button
+            v-else
+            class="nav-button nav-button-primary"
+            :disabled="!isCurrentLevelAnswered"
+            @click="finishGame"
+          >
+            Fullfør
+          </button>
+        </div>
       </template>
 
-      <DatacenterIntroPopup
-        v-if="showGuidePopup"
-        :image="DatatyvenImage"
-        @close="showGuidePopup = false"
-      />
+      <TaskGuide v-if="showGuidePopup" @close="showGuidePopup = false">
+        <h2>Velkommen til datasenteret!</h2>
+        <p>Klarer du å svare riktig på alle oppgavene og slå datatyven?</p>
+        <img :src="DatatyvenImage" alt="Datatyven" class="guide-image" />
+      </TaskGuide>
 
-      <DatacenterResultPopup
-        v-if="showResultPopup"
+      <TaskGuide v-if="showHelpPopup" @close="showHelpPopup = false">
+        <h2>Trenger du hjelp?</h2>
+        <p>Inne på denne siden skal du løse oppgaver for å bekjempe datatyven.</p>
+        <ul>
+          <li>Det er én oppgave på hvert nivå.</li>
+          <li>Du kan bare svare én gang på hver oppgave.</li>
+          <li>Du må svare riktig på alle nivåene for å vinne.</li>
+        </ul>
+      </TaskGuide>
+
+      <TaskGuide v-if="showHintPopup" @close="showHintPopup = false">
+        <h2>Tips 💡</h2>
+        <p>Les oppgaven nøye før du svarer.</p>
+        <ul>
+          <li>Se etter små detaljer som kan avsløre riktig svar.</li>
+          <li>Ta deg god tid – du kan ikke svare på nytt.</li>
+          <li>Bruk det du har lært tidligere i spillet.</li>
+        </ul>
+      </TaskGuide>
+
+      <CompleteGamePopup
+        :show="showResultPopup"
+        :success="resultType === 'victory'"
         :image="resultImage"
-        :alt-text="resultAltText"
+        :image-alt="resultAltText"
         :kicker="resultKicker"
         :title="resultTitle"
         :message="resultMessage"
-        :submessage="resultSubmessage"
+        :sub-message="resultSubmessage"
         :highlight-title="resultHighlightTitle"
         :highlight-text="resultHighlightText"
-        :result-type="resultType"
         @close="closeResultPopup"
         @retry="resetGame"
         @map="goBackToMap"
@@ -416,56 +408,82 @@ onBeforeUnmount(revokeAllImageUrls)
 </template>
 
 <style scoped>
+h2,
 p {
   margin: 0;
 }
 
-.page {
-  padding-bottom: 3rem;
+.datacenter-container {
+  max-width: 1000px;
+}
+
+.task-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
 .progress-box {
   width: min(100%, 700px);
   padding: 1rem 1.4rem;
-  background: var(--beige-light);
-  border: 4px solid var(--brown-dark);
-  border-radius: 24px;
   font-weight: 700;
 }
 
-.task-card {
-  text-align: left;
+.submit-button {
+  width: 100%;
+}
+
+.navigation-bar {
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
-.feedback-title {
-  margin-bottom: 0.35rem;
-  font-weight: 800;
+.nav-button {
+  min-width: 200px;
+  min-height: 58px;
+  padding: 10px 18px;
+  border-radius: 20px;
+  border: 2px solid var(--color-text);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.correct {
-  background: #a5d6a7 !important;
-  border-color: #2e7d32 !important;
+.nav-button-primary {
+  background: var(--orange-medium);
 }
 
-.wrong {
-  background: #ef9a9a !important;
-  border-color: #c62828 !important;
+.nav-button-secondary {
+  background: var(--yellow-award-60);
+}
+
+.nav-button:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.nav-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.guide-image {
+  width: min(260px, 70%);
+  margin: 1rem auto 0;
+  display: block;
+  object-fit: contain;
 }
 
 @media (max-width: 768px) {
-  .progress-box,
-  .task-wrapper,
-  .task-card {
-    border-width: 3px;
-    border-radius: 24px;
+  .navigation-bar {
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  .task-wrapper,
-  .task-card {
-    padding: 1rem;
+  .nav-button {
+    width: 100%;
+    min-width: 0;
   }
 }
 </style>

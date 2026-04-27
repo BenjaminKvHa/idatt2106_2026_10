@@ -28,7 +28,7 @@ import com.nettdet.backend.service.FileObjectService;
 import com.nettdet.backend.service.TaskAdminService;
 
 @Component
-@Order(3)
+@Order(4)
 public class TaskSeeder implements ApplicationRunner {
 
     private static final Logger logger = LoggerFactory.getLogger(TaskSeeder.class);

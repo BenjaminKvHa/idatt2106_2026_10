@@ -141,9 +141,9 @@ class NotebookControllerTest {
         UpdateChapterNotebookRequest request = new UpdateChapterNotebookRequest("Updated my notes");
         when(notebookService.updatePupilNotebook(
                 argThat(chapterId -> chapterId == 2L),
-                argThat(req -> request.ownNotes().equals("Updated notes")),
+                argThat(req -> req.ownNotes().equals("Updated my notes")),
                 argThat(argument -> argument.email().equals("pupil@example.com"))))
-                .thenReturn(new ChapterNotebookResponse(2L, "Fotografen", List.of("Read-only tip"), "Updated notes"));
+                .thenReturn(new ChapterNotebookResponse(2L, "Fotografen", List.of("Read-only tip"), "Updated my notes"));
 
         // Act: Perform PUT request
         mockMvc.perform(put("/pupil/chapters/2/notebook")
@@ -336,16 +336,15 @@ class NotebookControllerTest {
     void updatePupilNotebook_whenAuthenticatedTeacher_returnsForbidden() throws Exception {
         // Arrange: Create teacher principal and request
         JwtUserPrincipal principal = teacherPrincipal();
-        when(notebookService.getTeacherNotebook("ABCABC", "pupil@example.com", 2L, principal))
-                .thenReturn(new ChapterNotebookResponse(2L, "Fotografen", List.of("Teacher-visible tip"), "Pupil note"));
+        UpdateChapterNotebookRequest request = new UpdateChapterNotebookRequest("Should not be saved");
 
-        mockMvc.perform(get("/teacher/classrooms/ABCABC/pupils/pupil@example.com/chapters/2/notebook")
-                        .with(authentication(authenticationFor(principal, "TEACHER"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.chapterId").value(2))
-                .andExpect(jsonPath("$.chapterName").value("Fotografen"))
-                .andExpect(jsonPath("$.tips[0]").value("Teacher-visible tip"))
-                .andExpect(jsonPath("$.ownNotes").value("Pupil note"));
+        // Act: Perform PUT request to pupil endpoint with teacher auth
+        mockMvc.perform(put("/pupil/chapters/2/notebook")
+                        .with(authentication(authenticationFor(principal, "TEACHER")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                // Assert: Verify 403 Forbidden
+                .andExpect(status().isForbidden());
 
         // Assert: Verify service never called
         verifyNoInteractions(notebookService);

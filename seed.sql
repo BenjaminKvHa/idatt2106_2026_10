@@ -27,22 +27,6 @@ SET
     classroom_name = EXCLUDED.classroom_name,
     classroom_description = EXCLUDED.classroom_description;
 
-INSERT INTO chapter (id, chapter_name, successful_runs_needed_for_completion)
-VALUES
-    (1, 'Nyhetskvartalet', 3),
-    (2, 'Fotografen', 3),
-    (3, 'Datasenteret', 5)
-ON CONFLICT (id) DO UPDATE
-SET
-    chapter_name = EXCLUDED.chapter_name,
-    successful_runs_needed_for_completion = EXCLUDED.successful_runs_needed_for_completion;
-
-SELECT setval(
-    'chapter_id_seq',
-    GREATEST(COALESCE((SELECT MAX(id) FROM chapter), 0), 3),
-    true
-);
-
 INSERT INTO account (email, password_data, legal_name, account_role)
 VALUES
     (

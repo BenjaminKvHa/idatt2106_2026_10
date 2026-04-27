@@ -4,11 +4,11 @@ import TopBar from '@/components/TopBar.vue'
 
 import blobbyImage from '@/assets/creaturePeaking.png'
 
-import blobbySound1 from '@/assets/sounds/blobby-laugh.mp3'
-import blobbySound2 from '@/assets/sounds/blobby-sad.mp3'
-import blobbySound3 from '@/assets/sounds/blobby-grunt.mp3'
-import blobbySound4 from '@/assets/sounds/blobby-wow.mp3'
-import blobbySound5 from '@/assets/sounds/blobby-pop.mp3'
+import blobbySound1 from '@/assets/sounds/blobby/blobby-grunt.mp3'
+import blobbySound2 from '@/assets/sounds/blobby/blobby-wow.mp3'
+import blobbySound3 from '@/assets/sounds/blobby/blobby-pop.mp3'
+import blobbySound4 from '@/assets/sounds/blobby/blobby-plingpling.mp3'
+import blobbySound5 from '@/assets/sounds/blobby/blobby-blinking.mp3'
 
 import corkboardImage from '@/assets/korktavle.png'
 
@@ -72,6 +72,7 @@ function handleBlobbyClick() {
             :class="{ animate: isAnimatingBlobby }"
             @click="handleBlobbyClick"
             aria-label="Blobby"
+            data-no-click-sound
           >
             <img
               :src="blobbyImage"

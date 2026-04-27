@@ -1,5 +1,7 @@
 package com.nettdet.backend.domain;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -36,6 +38,9 @@ public class WeeklyMystery extends CreatedAtEntity {
 
     @Column(name = "approved", nullable = false)
     private boolean approved;
+
+    @Column(name = "approved_at")
+    private LocalDateTime approvedAt;
 
     public WeeklyMystery() {
     }
@@ -86,5 +91,13 @@ public class WeeklyMystery extends CreatedAtEntity {
 
     public void setApproved(boolean approved) {
         this.approved = approved;
+    }
+
+    public LocalDateTime getApprovedAt() {
+        return approvedAt;
+    }
+
+    public void setApprovedAt(LocalDateTime approvedAt) {
+        this.approvedAt = approvedAt;
     }
 }

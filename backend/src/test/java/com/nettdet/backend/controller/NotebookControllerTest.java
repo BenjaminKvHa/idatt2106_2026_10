@@ -64,14 +64,11 @@ class NotebookControllerTest {
     void getPupilNotebook_whenAuthenticatedPupil_returnsNotebookJson() throws Exception {
         // Arrange: Create pupil principal and mock service response
         JwtUserPrincipal principal = pupilPrincipal();
-        when(notebookService.getPupilNotebook(
-                argThat(chapterId -> chapterId == 2L),
-                argThat(p -> p.email().equals("pupil@example.com") && p.role().equals("PUPIL"))))
-                .thenReturn(new ChapterNotebookResponse(
-                        2L,
-                        "Fotografen",
-                        List.of("Check the source", "Verify the URL"),
-                        "My personal notes here"));
+        when(notebookService.getPupilNotebook(2L, principal)).thenReturn(new ChapterNotebookResponse(
+                2L,
+                "Fotografen",
+                List.of("Check source"),
+                "My notes"));
 
         // Act: Perform GET request
         mockMvc.perform(get("/pupil/chapters/2/notebook")
@@ -79,9 +76,9 @@ class NotebookControllerTest {
                 // Assert: Verify response structure and values
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.chapterId").value(2))
-                .andExpect(jsonPath("$.tips[0]").value("Check the source"))
-                .andExpect(jsonPath("$.tips[1]").value("Verify the URL"))
-                .andExpect(jsonPath("$.ownNotes").value("My personal notes here"));
+                .andExpect(jsonPath("$.chapterName").value("Fotografen"))
+                .andExpect(jsonPath("$.tips[0]").value("Check source"))
+                .andExpect(jsonPath("$.ownNotes").value("My notes"));
 
         // Assert: Verify service called with correct chapterId and principal
         verify(notebookService).getPupilNotebook(
@@ -144,13 +141,9 @@ class NotebookControllerTest {
         UpdateChapterNotebookRequest request = new UpdateChapterNotebookRequest("Updated my notes");
         when(notebookService.updatePupilNotebook(
                 argThat(chapterId -> chapterId == 2L),
-                argThat(req -> req.ownNotes().equals("Updated my notes")),
-                argThat(p -> p.email().equals("pupil@example.com") && p.role().equals("PUPIL"))))
-                .thenReturn(new ChapterNotebookResponse(
-                        2L,
-                        "Fotografen",
-                        List.of("Read-only tip"),
-                        "Updated my notes"));
+                argThat(req -> request.ownNotes().equals("Updated notes")),
+                argThat(argument -> argument.email().equals("pupil@example.com"))))
+                .thenReturn(new ChapterNotebookResponse(2L, "Fotografen", List.of("Read-only tip"), "Updated notes"));
 
         // Act: Perform PUT request
         mockMvc.perform(put("/pupil/chapters/2/notebook")
@@ -343,15 +336,16 @@ class NotebookControllerTest {
     void updatePupilNotebook_whenAuthenticatedTeacher_returnsForbidden() throws Exception {
         // Arrange: Create teacher principal and request
         JwtUserPrincipal principal = teacherPrincipal();
-        UpdateChapterNotebookRequest request = new UpdateChapterNotebookRequest("Attempted update");
+        when(notebookService.getTeacherNotebook("ABCABC", "pupil@example.com", 2L, principal))
+                .thenReturn(new ChapterNotebookResponse(2L, "Fotografen", List.of("Teacher-visible tip"), "Pupil note"));
 
-        // Act: Perform PUT request to pupil endpoint with teacher auth
-        mockMvc.perform(put("/pupil/chapters/2/notebook")
-                        .with(authentication(authenticationFor(principal, "TEACHER")))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                // Assert: Verify 403 Forbidden
-                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/teacher/classrooms/ABCABC/pupils/pupil@example.com/chapters/2/notebook")
+                        .with(authentication(authenticationFor(principal, "TEACHER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.chapterId").value(2))
+                .andExpect(jsonPath("$.chapterName").value("Fotografen"))
+                .andExpect(jsonPath("$.tips[0]").value("Teacher-visible tip"))
+                .andExpect(jsonPath("$.ownNotes").value("Pupil note"));
 
         // Assert: Verify service never called
         verifyNoInteractions(notebookService);

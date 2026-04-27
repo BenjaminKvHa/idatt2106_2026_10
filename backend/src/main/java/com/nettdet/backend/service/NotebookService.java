@@ -1,15 +1,11 @@
 package com.nettdet.backend.service;
 
-import java.util.List;
-
 import jakarta.persistence.EntityNotFoundException;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nettdet.backend.domain.Chapter;
 import com.nettdet.backend.domain.PupilChapterBridgeProgression;
 import com.nettdet.backend.domain.PupilClassroomMembership;
@@ -30,18 +26,18 @@ public class NotebookService {
     private final PupilClassroomMembershipRepository membershipRepository;
     private final ChapterRepository chapterRepository;
     private final AccountClassroomBridgeTeacherRepository teacherBridgeRepository;
-    private final ObjectMapper objectMapper;
+    private final NotebookJsonService notebookJsonService;
 
     public NotebookService(PupilChapterBridgeProgressionRepository progressionRepository,
                            PupilClassroomMembershipRepository membershipRepository,
                            ChapterRepository chapterRepository,
                            AccountClassroomBridgeTeacherRepository teacherBridgeRepository,
-                           ObjectMapper objectMapper) {
+                           NotebookJsonService notebookJsonService) {
         this.progressionRepository = progressionRepository;
         this.membershipRepository = membershipRepository;
         this.chapterRepository = chapterRepository;
         this.teacherBridgeRepository = teacherBridgeRepository;
-        this.objectMapper = objectMapper;
+        this.notebookJsonService = notebookJsonService;
     }
 
     @Transactional
@@ -62,9 +58,9 @@ public class NotebookService {
         Chapter chapter = getRequiredChapter(chapterId);
         PupilChapterBridgeProgression progression = getOrCreateProgression(membership, chapter);
 
-        ChapterNotebookData existing = parseNotebook(progression.getNotebookJson());
+        ChapterNotebookData existing = notebookJsonService.parse(progression.getNotebookJson());
         ChapterNotebookData updated = new ChapterNotebookData(existing.tips(), normalizeOwnNotes(request.ownNotes()));
-        progression.setNotebookJson(serializeNotebook(updated));
+        progression.setNotebookJson(notebookJsonService.serialize(updated));
 
         return toResponse(chapter, progressionRepository.save(progression));
     }
@@ -135,7 +131,7 @@ public class NotebookService {
             return progression;
         }
 
-        progression.setNotebookJson(serializeNotebook(ChapterNotebookData.empty()));
+        progression.setNotebookJson(notebookJsonService.defaultNotebookJson());
         return progressionRepository.save(progression);
     }
 
@@ -147,40 +143,17 @@ public class NotebookService {
         progression.setSuccessfulRuns(0);
         progression.setHighscore(0);
         progression.setUnsuccessfulStreak(0);
-        progression.setNotebookJson(serializeNotebook(ChapterNotebookData.empty()));
+        progression.setNotebookJson(notebookJsonService.defaultNotebookJson());
         return progressionRepository.save(progression);
     }
 
     private ChapterNotebookResponse toResponse(Chapter chapter, PupilChapterBridgeProgression progression) {
-        ChapterNotebookData notebookData = parseNotebook(progression.getNotebookJson());
+        ChapterNotebookData notebookData = notebookJsonService.parse(progression.getNotebookJson());
         return new ChapterNotebookResponse(
                 chapter.getId(),
                 chapter.getChapterName(),
                 notebookData.tips(),
                 notebookData.ownNotes());
-    }
-
-    private ChapterNotebookData parseNotebook(String notebookJson) {
-        if (notebookJson == null || notebookJson.isBlank()) {
-            return ChapterNotebookData.empty();
-        }
-
-        try {
-            ChapterNotebookData notebookData = objectMapper.readValue(notebookJson, ChapterNotebookData.class);
-            List<String> tips = notebookData.tips() == null ? List.of() : notebookData.tips();
-            String ownNotes = notebookData.ownNotes() == null ? "" : notebookData.ownNotes();
-            return new ChapterNotebookData(tips, ownNotes);
-        } catch (JsonProcessingException exception) {
-            return ChapterNotebookData.empty();
-        }
-    }
-
-    private String serializeNotebook(ChapterNotebookData notebookData) {
-        try {
-            return objectMapper.writeValueAsString(notebookData);
-        } catch (JsonProcessingException exception) {
-            throw new IllegalStateException("Unable to serialize notebook data");
-        }
     }
 
     private String normalizeOwnNotes(String ownNotes) {

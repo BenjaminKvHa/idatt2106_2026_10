@@ -17,6 +17,11 @@ public record TeacherPendingWeeklyMysteryResponse(
     @Schema(description = "Comment submitted by the pupil.", example = "Jeg fant dette mystiske bildet på nett.")
     String comment,
     @Schema(description = "Time the weekly mystery was submitted.", example = "2026-04-23T10:15:30")
-    LocalDateTime createdAt
+    LocalDateTime createdAt,
+    @Schema(
+            description = "Time the weekly mystery was approved. Null for pending mysteries.",
+            example = "2026-04-24T09:30:00",
+            nullable = true)
+    LocalDateTime approvedAt
 ) {
 }

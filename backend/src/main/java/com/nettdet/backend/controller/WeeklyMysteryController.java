@@ -17,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.nettdet.backend.dto.CreateWeeklyMysteryResponse;
 import com.nettdet.backend.dto.PupilWeeklyMysteryResponse;
+import com.nettdet.backend.dto.TeacherApprovedWeeklyMysteryResponse;
 import com.nettdet.backend.dto.TeacherPendingWeeklyMysteryResponse;
 import com.nettdet.backend.security.JwtUserPrincipal;
 import com.nettdet.backend.service.WeeklyMysteryService;
@@ -50,7 +51,7 @@ public class WeeklyMysteryController {
 
     @GetMapping("/pupil/classrooms/{classroomCode}/weekly-mysteries")
     @PreAuthorize("hasAuthority('PUPIL')")
-    @Operation(summary = "List approved weekly mysteries", description = "Returns all approved weekly mysteries for a classroom where the authenticated pupil has confirmed membership, ordered newest first.")
+    @Operation(summary = "List approved weekly mysteries", description = "Returns all approved weekly mysteries for a classroom where the authenticated pupil has confirmed membership, ordered by approvedAt descending.")
     public ResponseEntity<List<PupilWeeklyMysteryResponse>> getApprovedMysteries(
             @PathVariable String classroomCode,
             @AuthenticationPrincipal JwtUserPrincipal principal) {
@@ -66,9 +67,18 @@ public class WeeklyMysteryController {
         return ResponseEntity.ok(weeklyMysteryService.getPendingMysteries(classroomCode, principal));
     }
 
+    @GetMapping("/teacher/classrooms/{classroomCode}/weekly-mysteries/approved")
+    @PreAuthorize("hasAuthority('TEACHER')")
+    @Operation(summary = "List approved weekly mysteries for teacher", description = "Returns approved weekly mysteries for a classroom the authenticated teacher belongs to, ordered by approvedAt descending and including the submitting pupil's legal name.")
+    public ResponseEntity<List<TeacherApprovedWeeklyMysteryResponse>> getApprovedMysteriesForTeacher(
+            @PathVariable String classroomCode,
+            @AuthenticationPrincipal JwtUserPrincipal principal) {
+        return ResponseEntity.ok(weeklyMysteryService.getApprovedMysteriesForTeacher(classroomCode, principal));
+    }
+
     @PutMapping("/teacher/classrooms/{classroomCode}/weekly-mysteries/{mysteryId}/accept")
     @PreAuthorize("hasAuthority('TEACHER')")
-    @Operation(summary = "Accept weekly mystery", description = "Approves a pending weekly mystery and changes the linked file access to classroom-only.")
+    @Operation(summary = "Accept weekly mystery", description = "Approves a weekly mystery, records approvedAt when first approved, and changes the linked file access to classroom-only.")
     public ResponseEntity<PupilWeeklyMysteryResponse> acceptMystery(
             @PathVariable String classroomCode,
             @PathVariable Long mysteryId,

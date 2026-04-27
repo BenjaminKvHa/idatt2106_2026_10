@@ -1,8 +1,11 @@
 package com.nettdet.backend.controller;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -11,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.nettdet.backend.domain.Task;
+import com.nettdet.backend.security.JwtUserPrincipal;
 import com.nettdet.backend.dto.CreateDatacenterImageTaskRequest;
 import com.nettdet.backend.dto.CreateDatacenterNewsTaskRequest;
 import com.nettdet.backend.dto.CreateImageVerificationTaskRequest;
@@ -52,6 +56,43 @@ public class TaskAdminController {
         FileReferenceResponse response = taskAdminService.getOrCreateFileReference(objectKey, contentType, fileName);
         return ResponseEntity.status(response.newlyCreated() ? HttpStatus.CREATED : HttpStatus.OK)
                 .body(response);
+    }
+
+    // --------------------------------------------------
+    // TASK LISTING (per chapter, scoped to a classroom)
+    // --------------------------------------------------
+
+    @GetMapping("/fotografen")
+    @Operation(summary = "List Fotografen tasks for a classroom",
+               description = "Returns all Fotografen tasks scoped to the given classroom code. " +
+                            "Caller must be a teacher of that classroom.")
+    public ResponseEntity<List<Task>> listFotografenTasks(
+            @AuthenticationPrincipal JwtUserPrincipal principal,
+            @RequestParam String classroomCode) {
+        return ResponseEntity.ok(
+                taskAdminService.listFotografenTasksForClassroom(principal.email(), classroomCode));
+    }
+
+    @GetMapping("/nyhetskvartalet")
+    @Operation(summary = "List Nyhetskvartalet tasks for a classroom",
+               description = "Returns all Nyhetskvartalet tasks scoped to the given classroom code. " +
+                            "Caller must be a teacher of that classroom.")
+    public ResponseEntity<List<Task>> listNyhetskvartaletTasks(
+            @AuthenticationPrincipal JwtUserPrincipal principal,
+            @RequestParam String classroomCode) {
+        return ResponseEntity.ok(
+                taskAdminService.listNyhetskvartaletTasksForClassroom(principal.email(), classroomCode));
+    }
+
+    @GetMapping("/datasenteret")
+    @Operation(summary = "List Datasenteret tasks for a classroom",
+               description = "Returns all Datasenteret tasks scoped to the given classroom code. " +
+                            "Caller must be a teacher of that classroom.")
+    public ResponseEntity<List<Task>> listDatasenteretTasks(
+            @AuthenticationPrincipal JwtUserPrincipal principal,
+            @RequestParam String classroomCode) {
+        return ResponseEntity.ok(
+                taskAdminService.listDatasenteretTasksForClassroom(principal.email(), classroomCode));
     }
 
     // --------------------------------------------------

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import TopBar from '@/components/TopBar.vue'
+import TopBar from '@/components/pupil/TopBar.vue'
 
-import blobbyImage from '@/assets/creaturePeaking.png'
+import blobbyImage from '@/assets/icons/blobby/creaturePeaking.png'
 
 import blobbySound1 from '@/assets/sounds/blobby/blobby-grunt.mp3'
 import blobbySound2 from '@/assets/sounds/blobby/blobby-wow.mp3'
@@ -10,7 +10,14 @@ import blobbySound3 from '@/assets/sounds/blobby/blobby-pop.mp3'
 import blobbySound4 from '@/assets/sounds/blobby/blobby-plingpling.mp3'
 import blobbySound5 from '@/assets/sounds/blobby/blobby-blinking.mp3'
 
-import corkboardImage from '@/assets/korktavle.png'
+import corkboardImage from '@/assets/backgrounds/korktavle.png'
+
+import notesIcon from '@/assets/icons/homescreen/icon_notes.png'
+import mysteryIcon from '@/assets/icons/homescreen/icon_mystery.png'
+import medalsIcon from '@/assets/icons/homescreen/icon_medals.png'
+import mapIcon from '@/assets/icons/homescreen/icon_map.png'
+import leaderboardIcon from '@/assets/icons/homescreen/icon_leaderboard.png'
+import helpIcon from '@/assets/icons/homescreen/icon_help.png'
 
 const showBlobbyMessage = ref(false)
 const blobbyStep = ref(0)
@@ -88,27 +95,27 @@ function handleBlobbyClick() {
           </div>
 
           <router-link to="/pupil/classroom/notebook" class="overlay-button notes">
-            <img src="/src/assets/homescreen/icon_notes.png" />
+            <img :src="notesIcon" alt="Notater" />
           </router-link>
 
           <router-link to="/pupil/classroom/mystery" class="overlay-button mystery">
-            <img src="/src/assets/homescreen/icon_mystery.png" />
+            <img :src="mysteryIcon" alt="Mysterium" />
           </router-link>
 
           <router-link to="/pupil/classroom/medals" class="overlay-button medals">
-            <img src="/src/assets/homescreen/icon_medals.png" />
+            <img :src="medalsIcon" alt="Medaljer" />
           </router-link>
 
           <router-link to="/pupil/classroom/map" class="overlay-button map">
-            <img src="/src/assets/homescreen/icon_map.png" />
+            <img :src="mapIcon" alt="Kart" />
           </router-link>
 
           <router-link to="/pupil/classroom/leaderboard" class="overlay-button leaderboard">
-            <img src="/src/assets/homescreen/icon_leaderboard.png" />
+            <img :src="leaderboardIcon" alt="Poengtavle" />
           </router-link>
 
           <router-link to="/pupil/classroom/help" class="overlay-button help">
-            <img src="/src/assets/homescreen/icon_help.png" />
+            <img :src="helpIcon" alt="Hjelp" />
           </router-link>
         </div>
       </div>

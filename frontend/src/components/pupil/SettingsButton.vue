@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import settingsIcon from '@/assets/homescreen/icon_settings.png'
+import settingsIcon from '@/assets/icons/homescreen/icon_settings.png'
 import { useRouter } from 'vue-router'
 
 const props = withDefaults(

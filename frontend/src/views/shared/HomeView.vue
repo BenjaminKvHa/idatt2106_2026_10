@@ -1,5 +1,5 @@
 <script setup lang="ts">
-
+import logoImage from '@/assets/logo/nettdetektivene_logo.png'
 </script>
 
 <template>
@@ -7,7 +7,7 @@
     <div class="scene">
 
       <div class="card">
-        <img src="/src/assets/nettdetektivene_logo.png" alt="Nettdetektivene logo" />
+        <img :src="logoImage" alt="Nettdetektivene logo" />
         <p class="tagline">Er du klar for oppdraget?</p>
         <router-link to="/sign-in" class="link">
           <button class="ready-button">
@@ -29,7 +29,7 @@
   position: relative;
   padding: 3rem 1.5rem;
   overflow: hidden;
-  background-image: url('/src/assets/welcomeBackground.png');
+  background-image: url('/src/assets/backgrounds/welcomeBackground.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

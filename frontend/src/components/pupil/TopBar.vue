@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { ChevronLeftIcon, HomeIcon } from '@lucide/vue'
-import { get, type BackendAccountRole } from '@/utils/apiUtils'
+import { get, type BackendAccountRole } from '@/utils/apiUtils.ts'
 import { useRoute, useRouter } from 'vue-router'
 
 

@@ -50,7 +50,7 @@ public class NotebookService {
         PupilClassroomMembership membership = getConfirmedPupilMembership(principal.email());
         Chapter chapter = getRequiredChapter(chapterId);
         PupilChapterBridgeProgression progression = getOrCreateProgression(membership, chapter);
-        return toResponse(chapterId, progression);
+        return toResponse(chapter, progression);
     }
 
     @Transactional
@@ -66,7 +66,7 @@ public class NotebookService {
         ChapterNotebookData updated = new ChapterNotebookData(existing.tips(), normalizeOwnNotes(request.ownNotes()));
         progression.setNotebookJson(serializeNotebook(updated));
 
-        return toResponse(chapterId, progressionRepository.save(progression));
+        return toResponse(chapter, progressionRepository.save(progression));
     }
 
     @Transactional
@@ -85,7 +85,7 @@ public class NotebookService {
 
         Chapter chapter = getRequiredChapter(chapterId);
         PupilChapterBridgeProgression progression = getOrCreateProgression(membership, chapter);
-        return toResponse(chapterId, progression);
+        return toResponse(chapter, progression);
     }
 
     private void verifyPupilPrincipal(JwtUserPrincipal principal) {
@@ -151,9 +151,13 @@ public class NotebookService {
         return progressionRepository.save(progression);
     }
 
-    private ChapterNotebookResponse toResponse(Long chapterId, PupilChapterBridgeProgression progression) {
+    private ChapterNotebookResponse toResponse(Chapter chapter, PupilChapterBridgeProgression progression) {
         ChapterNotebookData notebookData = parseNotebook(progression.getNotebookJson());
-        return new ChapterNotebookResponse(chapterId, notebookData.tips(), notebookData.ownNotes());
+        return new ChapterNotebookResponse(
+                chapter.getId(),
+                chapter.getChapterName(),
+                notebookData.tips(),
+                notebookData.ownNotes());
     }
 
     private ChapterNotebookData parseNotebook(String notebookJson) {

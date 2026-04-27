@@ -11,6 +11,8 @@ public record AcceptedClassroomPupilResponse(
     @Schema(description = "Pupil username shown in the UI.", example = "detektiv1")
     String username,
     @Schema(description = "Saved avatar object key. The frontend can derive `/api/avatar-images/{fileName}` from it.", example = "avatar-images/boy_hair1_costume1.png", nullable = true)
-    String avatarObjectKey
+    String avatarObjectKey,
+    @Schema(description = "Total XP for the pupil using the same calculation as the classroom leaderboard.", example = "240")
+    long totalXp
 ) {
 }

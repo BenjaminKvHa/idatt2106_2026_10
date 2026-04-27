@@ -35,6 +35,7 @@ public class WeeklyMysteryService {
     private final FileObjectRepository fileObjectRepository;
     private final FileObjectService fileObjectService;
     private final FileObjectAccessControlService fileObjectAccessControlService;
+    private final NotificationService notificationService;
 
     public WeeklyMysteryService(WeeklyMysteryRepository weeklyMysteryRepository,
                                 ClassroomRepository classroomRepository,
@@ -42,7 +43,8 @@ public class WeeklyMysteryService {
                                 AccountClassroomBridgeTeacherRepository teacherBridgeRepository,
                                 FileObjectRepository fileObjectRepository,
                                 FileObjectService fileObjectService,
-                                FileObjectAccessControlService fileObjectAccessControlService) {
+                                FileObjectAccessControlService fileObjectAccessControlService,
+                                NotificationService notificationService) {
         this.weeklyMysteryRepository = weeklyMysteryRepository;
         this.classroomRepository = classroomRepository;
         this.membershipRepository = membershipRepository;
@@ -50,6 +52,7 @@ public class WeeklyMysteryService {
         this.fileObjectRepository = fileObjectRepository;
         this.fileObjectService = fileObjectService;
         this.fileObjectAccessControlService = fileObjectAccessControlService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -74,7 +77,13 @@ public class WeeklyMysteryService {
         mystery.setComment(normalizedComment);
         mystery.setApproved(false);
 
-        return toCreateResponse(weeklyMysteryRepository.saveAndFlush(mystery));
+        WeeklyMystery savedMystery = weeklyMysteryRepository.saveAndFlush(mystery);
+        notificationService.createNotification(
+                normalizedClassroomCode,
+                principal.email(),
+                membership.getAccount().getLegalName() + " har sendt inn et nytt bidrag til Ukens mysterium.");
+
+        return toCreateResponse(savedMystery);
     }
 
     @Transactional(readOnly = true)

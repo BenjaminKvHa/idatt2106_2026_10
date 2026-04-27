@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -44,6 +45,7 @@ import com.nettdet.backend.dto.ClassroomResponse;
 import com.nettdet.backend.dto.ClassroomTeacherResponse;
 import com.nettdet.backend.dto.CreateClassroomRequest;
 import com.nettdet.backend.dto.TeacherLeaveStatusResponse;
+import com.nettdet.backend.dto.UpdatePupilUsernameRequest;
 import com.nettdet.backend.dto.ValidateClassroomCodeRequest;
 import com.nettdet.backend.dto.ValidateClassroomCodeResponse;
 import com.nettdet.backend.security.JwtUserPrincipal;
@@ -161,7 +163,8 @@ class ClassroomControllerTest {
                         "pupil@example.com",
                         "Pupil Name",
                         "detektiv1",
-                        "avatar-images/boy_hair1_costume1.png")));
+                        "avatar-images/boy_hair1_costume1.png",
+                        240L)));
 
         mockMvc.perform(get("/classrooms/ABCABC/pupils")
                         .with(authentication(authenticationFor(principal, "TEACHER"))))
@@ -169,9 +172,56 @@ class ClassroomControllerTest {
                 .andExpect(jsonPath("$[0].accountEmail").value("pupil@example.com"))
                 .andExpect(jsonPath("$[0].legalName").value("Pupil Name"))
                 .andExpect(jsonPath("$[0].username").value("detektiv1"))
-                .andExpect(jsonPath("$[0].avatarObjectKey").value("avatar-images/boy_hair1_costume1.png"));
+                .andExpect(jsonPath("$[0].avatarObjectKey").value("avatar-images/boy_hair1_costume1.png"))
+                .andExpect(jsonPath("$[0].totalXp").value(240));
 
         verify(classroomService).getAcceptedPupils("ABCABC", principal);
+    }
+
+    @DisplayName("Allows authenticated teachers to update a pupil classroom username")
+    @Test
+    void updatePupilUsername_whenAuthenticatedTeacher_returnsUpdatedPupilJson() throws Exception {
+        JwtUserPrincipal principal = teacherPrincipal();
+        when(classroomService.updatePupilUsername(
+                argThat("ABCABC"::equals),
+                argThat("pupil@example.com"::equals),
+                argThat(request -> request.username().equals("nydetektiv")),
+                argThat(argument -> argument.email().equals("teacher@example.com"))))
+                .thenReturn(new AcceptedClassroomPupilResponse(
+                        "pupil@example.com",
+                        "Pupil Name",
+                        "nydetektiv",
+                        "avatar-images/boy_hair1_costume1.png",
+                        240L));
+
+        mockMvc.perform(patch("/classrooms/ABCABC/pupils/pupil@example.com/username")
+                        .with(authentication(authenticationFor(principal, "TEACHER")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new UpdatePupilUsernameRequest("nydetektiv"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accountEmail").value("pupil@example.com"))
+                .andExpect(jsonPath("$.username").value("nydetektiv"))
+                .andExpect(jsonPath("$.totalXp").value(240));
+
+        verify(classroomService).updatePupilUsername(
+                argThat("ABCABC"::equals),
+                argThat("pupil@example.com"::equals),
+                argThat(request -> request.username().equals("nydetektiv")),
+                argThat(argument -> argument.email().equals("teacher@example.com") && argument.role().equals("TEACHER")));
+    }
+
+    @DisplayName("Denies pupils from updating another pupil classroom username")
+    @Test
+    void updatePupilUsername_whenAuthenticatedPupil_returnsForbidden() throws Exception {
+        JwtUserPrincipal principal = new JwtUserPrincipal("Pupil Name", "pupil@example.com", "PUPIL");
+
+        mockMvc.perform(patch("/classrooms/ABCABC/pupils/other@example.com/username")
+                        .with(authentication(authenticationFor(principal, "PUPIL")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new UpdatePupilUsernameRequest("nydetektiv"))))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(classroomService);
     }
 
     @DisplayName("Allows authenticated teachers to accept pending pupil requests")

@@ -69,6 +69,7 @@ class NotebookControllerTest {
                 argThat(p -> p.email().equals("pupil@example.com") && p.role().equals("PUPIL"))))
                 .thenReturn(new ChapterNotebookResponse(
                         2L,
+                        "Fotografen",
                         List.of("Check the source", "Verify the URL"),
                         "My personal notes here"));
 
@@ -96,7 +97,7 @@ class NotebookControllerTest {
         when(notebookService.getPupilNotebook(
                 argThat(chapterId -> chapterId == 1L),
                 argThat(p -> p.email().equals("pupil@example.com"))))
-                .thenReturn(new ChapterNotebookResponse(1L, Collections.emptyList(), ""));
+                .thenReturn(new ChapterNotebookResponse(1L, "Fotografen", Collections.emptyList(), ""));
 
         // Act: Perform GET request
         mockMvc.perform(get("/pupil/chapters/1/notebook")
@@ -117,7 +118,7 @@ class NotebookControllerTest {
         when(notebookService.getPupilNotebook(
                 argThat(chapterId -> chapterId == 2L),
                 argThat(p -> p.email().equals("pupil@example.com"))))
-                .thenReturn(new ChapterNotebookResponse(2L, List.of("Tip"), "Notes"));
+                .thenReturn(new ChapterNotebookResponse(2L, "Fotografen", List.of("Tip"), "Notes"));
 
         // Act: Perform request with malicious query params
         mockMvc.perform(get("/pupil/chapters/2/notebook?email=other@example.com&chapterId=99")
@@ -147,6 +148,7 @@ class NotebookControllerTest {
                 argThat(p -> p.email().equals("pupil@example.com") && p.role().equals("PUPIL"))))
                 .thenReturn(new ChapterNotebookResponse(
                         2L,
+                        "Fotografen",
                         List.of("Read-only tip"),
                         "Updated my notes"));
 
@@ -158,6 +160,7 @@ class NotebookControllerTest {
                 // Assert: Verify response contains updated notes
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.chapterId").value(2))
+                .andExpect(jsonPath("$.chapterName").value("Fotografen"))
                 .andExpect(jsonPath("$.tips[0]").value("Read-only tip"))
                 .andExpect(jsonPath("$.ownNotes").value("Updated my notes"));
 
@@ -178,7 +181,7 @@ class NotebookControllerTest {
                 argThat(chapterId -> chapterId == 1L),
                 argThat(req -> req.ownNotes().equals("")),
                 argThat(p -> p.email().equals("pupil@example.com"))))
-                .thenReturn(new ChapterNotebookResponse(1L, List.of("Tip"), ""));
+                .thenReturn(new ChapterNotebookResponse(1L, "Fotografen", List.of("Tip"), ""));
 
         // Act: Perform PUT request
         mockMvc.perform(put("/pupil/chapters/1/notebook")
@@ -206,7 +209,7 @@ class NotebookControllerTest {
                 argThat(chapterId -> chapterId == 2L),
                 argThat(req -> req.ownNotes().equals("My notes")),
                 argThat(p -> p.email().equals("pupil@example.com"))))
-                .thenReturn(new ChapterNotebookResponse(2L, List.of(), "My notes"));
+                .thenReturn(new ChapterNotebookResponse(2L, "Fotografen", List.of(), "My notes"));
 
         // Act: Perform request with malicious query params
         mockMvc.perform(put("/pupil/chapters/2/notebook?email=attacker@example.com")
@@ -239,6 +242,7 @@ class NotebookControllerTest {
                 argThat(p -> p.email().equals("teacher@example.com") && p.role().equals("TEACHER"))))
                 .thenReturn(new ChapterNotebookResponse(
                         2L,
+                        "Fotografen",
                         List.of("Teacher-visible tip"),
                         "Pupil's personal note"));
 
@@ -269,7 +273,7 @@ class NotebookControllerTest {
                 argThat(email -> email.equals("pupil@example.com")),
                 argThat(chapterId -> chapterId == 2L),
                 argThat(p -> p.email().equals("teacher@example.com"))))
-                .thenReturn(new ChapterNotebookResponse(2L, List.of(), ""));
+                .thenReturn(new ChapterNotebookResponse(2L, "Fotografen", List.of(), ""));
 
         // Act: Perform request with conflicting query params
         mockMvc.perform(get("/teacher/classrooms/ABCABC/pupils/pupil@example.com/chapters/2/notebook" +
@@ -297,7 +301,7 @@ class NotebookControllerTest {
                 argThat(email -> email.equals("pupil@example.com")),
                 argThat(chapterId -> chapterId == 2L),
                 argThat(p -> p.email().equals("teacher@example.com"))))
-                .thenReturn(new ChapterNotebookResponse(2L, List.of(), ""));
+                .thenReturn(new ChapterNotebookResponse(2L, "Fotografen", List.of(), ""));
 
         // Act: Perform request with malicious teacherEmail query param
         mockMvc.perform(get("/teacher/classrooms/ABCABC/pupils/pupil@example.com/chapters/2/notebook" +
@@ -396,7 +400,7 @@ class NotebookControllerTest {
         when(notebookService.getPupilNotebook(
                 argThat(chapterId -> chapterId == 999999L),
                 argThat(p -> p.email().equals("pupil@example.com"))))
-                .thenReturn(new ChapterNotebookResponse(999999L, List.of("Tip"), "Notes"));
+                .thenReturn(new ChapterNotebookResponse(999999L, "Fotografen", List.of("Tip"), "Notes"));
 
         // Act: Perform GET request with large chapterId
         mockMvc.perform(get("/pupil/chapters/999999/notebook")
@@ -422,7 +426,7 @@ class NotebookControllerTest {
                 argThat(chapterId -> chapterId == 1L),
                 argThat(req -> req.ownNotes().equals(specialNotes)),
                 argThat(p -> p.email().equals("pupil@example.com"))))
-                .thenReturn(new ChapterNotebookResponse(1L, List.of(), specialNotes));
+                .thenReturn(new ChapterNotebookResponse(1L, "Fotografen", List.of(), specialNotes));
 
         // Act: Perform PUT request with special characters
         mockMvc.perform(put("/pupil/chapters/1/notebook")

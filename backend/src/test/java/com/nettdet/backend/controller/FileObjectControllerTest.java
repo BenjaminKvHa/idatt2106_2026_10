@@ -31,6 +31,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -130,30 +132,30 @@ class FileObjectControllerTest {
 
     @DisplayName("Read denies unauthenticated requests")
     @Test
-    void read_whenUnauthenticated_returnsForbidden() throws Exception {
+    void read_whenUnauthenticated_returnsUnauthorized() throws Exception {
         mockMvc.perform(get("/objects/7"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(fileObjectAccessControlService);
     }
 
     @DisplayName("Delete denies unauthenticated requests")
     @Test
-    void delete_whenUnauthenticated_returnsForbidden() throws Exception {
+    void delete_whenUnauthenticated_returnsUnauthorized() throws Exception {
         mockMvc.perform(delete("/objects/8"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(fileObjectAccessControlService);
     }
 
     @DisplayName("Upload denies unauthenticated requests")
     @Test
-    void upload_whenUnauthenticated_returnsForbidden() throws Exception {
+    void upload_whenUnauthenticated_returnsUnauthorized() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "x.png", "image/png", new byte[] {1});
 
         mockMvc.perform(multipart("/objects").file(file))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(fileObjectAccessControlService);
     }
@@ -188,6 +190,7 @@ class FileObjectControllerTest {
         SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
             return http
                     .csrf(csrf -> csrf.disable())
+                    .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                     .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
                     .build();
         }

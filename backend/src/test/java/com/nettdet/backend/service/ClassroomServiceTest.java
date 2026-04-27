@@ -34,6 +34,7 @@ import com.nettdet.backend.domain.enums.AccountRole;
 import com.nettdet.backend.dto.AcceptedClassroomPupilResponse;
 import com.nettdet.backend.dto.AcceptedPupilMembershipResponse;
 import com.nettdet.backend.dto.ClassroomResponse;
+import com.nettdet.backend.dto.ClassroomTeacherResponse;
 import com.nettdet.backend.dto.CreateClassroomRequest;
 import com.nettdet.backend.dto.InviteTeacherRequest;
 import com.nettdet.backend.dto.TeacherLeaveStatusResponse;
@@ -368,6 +369,117 @@ class ClassroomServiceTest {
                 () -> classroomService.leaveClassroomAsPupil(CLASSROOM_CODE, pupilPrincipal()));
 
         assertEquals("Pupil membership not found", exception.getMessage());
+    }
+
+    @DisplayName("Returns the classroom for a teacher who belongs to it")
+    @Test
+    void getClassroom_whenActorIsTeacherInClassroom_returnsClassroomResponse() {
+        Classroom classroom = classroom(CLASSROOM_CODE, "8A", "Mandag");
+        when(classroomRepository.findById(CLASSROOM_CODE)).thenReturn(Optional.of(classroom));
+        when(bridgeRepository.existsByIdAccountEmailAndIdClassroomCode(TEACHER_EMAIL, CLASSROOM_CODE))
+                .thenReturn(true);
+
+        ClassroomResponse response = classroomService.getClassroom(CLASSROOM_CODE, teacherPrincipal());
+
+        assertEquals(CLASSROOM_CODE, response.classroomCode());
+        assertEquals("8A", response.classroomName());
+        assertEquals("Mandag", response.classroomDescription());
+    }
+
+    @DisplayName("Returns the classroom for a pupil who has a membership row for it")
+    @Test
+    void getClassroom_whenActorIsPupilWithMembership_returnsClassroomResponse() {
+        Classroom classroom = classroom(CLASSROOM_CODE, "8A", "Mandag");
+        when(classroomRepository.findById(CLASSROOM_CODE)).thenReturn(Optional.of(classroom));
+        when(bridgeRepository.existsByIdAccountEmailAndIdClassroomCode(PUPIL_EMAIL, CLASSROOM_CODE))
+                .thenReturn(false);
+        when(pupilClassroomMembershipRepository.existsByAccountEmailAndClassroomClassroomCode(
+                PUPIL_EMAIL, CLASSROOM_CODE)).thenReturn(true);
+
+        ClassroomResponse response = classroomService.getClassroom(CLASSROOM_CODE, pupilPrincipal());
+
+        assertEquals(CLASSROOM_CODE, response.classroomCode());
+    }
+
+    @DisplayName("Denies classroom retrieval for users with no membership in the classroom")
+    @Test
+    void getClassroom_whenActorIsNeitherTeacherNorPupilOfClassroom_throwsAccessDenied() {
+        Classroom classroom = classroom(CLASSROOM_CODE, "8A", "Mandag");
+        when(classroomRepository.findById(CLASSROOM_CODE)).thenReturn(Optional.of(classroom));
+        when(bridgeRepository.existsByIdAccountEmailAndIdClassroomCode(PUPIL_EMAIL, CLASSROOM_CODE))
+                .thenReturn(false);
+        when(pupilClassroomMembershipRepository.existsByAccountEmailAndClassroomClassroomCode(
+                PUPIL_EMAIL, CLASSROOM_CODE)).thenReturn(false);
+
+        assertThrows(AccessDeniedException.class,
+                () -> classroomService.getClassroom(CLASSROOM_CODE, pupilPrincipal()));
+    }
+
+    @DisplayName("Throws when the classroom does not exist")
+    @Test
+    void getClassroom_whenClassroomMissing_throwsEntityNotFound() {
+        when(classroomRepository.findById(CLASSROOM_CODE)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class,
+                () -> classroomService.getClassroom(CLASSROOM_CODE, teacherPrincipal()));
+    }
+
+    @DisplayName("Denies classroom retrieval when the principal is null")
+    @Test
+    void getClassroom_whenPrincipalIsNull_throwsAccessDenied() {
+        assertThrows(AccessDeniedException.class,
+                () -> classroomService.getClassroom(CLASSROOM_CODE, null));
+        verifyNoInteractions(classroomRepository, bridgeRepository, pupilClassroomMembershipRepository);
+    }
+
+    @DisplayName("Returns the teachers for a classroom sorted by legal name")
+    @Test
+    void getClassroomTeachers_whenAuthenticatedTeacherOwnsClassroom_returnsSortedTeachers() {
+        Classroom classroom = classroom(CLASSROOM_CODE, "8A", "Mandag");
+        when(classroomRepository.findById(CLASSROOM_CODE)).thenReturn(Optional.of(classroom));
+        when(bridgeRepository.existsByIdAccountEmailAndIdClassroomCode(TEACHER_EMAIL, CLASSROOM_CODE))
+                .thenReturn(true);
+
+        Account a = account("a@example.com", "Adam Adamsen", AccountRole.TEACHER);
+        Account z = account("z@example.com", "Zara Zaresen", AccountRole.TEACHER);
+        AccountClassroomBridgeTeacher bridgeZ = bridge(z);
+        AccountClassroomBridgeTeacher bridgeA = bridge(a);
+        when(bridgeRepository.findAllByIdClassroomCode(CLASSROOM_CODE))
+                .thenReturn(List.of(bridgeZ, bridgeA));
+
+        List<ClassroomTeacherResponse> response =
+                classroomService.getClassroomTeachers(CLASSROOM_CODE, teacherPrincipal());
+
+        assertEquals(2, response.size());
+        assertEquals("a@example.com", response.get(0).email());
+        assertEquals("Adam Adamsen", response.get(0).legalName());
+        assertEquals("z@example.com", response.get(1).email());
+    }
+
+    @DisplayName("Denies classroom teachers listing when the actor is not a teacher of the classroom")
+    @Test
+    void getClassroomTeachers_whenActorDoesNotOwnClassroom_throwsAccessDenied() {
+        Classroom classroom = classroom(CLASSROOM_CODE, "8A", "Mandag");
+        when(classroomRepository.findById(CLASSROOM_CODE)).thenReturn(Optional.of(classroom));
+        when(bridgeRepository.existsByIdAccountEmailAndIdClassroomCode(TEACHER_EMAIL, CLASSROOM_CODE))
+                .thenReturn(false);
+
+        assertThrows(AccessDeniedException.class,
+                () -> classroomService.getClassroomTeachers(CLASSROOM_CODE, teacherPrincipal()));
+    }
+
+    @DisplayName("Denies classroom teachers listing when principal is not a teacher role")
+    @Test
+    void getClassroomTeachers_whenPrincipalIsNotTeacher_throwsAccessDenied() {
+        assertThrows(AccessDeniedException.class,
+                () -> classroomService.getClassroomTeachers(CLASSROOM_CODE, pupilPrincipal()));
+        verifyNoInteractions(classroomRepository, bridgeRepository);
+    }
+
+    private AccountClassroomBridgeTeacher bridge(Account teacher) {
+        AccountClassroomBridgeTeacher bridge = new AccountClassroomBridgeTeacher();
+        bridge.setAccount(teacher);
+        return bridge;
     }
 
     private Classroom argThatClassroomCode(String classroomCode) {

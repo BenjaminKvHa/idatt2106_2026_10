@@ -1,6 +1,8 @@
 package com.nettdet.backend.controller;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -30,6 +32,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -37,6 +41,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nettdet.backend.dto.AcceptedClassroomPupilResponse;
 import com.nettdet.backend.dto.AcceptedPupilMembershipResponse;
 import com.nettdet.backend.dto.ClassroomResponse;
+import com.nettdet.backend.dto.ClassroomTeacherResponse;
 import com.nettdet.backend.dto.CreateClassroomRequest;
 import com.nettdet.backend.dto.TeacherLeaveStatusResponse;
 import com.nettdet.backend.dto.ValidateClassroomCodeRequest;
@@ -229,6 +234,59 @@ class ClassroomControllerTest {
         return new JwtUserPrincipal("Teacher Name", "teacher@example.com", "TEACHER");
     }
 
+    @DisplayName("Allows authenticated members to fetch classroom info")
+    @Test
+    void getClassroom_whenAuthenticated_returnsClassroomInfo() throws Exception {
+        JwtUserPrincipal principal = new JwtUserPrincipal("Pupil", "pupil@example.com", "PUPIL");
+        when(classroomService.getClassroom(eq("ABCABC"), any()))
+                .thenReturn(new ClassroomResponse("ABCABC", "8A", "Mandag"));
+
+        mockMvc.perform(get("/classrooms/ABCABC")
+                        .with(authentication(authenticationFor(principal, "PUPIL"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.classroomCode").value("ABCABC"))
+                .andExpect(jsonPath("$.classroomName").value("8A"))
+                .andExpect(jsonPath("$.classroomDescription").value("Mandag"));
+    }
+
+    @DisplayName("Denies unauthenticated requests to the classroom info endpoint")
+    @Test
+    void getClassroom_whenUnauthenticated_returnsUnauthorized() throws Exception {
+        mockMvc.perform(get("/classrooms/ABCABC")).andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(classroomService);
+    }
+
+    @DisplayName("Allows authenticated teachers to list classroom teachers")
+    @Test
+    void getClassroomTeachers_whenAuthenticatedTeacher_returnsTeacherListJson() throws Exception {
+        JwtUserPrincipal principal = teacherPrincipal();
+        when(classroomService.getClassroomTeachers(eq("ABCABC"), any()))
+                .thenReturn(List.of(
+                        new ClassroomTeacherResponse("a@example.com", "Adam"),
+                        new ClassroomTeacherResponse("z@example.com", "Zara")));
+
+        mockMvc.perform(get("/classrooms/ABCABC/teachers")
+                        .with(authentication(authenticationFor(principal, "TEACHER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].email").value("a@example.com"))
+                .andExpect(jsonPath("$[0].legalName").value("Adam"))
+                .andExpect(jsonPath("$[1].email").value("z@example.com"));
+    }
+
+    @DisplayName("Denies pupils from the classroom teachers endpoint")
+    @Test
+    void getClassroomTeachers_whenAuthenticatedPupil_returnsForbidden() throws Exception {
+        JwtUserPrincipal principal = new JwtUserPrincipal("Pupil", "pupil@example.com", "PUPIL");
+
+        mockMvc.perform(get("/classrooms/ABCABC/teachers")
+                        .with(authentication(authenticationFor(principal, "PUPIL"))))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(classroomService);
+    }
+
     private Authentication authenticationFor(JwtUserPrincipal principal, String authority) {
         return new UsernamePasswordAuthenticationToken(
                 principal,
@@ -244,6 +302,7 @@ class ClassroomControllerTest {
         SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
             return http
                     .csrf(csrf -> csrf.disable())
+                    .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                     .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
                     .build();
         }

@@ -57,16 +57,8 @@ const progressPercent = computed(() => {
   return ((stepIndex.value + 1) / DIFFICULTIES.length) * 100
 })
 
-function openHelpPopup(): void {
-  showHelpPopup.value = true
-}
-
 function closeHelpPopup(): void {
   showHelpPopup.value = false
-}
-
-function openHintPopup(): void {
-  showHintPopup.value = true
 }
 
 function closeHintPopup(): void {
@@ -93,9 +85,7 @@ async function loadTask(): Promise<void> {
 
     currentTask.value = task
 
-    const blobs = await Promise.all(
-      task.fileIds.map((id) => getBlob(`/api/objects/${id}`)),
-    )
+    const blobs = await Promise.all(task.fileIds.map((id) => getBlob(`/api/objects/${id}`)))
 
     imageUrls.value = blobs.map((blob) => URL.createObjectURL(blob))
   } catch (e) {
@@ -168,7 +158,7 @@ function showFinalResult(): void {
     : 'Du må ha rett på alle oppgavene for å bestå nyhetskvartalet.'
   popupSubMessage.value = success
     ? 'Du har nå fullført stoppestedet.'
-    : "Trykk 'prøv på nytt' for å prøve igjen, eller gå tilbake til kartet."
+    : "Trykk 'Prøv på nytt' for å prøve igjen, eller gå tilbake til kartet."
 
   showCompletePopup.value = true
 }
@@ -205,8 +195,8 @@ onBeforeUnmount(revokeImageUrls)
 <template>
   <TopBar
     title="Nyhetskvartalet"
-    @help="openHelpPopup"
-    @hint="openHintPopup"
+    help="På dette stoppestedet skal du prøve å se hvilken av nyhetsartiklene som er falsk. Det kan være noe i teksten, feil bilde, eller rar URL."
+    hint="Se nøye på de ulike artiklene, det kan være noe smått som skiller de."
   />
 
   <div class="page">
@@ -218,10 +208,7 @@ onBeforeUnmount(revokeImageUrls)
 
         <div class="progress-container">
           <div class="progress-bar">
-            <div
-              class="progress-fill"
-              :style="{ width: progressPercent + '%' }"
-            ></div>
+            <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
           </div>
 
           <p class="progress-text">
@@ -273,11 +260,7 @@ onBeforeUnmount(revokeImageUrls)
           </div>
         </div>
 
-        <button
-          v-if="lastResult"
-          class="next-level-button"
-          @click="next"
-        >
+        <button v-if="lastResult" class="next-level-button" @click="next">
           {{ stepIndex === DIFFICULTIES.length - 1 ? 'Se resultat' : 'Gå til neste nivå' }}
         </button>
       </template>
@@ -290,10 +273,9 @@ onBeforeUnmount(revokeImageUrls)
   <TaskGuide v-if="showGuidePopup" @close="showGuidePopup = false">
     <h2>Velkommen til nyhetskvartalet!</h2>
     <p>
-      I nyhetskvartalet vil du få oppgaver som handler om å skille ekte
-      avisforsider og uekte avisforsider. I hver oppgave vil du få én ekte
-      avisforside og én falsk. Du skal velge hvilken du tror er falsk.
-      Er du klar for å løse oppgaver?
+      I nyhetskvartalet vil du få oppgaver som handler om å skille ekte avisforsider og uekte
+      avisforsider. I hver oppgave vil du få én ekte avisforside og én falsk. Du skal velge hvilken
+      du tror er falsk. Er du klar for å løse oppgaver?
     </p>
   </TaskGuide>
 
@@ -303,8 +285,7 @@ onBeforeUnmount(revokeImageUrls)
 
       <div class="hint-text">
         <p>
-          I Nyhetskvartalet skal du undersøke informasjon og finne ut hva som er
-          ekte og falskt.
+          I Nyhetskvartalet skal du undersøke informasjon og finne ut hva som er ekte og falskt.
         </p>
         <ul>
           <li>Les oppgaven nøye før du svarer</li>
@@ -314,9 +295,7 @@ onBeforeUnmount(revokeImageUrls)
       </div>
 
       <div class="popup-actions">
-        <button class="popup-btn popup-btn-play" @click="closeHelpPopup">
-          Ok
-        </button>
+        <button class="popup-btn popup-btn-play" @click="closeHelpPopup">Ok</button>
       </div>
     </div>
   </div>
@@ -335,9 +314,7 @@ onBeforeUnmount(revokeImageUrls)
       </div>
 
       <div class="popup-actions">
-        <button class="popup-btn popup-btn-play" @click="closeHintPopup">
-          Ok
-        </button>
+        <button class="popup-btn popup-btn-play" @click="closeHintPopup">Ok</button>
       </div>
     </div>
   </div>
@@ -351,17 +328,9 @@ onBeforeUnmount(revokeImageUrls)
     :success-image="thumbsUpNews"
     :fail-image="thumbsDownNews"
     @close="closeCompletePopup"
+    @retry="retryLevel"
+    @map="goToMap"
   />
-
-  <div v-if="showCompletePopup && !popupSuccess" class="popup-button-layer">
-    <button class="popup-btn popup-btn-play" @click="retryLevel">
-      Prøv på nytt
-    </button>
-
-    <button class="popup-btn popup-btn-map" @click="goToMap">
-      Tilbake til kartet
-    </button>
-  </div>
 </template>
 
 <style scoped>
@@ -461,13 +430,14 @@ onBeforeUnmount(revokeImageUrls)
   align-items: center;
   gap: 1rem;
   flex: 1 1 300px;
-  max-width: 420px;
+  max-width: 520px;
   width: 100%;
-  padding: 1rem;
+  padding: 0;
   border-radius: 30px;
   background: rgb(255 255 255 / 35%);
   border: 3px solid rgb(91 62 43 / 25%);
   box-shadow: 0 10px 20px rgb(0 0 0 / 10%);
+  overflow: hidden;
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease,
@@ -493,21 +463,23 @@ onBeforeUnmount(revokeImageUrls)
 }
 
 .picture-placeholder {
-  width: min(100%, 420px);
-  aspect-ratio: 420 / 320;
+  width: 100%;
+  min-height: 360px;
   background-color: var(--beige-light);
   border: 4px solid var(--brown-dark);
   border-radius: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
   overflow: hidden;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 .picture {
   width: 100%;
   height: 100%;
+  display: block;
   object-fit: contain;
 }
 
@@ -543,6 +515,12 @@ onBeforeUnmount(revokeImageUrls)
     transform 0.2s ease,
     filter 0.2s ease,
     box-shadow 0.2s ease;
+}
+
+.fake-button {
+  width: calc(100% - 2rem);
+  max-width: 420px;
+  margin-bottom: 1rem;
 }
 
 .next-level-button {
@@ -619,24 +597,12 @@ onBeforeUnmount(revokeImageUrls)
   margin-bottom: 6px;
 }
 
-.popup-actions,
-.popup-button-layer {
+.popup-actions {
   display: flex;
   justify-content: center;
   gap: 22px;
   flex-wrap: wrap;
-}
-
-.popup-actions {
   margin-top: 26px;
-}
-
-.popup-button-layer {
-  position: fixed;
-  left: 50%;
-  bottom: 16vh;
-  transform: translateX(-50%);
-  z-index: 2000;
 }
 
 .popup-btn {
@@ -689,11 +655,6 @@ onBeforeUnmount(revokeImageUrls)
   .next-level-button {
     border-width: 3px;
     border-radius: 24px;
-  }
-
-  .popup-button-layer {
-    bottom: 8vh;
-    width: calc(100vw - 32px);
   }
 }
 </style>

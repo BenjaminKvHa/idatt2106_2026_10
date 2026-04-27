@@ -21,34 +21,65 @@ import com.nettdet.backend.dto.DatacenterTask;
 import com.nettdet.backend.dto.ImageVerificationTask;
 import com.nettdet.backend.dto.NewsVerificationTask;
 import com.nettdet.backend.dto.FileReferenceResponse;
+import com.nettdet.backend.repository.AccountClassroomBridgeTeacherRepository;
 import com.nettdet.backend.repository.ChapterRepository;
 import com.nettdet.backend.repository.FileObjectRepository;
 import com.nettdet.backend.repository.TaskRepository;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.security.access.AccessDeniedException;
+import java.util.List;
 
 @Service
 public class TaskAdminService {
 
     private static final Logger logger = LoggerFactory.getLogger(TaskAdminService.class);
+    private static final Long NYHETSKVARTALET_CHAPTER_ID = 1L;
+    private static final Long FOTOGRAFEN_CHAPTER_ID = 2L;
     private static final Long DATACENTER_CHAPTER_ID = 3L;
 
     private final TaskRepository taskRepository;
     private final ChapterRepository chapterRepository;
     private final FileObjectRepository fileObjectRepository;
     private final FileObjectService fileObjectService;
+    private final AccountClassroomBridgeTeacherRepository teacherBridgeRepository;
     private final ObjectMapper objectMapper;
 
     public TaskAdminService(TaskRepository taskRepository,
                             ChapterRepository chapterRepository,
                             FileObjectRepository fileObjectRepository,
                             FileObjectService fileObjectService,
+                            AccountClassroomBridgeTeacherRepository teacherBridgeRepository,
                             ObjectMapper objectMapper) {
         this.taskRepository = taskRepository;
         this.chapterRepository = chapterRepository;
         this.fileObjectRepository = fileObjectRepository;
         this.fileObjectService = fileObjectService;
+        this.teacherBridgeRepository = teacherBridgeRepository;
         this.objectMapper = objectMapper;
+    }
+
+    // --------------------------------------------------
+    // TASK LISTING (per chapter, scoped to a classroom)
+    // --------------------------------------------------
+
+    public List<Task> listFotografenTasksForClassroom(String teacherEmail, String classroomCode) {
+        return listTasksForClassroom(FOTOGRAFEN_CHAPTER_ID, teacherEmail, classroomCode);
+    }
+
+    public List<Task> listNyhetskvartaletTasksForClassroom(String teacherEmail, String classroomCode) {
+        return listTasksForClassroom(NYHETSKVARTALET_CHAPTER_ID, teacherEmail, classroomCode);
+    }
+
+    public List<Task> listDatasenteretTasksForClassroom(String teacherEmail, String classroomCode) {
+        return listTasksForClassroom(DATACENTER_CHAPTER_ID, teacherEmail, classroomCode);
+    }
+
+    private List<Task> listTasksForClassroom(Long chapterId, String teacherEmail, String classroomCode) {
+        if (!teacherBridgeRepository.existsByIdAccountEmailAndIdClassroomCode(teacherEmail, classroomCode)) {
+            throw new AccessDeniedException("Teacher does not belong to classroom: " + classroomCode);
+        }
+        return taskRepository.findByChapterIdAndClassroomClassroomCode(chapterId, classroomCode);
     }
 
     // --------------------------------------------------

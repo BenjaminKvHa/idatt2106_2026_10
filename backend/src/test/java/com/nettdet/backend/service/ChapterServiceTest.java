@@ -8,6 +8,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -23,9 +27,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nettdet.backend.domain.Account;
 import com.nettdet.backend.domain.Chapter;
+import com.nettdet.backend.domain.Classroom;
 import com.nettdet.backend.domain.PupilChapterBridgeProgression;
+import com.nettdet.backend.domain.PupilClassroomMembership;
 import com.nettdet.backend.domain.Task;
+import com.nettdet.backend.domain.enums.AccountRole;
 import com.nettdet.backend.domain.enums.DatacenterTaskFormat;
 import com.nettdet.backend.domain.enums.ImageCategory;
 import com.nettdet.backend.domain.enums.TaskDifficulty;
@@ -69,6 +77,9 @@ class ChapterServiceTest {
     @Mock
     private ChapterRepository chapterRepository;
 
+    @Mock
+    private NotificationService notificationService;
+
     private ObjectMapper objectMapper;
     private ChapterService chapterService;
 
@@ -84,7 +95,8 @@ class ChapterServiceTest {
                 progressionRepository,
                 chapterRepository,
                 objectMapper,
-                validators);
+                validators,
+                notificationService);
     }
 
     @DisplayName("Returns all chapters in repository order as chapter responses")
@@ -310,6 +322,152 @@ class ChapterServiceTest {
         assertEquals(1, progression.getUnsuccessfulStreak());
     }
 
+    @DisplayName("Creates notification when pupil completes a chapter for the first time")
+    @Test
+    void validateDatacenterAnswer_whenFirstPerfectRunCompletesChapter_createsCompletionNotification() throws Exception {
+        Task task = imageTask(77L, "i1", ImageCategory.REAL);
+        when(taskRepository.findById(77L)).thenReturn(Optional.of(task));
+        PupilChapterBridgeProgression progression = givenProgressionExists(4, 4);
+        progression.setSuccessfulRuns(0);
+
+        DatacenterAnswerRequest request = new DatacenterAnswerRequest(
+                DatacenterTaskFormat.IMAGE_VERIFICATION,
+                new ImageVerificationRequest(ImageCategory.REAL, "right"),
+                null);
+
+        ValidationResult result = chapterService.validateDatacenterAnswer(PUPIL_EMAIL, 77L, request);
+
+        assertTrue(result.runCompleted());
+        assertEquals(1, progression.getSuccessfulRuns());
+        verify(notificationService).createNotification(
+                CLASSROOM_CODE,
+                PUPIL_EMAIL,
+                "Pupil Name har fullført Datasenteret for første gang.");
+    }
+
+    @DisplayName("Does not create first-completion notification for later successful runs")
+    @Test
+    void validateDatacenterAnswer_whenLaterPerfectRunCompletesChapter_doesNotCreateCompletionNotification() throws Exception {
+        Task task = imageTask(78L, "i1", ImageCategory.REAL);
+        when(taskRepository.findById(78L)).thenReturn(Optional.of(task));
+        PupilChapterBridgeProgression progression = givenProgressionExists(4, 4);
+        progression.setSuccessfulRuns(1);
+
+        DatacenterAnswerRequest request = new DatacenterAnswerRequest(
+                DatacenterTaskFormat.IMAGE_VERIFICATION,
+                new ImageVerificationRequest(ImageCategory.REAL, "right"),
+                null);
+
+        ValidationResult result = chapterService.validateDatacenterAnswer(PUPIL_EMAIL, 78L, request);
+
+        assertTrue(result.runCompleted());
+        assertEquals(2, progression.getSuccessfulRuns());
+        verifyNoInteractions(notificationService);
+    }
+
+    @DisplayName("Creates stuck notification exactly when unsuccessful streak reaches five")
+    @Test
+    void validateDatacenterAnswer_whenUnsuccessfulStreakReachesFive_createsStuckNotification() throws Exception {
+        Task task = imageTask(79L, "i1", ImageCategory.REAL);
+        when(taskRepository.findById(79L)).thenReturn(Optional.of(task));
+        PupilChapterBridgeProgression progression = givenProgressionExists(4, 4);
+        progression.setSuccessfulRuns(2);
+        progression.setUnsuccessfulStreak(4);
+
+        DatacenterAnswerRequest request = new DatacenterAnswerRequest(
+                DatacenterTaskFormat.IMAGE_VERIFICATION,
+                new ImageVerificationRequest(ImageCategory.AI_GENERATED, "wrong"),
+                null);
+
+        ValidationResult result = chapterService.validateDatacenterAnswer(PUPIL_EMAIL, 79L, request);
+
+        assertTrue(result.runCompleted());
+        assertEquals(5, progression.getUnsuccessfulStreak());
+        verify(notificationService).createNotification(
+                CLASSROOM_CODE,
+                PUPIL_EMAIL,
+                "Pupil Name står fast på Datasenteret og kan trenge hjelp.");
+    }
+
+    @DisplayName("Does not create repeated stuck notification after streak has already passed five")
+    @Test
+    void validateDatacenterAnswer_whenUnsuccessfulStreakIsAlreadyFive_doesNotCreateStuckNotification() throws Exception {
+        Task task = imageTask(80L, "i1", ImageCategory.REAL);
+        when(taskRepository.findById(80L)).thenReturn(Optional.of(task));
+        PupilChapterBridgeProgression progression = givenProgressionExists(4, 4);
+        progression.setSuccessfulRuns(2);
+        progression.setUnsuccessfulStreak(5);
+
+        DatacenterAnswerRequest request = new DatacenterAnswerRequest(
+                DatacenterTaskFormat.IMAGE_VERIFICATION,
+                new ImageVerificationRequest(ImageCategory.AI_GENERATED, "wrong"),
+                null);
+
+        ValidationResult result = chapterService.validateDatacenterAnswer(PUPIL_EMAIL, 80L, request);
+
+        assertTrue(result.runCompleted());
+        assertEquals(6, progression.getUnsuccessfulStreak());
+        verifyNoInteractions(notificationService);
+    }
+
+    @DisplayName("Does not create notification before a run is completed")
+    @Test
+    void validateDatacenterAnswer_whenRunIsIncomplete_doesNotCreateNotification() throws Exception {
+        Task task = imageTask(81L, "i1", ImageCategory.REAL);
+        when(taskRepository.findById(81L)).thenReturn(Optional.of(task));
+        givenProgressionExists(1, 1);
+
+        DatacenterAnswerRequest request = new DatacenterAnswerRequest(
+                DatacenterTaskFormat.IMAGE_VERIFICATION,
+                new ImageVerificationRequest(ImageCategory.REAL, "right"),
+                null);
+
+        ValidationResult result = chapterService.validateDatacenterAnswer(PUPIL_EMAIL, 81L, request);
+
+        assertFalse(result.runCompleted());
+        verifyNoInteractions(notificationService);
+    }
+
+    @DisplayName("Creates stuck notification again after a successful run resets the streak")
+    @Test
+    void validateDatacenterAnswer_whenStreakWasResetAndReachesFiveAgain_createsNewStuckNotification() throws Exception {
+        Task successTask = imageTask(82L, "i1", ImageCategory.REAL);
+        Task failedTask = imageTask(83L, "i2", ImageCategory.REAL);
+        when(taskRepository.findById(82L)).thenReturn(Optional.of(successTask));
+        when(taskRepository.findById(83L)).thenReturn(Optional.of(failedTask));
+        PupilChapterBridgeProgression progression = givenProgressionExists(4, 4);
+        progression.setSuccessfulRuns(2);
+        progression.setUnsuccessfulStreak(4);
+
+        DatacenterAnswerRequest successRequest = new DatacenterAnswerRequest(
+                DatacenterTaskFormat.IMAGE_VERIFICATION,
+                new ImageVerificationRequest(ImageCategory.REAL, "right"),
+                null);
+
+        chapterService.validateDatacenterAnswer(PUPIL_EMAIL, 82L, successRequest);
+        assertEquals(0, progression.getUnsuccessfulStreak());
+        verify(notificationService, never()).createNotification(
+                CLASSROOM_CODE,
+                PUPIL_EMAIL,
+                "Pupil Name står fast på Datasenteret og kan trenge hjelp.");
+        clearInvocations(notificationService);
+        progression.setCurrentRunAttempts(4);
+        progression.setCurrentRunCorrect(4);
+        progression.setUnsuccessfulStreak(4);
+
+        DatacenterAnswerRequest failedRequest = new DatacenterAnswerRequest(
+                DatacenterTaskFormat.IMAGE_VERIFICATION,
+                new ImageVerificationRequest(ImageCategory.AI_GENERATED, "wrong"),
+                null);
+        chapterService.validateDatacenterAnswer(PUPIL_EMAIL, 83L, failedRequest);
+
+        assertEquals(5, progression.getUnsuccessfulStreak());
+        verify(notificationService).createNotification(
+                CLASSROOM_CODE,
+                PUPIL_EMAIL,
+                "Pupil Name står fast på Datasenteret og kan trenge hjelp.");
+    }
+
     // --------------------------------------------------
     // helpers
     // --------------------------------------------------
@@ -320,8 +478,11 @@ class ChapterServiceTest {
     }
 
     private PupilChapterBridgeProgression givenProgressionExists(int attempts, int correct) {
+        Chapter chapter = chapter(DATACENTER_CHAPTER_ID, "Datasenteret");
         PupilChapterBridgeProgression progression = new PupilChapterBridgeProgression();
         progression.setId(new PupilChapterBridgeProgressionId(PUPIL_EMAIL, DATACENTER_CHAPTER_ID));
+        progression.setPupilClassroomMembership(membership(PUPIL_EMAIL, "Pupil Name", classroom()));
+        progression.setChapter(chapter);
         progression.setCurrentRunAttempts(attempts);
         progression.setCurrentRunCorrect(correct);
         progression.setHighscore(0);
@@ -384,5 +545,31 @@ class ChapterServiceTest {
         chapter.setChapterName(name);
         chapter.setSuccessfulRunsNeededForCompletion(3);
         return chapter;
+    }
+
+    private Classroom classroom() {
+        Classroom classroom = new Classroom();
+        classroom.setClassroomCode(CLASSROOM_CODE);
+        classroom.setClassroomName("Classroom");
+        return classroom;
+    }
+
+    private Account account(String email, String legalName) {
+        Account account = new Account();
+        account.setEmail(email);
+        account.setLegalName(legalName);
+        account.setPasswordData("encoded-password");
+        account.setAccountRole(AccountRole.PUPIL);
+        return account;
+    }
+
+    private PupilClassroomMembership membership(String email, String legalName, Classroom classroom) {
+        PupilClassroomMembership membership = new PupilClassroomMembership();
+        membership.setAccountEmail(email);
+        membership.setAccount(account(email, legalName));
+        membership.setClassroom(classroom);
+        membership.setUsername("detektiv");
+        membership.setMembershipConfirmedByTeacher(true);
+        return membership;
     }
 }

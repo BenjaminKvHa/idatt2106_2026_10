@@ -65,13 +65,15 @@ public class ChapterService {
     private final ChapterRepository chapterRepository;
     private final ObjectMapper objectMapper;
     private final Map<String, TaskValidator<?, ?>> validators;
+    private final NotificationService notificationService;
 
     public ChapterService(TaskRepository taskRepository,
                           PupilClassroomMembershipRepository membershipRepository,
                           PupilChapterBridgeProgressionRepository progressionRepository,
                           ChapterRepository chapterRepository,
                           ObjectMapper objectMapper,
-                          List<TaskValidator<?, ?>> validatorList) {
+                          List<TaskValidator<?, ?>> validatorList,
+                          NotificationService notificationService) {
         this.taskRepository = taskRepository;
         this.membershipRepository = membershipRepository;
         this.progressionRepository = progressionRepository;
@@ -79,6 +81,7 @@ public class ChapterService {
         this.objectMapper = objectMapper;
         this.validators = validatorList.stream()
             .collect(Collectors.toMap(TaskValidator::getChapterType, v -> v));
+        this.notificationService = notificationService;
     }
 
     // -------------------------------------------
@@ -423,6 +426,8 @@ public class ChapterService {
     private RunStateAfterAttempt recordAttempt(String pupilEmail, Long chapterId, boolean correct) {
         PupilChapterBridgeProgression progression = getOrCreateProgression(pupilEmail, chapterId);
         int tasksPerRun = tasksPerRun(chapterId);
+        int previousSuccessfulRuns = progression.getSuccessfulRuns();
+        int previousUnsuccessfulStreak = progression.getUnsuccessfulStreak();
 
         int attempts = progression.getCurrentRunAttempts() + 1;
         int correctCount = progression.getCurrentRunCorrect() + (correct ? 1 : 0);
@@ -432,8 +437,14 @@ public class ChapterService {
             if (correctCount == tasksPerRun) {
                 progression.setSuccessfulRuns(progression.getSuccessfulRuns() + 1);
                 progression.setUnsuccessfulStreak(0);
+                if (previousSuccessfulRuns == 0) {
+                    notifyFirstChapterCompletion(progression);
+                }
             } else {
                 progression.setUnsuccessfulStreak(progression.getUnsuccessfulStreak() + 1);
+                if (previousUnsuccessfulStreak == 4 && progression.getUnsuccessfulStreak() == 5) {
+                    notifyPupilStuckOnChapter(progression);
+                }
             }
 
             if (correctCount > progression.getHighscore()) {
@@ -538,5 +549,38 @@ public class ChapterService {
             logger.error("Corrupt task_json for task id {}", task.getId(), e);
             throw new IllegalStateException("Corrupt task_json for task id " + task.getId(), e);
         }
+    }
+
+    private void notifyFirstChapterCompletion(PupilChapterBridgeProgression progression) {
+        createNotificationIfClassroomContextExists(
+            progression,
+            "%s har fullført %s for første gang.");
+    }
+
+    private void notifyPupilStuckOnChapter(PupilChapterBridgeProgression progression) {
+        createNotificationIfClassroomContextExists(
+            progression,
+            "%s står fast på %s og kan trenge hjelp.");
+    }
+
+    private void createNotificationIfClassroomContextExists(PupilChapterBridgeProgression progression,
+                                                           String textTemplate) {
+        PupilClassroomMembership membership = progression.getPupilClassroomMembership();
+        Chapter chapter = progression.getChapter();
+
+        if (membership == null || membership.getClassroom() == null || chapter == null) {
+            logger.warn("Skipping chapter notification because progression lacks classroom or chapter context");
+            return;
+        }
+
+        String legalName = membership.getAccount() != null && membership.getAccount().getLegalName() != null
+            ? membership.getAccount().getLegalName()
+            : membership.getAccountEmail();
+        String text = String.format(textTemplate, legalName, chapter.getChapterName());
+
+        notificationService.createNotification(
+            membership.getClassroom().getClassroomCode(),
+            membership.getAccountEmail(),
+            text);
     }
 }

@@ -17,7 +17,7 @@ import io.swagger.v3.oas.models.info.License;
         info = @Info(
                 title = "Nettdet API",
                 version = "v1",
-                description = "OpenAPI documentation for authentication, classroom, pupil, leaderboard, notebook, avatar, and file endpoints.",
+                description = "OpenAPI documentation for authentication, classroom, pupil, leaderboard, notebook, tips, avatar, and file endpoints.",
                 contact = @Contact(name = "Nettdet Backend")))
 @SecurityScheme(
         name = "bearerAuth",

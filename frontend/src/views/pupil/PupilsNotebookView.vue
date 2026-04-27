@@ -144,44 +144,61 @@ onMounted(async () => {
 <template>
   <TopBar />
 
-  <main class="page">
-    <section class="notebook-card">
+  <main class="page pupil-page-center notebook-page">
+    <section class="notebook-card pupil-card">
       <header class="chapter-header">
-        <button v-if="hasPreviousChapter" type="button" class="nav-button" @click="goToPreviousChapter">
+        <button
+          v-if="hasPreviousChapter"
+          type="button"
+          class="pupil-button pupil-button-secondary nav-button"
+          @click="goToPreviousChapter"
+        >
           Backward
         </button>
         <span v-else class="nav-placeholder" aria-hidden="true"></span>
 
         <h1>{{ currentChapter?.name ?? 'Notebook' }}</h1>
 
-        <button v-if="hasNextChapter" type="button" class="nav-button" @click="goToNextChapter">Forward</button>
+        <button
+          v-if="hasNextChapter"
+          type="button"
+          class="pupil-button pupil-button-secondary nav-button"
+          @click="goToNextChapter"
+        >
+          Forward
+        </button>
         <span v-else class="nav-placeholder" aria-hidden="true"></span>
       </header>
 
       <p class="page-number">Page {{ currentPageNumber }} / {{ totalPages }}</p>
 
-      <p v-if="loadingChapters || loadingNotebook" class="state-message">Loading...</p>
-      <p v-else-if="loadError" class="state-message error">{{ loadError }}</p>
+      <p v-if="loadingChapters || loadingNotebook" class="pupil-state-message">Loading...</p>
+      <p v-else-if="loadError" class="pupil-state-message pupil-error">{{ loadError }}</p>
 
       <div v-else-if="notebook" class="content-grid">
-        <section class="panel">
+        <section class="panel pupil-panel">
           <h2>System Tips</h2>
           <ul>
             <li v-for="tip in notebook.tips" :key="tip">{{ tip }}</li>
           </ul>
         </section>
 
-        <section class="panel">
+        <section class="panel pupil-panel">
           <h2>My Notes</h2>
           <textarea
             v-model="ownNotesDraft"
-            class="notes-input"
+            class="pupil-textarea"
             rows="8"
             placeholder="Write your notes here"
           ></textarea>
 
           <div class="notes-actions">
-            <button type="button" class="save-button" :disabled="savingNotebook || !hasUnsavedOwnNotes" @click="saveOwnNotes">
+            <button
+              type="button"
+              class="pupil-button pupil-button-secondary"
+              :disabled="savingNotebook || !hasUnsavedOwnNotes"
+              @click="saveOwnNotes"
+            >
               {{ savingNotebook ? 'Saving...' : 'Save notes' }}
             </button>
             <span v-if="saveStatus" class="save-status">{{ saveStatus }}</span>
@@ -194,19 +211,12 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.page {
-  min-height: calc(100vh - 4rem);
-  display: flex;
-  justify-content: center;
-  padding: 1.5rem;
+.notebook-page {
   margin-top: 2rem;
 }
 
 .notebook-card {
   width: min(56rem, 100%);
-  background: var(--beige-light);
-  border: var(--border-thin) solid var(--brown-dark);
-  border-radius: 1rem;
   padding: 1rem;
 }
 
@@ -222,14 +232,6 @@ onMounted(async () => {
   text-align: center;
 }
 
-.nav-button {
-  padding: 0.45rem 0.8rem;
-  border-radius: 0.55rem;
-  border: var(--border-thin) solid var(--brown-dark);
-  background: var(--beige);
-  cursor: pointer;
-}
-
 .nav-placeholder {
   width: 5.75rem;
   height: 2.1rem;
@@ -240,27 +242,11 @@ onMounted(async () => {
   text-align: center;
 }
 
-.state-message {
-  text-align: center;
-  margin-top: 1rem;
-}
-
-.state-message.error {
-  color: #9f1d1d;
-}
-
 .content-grid {
   margin-top: 1rem;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
-}
-
-.panel {
-  border: var(--border-thin) solid var(--brown-dark);
-  border-radius: 0.75rem;
-  padding: 0.75rem;
-  background: var(--beige);
 }
 
 .panel h2 {
@@ -272,23 +258,6 @@ onMounted(async () => {
   padding-left: 1rem;
 }
 
-.panel p {
-  margin: 0;
-  white-space: pre-wrap;
-}
-
-.notes-input {
-  width: 100%;
-  min-height: 9rem;
-  resize: vertical;
-  border: var(--border-thin) solid var(--brown-dark);
-  border-radius: 0.65rem;
-  padding: 0.6rem;
-  background: #fff;
-  font: inherit;
-  box-sizing: border-box;
-}
-
 .notes-actions {
   margin-top: 0.6rem;
   display: flex;
@@ -296,26 +265,13 @@ onMounted(async () => {
   gap: 0.6rem;
 }
 
-.save-button {
-  padding: 0.45rem 0.8rem;
-  border-radius: 0.55rem;
-  border: var(--border-thin) solid var(--brown-dark);
-  background: var(--beige-light);
-  cursor: pointer;
-}
-
-.save-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.65;
-}
-
-.save-status {
+.save-status,
+.save-error {
   font-size: 0.95rem;
 }
 
 .save-error {
-  font-size: 0.95rem;
-  color: #9f1d1d;
+  color: var(--red-danger);
 }
 
 @media (max-width: 768px) {

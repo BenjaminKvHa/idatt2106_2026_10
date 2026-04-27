@@ -1,73 +1,44 @@
 <template>
   <div class="page">
-    <TopBar title="Fotografen" />
+    <TopBar
+      title="Fotografen"
+      help="Du skal trykke på om du tror bildet er ekte, KI eller manipulert. Så velger du begrunnelse under."
+      hint="Manipulert vil si at et ekte bilde er endret på. KI har ofte mer urealistiske trekk."
+    />
 
     <div class="content">
       <div v-if="runDone" class="task-container">
         <div class="task-box end-screen">
           <h2>Ferdig!</h2>
-          <p>
-            Du fikk {{ runCorrect }} av {{ runAttempts }} riktig.
-          </p>
+          <p>Du fikk {{ runCorrect }} av {{ runAttempts }} riktig.</p>
           <button class="primary-btn" @click="finish">Til kartet</button>
         </div>
       </div>
 
       <div v-else-if="currentTask" class="task-container">
         <h1 class="level">Nivå {{ stepIndex + 1 }} — {{ difficultyLabel }}</h1>
-
         <div class="task-box">
-          <p class="task-text">{{ currentTask.taskDescription }}</p>
-
-          <div class="image-card">
-            <img
-              v-if="imageUrl"
-              :src="imageUrl"
-              alt="Oppgavebilde"
-              class="task-image"
-            />
-            <div v-else class="image-placeholder">Laster bilde…</div>
-
-            <div class="choices">
-              <button
-                v-for="cat in CATEGORIES"
-                :key="cat.value"
-                @click="selectCategory(cat.value)"
-                :disabled="!!lastResult"
-                :class="categoryClass(cat.value)"
-              >
-                {{ cat.label }}
-              </button>
-            </div>
-
-            <div v-if="selectedCategory !== null" class="reason-box">
-              <p>Hvorfor?</p>
-              <button
-                v-for="j in currentTask.justifications"
-                :key="j"
-                @click="selectJustification(j)"
-                :disabled="!!lastResult"
-                :class="justificationClass(j)"
-              >
-                {{ j }}
-              </button>
-            </div>
-
-            <div v-if="lastResult" class="answer-feedback">
-              <p>
-                <strong>{{ lastResult.correct ? 'Riktig!' : 'Feil.' }}</strong>
-              </p>
-              <p>{{ lastResult.feedback }}</p>
-            </div>
+          <PupilImageTask
+            :task-description="currentTask.taskDescription"
+            :image-url="imageUrl"
+            :categories="CATEGORIES"
+            :justifications="currentTask.justifications"
+            :selected-category="selectedCategory"
+            :selected-justification="selectedJustification"
+            :result="lastResult"
+            :submitting="submitting"
+            @select-category="selectCategory"
+            @select-justification="selectJustification"
+          />
+          <div v-if="lastResult" class="answer-feedback">
+            <p>
+              <strong>{{ lastResult.correct ? 'Riktig!' : 'Feil.' }}</strong>
+            </p>
+            <p>{{ lastResult.feedback }}</p>
           </div>
         </div>
-
         <div class="bottom-actions">
-          <button
-            v-if="!lastResult"
-            @click="submit"
-            :disabled="!canSubmit || submitting"
-          >
+          <button v-if="!lastResult" @click="submit" :disabled="!canSubmit || submitting">
             Svar
           </button>
           <button v-else @click="next">
@@ -88,8 +59,8 @@
         <h2>Velkommen til fotografen!</h2>
         <p>
           I fotografen vil du få se et bilde, og oppgaven din er å finne ut om bildet er ekte,
-          KI-generert eller manipulert. Etter du har bestemt det, skal du si hvorfor du mener
-          bildet er en av disse. Er du klar for å løse oppgaver?
+          KI-generert eller manipulert. Etter du har bestemt det, skal du si hvorfor du mener bildet
+          er en av disse. Er du klar for å løse oppgaver?
         </p>
       </TaskGuide>
 
@@ -110,11 +81,11 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import TopBar from '@/components/TopBar.vue'
-import TaskGuide from '@/components/TaskGuide.vue'
-import CompleteLevelPopup from '@/components/CompleteLevelPopup.vue'
-import thumbsUpPhoto from "@/assets/ThumbsUpPhoto.png";
-import thumbsDownPhoto from "@/assets/ThumbsDownPhoto.png";
+import TopBar from '@/components/pupil/TopBar.vue'
+import TaskGuide from '@/components/pupil/TaskGuide.vue'
+import CompleteLevelPopup from '@/components/pupil/CompleteLevelPopup.vue'
+import thumbsUpPhoto from '@/assets/icons/detectives_and_thief/ThumbsUpPhotographer.png'
+import thumbsDownPhoto from '@/assets/icons/detectives_and_thief/ThumbsDownPhotographer.png'
 import { get, getBlob, post } from '@/utils/apiUtils'
 import type {
   ImageCategory,
@@ -123,6 +94,7 @@ import type {
   TaskDifficulty,
   ValidationResult,
 } from '@/types/chapter'
+import PupilImageTask from '@/components/pupil/task/PupilImageTask.vue'
 
 const router = useRouter()
 const showGuidePopup = ref(true)
@@ -161,6 +133,7 @@ const difficultyLabel = computed(() => {
     MEDIUM: 'Middels',
     HARD: 'Vanskelig',
   }
+
   return labels[DIFFICULTIES[stepIndex.value]!]
 })
 
@@ -183,10 +156,13 @@ async function loadTask() {
 
   try {
     const difficulty = DIFFICULTIES[stepIndex.value]!
+
     const task = await get<ImageVerificationResponse>(
       `/api/chapters/${FOTOGRAFEN_CHAPTER_ID}/fotografen?difficulty=${difficulty}`,
     )
+
     currentTask.value = task
+
     const blob = await getBlob(`/api/objects/${task.fileId}`)
     imageUrl.value = URL.createObjectURL(blob)
   } catch (e) {
@@ -207,24 +183,9 @@ function selectJustification(value: string) {
   selectedJustification.value = value
 }
 
-function categoryClass(value: ImageCategory) {
-  const selected = selectedCategory.value === value
-  if (!selected) return ''
-  if (!lastResult.value) return 'selected'
-  const ok = lastResult.value.categoryCorrect ?? lastResult.value.correct
-  return ok ? 'selected correct' : 'selected wrong'
-}
-
-function justificationClass(value: string) {
-  const selected = selectedJustification.value === value
-  if (!selected) return ''
-  if (!lastResult.value) return 'selected'
-  const ok = lastResult.value.justificationCorrect ?? lastResult.value.correct
-  return ok ? 'selected correct' : 'selected wrong'
-}
-
 async function submit() {
   if (!currentTask.value || !canSubmit.value) return
+
   submitting.value = true
   error.value = null
 
@@ -273,7 +234,7 @@ function openResultPopup() {
 async function next() {
   if (!lastResult.value) return
 
-  if (lastResult.value.runCompleted) {
+  if (lastResult.value.runCompleted || stepIndex.value === DIFFICULTIES.length - 1) {
     runDone.value = true
     openResultPopup()
     return
@@ -283,6 +244,7 @@ async function next() {
   selectedCategory.value = null
   selectedJustification.value = null
   lastResult.value = null
+
   await loadTask()
 }
 
@@ -301,8 +263,13 @@ onBeforeUnmount(revokeImageUrl)
 
 <style scoped>
 .page {
-  background: #e6c8a8;
   min-height: 100vh;
+  background:
+    linear-gradient(rgb(255 255 255 / 45%), rgb(255 255 255 / 45%)),
+    url('@/assets/backgrounds/fotografen-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
 }
 
 .content {
@@ -334,104 +301,6 @@ onBeforeUnmount(revokeImageUrl)
   padding: 28px 28px 36px;
   box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
   position: relative;
-}
-
-.task-text {
-  text-align: center;
-  margin: 0 0 24px 0;
-  font-size: 20px;
-}
-
-.image-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.task-image {
-  width: 460px;
-  max-width: 100%;
-  height: 280px;
-  object-fit: contain;
-  background: #f2f2f2;
-  border-radius: 14px;
-  margin-bottom: 20px;
-  border: 2px solid #999;
-}
-
-.image-placeholder {
-  width: 460px;
-  max-width: 100%;
-  height: 280px;
-  background: #ddd;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 14px;
-  margin-bottom: 20px;
-  border: 2px solid #999;
-  font-size: 20px;
-  font-weight: 600;
-}
-
-.choices {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-bottom: 18px;
-}
-
-.choices button {
-  padding: 10px 16px;
-  border-radius: 20px;
-  border: 2px solid #333;
-  background: white;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-weight: 500;
-}
-
-.choices button:hover {
-  background: #f4a259;
-  transform: scale(1.05);
-}
-
-.choices button.selected {
-  background: #f4a259;
-  border-color: #000;
-  transform: scale(1.08);
-  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.2);
-}
-
-.reason-box {
-  margin-top: 10px;
-  text-align: center;
-}
-
-.reason-box p {
-  margin-bottom: 10px;
-  font-weight: 600;
-}
-
-.reason-box button {
-  margin: 5px;
-  padding: 8px 14px;
-  border-radius: 16px;
-  border: 2px solid #555;
-  background: #eee;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.reason-box button:hover {
-  background: #ddd;
-}
-
-.reason-box button.selected {
-  background: #90caf9;
-  border-color: #1976d2;
-  transform: scale(1.05);
 }
 
 .answer-feedback {
@@ -481,18 +350,4 @@ onBeforeUnmount(revokeImageUrl)
   font-weight: 600;
 }
 
-.correct {
-  background: #a5d6a7 !important;
-  border-color: #2e7d32 !important;
-}
-
-.wrong {
-  background: #ef9a9a !important;
-  border-color: #c62828 !important;
-}
-
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
 </style>

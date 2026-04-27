@@ -1,7 +1,7 @@
 @import 'base.css';
 @import 'teacherStyle.css';
-@import './pupilStyle.css';
-@import './pupilTaskStyle.css';
+@import 'pupilTaskStyle.css';
+@import 'pupilStyle.css';
 
 .transition {
   transition: all 0.1s;

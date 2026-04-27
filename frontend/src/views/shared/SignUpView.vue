@@ -88,7 +88,7 @@ const handleRegister = async (): Promise<void> => {
   <div class="signup-page">
     <div class="signup-card">
       <div class="signup-body">
-        <img src="../../assets/logo/NTNU.png" alt="NTNU" class="brand-logo" />
+        <img src="@/assets/logo/NTNU.png" alt="NTNU" class="brand-logo" />
 
         <div class="header-text">
           <h1>Opprett bruker</h1>

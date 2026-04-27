@@ -1,9 +1,18 @@
 <script setup lang="ts">
+withDefaults(
+  defineProps<{
+    buttonText?: string
+  }>(),
+  {
+    buttonText: 'Jeg er klar!',
+  },
+)
+
 const emit = defineEmits<{
   (e: 'close'): void
 }>()
 
-function confirm() {
+function confirm(): void {
   emit('close')
 }
 </script>
@@ -15,7 +24,7 @@ function confirm() {
         <slot />
       </div>
       <button class="confirm-button" @click="confirm">
-        Jeg er klar!
+        {{ buttonText }}
       </button>
     </div>
   </div>
@@ -25,6 +34,7 @@ function confirm() {
 .overlay {
   position: fixed;
   inset: 0;
+  z-index: 1000;
   display: flex;
   justify-content: center;
   align-items: center;

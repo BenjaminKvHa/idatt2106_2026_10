@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import logoImage from '@/assets/logo/nettdetektivene_logo.png'
+
 </script>
 
 <template>
@@ -7,7 +7,7 @@ import logoImage from '@/assets/logo/nettdetektivene_logo.png'
     <div class="scene">
 
       <div class="card">
-        <img :src="logoImage" alt="Nettdetektivene logo" />
+        <img src="/src/assets/logo/nettdetektivene_logo.png" alt="Nettdetektivene logo" />
         <p class="tagline">Er du klar for oppdraget?</p>
         <router-link to="/sign-in" class="link">
           <button class="ready-button">

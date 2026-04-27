@@ -151,9 +151,14 @@ const isOnHome = computed(() => route.fullPath == '/pupil/' || route.fullPath ==
   position: relative;
 }
 .nav-center-text {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   text-decoration: underline;
   color: var(--brown-dark);
   font-weight: 600;
+  white-space: nowrap;
 }
 .nav-icon-parent {
   width: 3rem;
@@ -179,6 +184,7 @@ const isOnHome = computed(() => route.fullPath == '/pupil/' || route.fullPath ==
 }
 
 .nav-container {
+  position: relative;
   background-color: var(--beige-medium);
   width: 100%;
   height: 5rem;
@@ -194,8 +200,6 @@ const isOnHome = computed(() => route.fullPath == '/pupil/' || route.fullPath ==
     align-items: center;
     flex-direction: row;
     gap: 1rem;
-
   }
 }
-
 </style>

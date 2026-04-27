@@ -71,7 +71,7 @@ class NotebookServiceTest {
                 membershipRepository,
                 chapterRepository,
                 teacherBridgeRepository,
-                objectMapper);
+                new NotebookJsonService(objectMapper));
     }
 
     @DisplayName("Returns existing pupil notebook for confirmed classroom membership")
@@ -90,6 +90,7 @@ class NotebookServiceTest {
         ChapterNotebookResponse response = notebookService.getPupilNotebook(CHAPTER_ID, pupilPrincipal());
 
         assertEquals(CHAPTER_ID, response.chapterId());
+        assertEquals("Chapter 2", response.chapterName());
         assertEquals(List.of("Check source", "Ask teacher"), response.tips());
         assertEquals("My notes", response.ownNotes());
     }
@@ -118,6 +119,7 @@ class NotebookServiceTest {
         assertEquals(0, saved.getSuccessfulRuns());
         assertEquals(0, saved.getHighscore());
         assertEquals(0, saved.getUnsuccessfulStreak());
+        assertEquals("Chapter 2", response.chapterName());
         assertEquals(List.of(), response.tips());
         assertEquals("", response.ownNotes());
     }
@@ -136,6 +138,7 @@ class NotebookServiceTest {
 
         ChapterNotebookResponse response = notebookService.getPupilNotebook(CHAPTER_ID, pupilPrincipal());
 
+        assertEquals("Chapter 2", response.chapterName());
         assertEquals(List.of(), response.tips());
         assertEquals("", response.ownNotes());
         assertTrue(progression.getNotebookJson().contains("tips"));
@@ -162,6 +165,7 @@ class NotebookServiceTest {
                 pupilPrincipal());
 
         ChapterNotebookData stored = objectMapper.readValue(progression.getNotebookJson(), ChapterNotebookData.class);
+        assertEquals("Chapter 2", response.chapterName());
         assertEquals(List.of("Read source carefully"), response.tips());
         assertEquals("New own notes", response.ownNotes());
         assertEquals(List.of("Read source carefully"), stored.tips());
@@ -250,6 +254,7 @@ class NotebookServiceTest {
                 CHAPTER_ID,
                 teacherPrincipal());
 
+        assertEquals("Chapter 2", response.chapterName());
         assertEquals(List.of("Teacher-visible tip"), response.tips());
         assertEquals("Pupil note", response.ownNotes());
     }

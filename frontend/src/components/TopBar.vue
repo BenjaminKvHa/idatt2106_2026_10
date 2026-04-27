@@ -182,6 +182,10 @@ onMounted(loadProfile)
 }
 
 .nav-center-text {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   text-decoration: underline;
   color: var(--brown-dark);
   font-weight: 600;

@@ -2,6 +2,8 @@ package com.nettdet.backend.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -33,6 +35,7 @@ import com.nettdet.backend.domain.enums.AccountRole;
 import com.nettdet.backend.domain.enums.ClassroomAccess;
 import com.nettdet.backend.dto.CreateWeeklyMysteryResponse;
 import com.nettdet.backend.dto.PupilWeeklyMysteryResponse;
+import com.nettdet.backend.dto.TeacherApprovedWeeklyMysteryResponse;
 import com.nettdet.backend.dto.TeacherPendingWeeklyMysteryResponse;
 import com.nettdet.backend.repository.AccountClassroomBridgeTeacherRepository;
 import com.nettdet.backend.repository.ClassroomRepository;
@@ -123,10 +126,12 @@ class WeeklyMysteryServiceTest {
         assertEquals(fileObject, captured.getFileObject());
         assertEquals("Min kommentar", captured.getComment());
         assertFalse(captured.isApproved());
+        assertNull(captured.getApprovedAt());
         assertEquals(1L, response.id());
         assertEquals(10L, response.fileObjectId());
         assertEquals("Min kommentar", response.comment());
         assertFalse(response.approved());
+        assertNull(response.approvedAt());
         verify(notificationService).createNotification(
                 CLASSROOM_CODE,
                 PUPIL_EMAIL,
@@ -167,7 +172,9 @@ class WeeklyMysteryServiceTest {
                 PUPIL_EMAIL,
                 CLASSROOM_CODE))
                 .thenReturn(Optional.of(membership));
-        when(weeklyMysteryRepository.findAllByClassroomClassroomCodeAndApprovedTrueOrderByCreatedAtDesc(CLASSROOM_CODE))
+        LocalDateTime approvedAt = LocalDateTime.of(2026, 4, 24, 9, 30);
+        approved.setApprovedAt(approvedAt);
+        when(weeklyMysteryRepository.findAllByClassroomClassroomCodeAndApprovedTrueOrderByApprovedAtDescCreatedAtDesc(CLASSROOM_CODE))
                 .thenReturn(List.of(approved));
 
         List<PupilWeeklyMysteryResponse> response = weeklyMysteryService.getApprovedMysteries(
@@ -178,6 +185,7 @@ class WeeklyMysteryServiceTest {
         assertEquals(2L, response.getFirst().id());
         assertEquals(20L, response.getFirst().fileObjectId());
         assertEquals("Approved mystery", response.getFirst().comment());
+        assertEquals(approvedAt, response.getFirst().approvedAt());
     }
 
     @DisplayName("Returns pending mysteries only for teachers in the classroom")
@@ -223,6 +231,52 @@ class WeeklyMysteryServiceTest {
                 .findAllByClassroomClassroomCodeAndApprovedFalseOrderByCreatedAtDesc(CLASSROOM_CODE);
     }
 
+    @DisplayName("Returns approved mysteries with pupil legal name for teachers in the classroom")
+    @Test
+    void getApprovedMysteriesForTeacher_whenTeacherHasAccess_returnsApprovedMysteriesWithPupilName() {
+        Classroom classroom = classroom();
+        WeeklyMystery approved = weeklyMystery(
+                6L,
+                fileObject(60L, ClassroomAccess.ONLY_CLASS, classroom),
+                classroom,
+                membership(PUPIL_EMAIL, "Pupil Name", classroom),
+                "Approved mystery",
+                true);
+        LocalDateTime approvedAt = LocalDateTime.of(2026, 4, 24, 9, 30);
+        approved.setApprovedAt(approvedAt);
+        when(classroomRepository.findById(CLASSROOM_CODE)).thenReturn(Optional.of(classroom));
+        when(teacherBridgeRepository.existsByIdAccountEmailAndIdClassroomCode(TEACHER_EMAIL, CLASSROOM_CODE))
+                .thenReturn(true);
+        when(weeklyMysteryRepository.findAllByClassroomClassroomCodeAndApprovedTrueOrderByApprovedAtDescCreatedAtDesc(CLASSROOM_CODE))
+                .thenReturn(List.of(approved));
+
+        List<TeacherApprovedWeeklyMysteryResponse> response = weeklyMysteryService.getApprovedMysteriesForTeacher(
+                CLASSROOM_CODE,
+                teacherPrincipal());
+
+        assertEquals(1, response.size());
+        assertEquals(6L, response.getFirst().id());
+        assertEquals(60L, response.getFirst().fileObjectId());
+        assertEquals("Pupil Name", response.getFirst().pupilLegalName());
+        assertEquals("Approved mystery", response.getFirst().comment());
+        assertEquals(approvedAt, response.getFirst().approvedAt());
+    }
+
+    @DisplayName("Denies approved mystery listing for teachers outside the classroom")
+    @Test
+    void getApprovedMysteriesForTeacher_whenTeacherDoesNotBelongToClassroom_deniesAccess() {
+        when(classroomRepository.findById(CLASSROOM_CODE)).thenReturn(Optional.of(classroom()));
+        when(teacherBridgeRepository.existsByIdAccountEmailAndIdClassroomCode(TEACHER_EMAIL, CLASSROOM_CODE))
+                .thenReturn(false);
+
+        assertThrows(AccessDeniedException.class, () -> weeklyMysteryService.getApprovedMysteriesForTeacher(
+                CLASSROOM_CODE,
+                teacherPrincipal()));
+
+        verify(weeklyMysteryRepository, org.mockito.Mockito.never())
+                .findAllByClassroomClassroomCodeAndApprovedTrueOrderByApprovedAtDescCreatedAtDesc(CLASSROOM_CODE);
+    }
+
     @DisplayName("Approves mystery and changes linked file access to classroom-only")
     @Test
     void acceptMystery_whenTeacherHasAccess_approvesMysteryAndUpdatesFileAccess() {
@@ -248,10 +302,43 @@ class WeeklyMysteryServiceTest {
                 teacherPrincipal());
 
         assertTrue(pending.isApproved());
+        assertNotNull(pending.getApprovedAt());
         assertEquals(ClassroomAccess.ONLY_CLASS, fileObject.getAccessLevel());
         assertEquals(4L, response.id());
+        assertEquals(pending.getApprovedAt(), response.approvedAt());
         verify(fileObjectRepository).save(fileObject);
         verify(weeklyMysteryRepository).save(pending);
+    }
+
+    @DisplayName("Keeps existing approval timestamp when an already approved mystery is accepted again")
+    @Test
+    void acceptMystery_whenMysteryAlreadyHasApprovedAt_preservesOriginalApprovalTimestamp() {
+        Classroom classroom = classroom();
+        FileObject fileObject = fileObject(41L, ClassroomAccess.ONLY_CLASS, classroom);
+        WeeklyMystery approved = weeklyMystery(
+                41L,
+                fileObject,
+                classroom,
+                membership(PUPIL_EMAIL, "Pupil Name", classroom),
+                "Approved mystery",
+                true);
+        LocalDateTime originalApprovedAt = LocalDateTime.of(2026, 4, 24, 9, 30);
+        approved.setApprovedAt(originalApprovedAt);
+        when(classroomRepository.findById(CLASSROOM_CODE)).thenReturn(Optional.of(classroom));
+        when(teacherBridgeRepository.existsByIdAccountEmailAndIdClassroomCode(TEACHER_EMAIL, CLASSROOM_CODE))
+                .thenReturn(true);
+        when(weeklyMysteryRepository.findByIdAndClassroomClassroomCode(41L, CLASSROOM_CODE))
+                .thenReturn(Optional.of(approved));
+        when(weeklyMysteryRepository.save(approved)).thenReturn(approved);
+
+        PupilWeeklyMysteryResponse response = weeklyMysteryService.acceptMystery(
+                CLASSROOM_CODE,
+                41L,
+                teacherPrincipal());
+
+        assertTrue(approved.isApproved());
+        assertEquals(originalApprovedAt, approved.getApprovedAt());
+        assertEquals(originalApprovedAt, response.approvedAt());
     }
 
     @DisplayName("Declines mystery by deleting request before deleting linked file")

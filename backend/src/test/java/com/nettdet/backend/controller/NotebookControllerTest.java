@@ -60,6 +60,7 @@ class NotebookControllerTest {
         JwtUserPrincipal principal = pupilPrincipal();
         when(notebookService.getPupilNotebook(2L, principal)).thenReturn(new ChapterNotebookResponse(
                 2L,
+                "Fotografen",
                 List.of("Check source"),
                 "My notes"));
 
@@ -67,6 +68,7 @@ class NotebookControllerTest {
                         .with(authentication(authenticationFor(principal, "PUPIL"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.chapterId").value(2))
+                .andExpect(jsonPath("$.chapterName").value("Fotografen"))
                 .andExpect(jsonPath("$.tips[0]").value("Check source"))
                 .andExpect(jsonPath("$.ownNotes").value("My notes"));
 
@@ -81,7 +83,7 @@ class NotebookControllerTest {
                 argThat(chapterId -> chapterId == 2L),
                 argThat(request -> request.ownNotes().equals("Updated notes")),
                 argThat(argument -> argument.email().equals("pupil@example.com"))))
-                .thenReturn(new ChapterNotebookResponse(2L, List.of("Read-only tip"), "Updated notes"));
+                .thenReturn(new ChapterNotebookResponse(2L, "Fotografen", List.of("Read-only tip"), "Updated notes"));
 
         mockMvc.perform(put("/pupil/chapters/2/notebook")
                         .with(authentication(authenticationFor(principal, "PUPIL")))
@@ -89,6 +91,7 @@ class NotebookControllerTest {
                         .content(objectMapper.writeValueAsString(new UpdateChapterNotebookRequest("Updated notes"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.chapterId").value(2))
+                .andExpect(jsonPath("$.chapterName").value("Fotografen"))
                 .andExpect(jsonPath("$.tips[0]").value("Read-only tip"))
                 .andExpect(jsonPath("$.ownNotes").value("Updated notes"));
 
@@ -115,12 +118,13 @@ class NotebookControllerTest {
     void getTeacherNotebook_whenAuthenticatedTeacher_returnsNotebookJson() throws Exception {
         JwtUserPrincipal principal = teacherPrincipal();
         when(notebookService.getTeacherNotebook("ABCABC", "pupil@example.com", 2L, principal))
-                .thenReturn(new ChapterNotebookResponse(2L, List.of("Teacher-visible tip"), "Pupil note"));
+                .thenReturn(new ChapterNotebookResponse(2L, "Fotografen", List.of("Teacher-visible tip"), "Pupil note"));
 
         mockMvc.perform(get("/teacher/classrooms/ABCABC/pupils/pupil@example.com/chapters/2/notebook")
                         .with(authentication(authenticationFor(principal, "TEACHER"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.chapterId").value(2))
+                .andExpect(jsonPath("$.chapterName").value("Fotografen"))
                 .andExpect(jsonPath("$.tips[0]").value("Teacher-visible tip"))
                 .andExpect(jsonPath("$.ownNotes").value("Pupil note"));
 
@@ -144,12 +148,13 @@ class NotebookControllerTest {
     void getTeacherNotebook_whenRequestIncludesExtraIdentityParameter_ignoresQueryIdentity() throws Exception {
         JwtUserPrincipal principal = teacherPrincipal();
         when(notebookService.getTeacherNotebook("ABCABC", "pupil@example.com", 2L, principal))
-                .thenReturn(new ChapterNotebookResponse(2L, List.of(), ""));
+                .thenReturn(new ChapterNotebookResponse(2L, "Fotografen", List.of(), ""));
 
         mockMvc.perform(get("/teacher/classrooms/ABCABC/pupils/pupil@example.com/chapters/2/notebook?teacherEmail=other@example.com")
-                        .with(authentication(authenticationFor(principal, "TEACHER"))))
+                .with(authentication(authenticationFor(principal, "TEACHER"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.chapterId").value(2));
+                .andExpect(jsonPath("$.chapterId").value(2))
+                .andExpect(jsonPath("$.chapterName").value("Fotografen"));
 
         verify(notebookService).getTeacherNotebook(
                 argThat("ABCABC"::equals),

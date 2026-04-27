@@ -88,8 +88,15 @@ CREATE TABLE weekly_mystery (
     account_email VARCHAR(255) NOT NULL REFERENCES pupil_classroom_membership(account_email) ON DELETE CASCADE,
     comment TEXT NOT NULL,
     approved BOOLEAN NOT NULL DEFAULT FALSE,
+    approved_at TIMESTAMPTZ NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+CREATE INDEX idx_weekly_mystery_classroom_approved_created_at
+    ON weekly_mystery (classroom_code, approved, approved_at DESC, created_at DESC);
+
+CREATE INDEX idx_weekly_mystery_account_created_at
+    ON weekly_mystery (account_email, created_at DESC);
 
 CREATE TABLE refresh_token (
     id BIGSERIAL PRIMARY KEY,

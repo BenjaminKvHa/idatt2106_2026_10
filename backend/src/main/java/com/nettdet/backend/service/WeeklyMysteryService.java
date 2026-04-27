@@ -1,5 +1,6 @@
 package com.nettdet.backend.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.security.access.AccessDeniedException;
@@ -15,6 +16,7 @@ import com.nettdet.backend.domain.enums.AccountRole;
 import com.nettdet.backend.domain.enums.ClassroomAccess;
 import com.nettdet.backend.dto.CreateWeeklyMysteryResponse;
 import com.nettdet.backend.dto.PupilWeeklyMysteryResponse;
+import com.nettdet.backend.dto.TeacherApprovedWeeklyMysteryResponse;
 import com.nettdet.backend.dto.TeacherPendingWeeklyMysteryResponse;
 import com.nettdet.backend.repository.AccountClassroomBridgeTeacherRepository;
 import com.nettdet.backend.repository.ClassroomRepository;
@@ -35,6 +37,7 @@ public class WeeklyMysteryService {
     private final FileObjectRepository fileObjectRepository;
     private final FileObjectService fileObjectService;
     private final FileObjectAccessControlService fileObjectAccessControlService;
+    private final NotificationService notificationService;
 
     public WeeklyMysteryService(WeeklyMysteryRepository weeklyMysteryRepository,
                                 ClassroomRepository classroomRepository,
@@ -42,7 +45,8 @@ public class WeeklyMysteryService {
                                 AccountClassroomBridgeTeacherRepository teacherBridgeRepository,
                                 FileObjectRepository fileObjectRepository,
                                 FileObjectService fileObjectService,
-                                FileObjectAccessControlService fileObjectAccessControlService) {
+                                FileObjectAccessControlService fileObjectAccessControlService,
+                                NotificationService notificationService) {
         this.weeklyMysteryRepository = weeklyMysteryRepository;
         this.classroomRepository = classroomRepository;
         this.membershipRepository = membershipRepository;
@@ -50,6 +54,7 @@ public class WeeklyMysteryService {
         this.fileObjectRepository = fileObjectRepository;
         this.fileObjectService = fileObjectService;
         this.fileObjectAccessControlService = fileObjectAccessControlService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -74,7 +79,13 @@ public class WeeklyMysteryService {
         mystery.setComment(normalizedComment);
         mystery.setApproved(false);
 
-        return toCreateResponse(weeklyMysteryRepository.saveAndFlush(mystery));
+        WeeklyMystery savedMystery = weeklyMysteryRepository.saveAndFlush(mystery);
+        notificationService.createNotification(
+                normalizedClassroomCode,
+                principal.email(),
+                membership.getAccount().getLegalName() + " har sendt inn et nytt bidrag til Ukens mysterium.");
+
+        return toCreateResponse(savedMystery);
     }
 
     @Transactional(readOnly = true)
@@ -85,7 +96,7 @@ public class WeeklyMysteryService {
         getConfirmedMembership(principal.email(), normalizedClassroomCode);
 
         return weeklyMysteryRepository
-                .findAllByClassroomClassroomCodeAndApprovedTrueOrderByCreatedAtDesc(normalizedClassroomCode)
+                .findAllByClassroomClassroomCodeAndApprovedTrueOrderByApprovedAtDescCreatedAtDesc(normalizedClassroomCode)
                 .stream()
                 .map(this::toPupilResponse)
                 .toList();
@@ -104,6 +115,19 @@ public class WeeklyMysteryService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<TeacherApprovedWeeklyMysteryResponse> getApprovedMysteriesForTeacher(String classroomCode,
+                                                                                     JwtUserPrincipal principal) {
+        String normalizedClassroomCode = normalizeClassroomCode(classroomCode);
+        verifyTeacherAccess(principal, normalizedClassroomCode);
+
+        return weeklyMysteryRepository
+                .findAllByClassroomClassroomCodeAndApprovedTrueOrderByApprovedAtDescCreatedAtDesc(normalizedClassroomCode)
+                .stream()
+                .map(this::toTeacherApprovedResponse)
+                .toList();
+    }
+
     @Transactional
     public PupilWeeklyMysteryResponse acceptMystery(String classroomCode,
                                                     Long mysteryId,
@@ -113,6 +137,9 @@ public class WeeklyMysteryService {
 
         WeeklyMystery mystery = getRequiredMystery(mysteryId, normalizedClassroomCode);
         mystery.setApproved(true);
+        if (mystery.getApprovedAt() == null) {
+            mystery.setApprovedAt(LocalDateTime.now());
+        }
         mystery.getFileObject().setAccessLevel(ClassroomAccess.ONLY_CLASS);
         fileObjectRepository.save(mystery.getFileObject());
 
@@ -184,6 +211,7 @@ public class WeeklyMysteryService {
                 mystery.getFileObject().getId(),
                 mystery.getComment(),
                 mystery.getCreatedAt(),
+                mystery.getApprovedAt(),
                 mystery.isApproved());
     }
 
@@ -192,7 +220,8 @@ public class WeeklyMysteryService {
                 mystery.getId(),
                 mystery.getFileObject().getId(),
                 mystery.getComment(),
-                mystery.getCreatedAt());
+                mystery.getCreatedAt(),
+                mystery.getApprovedAt());
     }
 
     private TeacherPendingWeeklyMysteryResponse toTeacherPendingResponse(WeeklyMystery mystery) {
@@ -202,7 +231,18 @@ public class WeeklyMysteryService {
                 mystery.getPupilClassroomMembership().getAccountEmail(),
                 mystery.getPupilClassroomMembership().getAccount().getLegalName(),
                 mystery.getComment(),
-                mystery.getCreatedAt());
+                mystery.getCreatedAt(),
+                mystery.getApprovedAt());
+    }
+
+    private TeacherApprovedWeeklyMysteryResponse toTeacherApprovedResponse(WeeklyMystery mystery) {
+        return new TeacherApprovedWeeklyMysteryResponse(
+                mystery.getId(),
+                mystery.getFileObject().getId(),
+                mystery.getPupilClassroomMembership().getAccount().getLegalName(),
+                mystery.getComment(),
+                mystery.getCreatedAt(),
+                mystery.getApprovedAt());
     }
 
     private String normalizeClassroomCode(String classroomCode) {

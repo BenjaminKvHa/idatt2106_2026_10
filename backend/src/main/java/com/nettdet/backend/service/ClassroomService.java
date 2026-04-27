@@ -26,6 +26,7 @@ import com.nettdet.backend.dto.InviteTeacherRequest;
 import com.nettdet.backend.dto.PendingPupilRequestResponse;
 import com.nettdet.backend.dto.TeacherLeaveStatusResponse;
 import com.nettdet.backend.dto.UpdateClassroomRequest;
+import com.nettdet.backend.dto.UpdatePupilUsernameRequest;
 import com.nettdet.backend.dto.ValidateClassroomCodeRequest;
 import com.nettdet.backend.dto.ValidateClassroomCodeResponse;
 import com.nettdet.backend.repository.AccountClassroomBridgeTeacherRepository;
@@ -45,17 +46,20 @@ public class ClassroomService {
     private final AccountRepository accountRepository;
     private final PupilClassroomMembershipRepository pupilClassroomMembershipRepository;
     private final ClassroomCodeGenerator classroomCodeGenerator;
+    private final PupilXpService pupilXpService;
 
     public ClassroomService(ClassroomRepository classroomRepository,
                             AccountClassroomBridgeTeacherRepository bridgeRepository,
                             AccountRepository accountRepository,
                             PupilClassroomMembershipRepository pupilClassroomMembershipRepository,
-                            ClassroomCodeGenerator classroomCodeGenerator) {
+                            ClassroomCodeGenerator classroomCodeGenerator,
+                            PupilXpService pupilXpService) {
         this.classroomRepository = classroomRepository;
         this.bridgeRepository = bridgeRepository;
         this.accountRepository = accountRepository;
         this.pupilClassroomMembershipRepository = pupilClassroomMembershipRepository;
         this.classroomCodeGenerator = classroomCodeGenerator;
+        this.pupilXpService = pupilXpService;
     }
 
     @Transactional
@@ -298,6 +302,25 @@ public class ClassroomService {
         pupilClassroomMembershipRepository.delete(membership);
     }
 
+    @Transactional
+    public AcceptedClassroomPupilResponse updatePupilUsername(String classroomCode,
+                                                             String pupilEmail,
+                                                             UpdatePupilUsernameRequest request,
+                                                             JwtUserPrincipal principal) {
+        verifyTeacherPrincipal(principal);
+        getRequiredClassroom(classroomCode);
+        verifyTeacherOwnership(principal.email(), classroomCode);
+
+        PupilClassroomMembership membership = pupilClassroomMembershipRepository
+                .findByAccountEmailAndClassroomClassroomCodeAndMembershipConfirmedByTeacherTrue(
+                        normalizeEmail(pupilEmail),
+                        classroomCode)
+                .orElseThrow(() -> new EntityNotFoundException("Confirmed pupil membership not found"));
+
+        membership.setUsername(normalizeUsername(request.username()));
+        return toAcceptedClassroomPupilResponse(pupilClassroomMembershipRepository.save(membership));
+    }
+
     private void verifyTeacherPrincipal(JwtUserPrincipal principal) {
         if (principal == null || principal.email() == null || principal.role() == null) {
             throw new AccessDeniedException("Teacher access is required");
@@ -355,6 +378,14 @@ public class ClassroomService {
         return email.trim();
     }
 
+    private String normalizeUsername(String username) {
+        if (username == null || username.isBlank()) {
+            throw new IllegalArgumentException("Username is required");
+        }
+
+        return username.trim();
+    }
+
     private ClassroomResponse toResponse(Classroom classroom) {
         return new ClassroomResponse(
                 classroom.getClassroomCode(),
@@ -382,6 +413,7 @@ public class ClassroomService {
                 membership.getAccountEmail(),
                 membership.getAccount().getLegalName(),
                 membership.getUsername(),
-                avatarFileObject != null ? avatarFileObject.getObjectKey() : null);
+                avatarFileObject != null ? avatarFileObject.getObjectKey() : null,
+                pupilXpService.calculateMembershipXp(membership));
     }
 }

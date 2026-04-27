@@ -98,8 +98,6 @@ class AvatarServiceTest {
     @DisplayName("Throws when one of the requested asset parts is not present")
     @Test
     void getOrCreateAvatar_whenAssetMissing_throwsEntityNotFound() {
-        when(fileObjectRepository.findByObjectKey("avatar-images/p_h_c.png"))
-                .thenReturn(Optional.empty());
         when(fileObjectRepository.findByObjectKey(any(String.class))).thenReturn(Optional.empty());
 
         assertThrows(EntityNotFoundException.class, () -> service.getOrCreateAvatar("p_h_c"));

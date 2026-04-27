@@ -2,6 +2,7 @@
 -- Apply after schema.sql has created the database objects.
 
 -- Run this to seed the database: docker compose exec -T db psql -U app -d app < seed.sql
+-- Run this to seed the database on windows: Get-Content .\seed.sql | docker compose exec -T db psql -U app -d app
 -- Accounts you can log in with:
 -- demo.teacher@example.com
 -- map.partial@example.com

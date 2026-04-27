@@ -14,6 +14,11 @@ public record CreateWeeklyMysteryResponse(
     String comment,
     @Schema(description = "Time the weekly mystery was submitted.", example = "2026-04-23T10:15:30")
     LocalDateTime createdAt,
+    @Schema(
+            description = "Time the weekly mystery was approved. Null until a teacher approves it.",
+            example = "2026-04-24T09:30:00",
+            nullable = true)
+    LocalDateTime approvedAt,
     @Schema(description = "Whether the teacher has approved the weekly mystery.", example = "false")
     boolean approved
 ) {

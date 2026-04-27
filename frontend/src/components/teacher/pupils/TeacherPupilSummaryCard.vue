@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { SaveIcon } from '@lucide/vue'
 import type { Pupil } from './types'
 
 const props = defineProps<{
   pupil: Pupil
   editUsername: string
+  showSaveButton?: boolean
 }>()
 
 const emit = defineEmits<{
   'update:editUsername': [value: string]
+  saveChanges: []
 }>()
 
 const initials = computed(() =>
@@ -46,43 +49,49 @@ function updateUsername(event: Event) {
       </div>
 
       <div class="profile-text">
-        <p class="profile-name inika">{{ pupil.legalName }}</p>
+        <div class="profile-header-row">
+          <p class="profile-name inika">{{ pupil.legalName }}</p>
+          <p class="xp-inline inika">{{ pupil.totalXp }} XP</p>
+        </div>
         <p class="username-display inika">{{ secondaryText }}</p>
       </div>
 
       <div class="username-edit">
         <label class="field-label inika" for="username-input">Brukernavn</label>
 
-        <input
-          id="username-input"
-          :value="editUsername"
-          type="text"
-          class="small-input"
-          placeholder="Brukernavn"
-          @input="updateUsername"
-        />
-      </div>
-    </div>
+        <div class="username-edit-row">
+          <input
+            id="username-input"
+            :value="editUsername"
+            type="text"
+            class="small-input"
+            placeholder="Brukernavn"
+            @input="updateUsername"
+          />
 
-    <div class="xp-area">
-      <div class="stat-card">
-        <div class="stat-item">
-          <span class="stat-label inika">XP</span>
-          <strong class="stat-value inika">{{ pupil.totalXp }}</strong>
+          <button
+            v-if="showSaveButton"
+            class="save-btn inika"
+            type="button"
+            aria-label="Lagre endringer"
+            @click="emit('saveChanges')"
+          >
+            <SaveIcon />
+          </button>
         </div>
       </div>
     </div>
+
   </div>
 </template>
 
 <style scoped>
 .profile-summary-card {
-  border: 5px solid var(--accent);
-  border-radius: 28px;
-  padding: 24px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 28px;
+  border: var(--border-thin) solid var(--accent);
+  border-radius: 1rem;
+  padding: 2.5rem;
+  display: flex;
+  gap: 1rem;
   align-items: center;
   background: var(--background);
 }
@@ -91,7 +100,7 @@ function updateUsername(event: Event) {
   display: grid;
   grid-template-columns: 120px 1fr;
   column-gap: 18px;
-  row-gap: 10px;
+  row-gap: .5px;
   align-items: center;
 }
 
@@ -121,10 +130,24 @@ function updateUsername(event: Event) {
   align-self: end;
 }
 
+.profile-header-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
 .profile-name {
   margin: 0;
   font-size: 1.35rem;
   font-weight: 700;
+}
+
+.xp-inline {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  opacity: 0.8;
 }
 
 .username-display {
@@ -156,42 +179,40 @@ function updateUsername(event: Event) {
   font-size: 1rem;
 }
 
-.xp-area {
+.username-edit-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.save-btn {
+  width: 3rem;
+  height: 3rem;
+  border: 3px solid var(--accent);
+  border-radius: 999px;
+  padding: 0;
+  cursor: pointer;
+  transition: 0.2s ease;
+  background: var(--background);
+  color: var(--brown-dark);
   display: flex;
+  align-items: center;
   justify-content: center;
 }
 
-.stat-card {
-  display: grid;
-  place-items: center;
-  width: 100%;
-  max-width: 220px;
-  background: var(--background);
-  border: 3px solid var(--background-sec);
-  border-radius: 18px;
-  padding: 18px 20px;
-  margin: 0 auto;
+.save-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 0 var(--accent);
 }
 
-.stat-item {
-  text-align: center;
-}
-
-.stat-label {
-  display: block;
-  font-size: 0.95rem;
-  font-weight: 700;
-  opacity: 0.75;
-}
-
-.stat-value {
-  display: block;
-  margin-top: 4px;
-  font-size: 2rem;
+.save-btn :deep(svg) {
+  width: 1.2rem;
+  height: 1.2rem;
 }
 
 @media (max-width: 1100px) {
-  .profile-summary-card {
+  .username-edit-row {
     grid-template-columns: 1fr;
   }
 }

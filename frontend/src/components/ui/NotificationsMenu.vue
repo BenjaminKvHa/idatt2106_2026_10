@@ -3,6 +3,13 @@ import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import { get } from '@/utils/apiUtils'
 
+type TeacherClassroomOverview = {
+  classroomCode: string
+  classroomName: string
+  totalScore: number
+  globalRank: number
+}
+
 type TeacherNotification = {
   id: number
   classroomCode: string
@@ -18,8 +25,12 @@ const props = defineProps<{
 
 const emit = defineEmits<{ (e: 'close'): void }>()
 
+const classrooms = ref<TeacherClassroomOverview[]>([])
+const selectedClassroomCode = ref('')
 const notifications = ref<TeacherNotification[]>([])
+const classroomsLoading = ref(false)
 const loading = ref(false)
+const classroomsError = ref('')
 const error = ref('')
 
 let pollingHandle: number | null = null
@@ -42,12 +53,44 @@ function formatTimestamp(value: string): string {
   }).format(parsedDate)
 }
 
+async function loadClassrooms() {
+  classroomsLoading.value = true
+  classroomsError.value = ''
+
+  try {
+    const response = await get<TeacherClassroomOverview[]>('/api/teacher/classrooms')
+    if (disposed) {
+      return
+    }
+
+    classrooms.value = response
+
+    const matchingInitialClassroom = props.classroomCode && response.some((classroom) => classroom.classroomCode === props.classroomCode)
+      ? props.classroomCode
+      : null
+
+    selectedClassroomCode.value = matchingInitialClassroom ?? response[0]?.classroomCode ?? ''
+  } catch (fetchError) {
+    if (disposed) {
+      return
+    }
+
+    classrooms.value = []
+    selectedClassroomCode.value = ''
+    classroomsError.value = fetchError instanceof Error ? fetchError.message : 'Kunne ikke hente klasserom'
+  } finally {
+    if (!disposed) {
+      classroomsLoading.value = false
+    }
+  }
+}
+
 async function loadNotifications(backgroundRefresh = false) {
   if (requestInFlight) {
     return
   }
 
-  if (!props.classroomCode) {
+  if (!selectedClassroomCode.value) {
     notifications.value = []
     error.value = 'Velg et klasserom for å se varsler.'
     loading.value = false
@@ -61,7 +104,7 @@ async function loadNotifications(backgroundRefresh = false) {
   }
 
   try {
-    const response = await get<TeacherNotification[]>(`/api/teacher/classrooms/${props.classroomCode}/notifications`)
+    const response = await get<TeacherNotification[]>(`/api/teacher/classrooms/${selectedClassroomCode.value}/notifications`)
     if (disposed) {
       return
     }
@@ -97,6 +140,10 @@ function stopPolling() {
 
 function startPolling() {
   stopPolling()
+  if (!selectedClassroomCode.value) {
+    return
+  }
+
   pollingHandle = window.setInterval(async () => {
     await loadNotifications(true)
   }, 2000)
@@ -104,12 +151,22 @@ function startPolling() {
 
 onMounted(async () => {
   disposed = false
+  await loadClassrooms()
   await loadNotifications()
   startPolling()
 })
 
 watch(
   () => props.classroomCode,
+  async () => {
+    if (props.classroomCode && classrooms.value.some((classroom) => classroom.classroomCode === props.classroomCode)) {
+      selectedClassroomCode.value = props.classroomCode
+    }
+  },
+)
+
+watch(
+  () => selectedClassroomCode.value,
   async () => {
     await loadNotifications()
     startPolling()
@@ -129,7 +186,23 @@ onBeforeUnmount(() => {
       <button type="button" class="close-button" @click="close">Lukk</button>
     </div>
 
-    <p v-if="loading" class="state-message">Laster varsler...</p>
+    <div class="classroom-picker">
+      <label for="notifications-classroom">Klasserom</label>
+      <select
+        id="notifications-classroom"
+        v-model="selectedClassroomCode"
+        :disabled="classroomsLoading || classrooms.length === 0"
+      >
+        <option v-if="classrooms.length === 0" value="">Ingen klasserom</option>
+        <option v-for="classroom in classrooms" :key="classroom.classroomCode" :value="classroom.classroomCode">
+          {{ classroom.classroomName }} ({{ classroom.classroomCode }})
+        </option>
+      </select>
+    </div>
+
+    <p v-if="classroomsError" class="state-message error">{{ classroomsError }}</p>
+    <p v-else-if="classroomsLoading" class="state-message">Laster klasserom...</p>
+    <p v-else-if="loading" class="state-message">Laster varsler...</p>
     <p v-else-if="error" class="state-message error">{{ error }}</p>
 
     <div v-else-if="notifications.length === 0" class="state-message">
@@ -181,6 +254,27 @@ onBeforeUnmount(() => {
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+}
+
+.classroom-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.classroom-picker label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--txt);
+}
+
+.classroom-picker select {
+  padding: 0.7rem 0.9rem;
+  border-radius: 12px;
+  border: 2px solid var(--accent);
+  background: var(--background);
+  color: var(--txt);
+  font: inherit;
 }
 
 .notifications-list {

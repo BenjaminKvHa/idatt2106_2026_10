@@ -4,13 +4,14 @@ import { useRoute } from 'vue-router'
 import TeacherPupilsLeftPanel from '@/components/teacher/pupils/TeacherPupilsLeftPanel.vue'
 import TeacherPupilsRightPanel from '@/components/teacher/pupils/TeacherPupilsRightPanel.vue'
 import type { ActivePanel, Pupil, StopName } from '@/components/teacher/pupils/types'
-import { del, get, put } from '@/utils/apiUtils'
+import { del, get, patch, put } from '@/utils/apiUtils'
 
 type AcceptedPupilResponse = {
   accountEmail: string
   legalName: string
   username: string
   avatarObjectKey: string | null
+  totalXp: number
 }
 
 type PendingPupilResponse = {
@@ -20,21 +21,23 @@ type PendingPupilResponse = {
 
 type ChapterNotebookResponse = {
   chapterId: number
+  chapterName: string
   tips: string[]
   ownNotes: string
 }
 
-const MOCK_PUPIL_DATA: Record<string, { totalXp: number; mysterySuggestion: string }> = {
+type UpdatePupilUsernameRequest = {
+  username: string
+}
+
+const MOCK_PUPIL_DATA: Record<string, { mysterySuggestion: string }> = {
   'demo.alice@example.com': {
-    totalXp: 1240,
     mysterySuggestion: 'Lag et mysterium om falske nyheter på TikTok.',
   },
   'demo.bob@example.com': {
-    totalXp: 860,
     mysterySuggestion: 'Et mysterium om en rar e-post fra banken.',
   },
   'test.elev@example.com': {
-    totalXp: 540,
     mysterySuggestion: 'Noen har laget et KI-bilde av skolen.',
   },
 }
@@ -56,6 +59,8 @@ const actionError = ref('')
 const notebookLoading = ref(false)
 const notebookError = ref('')
 const selectedNotebookNote = ref('')
+const selectedNotebookChapterName = ref('')
+const savingUsername = ref(false)
 
 const stopNames: StopName[] = ['Nyhetskvartalet', 'Fotografen', 'Postkontoret', 'Datasenteret']
 
@@ -97,6 +102,7 @@ const selectPupil = (email: string): void => {
   selectedStopName.value = ''
   notebookError.value = ''
   selectedNotebookNote.value = ''
+  selectedNotebookChapterName.value = ''
 }
 
 const closeDetails = (): void => {
@@ -105,6 +111,7 @@ const closeDetails = (): void => {
   selectedStopName.value = ''
   notebookError.value = ''
   selectedNotebookNote.value = ''
+  selectedNotebookChapterName.value = ''
 }
 
 const openNotes = (): void => {
@@ -112,6 +119,7 @@ const openNotes = (): void => {
   selectedStopName.value = ''
   notebookError.value = ''
   selectedNotebookNote.value = ''
+  selectedNotebookChapterName.value = ''
 }
 
 const openMysterySuggestion = (): void => {
@@ -124,7 +132,7 @@ const selectStopNote = (stopName: StopName): void => {
 }
 
 function getMockData(email: string) {
-  return MOCK_PUPIL_DATA[email] ?? { totalXp: 0, mysterySuggestion: '' }
+  return MOCK_PUPIL_DATA[email] ?? { mysterySuggestion: '' }
 }
 
 function mapAcceptedPupil(response: AcceptedPupilResponse): Pupil {
@@ -136,7 +144,7 @@ function mapAcceptedPupil(response: AcceptedPupilResponse): Pupil {
     username: response.username,
     classroomCode: classroomCode.value,
     status: 'APPROVED',
-    totalXp: mockData.totalXp,
+    totalXp: response.totalXp,
     notes: [],
     mysterySuggestion: mockData.mysterySuggestion,
     avatarUrl: response.avatarObjectKey ? `/api/${response.avatarObjectKey}` : null,
@@ -196,18 +204,21 @@ async function loadSelectedNotebook() {
     notebookLoading.value = false
     notebookError.value = ''
     selectedNotebookNote.value = ''
+    selectedNotebookChapterName.value = ''
     return
   }
 
   notebookLoading.value = true
   notebookError.value = ''
   selectedNotebookNote.value = ''
+  selectedNotebookChapterName.value = ''
 
   try {
     const chapterId = CHAPTER_ID_BY_STOP_NAME[selectedStopName.value]
     const response = await get<ChapterNotebookResponse>(
       `/api/teacher/classrooms/${classroomCode.value}/pupils/${selectedPupil.value.email}/chapters/${chapterId}/notebook`,
     )
+    selectedNotebookChapterName.value = response.chapterName
     selectedNotebookNote.value = response.ownNotes
   } catch (fetchError) {
     notebookError.value = fetchError instanceof Error ? fetchError.message : 'Failed to load notebook'
@@ -216,13 +227,34 @@ async function loadSelectedNotebook() {
   }
 }
 
-const saveChanges = (): void => {
+const saveChanges = async (): Promise<void> => {
   if (!selectedPupil.value) return
+  if (savingUsername.value) return
 
   const pupil = approvedPupils.value.find((item) => item.email === selectedPupil.value?.email)
   if (!pupil) return
 
-  pupil.username = editUsername.value.trim()
+  savingUsername.value = true
+
+  try {
+    actionError.value = ''
+    const payload: UpdatePupilUsernameRequest = {
+      username: editUsername.value.trim(),
+    }
+
+    const updatedPupil = await patch<AcceptedPupilResponse>(
+      `/api/classrooms/${classroomCode.value}/pupils/${selectedPupil.value.email}/username`,
+      payload,
+    )
+
+    pupil.username = updatedPupil.username
+    pupil.totalXp = updatedPupil.totalXp
+  } catch (requestError) {
+    actionError.value = requestError instanceof Error ? requestError.message : 'Failed to save pupil changes'
+    return
+  } finally {
+    savingUsername.value = false
+  }
 
   closeDetails()
 }
@@ -327,6 +359,7 @@ watch(
         :active-panel="activePanel"
         :stop-names="stopNames"
         :selected-stop-name="selectedStopName"
+        :selected-chapter-name="selectedNotebookChapterName"
         :selected-stop-note="selectedStopNote"
         :notebook-loading="notebookLoading"
         :notebook-error="notebookError"

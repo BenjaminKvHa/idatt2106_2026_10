@@ -10,6 +10,7 @@ defineProps<{
   activePanel: ActivePanel
   stopNames: StopName[]
   selectedStopName: StopName | ''
+  selectedChapterName: string
   selectedStopNote: string
   notebookLoading: boolean
   notebookError: string
@@ -33,14 +34,12 @@ const emit = defineEmits<{
       <TeacherPupilSummaryCard
         :pupil="selectedPupil"
         :edit-username="editUsername"
+        :show-save-button="selectedPupil.status === 'APPROVED'"
         @update:edit-username="emit('update:editUsername', $event)"
+        @save-changes="emit('saveChanges')"
       />
 
       <div v-if="selectedPupil.status === 'APPROVED'" class="button-grid">
-        <button class="main-btn primary-btn inika save-changes" type="button" @click="emit('saveChanges')">
-          Lagre endringer
-        </button>
-
         <button class="main-btn secondary-btn inika" type="button" @click="emit('openMystery')">
           Ukens mysterium, forslag
         </button>
@@ -63,6 +62,7 @@ const emit = defineEmits<{
         v-if="selectedPupil.status === 'APPROVED' && activePanel === 'NOTES'"
         :stop-names="stopNames"
         :selected-stop-name="selectedStopName"
+        :selected-chapter-name="selectedChapterName"
         :selected-stop-note="selectedStopNote"
         :loading="notebookLoading"
         :error="notebookError"
@@ -90,9 +90,6 @@ const emit = defineEmits<{
 .approve-pupil {
   color: var(--beige-light) !important;
 }
-.save-changes {
-  color: var(--beige-light) !important;
-}
 
 .details-card {
   width: min(820px, 100%);
@@ -103,7 +100,7 @@ const emit = defineEmits<{
 
 .button-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 16px 24px;
   margin-top: 28px;
 }

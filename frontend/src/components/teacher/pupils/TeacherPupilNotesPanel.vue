@@ -4,6 +4,7 @@ import type { StopName } from './types'
 defineProps<{
   stopNames: StopName[]
   selectedStopName: StopName | ''
+  selectedChapterName: string
   selectedStopNote: string
   loading: boolean
   error: string
@@ -39,7 +40,7 @@ function selectStop(stopName: StopName) {
     <p v-else-if="error" class="notes-state error-text">{{ error }}</p>
 
     <div v-else-if="selectedStopName" class="read-only-box inter">
-      <h3>{{ selectedStopName }}</h3>
+      <h3>{{ selectedChapterName || selectedStopName }}</h3>
       <p>{{ selectedStopNote || 'Eleven har ikke skrevet inn noe.' }}</p>
     </div>
   </div>

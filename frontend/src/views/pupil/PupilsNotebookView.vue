@@ -258,8 +258,9 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background-repeat: repeat;
-  background-size: 36rem auto;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
   padding: clamp(0.35rem, 1vw, 0.85rem);
 }
 

@@ -48,9 +48,8 @@ function goBack(): void {
 </script>
 
 <template>
-  <div class="page">
-    <div class="center-container"
-         :style="{ backgroundImage: `url(${bgImg})` }">
+  <div class="page" :style="{ backgroundImage: `url(${bgImg})` }">
+    <div class="center-container">
       <div class="waiting-container">
         <div class="text-container">
           <h1>Venter på godkjenning</h1>

@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import confetti from 'canvas-confetti'
 import completedSoundFile from '@/assets/sounds/levels/completedSound.mp3'
 import tryAgainSoundFile from '@/assets/sounds/levels/tryAgainSound.mp3'
+import { useAudio } from '@/composables/useAudio'
 
 const router = useRouter()
+const { playSound, stopSound } = useAudio()
 
 const props = defineProps<{
   show: boolean
@@ -23,20 +25,16 @@ const emit = defineEmits<{
   (e: 'map'): void
 }>()
 
-const completedSound = new Audio(completedSoundFile)
-completedSound.volume = 0.5
-
-const tryAgainSound = new Audio(tryAgainSoundFile)
-tryAgainSound.volume = 0.5
+let completedSoundRef: HTMLAudioElement | null = null
+let tryAgainSoundRef: HTMLAudioElement | null = null
 
 const currentImage = computed(() => (props.success ? props.successImage : props.failImage))
 
 function stopAllSounds() {
-  completedSound.pause()
-  tryAgainSound.pause()
-
-  completedSound.currentTime = 0
-  tryAgainSound.currentTime = 0
+  stopSound(completedSoundRef)
+  stopSound(tryAgainSoundRef)
+  completedSoundRef = null
+  tryAgainSoundRef = null
 }
 
 function closePopup() {
@@ -60,6 +58,8 @@ function retry() {
   emit('retry')
 }
 
+onUnmounted(stopAllSounds)
+
 watch(
   () => props.show,
   (isOpen) => {
@@ -71,7 +71,7 @@ watch(
     stopAllSounds()
 
     if (props.success) {
-      completedSound.play()
+      completedSoundRef = playSound(completedSoundFile, 0.5)
 
       const duration = 2000
       const end = Date.now() + duration
@@ -104,7 +104,7 @@ watch(
 
       frame()
     } else {
-      tryAgainSound.play()
+      tryAgainSoundRef = playSound(tryAgainSoundFile, 0.5)
     }
   },
 )

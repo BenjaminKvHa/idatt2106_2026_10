@@ -45,6 +45,7 @@ onBeforeUnmount(() => {
   <Teleport to="body">
     <div class="modal-backdrop" @click.self="onBackdropClick">
       <div class="modal-window" :class="panelClass" role="dialog" aria-modal="true">
+        <button class="modal-close" @click="requestClose" aria-label="close">✕</button>
         <slot />
       </div>
     </div>
@@ -63,11 +64,30 @@ onBeforeUnmount(() => {
 }
 
 .modal-window {
+    position: relative;
     width: min(90vw, 640px);
     max-height: 90vh;
     overflow: auto;
     display: flex;
     flex-direction: column;
     padding: var(--thick-padding);
+}
+
+.modal-close {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    line-height: 1;
+    padding: 0.25rem 0.5rem;
+    color: inherit;
+    opacity: 0.6;
+}
+
+.modal-close:hover {
+    opacity: 1;
 }
 </style>

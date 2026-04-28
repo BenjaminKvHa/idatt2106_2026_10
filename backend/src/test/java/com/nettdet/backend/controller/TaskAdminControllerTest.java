@@ -6,7 +6,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -21,7 +21,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -34,7 +36,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.nettdet.backend.domain.enums.TaskDifficulty;
-import com.nettdet.backend.dto.FileReferenceResponse;
 import com.nettdet.backend.dto.TaskAdminResponse;
 import com.nettdet.backend.security.JwtUserPrincipal;
 import com.nettdet.backend.service.TaskAdminService;
@@ -53,120 +54,137 @@ class TaskAdminControllerTest {
     @MockitoBean
     private TaskAdminService taskAdminService;
 
-    @DisplayName("Allows teachers to look up an existing file reference and returns 200")
-    @Test
-    void getOrCreateFileReference_whenFileExists_returnsOkWithReference() throws Exception {
-        when(taskAdminService.getOrCreateFileReference("k", "image/png", "x.png"))
-                .thenReturn(new FileReferenceResponse(42L, "k", false));
-
-        mockMvc.perform(get("/admin/tasks/files/reference")
-                        .param("objectKey", "k")
-                        .param("contentType", "image/png")
-                        .param("fileName", "x.png")
-                        .with(authentication(authFor(teacherPrincipal(), "TEACHER"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.fileId").value(42))
-                .andExpect(jsonPath("$.newlyCreated").value(false));
-
-        verify(taskAdminService).getOrCreateFileReference("k", "image/png", "x.png");
+    private MockMultipartFile metadataPart(String json) {
+        return new MockMultipartFile("metadata", "metadata", MediaType.APPLICATION_JSON_VALUE, json.getBytes());
     }
 
-    @DisplayName("Returns 201 when the file reference was newly created")
-    @Test
-    void getOrCreateFileReference_whenNewlyCreated_returnsCreated() throws Exception {
-        when(taskAdminService.getOrCreateFileReference("k", "image/png", "x.png"))
-                .thenReturn(new FileReferenceResponse(42L, "k", true));
-
-        mockMvc.perform(get("/admin/tasks/files/reference")
-                        .param("objectKey", "k")
-                        .param("contentType", "image/png")
-                        .param("fileName", "x.png")
-                        .with(authentication(authFor(teacherPrincipal(), "TEACHER"))))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.newlyCreated").value(true));
+    private MockMultipartFile filePart(String name) {
+        return new MockMultipartFile(name, name + ".png", MediaType.IMAGE_PNG_VALUE, new byte[]{1, 2, 3});
     }
 
-    @DisplayName("Allows teachers to create a Fotografen task")
+    @DisplayName("Allows teachers to create a Fotografen task with metadata + file multipart")
     @Test
     void createImageVerificationTask_whenTeacher_returnsCreated() throws Exception {
-        when(taskAdminService.createImageVerificationTask(any())).thenReturn(taskWithId(1L));
+        when(taskAdminService.createImageVerificationTask(any(), any(), any())).thenReturn(taskWithId(1L));
 
-        String body = """
+        String metadata = """
                 {"chapterId": 2, "difficulty": "EASY", "taskDescription": "x",
-                 "fileId": 1, "correctCategory": "REAL", "correctJustification": "j",
+                 "correctCategory": "REAL", "correctJustification": "j",
                  "justifications": ["j"], "correctDescription": "ok", "falseDescription": "no"}
                 """;
 
-        mockMvc.perform(post("/admin/tasks/fotografen")
-                        .with(authentication(authFor(teacherPrincipal(), "TEACHER")))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+        mockMvc.perform(multipart("/admin/tasks/fotografen")
+                        .file(metadataPart(metadata))
+                        .file(filePart("file"))
+                        .with(authentication(authFor(teacherPrincipal(), "TEACHER"))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1));
 
-        verify(taskAdminService).createImageVerificationTask(any());
+        verify(taskAdminService).createImageVerificationTask(any(), any(), any());
     }
 
-    @DisplayName("Allows teachers to create a Nyhetskvartalet task")
+    @DisplayName("Allows teachers to create a Nyhetskvartalet task with two file parts")
     @Test
     void createNewsVerificationTask_whenTeacher_returnsCreated() throws Exception {
-        when(taskAdminService.createNewsVerificationTask(any())).thenReturn(taskWithId(2L));
+        when(taskAdminService.createNewsVerificationTask(any(), any(), any(), any())).thenReturn(taskWithId(2L));
 
-        String body = """
+        String metadata = """
                 {"chapterId": 1, "difficulty": "MEDIUM", "taskDescription": "x",
-                 "fileId_1": 10, "fileId_2": 20, "correctFileId": 10,
+                 "correctFileSlot": "FILE_1",
                  "correctDescription": "ok", "incorrectDescription": "no"}
                 """;
 
-        mockMvc.perform(post("/admin/tasks/nyhetskvartalet")
-                        .with(authentication(authFor(teacherPrincipal(), "TEACHER")))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+        mockMvc.perform(multipart("/admin/tasks/nyhetskvartalet")
+                        .file(metadataPart(metadata))
+                        .file(filePart("file1"))
+                        .file(filePart("file2"))
+                        .with(authentication(authFor(teacherPrincipal(), "TEACHER"))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(2));
 
-        verify(taskAdminService).createNewsVerificationTask(any());
+        verify(taskAdminService).createNewsVerificationTask(any(), any(), any(), any());
     }
 
-    @DisplayName("Allows teachers to create a Datasenteret image task")
+    @DisplayName("Allows teachers to create a Datasenteret image task with multipart")
     @Test
     void createDatacenterImageTask_whenTeacher_returnsCreated() throws Exception {
-        when(taskAdminService.createDatacenterImageTask(any())).thenReturn(taskWithId(3L));
+        when(taskAdminService.createDatacenterImageTask(any(), any(), any())).thenReturn(taskWithId(3L));
 
-        String body = """
-                {"taskDescription": "x", "fileId": 7,
-                 "correctCategory": "AI_GENERATED", "correctJustification": "j",
+        String metadata = """
+                {"taskDescription": "x", "correctCategory": "AI_GENERATED", "correctJustification": "j",
                  "justifications": ["j"], "correctDescription": "ok", "falseDescription": "no"}
                 """;
 
-        mockMvc.perform(post("/admin/tasks/datasenteret/image")
-                        .with(authentication(authFor(teacherPrincipal(), "TEACHER")))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+        mockMvc.perform(multipart("/admin/tasks/datasenteret/image")
+                        .file(metadataPart(metadata))
+                        .file(filePart("file"))
+                        .with(authentication(authFor(teacherPrincipal(), "TEACHER"))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(3));
 
-        verify(taskAdminService).createDatacenterImageTask(any());
+        verify(taskAdminService).createDatacenterImageTask(any(), any(), any());
     }
 
-    @DisplayName("Allows teachers to create a Datasenteret news task")
+    @DisplayName("Allows teachers to create a Datasenteret news task with multipart")
     @Test
     void createDatacenterNewsTask_whenTeacher_returnsCreated() throws Exception {
-        when(taskAdminService.createDatacenterNewsTask(any())).thenReturn(taskWithId(4L));
+        when(taskAdminService.createDatacenterNewsTask(any(), any(), any(), any())).thenReturn(taskWithId(4L));
 
-        String body = """
-                {"taskDescription": "x", "fileId_1": 10, "fileId_2": 20,
-                 "correctFileId": 10, "correctDescription": "ok", "incorrectDescription": "no"}
+        String metadata = """
+                {"taskDescription": "x", "correctFileSlot": "FILE_1",
+                 "correctDescription": "ok", "incorrectDescription": "no"}
                 """;
 
-        mockMvc.perform(post("/admin/tasks/datasenteret/news")
-                        .with(authentication(authFor(teacherPrincipal(), "TEACHER")))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+        mockMvc.perform(multipart("/admin/tasks/datasenteret/news")
+                        .file(metadataPart(metadata))
+                        .file(filePart("file1"))
+                        .file(filePart("file2"))
+                        .with(authentication(authFor(teacherPrincipal(), "TEACHER"))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(4));
 
-        verify(taskAdminService).createDatacenterNewsTask(any());
+        verify(taskAdminService).createDatacenterNewsTask(any(), any(), any(), any());
+    }
+
+    @DisplayName("Allows teachers to update a Fotografen task without sending a file")
+    @Test
+    void updateImageVerificationTask_whenTeacher_returnsOk() throws Exception {
+        when(taskAdminService.updateImageVerificationTask(any(), any(), any(), any()))
+                .thenReturn(taskWithId(1L));
+
+        String metadata = """
+                {"difficulty": "EASY", "taskDescription": "x", "correctCategory": "REAL",
+                 "correctJustification": "j", "justifications": ["j"],
+                 "correctDescription": "ok", "falseDescription": "no"}
+                """;
+
+        mockMvc.perform(multipart(HttpMethod.PATCH, "/admin/tasks/fotografen/1")
+                        .file(metadataPart(metadata))
+                        .with(authentication(authFor(teacherPrincipal(), "TEACHER"))))
+                .andExpect(status().isOk());
+
+        verify(taskAdminService).updateImageVerificationTask(any(), any(), any(), any());
+    }
+
+    @DisplayName("Allows teachers to update a Nyhetskvartalet task with both file replacements")
+    @Test
+    void updateNewsVerificationTask_whenTeacher_returnsOk() throws Exception {
+        when(taskAdminService.updateNewsVerificationTask(any(), any(), any(), any(), any()))
+                .thenReturn(taskWithId(2L));
+
+        String metadata = """
+                {"difficulty": "HARD", "taskDescription": "x", "correctFileSlot": "FILE_2",
+                 "correctDescription": "ok", "incorrectDescription": "no"}
+                """;
+
+        mockMvc.perform(multipart(HttpMethod.PATCH, "/admin/tasks/nyhetskvartalet/2")
+                        .file(metadataPart(metadata))
+                        .file(filePart("file1"))
+                        .file(filePart("file2"))
+                        .with(authentication(authFor(teacherPrincipal(), "TEACHER"))))
+                .andExpect(status().isOk());
+
+        verify(taskAdminService).updateNewsVerificationTask(any(), any(), any(), any(), any());
     }
 
     @DisplayName("Denies pupils from any /admin/tasks endpoint")
@@ -174,10 +192,8 @@ class TaskAdminControllerTest {
     void anyAdminEndpoint_whenPupil_returnsForbidden() throws Exception {
         JwtUserPrincipal principal = new JwtUserPrincipal("Pupil Name", "pupil@example.com", "PUPIL");
 
-        mockMvc.perform(get("/admin/tasks/files/reference")
-                        .param("objectKey", "k")
-                        .param("contentType", "image/png")
-                        .param("fileName", "x.png")
+        mockMvc.perform(get("/admin/tasks/fotografen")
+                        .param("classroomCode", "ABCABC")
                         .with(authentication(authFor(principal, "PUPIL"))))
                 .andExpect(status().isForbidden());
 
@@ -187,10 +203,7 @@ class TaskAdminControllerTest {
     @DisplayName("Denies unauthenticated requests to /admin/tasks endpoints")
     @Test
     void anyAdminEndpoint_whenUnauthenticated_returnsUnauthorized() throws Exception {
-        mockMvc.perform(get("/admin/tasks/files/reference")
-                        .param("objectKey", "k")
-                        .param("contentType", "image/png")
-                        .param("fileName", "x.png"))
+        mockMvc.perform(get("/admin/tasks/fotografen").param("classroomCode", "ABCABC"))
                 .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(taskAdminService);
@@ -240,19 +253,6 @@ class TaskAdminControllerTest {
                 .andExpect(jsonPath("$.length()").value(0));
 
         verify(taskAdminService).listDatasenteretTasksForClassroom("teacher@example.com", "ABCABC");
-    }
-
-    @DisplayName("Denies pupils from listing classroom tasks")
-    @Test
-    void listFotografenTasks_whenPupil_returnsForbidden() throws Exception {
-        JwtUserPrincipal pupil = new JwtUserPrincipal("Pupil", "pupil@example.com", "PUPIL");
-
-        mockMvc.perform(get("/admin/tasks/fotografen")
-                        .param("classroomCode", "ABCABC")
-                        .with(authentication(authFor(pupil, "PUPIL"))))
-                .andExpect(status().isForbidden());
-
-        verifyNoInteractions(taskAdminService);
     }
 
     private JwtUserPrincipal teacherPrincipal() {

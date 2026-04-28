@@ -442,7 +442,7 @@ onMounted(async () => {
 
 .save-error {
   font-size: 0.95rem;
-  color: #9f1d1d;
+  color: var(--red-danger);
   font-weight: 700;
 }
 

@@ -301,10 +301,10 @@ onBeforeUnmount(revokeImageUrl)
   width: 100%;
   max-width: 760px;
   background: rgba(255, 255, 255, 0.65);
-  border: 3px solid #5c4033;
+  border: 3px solid var(--brown-dark);
   border-radius: 24px;
   padding: 28px 28px 36px;
-  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
+  box-shadow: 0 6px 0 var(--brown-dark-20);
   position: relative;
   overflow: visible !important;
 }
@@ -314,7 +314,7 @@ onBeforeUnmount(revokeImageUrl)
   padding: 16px;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.85);
-  border: 2px solid #5c4033;
+  border: 2px solid var(--brown-dark);
   width: 100%;
   max-width: 500px;
   margin-left: auto;
@@ -357,10 +357,6 @@ onBeforeUnmount(revokeImageUrl)
 .error {
   color: #c62828;
   font-weight: 600;
-}
-
-.task-container {
-  align-items: center;
 }
 
 .hint-wrapper {

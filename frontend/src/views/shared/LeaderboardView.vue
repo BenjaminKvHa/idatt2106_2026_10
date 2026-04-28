@@ -134,11 +134,10 @@ h1 {
 .state-message {
   margin: 0;
   text-align: center;
-  font-family: 'Inter', sans-serif;
 }
 
 .state-message.error {
-  color: #9f1d1d;
+  color: var(--red-danger);
 }
 
 .list-wrap {
@@ -169,7 +168,6 @@ li {
   background: var(--beige-light);
   border-radius: 1rem;
   border: var(--border-thin) solid var(--brown-dark);
-  font-family: 'Inter', sans-serif;
 }
 
 .rank {
@@ -199,7 +197,6 @@ li {
   align-items: center;
   gap: 1rem;
 
-  font-family: 'Inter', sans-serif;
   z-index: 10;
 }
 

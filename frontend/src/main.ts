@@ -1,10 +1,10 @@
-import './assets/main.css'
+import './assets/styles/main.css'
 
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
-import clickSoundFile from '@/assets/click-sound.mp3'
-import backgroundMusicFile from '@/assets/backgroundMusic.mp3'
+import clickSoundFile from '@/assets/sounds/shared/click-sound.mp3'
+import backgroundMusicFile from '@/assets/sounds/shared/backgroundMusic.mp3'
 import { useAudio } from '@/composables/useAudio'
 
 const { registerAudioElement, playSound } = useAudio()

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import TopBar from '@/components/TopBar.vue'
+import TopBar from '@/components/pupil/TopBar.vue'
+import mysteryBackground from '@/assets/backgrounds/ukens_mysterium-bg.png'
 
 type SubmittedMystery = {
   id: number
@@ -84,6 +85,13 @@ const visibleMysteries = computed(() =>
 
 const selectedMystery = computed(() => visibleMysteries.value[currentIndex.value])
 
+const pageStyle = computed(() => ({
+  background: `
+    linear-gradient(rgba(20, 12, 30, 0.45), rgba(20, 12, 30, 0.65)),
+    url(${mysteryBackground}) center center / cover no-repeat fixed
+  `,
+}))
+
 const setTab = (tab: 'current' | 'previous') => {
   activeTab.value = tab
   currentIndex.value = 0
@@ -137,10 +145,10 @@ const submitMystery = () => {
 </script>
 
 <template>
-  <div class="page">
+  <div class="page" :style="pageStyle">
     <TopBar title="Ukens mysterium" />
 
-    <main class="content">
+    <main class="content pupil-fullscreen-center">
       <section class="mystery-panel">
         <div class="header">
           <div>
@@ -222,7 +230,11 @@ const submitMystery = () => {
       </section>
     </main>
 
-    <div v-if="showSubmitPopup" class="popup-overlay" @click.self="closeSubmitPopup">
+    <div
+      v-if="showSubmitPopup"
+      class="popup-overlay pupil-popup-fixed-center"
+      @click.self="closeSubmitPopup"
+    >
       <div class="popup">
         <button class="close-button" @click="closeSubmitPopup">×</button>
 
@@ -248,7 +260,7 @@ const submitMystery = () => {
           ></textarea>
         </label>
 
-        <div class="popup-buttons">
+        <div class="popup-buttons pupil-responsive-button-row">
           <button class="cancel-button" @click="closeSubmitPopup">Avbryt</button>
 
           <button
@@ -267,17 +279,10 @@ const submitMystery = () => {
 <style scoped>
 .page {
   min-height: 100vh;
-  background:
-    linear-gradient(rgba(20, 12, 30, 0.45), rgba(20, 12, 30, 0.65)),
-    url('@/assets/backgrounds/ukens_mysterium-bg.png') center center / cover no-repeat fixed;
   background-attachment: fixed;
 }
 
 .content {
-  min-height: calc(100vh - 80px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
   padding: 2rem;
 }
 
@@ -521,14 +526,7 @@ h1 {
 }
 
 .popup-overlay {
-  position: fixed;
-  inset: 0;
   background: rgba(12, 7, 18, 0.75);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 1rem;
-  z-index: 1000;
 }
 
 .popup {
@@ -604,13 +602,6 @@ textarea {
   object-fit: cover;
 }
 
-.popup-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  margin-top: 1.2rem;
-}
-
 .cancel-button,
 .submit-button {
   border: 3px solid #101010;
@@ -668,10 +659,6 @@ textarea {
   .image-preview,
   .image-placeholder {
     height: 190px;
-  }
-
-  .popup-buttons {
-    flex-direction: column;
   }
 
   .cancel-button,

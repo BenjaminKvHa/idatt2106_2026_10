@@ -2,8 +2,8 @@
 import { computed, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import confetti from 'canvas-confetti'
-import completedSoundFile from '@/assets/completedSound.mp3'
-import tryAgainSoundFile from '@/assets/tryAgainSound.mp3'
+import completedSoundFile from '@/assets/sounds/levels/completedSound.mp3'
+import tryAgainSoundFile from '@/assets/sounds/levels/tryAgainSound.mp3'
 import { useAudio } from '@/composables/useAudio'
 
 const router = useRouter()

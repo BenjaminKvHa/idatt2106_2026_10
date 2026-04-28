@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { user } from '@/components/exampleUser'
+import { user } from '@/composables/exampleUser.ts'
 import { computed } from 'vue'
-import { getJwtData } from '@/utils/jwtUtils';
+import { getJwtData } from '@/utils/jwtUtils.ts';
 
 const props = withDefaults(
   defineProps<{

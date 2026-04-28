@@ -1,61 +1,22 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import TopBar from '@/components/TopBar.vue'
+import TopBar from '@/components/pupil/TopBar.vue'
+import corkboardImage from '@/assets/backgrounds/korktavle.png'
+import Blobby from '@/components/pupil/home/Blobby.vue'
+import notesIcon from '@/assets/icons/homescreen/icon_notes.png'
+import mysteryIcon from '@/assets/icons/homescreen/icon_mystery.png'
+import medalsIcon from '@/assets/icons/homescreen/icon_medals.png'
+import mapIcon from '@/assets/icons/homescreen/icon_map.png'
+import leaderboardIcon from '@/assets/icons/homescreen/icon_leaderboard.png'
+import helpIcon from '@/assets/icons/homescreen/icon_help.png'
 
-import blobbyImage from '@/assets/creaturePeaking.png'
-
-import blobbySound1 from '@/assets/sounds/blobby/blobby-grunt.mp3'
-import blobbySound2 from '@/assets/sounds/blobby/blobby-wow.mp3'
-import blobbySound3 from '@/assets/sounds/blobby/blobby-pop.mp3'
-import blobbySound4 from '@/assets/sounds/blobby/blobby-plingpling.mp3'
-import blobbySound5 from '@/assets/sounds/blobby/blobby-blinking.mp3'
-
-import corkboardImage from '@/assets/korktavle.png'
-
-const showBlobbyMessage = ref(false)
-const blobbyStep = ref(0)
-const isAnimatingBlobby = ref(false)
-
-const blobbyMessage = 'Hei mitt navn er Blobby. Trykk på meg for å høre hvilke lyder jeg kan lage!'
-
-const blobbySounds = [blobbySound1, blobbySound2, blobbySound3, blobbySound4, blobbySound5]
-
-function handleBlobbyClick() {
-  if (blobbyStep.value === 0) {
-    showBlobbyMessage.value = true
-    blobbyStep.value = 1
-    return
-  }
-
-  if (blobbyStep.value >= 1 && blobbyStep.value <= blobbySounds.length) {
-    showBlobbyMessage.value = false
-
-    const soundIndex = blobbyStep.value - 1
-    const audio = new Audio(blobbySounds[soundIndex])
-
-    audio.play().catch((error) => {
-      console.error('Kunne ikke spille av lyd:', error)
-    })
-
-    blobbyStep.value++
-    return
-  }
-
-  if (blobbyStep.value === blobbySounds.length + 1) {
-    isAnimatingBlobby.value = false
-
-    requestAnimationFrame(() => {
-      isAnimatingBlobby.value = true
-    })
-
-    setTimeout(() => {
-      isAnimatingBlobby.value = false
-    }, 800)
-
-    showBlobbyMessage.value = false
-    blobbyStep.value = 0
-  }
-}
+const buttons = [
+  { to: '/pupil/classroom/notebook', class: 'notes', icon: notesIcon },
+  { to: '/pupil/classroom/mystery', class: 'mystery', icon: mysteryIcon },
+  { to: '/pupil/classroom/medals', class: 'medals', icon: medalsIcon },
+  { to: '/pupil/classroom/map', class: 'map', icon: mapIcon },
+  { to: '/pupil/classroom/leaderboard', class: 'leaderboard', icon: leaderboardIcon },
+  { to: '/pupil/classroom/help', class: 'help', icon: helpIcon },
+]
 </script>
 
 <template>
@@ -65,50 +26,14 @@ function handleBlobbyClick() {
       <div class="center-container">
         <div class="image-wrapper">
           <img :src="corkboardImage" alt="Background" />
-
-          <div class="blobby-wrapper">
-            <button
-              class="blobby-button"
-              :class="{ animate: isAnimatingBlobby }"
-              @click="handleBlobbyClick"
-              aria-label="Blobby"
-              data-no-click-sound
-            >
-              <img
-                :src="blobbyImage"
-                alt="Blobby"
-                class="blobby-image"
-                :class="{ wiggle: isAnimatingBlobby }"
-              />
-            </button>
-
-            <div v-if="showBlobbyMessage" class="blobby-message">
-              {{ blobbyMessage }}
-            </div>
-          </div>
-
-          <router-link to="/pupil/classroom/notebook" class="overlay-button notes">
-            <img src="/src/assets/homescreen/icon_notes.png" />
-          </router-link>
-
-          <router-link to="/pupil/classroom/mystery" class="overlay-button mystery">
-            <img src="/src/assets/homescreen/icon_mystery.png" />
-          </router-link>
-
-          <router-link to="/pupil/classroom/medals" class="overlay-button medals">
-            <img src="/src/assets/homescreen/icon_medals.png" />
-          </router-link>
-
-          <router-link to="/pupil/classroom/map" class="overlay-button map">
-            <img src="/src/assets/homescreen/icon_map.png" />
-          </router-link>
-
-          <router-link to="/pupil/classroom/leaderboard" class="overlay-button leaderboard">
-            <img src="/src/assets/homescreen/icon_leaderboard.png" />
-          </router-link>
-
-          <router-link to="/pupil/classroom/help" class="overlay-button help">
-            <img src="/src/assets/homescreen/icon_help.png" />
+          <Blobby />
+          <router-link
+            v-for="btn in buttons"
+            :key="btn.to"
+            :to="btn.to"
+            class="overlay-button"
+            :class="btn.class">
+            <img :src="btn.icon" />
           </router-link>
         </div>
       </div>
@@ -119,21 +44,23 @@ function handleBlobbyClick() {
 
 <style scoped>
 .screen {
-  height: 100dvh;
-  overflow: hidden;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
+
+/* page */
 .page {
   position: relative;
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  overflow: auto;
   background: url('@/assets/backgrounds/hjemskjerm-bg.png') no-repeat center center;
   background-size: cover;
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: clamp(0.5rem, 2vw, 2rem);
 }
 
 .page::before {
@@ -146,7 +73,7 @@ function handleBlobbyClick() {
 
 .center-container {
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -154,23 +81,25 @@ function handleBlobbyClick() {
   z-index: 1;
 }
 
+/* pin-board */
 .image-wrapper {
   position: relative;
   width: min(96vw, 1400px);
-  max-height: 100%;
+  aspect-ratio: 1400 / 900;
 }
 
 .image-wrapper > img {
   width: 100%;
-  max-height: 100%;
+  height: 100%;
   object-fit: contain;
   display: block;
 }
 
+/* icons */
 .overlay-button {
   position: absolute;
   cursor: pointer;
-  width: clamp(200px, 20vw, 200px);
+  width: clamp(70px, 13vw, 200px);
 }
 
 .overlay-button img {
@@ -183,184 +112,119 @@ function handleBlobbyClick() {
   transition: transform 0.15s ease;
 }
 
-/* Blobby */
-.blobby-wrapper {
-  position: absolute;
-  top: 10.5%;
-  right: 6%;
-  width: 30%;
-  z-index: 10;
-  transform: translateY(-50%);
-}
-
-.blobby-button {
-  background: transparent;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  width: 100%;
-  transform-origin: bottom center;
-}
-
-.blobby-image {
-  width: 100%;
-  height: auto;
-  display: block;
-  filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.2));
-}
-
-.blobby-button.animate {
-  animation: blobby-bounce 0.8s ease;
-}
-
-.blobby-image.wiggle {
-  animation: blobby-wiggle 0.8s ease;
-}
-
-.blobby-message {
-  position: absolute;
-  top: 35%;
-  right: 75%;
-  width: 100%;
-  max-width: none;
-  background: #fff8e8;
-  border: 2px solid #5c4033;
-  border-radius: 16px;
-  padding: 10px 14px;
-  font-size: clamp(12px, 1.1vw, 18px);
-  text-align: center;
-  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.12);
-}
-
-@keyframes blobby-bounce {
-  0% {
-    transform: translateY(0);
-  }
-  30% {
-    transform: translateY(-20px);
-  }
-  60% {
-    transform: translateY(0);
-  }
-  80% {
-    transform: translateY(-10px);
-  }
-  100% {
-    transform: translateY(0);
-  }
-}
-
-@keyframes blobby-wiggle {
-  0% {
-    transform: rotate(0deg);
-  }
-  15% {
-    transform: rotate(-6deg);
-  }
-  30% {
-    transform: rotate(6deg);
-  }
-  45% {
-    transform: rotate(-5deg);
-  }
-  60% {
-    transform: rotate(5deg);
-  }
-  75% {
-    transform: rotate(-2deg);
-  }
-  100% {
-    transform: rotate(0deg);
-  }
-}
-
-/* Responsive positions */
+/* positions */
 .medals {
-  top: 25%;
+  top: 22%;
   left: 20%;
   transform: rotate(-5deg);
 }
+
 .map {
-  top: 25%;
+  top: 22%;
   left: 40%;
-  width: 290px;
+  width: clamp(90px, 18vw, 290px);
 }
+
 .leaderboard {
-  top: 25%;
+  top: 22%;
   right: 20%;
   transform: rotate(10deg);
 }
 
 .mystery {
-  top: 58%;
+  top: 55%;
   left: 20%;
   transform: rotate(4deg);
 }
+
 .notes {
-  top: 58%;
+  top: 55%;
   right: 20%;
   transform: rotate(-2deg);
 }
+
 .help {
   top: 60%;
   left: 44%;
 }
 
-/* Medium screen */
+/* tablet screen */
 @media (max-width: 768px) {
+  .image-wrapper {
+    width: 120vw;
+    max-width: none;
+  }
+
   .overlay-button {
-    width: 30%;
+    width: clamp(70px, 18vw, 130px);
   }
 
-  .top-bar .settings img {
-    width: 50px;
-  }
-
-  .blobby-wrapper {
-    top: -40px;
-    right: 20px;
-  }
-
-  .blobby-image {
-    width: 105px;
-  }
-
-  .blobby-message {
-    right: 105px;
-    max-width: 220px;
-    font-size: 13px;
+  .map {
+    width: clamp(90px, 24vw, 160px);
   }
 }
 
-/* Small screen */
-@media (max-width: 480px) {
+/* phone screen */
+@media (max-width: 768px) {
+  .image-wrapper {
+    width: min(96vw, 900px);
+  }
+
   .overlay-button {
-    width: 35%;
+    width: clamp(48px, 11vw, 100px);
   }
 
-  .top-bar {
-    padding: 0 0.25rem;
+  .map {
+    width: clamp(65px, 15vw, 135px);
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    align-items: center;
+    padding: 0.5rem;
   }
 
-  .top-bar .settings img {
-    width: 40px;
+  .image-wrapper {
+    width: 96vw;
   }
 
-  .blobby-wrapper {
-    top: -30px;
-    right: 10px;
+  .overlay-button {
+    width: clamp(38px, 12vw, 70px);
   }
 
-  .blobby-image {
-    width: 90px;
+  .map {
+    width: clamp(52px, 17vw, 92px);
   }
 
-  .blobby-message {
-    top: 15px;
-    right: 90px;
-    max-width: 180px;
-    font-size: 12px;
-    padding: 8px 10px;
+  .medals {
+    top: 24%;
+    left: 21%;
+  }
+
+  .map {
+    top: 24%;
+    left: 41%;
+  }
+
+  .leaderboard {
+    top: 24%;
+    right: 21%;
+  }
+
+  .mystery {
+    top: 56%;
+    left: 21%;
+  }
+
+  .notes {
+    top: 56%;
+    right: 21%;
+  }
+
+  .help {
+    top: 60%;
+    left: 45%;
   }
 }
 </style>

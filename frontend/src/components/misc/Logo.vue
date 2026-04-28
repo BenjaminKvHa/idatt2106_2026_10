@@ -3,7 +3,7 @@
 
 <template>
     <div class="logo-wrapper">
-        <img src="@/assets/nettdetektivene_logo.png" alt="" class="logo">
+        <img src="../../assets/logo/nettdetektivene_logo.png" alt="" class="logo">
     </div>
 </template>
 

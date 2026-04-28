@@ -17,48 +17,26 @@
 
       <div v-else-if="currentTask" class="task-container">
         <h1 class="level">Nivå {{ stepIndex + 1 }} — {{ difficultyLabel }}</h1>
-
         <div class="task-box">
-          <p class="task-text">{{ currentTask.taskDescription }}</p>
-
-          <div class="image-card">
-            <img v-if="imageUrl" :src="imageUrl" alt="Oppgavebilde" class="task-image" />
-            <div v-else class="image-placeholder">Laster bilde…</div>
-
-            <div class="choices">
-              <button
-                v-for="cat in CATEGORIES"
-                :key="cat.value"
-                @click="selectCategory(cat.value)"
-                :disabled="!!lastResult"
-                :class="categoryClass(cat.value)"
-              >
-                {{ cat.label }}
-              </button>
-            </div>
-
-            <div v-if="selectedCategory !== null" class="reason-box">
-              <p>Hvorfor?</p>
-              <button
-                v-for="j in currentTask.justifications"
-                :key="j"
-                @click="selectJustification(j)"
-                :disabled="!!lastResult"
-                :class="justificationClass(j)"
-              >
-                {{ j }}
-              </button>
-            </div>
-
-            <div v-if="lastResult" class="answer-feedback">
-              <p>
-                <strong>{{ lastResult.correct ? 'Riktig!' : 'Feil.' }}</strong>
-              </p>
-              <p>{{ lastResult.feedback }}</p>
-            </div>
+          <PupilImageTask
+            :task-description="currentTask.taskDescription"
+            :image-url="imageUrl"
+            :categories="CATEGORIES"
+            :justifications="currentTask.justifications"
+            :selected-category="selectedCategory"
+            :selected-justification="selectedJustification"
+            :result="lastResult"
+            :submitting="submitting"
+            @select-category="selectCategory"
+            @select-justification="selectJustification"
+          />
+          <div v-if="lastResult" class="answer-feedback">
+            <p>
+              <strong>{{ lastResult.correct ? 'Riktig!' : 'Feil.' }}</strong>
+            </p>
+            <p>{{ lastResult.feedback }}</p>
           </div>
         </div>
-
         <div class="bottom-actions">
           <button v-if="!lastResult" @click="submit" :disabled="!canSubmit || submitting">
             Svar
@@ -103,11 +81,11 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import TopBar from '@/components/TopBar.vue'
-import TaskGuide from '@/components/TaskGuide.vue'
-import CompleteLevelPopup from '@/components/CompleteLevelPopup.vue'
-import thumbsUpPhoto from '@/assets/ThumbsUpPhotographer.png'
-import thumbsDownPhoto from '@/assets/ThumbsDownPhotographer.png'
+import TopBar from '@/components/pupil/TopBar.vue'
+import TaskGuide from '@/components/pupil/TaskGuide.vue'
+import CompleteLevelPopup from '@/components/pupil/CompleteLevelPopup.vue'
+import thumbsUpPhoto from '@/assets/icons/detectives_and_thief/ThumbsUpPhotographer.png'
+import thumbsDownPhoto from '@/assets/icons/detectives_and_thief/ThumbsDownPhotographer.png'
 import { get, getBlob, post } from '@/utils/apiUtils'
 import type {
   ImageCategory,
@@ -116,6 +94,7 @@ import type {
   TaskDifficulty,
   ValidationResult,
 } from '@/types/chapter'
+import PupilImageTask from '@/components/pupil/task/PupilImageTask.vue'
 
 const router = useRouter()
 const showGuidePopup = ref(true)
@@ -202,24 +181,6 @@ function selectCategory(value: ImageCategory) {
 function selectJustification(value: string) {
   if (lastResult.value) return
   selectedJustification.value = value
-}
-
-function categoryClass(value: ImageCategory) {
-  const selected = selectedCategory.value === value
-  if (!selected) return ''
-  if (!lastResult.value) return 'selected'
-
-  const ok = lastResult.value.categoryCorrect ?? lastResult.value.correct
-  return ok ? 'selected correct' : 'selected wrong'
-}
-
-function justificationClass(value: string) {
-  const selected = selectedJustification.value === value
-  if (!selected) return ''
-  if (!lastResult.value) return 'selected'
-
-  const ok = lastResult.value.justificationCorrect ?? lastResult.value.correct
-  return ok ? 'selected correct' : 'selected wrong'
 }
 
 async function submit() {
@@ -342,106 +303,6 @@ onBeforeUnmount(revokeImageUrl)
   position: relative;
 }
 
-.task-text {
-  text-align: center;
-  margin: 0 0 24px 0;
-  font-size: 20px;
-}
-
-.image-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.task-image {
-  width: 100%;
-  max-width: 620px;
-  height: auto;
-  max-height: 520px;
-  object-fit: contain;
-  display: block;
-  background: #f2f2f2;
-  border-radius: 14px;
-  margin-bottom: 20px;
-  border: 2px solid #999;
-}
-
-.image-placeholder {
-  width: 460px;
-  max-width: 100%;
-  height: 280px;
-  background: #ddd;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 14px;
-  margin-bottom: 20px;
-  border: 2px solid #999;
-  font-size: 20px;
-  font-weight: 600;
-}
-
-.choices {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-bottom: 18px;
-}
-
-.choices button {
-  padding: 10px 16px;
-  border-radius: 20px;
-  border: 2px solid #333;
-  background: white;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-weight: 500;
-}
-
-.choices button:hover:not(:disabled) {
-  background: #f4a259;
-  transform: scale(1.05);
-}
-
-.choices button.selected {
-  background: #f4a259;
-  border-color: #000;
-  transform: scale(1.08);
-  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.2);
-}
-
-.reason-box {
-  margin-top: 10px;
-  text-align: center;
-}
-
-.reason-box p {
-  margin-bottom: 10px;
-  font-weight: 600;
-}
-
-.reason-box button {
-  margin: 5px;
-  padding: 8px 14px;
-  border-radius: 16px;
-  border: 2px solid #555;
-  background: #eee;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.reason-box button:hover:not(:disabled) {
-  background: #ddd;
-}
-
-.reason-box button.selected {
-  background: #90caf9;
-  border-color: #1976d2;
-  transform: scale(1.05);
-}
-
 .answer-feedback {
   margin-top: 20px;
   padding: 16px;
@@ -489,18 +350,4 @@ onBeforeUnmount(revokeImageUrl)
   font-weight: 600;
 }
 
-.correct {
-  background: #a5d6a7 !important;
-  border-color: #2e7d32 !important;
-}
-
-.wrong {
-  background: #ef9a9a !important;
-  border-color: #c62828 !important;
-}
-
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
 </style>

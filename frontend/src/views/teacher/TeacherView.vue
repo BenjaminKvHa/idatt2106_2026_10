@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import TeacherMenu from '@/components/layout/TeacherMenu.vue'
+import TeacherMenu from '@/components/teacher/TeacherMenu.vue'
 import TeacherTopbar from '@/components/ui/TeacherTopbar.vue'
 </script>
 

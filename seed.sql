@@ -239,18 +239,6 @@ VALUES
      'Logoen på skiltet ser ikke riktig ut.',
      FALSE, NULL,                       NOW() - INTERVAL '6 hours');
 
-FROM chapter
-WHERE chapter.id = progression.chapter_id
-  AND progression.successful_runs >= 1
-  AND progression.email IN (
-      'demo.alice@example.com',
-      'demo.bob@example.com',
-      'demo.carla@example.com',
-      'map.partial@example.com',
-      'map.complete@example.com',
-      'rank.two@example.com',
-      'rank.three@example.com'
-  );
 
 
 DELETE FROM notification

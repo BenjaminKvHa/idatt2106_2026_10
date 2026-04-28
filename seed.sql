@@ -221,7 +221,16 @@ SET notebook_json = jsonb_set(
 )
 FROM chapter
 WHERE chapter.id = progression.chapter_id
-  AND progression.successful_runs >= chapter.successful_runs_needed_for_completion;
+  AND progression.successful_runs >= chapter.successful_runs_needed_for_completion
+  AND progression.email IN (
+      'demo.alice@example.com',
+      'demo.bob@example.com',
+      'demo.carla@example.com',
+      'map.partial@example.com',
+      'map.complete@example.com',
+      'rank.two@example.com',
+      'rank.three@example.com'
+  );
 
 DELETE FROM notification
 WHERE classroom_code = 'MAPAAA'

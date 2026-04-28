@@ -29,7 +29,6 @@ import boardBackground from '@/assets/backgrounds/korktavle.png'
             <ul>
               <li><strong>Nyhetskvartalet:</strong> Vurder om nyheter er ekte eller falske.</li>
               <li><strong>Fotografen:</strong> Se om bilder er manipulerte eller ekte.</li>
-              <li><strong>Postkontoret:</strong> Identifiser svindel og mistenkelige meldinger.</li>
               <li><strong>Datasenteret:</strong> Løs oppgaver knyttet til digital sikkerhet.</li>
             </ul>
 

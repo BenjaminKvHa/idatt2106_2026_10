@@ -62,20 +62,23 @@
       </div>
 
       <p v-if="loadingProgress" class="map-status" role="status">Laster progresjon...</p>
-      <p v-else-if="progressError" class="map-status error" role="alert">{{ progressError }}</p>
+      <p v-else-if="progressError" class="map-status pupil-error" role="alert">
+        {{ progressError }}
+      </p>
     </div>
     <p v-if="loadingProgress" class="map-status" role="status">Laster progresjon...</p>
     <p v-else-if="progressError" class="map-status error" role="alert">{{ progressError }}</p>
 
-    <div v-if="activeLockedStop" class="popup-overlay" @click="closeLockedPopup">
+    <div v-if="activeLockedStop" class="pupil-popup-overlay" @click="closeLockedPopup">
+
       <div class="locked-popup" @click.stop>
         <h2 class="popup-title">{{ activeLockedStop.name }} er låst.</h2>
         <p class="popup-text">
           Få 3 stjerner på {{ activeLockedStop.requiredPreviousStop }} for å låse det opp!
         </p>
-        <div class="popup-actions">
-          <button class="popup-btn popup-btn-back" @click="closeLockedPopup">Tilbake</button>
-          <button class="popup-btn popup-btn-play" @click="goToRequiredStop">Spill</button>
+        <div class="pupil-popup-actions">
+          <button class="pupil-popup-btn popup-btn-back" @click="closeLockedPopup">Tilbake</button>
+          <button class="pupil-popup-btn popup-btn-play" @click="goToRequiredStop">Spill</button>
         </div>
       </div>
     </div>
@@ -130,7 +133,6 @@ import detektivkontoretImage from '@/assets/icons/stoppesteder/detektivkontoret.
 import lockImage from '@/assets/icons/topbar/lock.png'
 import nyhetskvartaletImage from '@/assets/icons/stoppesteder/nyhetskvartalet.png'
 import fotografenImage from '@/assets/icons/stoppesteder/fotografen.png'
-import postkontoretImage from '@/assets/icons/stoppesteder/postkontoret.png'
 import datasenteretImage from '@/assets/icons/stoppesteder/datasenteret.png'
 
 type StopSide = 'top' | 'bottom'
@@ -164,7 +166,7 @@ const showHintPopup = ref<boolean>(false)
 const loadingProgress = ref<boolean>(false)
 const progressError = ref<string>('')
 
-const positions = ['pos-1', 'pos-2', 'pos-3'] as const
+const positions = ['pos-1', 'pos-2'] as const
 
 const stops = ref<Stop[]>([
   {
@@ -206,18 +208,6 @@ const stops = ref<Stop[]>([
   },
   {
     id: 3,
-    name: 'Postkontoret',
-    chapterId: null,
-    maxStars: 3,
-    stars: 0,
-    unlocked: false,
-    image: postkontoretImage,
-    side: 'top',
-    routePath: '/pupil/classroom/map/postoffice',
-    requiredPreviousStop: 'Fotografen',
-  },
-  {
-    id: 4,
     name: 'Datasenteret',
     chapterId: 3,
     maxStars: 5,
@@ -227,7 +217,7 @@ const stops = ref<Stop[]>([
     side: 'top',
     isEnd: true,
     routePath: '/pupil/classroom/map/datacenter',
-    requiredPreviousStop: 'Postkontoret',
+    requiredPreviousStop: 'Fotografen',
   },
 ])
 
@@ -411,7 +401,7 @@ onMounted(() => {
 }
 
 .homeNode {
-  left: -30px !important;
+  left: var(--road-start-x) !important;
 }
 
 .homeNode .path-point {
@@ -429,8 +419,8 @@ onMounted(() => {
 }
 
 .endNode {
-  right: -30px !important;
-  left: auto !important;
+  left: var(--road-end-x) !important;
+  right: auto !important;
 }
 
 .endNode .stop-content {
@@ -449,12 +439,18 @@ onMounted(() => {
 .map-area {
   position: relative;
   min-height: 900px;
+  --stop-node-width: clamp(180px, 12vw, 240px);
+  --stop-circle-size: clamp(108px, 9vw, 170px);
+  --road-start-x: 8%;
+  --road-one-third-x: 36%;
+  --road-two-thirds-x: 64%;
+  --road-end-x: 92%;
 }
 
 .path-line {
   position: absolute;
-  left: 280px;
-  right: 280px;
+  left: var(--road-start-x);
+  right: calc(100% - var(--road-end-x));
   top: 360px;
   transform: translateY(-50%);
   height: 40px;
@@ -465,8 +461,9 @@ onMounted(() => {
 
 .stop-node {
   position: absolute;
-  width: 240px;
+  width: var(--stop-node-width);
   left: 0;
+  transform: translateX(-50%);
 }
 
 .stop-node .path-point {
@@ -495,7 +492,7 @@ onMounted(() => {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  width: 260px;
+  width: var(--stop-node-width);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -503,15 +500,15 @@ onMounted(() => {
 }
 
 .stop-node.pos-1 {
-  left: 22%;
+  left: var(--road-one-third-x);
 }
 
 .stop-node.pos-2 {
-  left: 44%;
+  left: var(--road-two-thirds-x);
 }
 
 .stop-node.pos-3 {
-  left: 60%;
+  left: var(--road-two-thirds-x);
 }
 
 .stop-node.top .connector {
@@ -586,8 +583,8 @@ onMounted(() => {
 }
 
 .stop-circle {
-  width: 170px;
-  height: 170px;
+  width: var(--stop-circle-size);
+  height: var(--stop-circle-size);
   border-radius: 50%;
   border: 4px solid rgba(146, 94, 44, 0.8);
   background: rgba(245, 237, 224, 0.96);
@@ -622,9 +619,9 @@ onMounted(() => {
 }
 
 .stop-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  width: 82%;
+  height: 82%;
+  object-fit: contain;
 }
 
 .stop-title {
@@ -712,26 +709,12 @@ onMounted(() => {
   }
 
   .path-line {
-    left: 60px;
-    right: 60px;
-  }
-
-  .stop-node {
-    width: 220px;
+    left: var(--road-start-x);
+    right: calc(100% - var(--road-end-x));
   }
 
   .stop-node .stop-content {
-    width: 220px;
-  }
-
-  .stop-circle {
-    width: 150px;
-    height: 150px;
-  }
-
-  .stop-image {
-    width: 78px;
-    height: 78px;
+    width: var(--stop-node-width);
   }
 
   .stop-title {
@@ -745,25 +728,7 @@ onMounted(() => {
   }
 
   .path-line {
-    left: 40px;
-    right: 40px;
     top: 360px;
-  }
-
-  .stop-node.pos-1 {
-    left: 4%;
-  }
-
-  .stop-node.pos-2 {
-    left: 24%;
-  }
-
-  .stop-node.pos-3 {
-    left: 54%;
-  }
-
-  .stop-node.pos-4 {
-    left: 76%;
   }
 
   .back-btn {
@@ -788,46 +753,18 @@ onMounted(() => {
 
   .map-area {
     min-height: 1180px;
+    --road-start-x: 10%;
+    --road-one-third-x: 36.667%;
+    --road-two-thirds-x: 63.333%;
+    --road-end-x: 90%;
   }
 
   .path-line {
-    left: 20px;
-    right: 20px;
     height: 22px;
   }
 
-  .stop-node {
-    width: 180px;
-  }
-
   .stop-node .stop-content {
-    width: 180px;
-  }
-
-  .stop-node.pos-1 {
-    left: 0%;
-  }
-
-  .stop-node.pos-2 {
-    left: 20%;
-  }
-
-  .stop-node.pos-3 {
-    left: 48%;
-  }
-
-  .stop-node.pos-4 {
-    left: 72%;
-  }
-
-  .stop-circle {
-    width: 126px;
-    height: 126px;
-  }
-
-  .stop-image {
-    width: 62px;
-    height: 62px;
+    width: var(--stop-node-width);
   }
 
   .star {
@@ -877,11 +814,10 @@ onMounted(() => {
 
   .map-area {
     min-height: 980px;
-  }
-
-  .path-line {
-    left: 10px;
-    right: 10px;
+    --road-start-x: 12%;
+    --road-one-third-x: 37.333%;
+    --road-two-thirds-x: 62.667%;
+    --road-end-x: 88%;
   }
 
   .stop-node .path-point {
@@ -911,11 +847,6 @@ onMounted(() => {
     top: 395px;
   }
 
-  .stop-circle {
-    width: 108px;
-    height: 108px;
-  }
-
   .star {
     font-size: 2rem;
   }
@@ -938,14 +869,14 @@ onMounted(() => {
 
 .lock-overlay {
   position: absolute;
-  width: 85px;
-  height: 85px;
+  width: 52%;
+  height: 52%;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   background: rgba(0, 0, 0, 0.35);
   border-radius: 50%;
-  padding: 16px;
+  padding: 9%;
   display: flex;
   align-items: center;
   justify-content: center;

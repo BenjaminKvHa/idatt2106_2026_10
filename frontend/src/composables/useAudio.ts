@@ -62,7 +62,7 @@ export function useAudio() {
     if (startTime > 0) audio.currentTime = startTime
     activeSounds.set(audio, relVol)
     audio.addEventListener('ended', () => activeSounds.delete(audio), { once: true })
-    audio.play().catch(() => {})
+    audio.play().catch((e) => { console.error('useAudio: playSound failed for', src, e) })
     return audio
   }
 

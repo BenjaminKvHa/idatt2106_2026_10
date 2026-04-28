@@ -33,8 +33,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.nettdet.backend.domain.Task;
+import com.nettdet.backend.domain.enums.TaskDifficulty;
 import com.nettdet.backend.dto.FileReferenceResponse;
+import com.nettdet.backend.dto.TaskAdminResponse;
 import com.nettdet.backend.security.JwtUserPrincipal;
 import com.nettdet.backend.service.TaskAdminService;
 import com.nettdet.backend.util.JwtAuthFilter;
@@ -263,10 +264,8 @@ class TaskAdminControllerTest {
                 principal, null, List.of(new SimpleGrantedAuthority(authority)));
     }
 
-    private Task taskWithId(Long id) {
-        Task task = new Task();
-        task.setId(id);
-        return task;
+    private TaskAdminResponse taskWithId(Long id) {
+        return new TaskAdminResponse(id, TaskDifficulty.EASY, 1L, null, "{}", null);
     }
 
     @TestConfiguration

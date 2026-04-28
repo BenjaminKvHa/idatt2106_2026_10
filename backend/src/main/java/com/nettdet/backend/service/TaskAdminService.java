@@ -21,6 +21,7 @@ import com.nettdet.backend.dto.DatacenterTask;
 import com.nettdet.backend.dto.ImageVerificationTask;
 import com.nettdet.backend.dto.NewsVerificationTask;
 import com.nettdet.backend.dto.FileReferenceResponse;
+import com.nettdet.backend.dto.TaskAdminResponse;
 import com.nettdet.backend.repository.AccountClassroomBridgeTeacherRepository;
 import com.nettdet.backend.repository.ChapterRepository;
 import com.nettdet.backend.repository.FileObjectRepository;
@@ -63,23 +64,29 @@ public class TaskAdminService {
     // TASK LISTING (per chapter, scoped to a classroom)
     // --------------------------------------------------
 
-    public List<Task> listFotografenTasksForClassroom(String teacherEmail, String classroomCode) {
+    @Transactional(readOnly = true)
+    public List<TaskAdminResponse> listFotografenTasksForClassroom(String teacherEmail, String classroomCode) {
         return listTasksForClassroom(FOTOGRAFEN_CHAPTER_ID, teacherEmail, classroomCode);
     }
 
-    public List<Task> listNyhetskvartaletTasksForClassroom(String teacherEmail, String classroomCode) {
+    @Transactional(readOnly = true)
+    public List<TaskAdminResponse> listNyhetskvartaletTasksForClassroom(String teacherEmail, String classroomCode) {
         return listTasksForClassroom(NYHETSKVARTALET_CHAPTER_ID, teacherEmail, classroomCode);
     }
 
-    public List<Task> listDatasenteretTasksForClassroom(String teacherEmail, String classroomCode) {
+    @Transactional(readOnly = true)
+    public List<TaskAdminResponse> listDatasenteretTasksForClassroom(String teacherEmail, String classroomCode) {
         return listTasksForClassroom(DATACENTER_CHAPTER_ID, teacherEmail, classroomCode);
     }
 
-    private List<Task> listTasksForClassroom(Long chapterId, String teacherEmail, String classroomCode) {
+    private List<TaskAdminResponse> listTasksForClassroom(Long chapterId, String teacherEmail, String classroomCode) {
         if (!teacherBridgeRepository.existsByIdAccountEmailAndIdClassroomCode(teacherEmail, classroomCode)) {
             throw new AccessDeniedException("Teacher does not belong to classroom: " + classroomCode);
         }
-        return taskRepository.findByChapterIdAndClassroomClassroomCode(chapterId, classroomCode);
+        return taskRepository.findByChapterIdAndClassroomClassroomCode(chapterId, classroomCode)
+                .stream()
+                .map(TaskAdminResponse::from)
+                .toList();
     }
 
     // --------------------------------------------------
@@ -124,7 +131,7 @@ public class TaskAdminService {
      * @return the created task with its generated ID
      */
     @Transactional
-    public Task createImageVerificationTask(CreateImageVerificationTaskRequest request) {
+    public TaskAdminResponse createImageVerificationTask(CreateImageVerificationTaskRequest request) {
         Chapter chapter = chapterRepository.findById(request.chapterId())
                 .orElseThrow(() -> new EntityNotFoundException("Chapter not found: " + request.chapterId()));
 
@@ -140,7 +147,7 @@ public class TaskAdminService {
                 request.falseDescription()
         );
 
-        return createTask(chapter, request.difficulty(), taskData);
+        return TaskAdminResponse.from(createTask(chapter, request.difficulty(), taskData));
     }
 
     // --------------------------------------------------
@@ -154,7 +161,7 @@ public class TaskAdminService {
      * @return the created task with its generated ID
      */
     @Transactional
-    public Task createNewsVerificationTask(CreateNewsVerificationTaskRequest request) {
+    public TaskAdminResponse createNewsVerificationTask(CreateNewsVerificationTaskRequest request) {
         Chapter chapter = chapterRepository.findById(request.chapterId())
                 .orElseThrow(() -> new EntityNotFoundException("Chapter not found: " + request.chapterId()));
 
@@ -174,7 +181,7 @@ public class TaskAdminService {
                 request.incorrectDescription()
         );
 
-        return createTask(chapter, request.difficulty(), taskData);
+        return TaskAdminResponse.from(createTask(chapter, request.difficulty(), taskData));
     }
 
     // --------------------------------------------------
@@ -186,7 +193,7 @@ public class TaskAdminService {
      * Always associated with the Datasenteret chapter at HARD difficulty.
      */
     @Transactional
-    public Task createDatacenterImageTask(CreateDatacenterImageTaskRequest request) {
+    public TaskAdminResponse createDatacenterImageTask(CreateDatacenterImageTaskRequest request) {
         Chapter chapter = chapterRepository.findById(DATACENTER_CHAPTER_ID)
                 .orElseThrow(() -> new EntityNotFoundException("Datasenteret chapter not found"));
 
@@ -204,7 +211,7 @@ public class TaskAdminService {
         DatacenterTask wrapped = new DatacenterTask(
                 DatacenterTaskFormat.IMAGE_VERIFICATION, inner, null);
 
-        return createTask(chapter, TaskDifficulty.HARD, wrapped);
+        return TaskAdminResponse.from(createTask(chapter, TaskDifficulty.HARD, wrapped));
     }
 
     /**
@@ -212,7 +219,7 @@ public class TaskAdminService {
      * Always associated with the Datasenteret chapter at HARD difficulty.
      */
     @Transactional
-    public Task createDatacenterNewsTask(CreateDatacenterNewsTaskRequest request) {
+    public TaskAdminResponse createDatacenterNewsTask(CreateDatacenterNewsTaskRequest request) {
         Chapter chapter = chapterRepository.findById(DATACENTER_CHAPTER_ID)
                 .orElseThrow(() -> new EntityNotFoundException("Datasenteret chapter not found"));
 
@@ -235,7 +242,7 @@ public class TaskAdminService {
         DatacenterTask wrapped = new DatacenterTask(
                 DatacenterTaskFormat.NEWS_VERIFICATION, null, inner);
 
-        return createTask(chapter, TaskDifficulty.HARD, wrapped);
+        return TaskAdminResponse.from(createTask(chapter, TaskDifficulty.HARD, wrapped));
     }
 
     // --------------------------------------------------

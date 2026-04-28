@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { loginWithCredentials } from '@/utils/apiUtils'
-import { decodeJwtPayload } from '@/utils/jwtUtils'
+import { decodeJwtPayload, getDefaultRouteForRole } from '@/utils/jwtUtils'
 
 const router = useRouter()
 const step = ref<number>(1)
@@ -39,7 +39,7 @@ const login = async (): Promise<void> => {
 
     const payload = decodeJwtPayload(accessToken)
     submitted.value = true
-    await router.push(payload?.role === "PUPIL" ? "/pupil" : "/join-classroom/enter-classroom-code")
+    await router.push(getDefaultRouteForRole(payload?.role, payload?.email))
   } catch (caughtError) {
     error.value = caughtError instanceof Error ? caughtError.message : 'Kunne ikke logge inn.'
   } finally {

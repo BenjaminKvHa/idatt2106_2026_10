@@ -1,6 +1,6 @@
 export type PupilStatus = 'APPROVED' | 'PENDING'
 export type ActivePanel = 'NONE' | 'NOTES' | 'MYSTERY'
-export type StopName = 'Nyhetskvartalet' | 'Fotografen' | 'Postkontoret' | 'Datasenteret'
+export type StopName = 'Nyhetskvartalet' | 'Fotografen' | 'Datasenteret'
 
 export interface StopNote {
   stopName: StopName

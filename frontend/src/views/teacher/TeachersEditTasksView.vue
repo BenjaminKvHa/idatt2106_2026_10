@@ -1,4 +1,11 @@
 <script setup lang="ts">
+import type { StopName } from '@/components/teacher/pupils/types';
+
+const CHAPTER_ID_BY_STOP_NAME: Record<StopName, number> = {
+  Nyhetskvartalet: 1,
+  Fotografen: 2,
+  Datasenteret: 3,
+}
 </script>
 
 <template>
@@ -12,9 +19,6 @@
       </button>
       <button class="go-to-stop-btn active-go-to-stop-btn">
         Passordbanken
-      </button>
-      <button class="go-to-stop-btn">
-        Postkontoret
       </button>
     </div>
     <div>

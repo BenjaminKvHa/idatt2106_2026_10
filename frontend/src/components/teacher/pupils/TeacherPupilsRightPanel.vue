@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import TeacherPupilMysteryPanel from './TeacherPupilMysteryPanel.vue'
 import TeacherPupilNotesPanel from './TeacherPupilNotesPanel.vue'
 import TeacherPupilSummaryCard from './TeacherPupilSummaryCard.vue'
 import type { ActivePanel, Pupil, StopName } from './types'
@@ -19,7 +18,6 @@ defineProps<{
 const emit = defineEmits<{
   'update:editUsername': [value: string]
   saveChanges: []
-  openMystery: []
   removePupil: []
   openNotes: []
   selectStopNote: [stopName: StopName]
@@ -40,10 +38,6 @@ const emit = defineEmits<{
       />
 
       <div v-if="selectedPupil.status === 'APPROVED'" class="button-grid">
-        <button class="main-btn secondary-btn inika" type="button" @click="emit('openMystery')">
-          Ukens mysterium, forslag
-        </button>
-
         <button class="danger-btn inika" type="button" @click="emit('removePupil')">
           Fjern fra klasserom
         </button>
@@ -52,11 +46,6 @@ const emit = defineEmits<{
           Elev-notater
         </button>
       </div>
-
-      <TeacherPupilMysteryPanel
-        v-if="selectedPupil.status === 'APPROVED' && activePanel === 'MYSTERY'"
-        :mystery-suggestion="selectedPupil.mysterySuggestion"
-      />
 
       <TeacherPupilNotesPanel
         v-if="selectedPupil.status === 'APPROVED' && activePanel === 'NOTES'"
@@ -100,7 +89,7 @@ const emit = defineEmits<{
 
 .button-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 16px 24px;
   margin-top: 28px;
 }

@@ -30,23 +30,10 @@ type UpdatePupilUsernameRequest = {
   username: string
 }
 
-const MOCK_PUPIL_DATA: Record<string, { mysterySuggestion: string }> = {
-  'demo.alice@example.com': {
-    mysterySuggestion: 'Lag et mysterium om falske nyheter på TikTok.',
-  },
-  'demo.bob@example.com': {
-    mysterySuggestion: 'Et mysterium om en rar e-post fra banken.',
-  },
-  'test.elev@example.com': {
-    mysterySuggestion: 'Noen har laget et KI-bilde av skolen.',
-  },
-}
-
 const CHAPTER_ID_BY_STOP_NAME: Record<StopName, number> = {
   Nyhetskvartalet: 1,
   Fotografen: 2,
-  Postkontoret: 3,
-  Datasenteret: 4,
+  Datasenteret: 3,
 }
 
 const route = useRoute()
@@ -62,7 +49,7 @@ const selectedNotebookNote = ref('')
 const selectedNotebookChapterName = ref('')
 const savingUsername = ref(false)
 
-const stopNames: StopName[] = ['Nyhetskvartalet', 'Fotografen', 'Postkontoret', 'Datasenteret']
+const stopNames: StopName[] = ['Nyhetskvartalet', 'Fotografen', 'Datasenteret']
 
 const approvedPupils = ref<Pupil[]>([])
 const pendingPupils = ref<Pupil[]>([])
@@ -122,22 +109,11 @@ const openNotes = (): void => {
   selectedNotebookChapterName.value = ''
 }
 
-const openMysterySuggestion = (): void => {
-  activePanel.value = activePanel.value === 'MYSTERY' ? 'NONE' : 'MYSTERY'
-  selectedStopName.value = ''
-}
-
 const selectStopNote = (stopName: StopName): void => {
   selectedStopName.value = stopName
 }
 
-function getMockData(email: string) {
-  return MOCK_PUPIL_DATA[email] ?? { mysterySuggestion: '' }
-}
-
 function mapAcceptedPupil(response: AcceptedPupilResponse): Pupil {
-  const mockData = getMockData(response.accountEmail)
-
   return {
     email: response.accountEmail,
     legalName: response.legalName,
@@ -146,7 +122,7 @@ function mapAcceptedPupil(response: AcceptedPupilResponse): Pupil {
     status: 'APPROVED',
     totalXp: response.totalXp,
     notes: [],
-    mysterySuggestion: mockData.mysterySuggestion,
+    mysterySuggestion: '',
     avatarUrl: response.avatarObjectKey ? `/api/${response.avatarObjectKey}` : null,
   }
 }
@@ -310,11 +286,6 @@ const rejectPendingPupil = async (): Promise<void> => {
   }
 }
 
-const resetTestData = (): void => {
-  void loadPupils()
-  closeDetails()
-}
-
 onMounted(async () => {
   await loadPupils()
 })
@@ -349,7 +320,6 @@ watch(
         :pending-pupils="pendingPupils"
         :selected-pupil-email="selectedPupilEmail"
         @select-pupil="selectPupil"
-        @reset-data="resetTestData"
       />
 
       <TeacherPupilsRightPanel
@@ -365,7 +335,6 @@ watch(
         :notebook-error="notebookError"
         @update:edit-username="editUsername = $event"
         @save-changes="saveChanges"
-        @open-mystery="openMysterySuggestion"
         @remove-pupil="removePupil"
         @open-notes="openNotes"
         @select-stop-note="selectStopNote"

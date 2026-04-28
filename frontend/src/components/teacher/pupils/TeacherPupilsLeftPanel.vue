@@ -10,15 +10,10 @@ defineProps<{
 
 const emit = defineEmits<{
   selectPupil: [email: string]
-  resetData: []
 }>()
 
 function selectPupil(email: string) {
   emit('selectPupil', email)
-}
-
-function resetData() {
-  emit('resetData')
 }
 </script>
 
@@ -47,8 +42,6 @@ function resetData() {
         @select="selectPupil"
       />
     </div>
-
-    <button class="reset-btn" type="button" @click="resetData">Nullstill testdata</button>
   </aside>
 </template>
 
@@ -75,14 +68,4 @@ function resetData() {
   font-weight: 700;
 }
 
-.reset-btn {
-  margin-top: 24px;
-  border: 3px solid var(--accent);
-  border-radius: 999px;
-  background: var(--background);
-  padding: 9px 14px;
-  font-size: 0.9rem;
-  font-weight: 700;
-  cursor: pointer;
-}
 </style>

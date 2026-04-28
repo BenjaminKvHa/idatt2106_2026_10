@@ -13,13 +13,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.nettdet.backend.domain.Task;
 import com.nettdet.backend.security.JwtUserPrincipal;
 import com.nettdet.backend.dto.CreateDatacenterImageTaskRequest;
 import com.nettdet.backend.dto.CreateDatacenterNewsTaskRequest;
 import com.nettdet.backend.dto.CreateImageVerificationTaskRequest;
 import com.nettdet.backend.dto.CreateNewsVerificationTaskRequest;
 import com.nettdet.backend.dto.FileReferenceResponse;
+import com.nettdet.backend.dto.TaskAdminResponse;
 import com.nettdet.backend.service.TaskAdminService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -66,7 +66,7 @@ public class TaskAdminController {
     @Operation(summary = "List Fotografen tasks for a classroom",
                description = "Returns all Fotografen tasks scoped to the given classroom code. " +
                             "Caller must be a teacher of that classroom.")
-    public ResponseEntity<List<Task>> listFotografenTasks(
+    public ResponseEntity<List<TaskAdminResponse>> listFotografenTasks(
             @AuthenticationPrincipal JwtUserPrincipal principal,
             @RequestParam String classroomCode) {
         return ResponseEntity.ok(
@@ -77,7 +77,7 @@ public class TaskAdminController {
     @Operation(summary = "List Nyhetskvartalet tasks for a classroom",
                description = "Returns all Nyhetskvartalet tasks scoped to the given classroom code. " +
                             "Caller must be a teacher of that classroom.")
-    public ResponseEntity<List<Task>> listNyhetskvartaletTasks(
+    public ResponseEntity<List<TaskAdminResponse>> listNyhetskvartaletTasks(
             @AuthenticationPrincipal JwtUserPrincipal principal,
             @RequestParam String classroomCode) {
         return ResponseEntity.ok(
@@ -88,7 +88,7 @@ public class TaskAdminController {
     @Operation(summary = "List Datasenteret tasks for a classroom",
                description = "Returns all Datasenteret tasks scoped to the given classroom code. " +
                             "Caller must be a teacher of that classroom.")
-    public ResponseEntity<List<Task>> listDatasenteretTasks(
+    public ResponseEntity<List<TaskAdminResponse>> listDatasenteretTasks(
             @AuthenticationPrincipal JwtUserPrincipal principal,
             @RequestParam String classroomCode) {
         return ResponseEntity.ok(
@@ -103,9 +103,9 @@ public class TaskAdminController {
     @Operation(summary = "Create Fotografen task",
                description = "Creates a new image verification task for the Fotografen chapter. " +
                             "Requires a fileId referencing an image stored in MinIO.")
-    public ResponseEntity<Task> createImageVerificationTask(
+    public ResponseEntity<TaskAdminResponse> createImageVerificationTask(
             @Valid @RequestBody CreateImageVerificationTaskRequest request) {
-        Task task = taskAdminService.createImageVerificationTask(request);
+        TaskAdminResponse task = taskAdminService.createImageVerificationTask(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(task);
     }
 
@@ -117,9 +117,9 @@ public class TaskAdminController {
     @Operation(summary = "Create Nyhetskvartalet task",
                description = "Creates a new news verification task for the Nyhetskvartalet chapter. " +
                             "Requires two fileIds for comparison and a correctFileId indicating which is the credible source.")
-    public ResponseEntity<Task> createNewsVerificationTask(
+    public ResponseEntity<TaskAdminResponse> createNewsVerificationTask(
             @Valid @RequestBody CreateNewsVerificationTaskRequest request) {
-        Task task = taskAdminService.createNewsVerificationTask(request);
+        TaskAdminResponse task = taskAdminService.createNewsVerificationTask(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(task);
     }
 
@@ -131,9 +131,9 @@ public class TaskAdminController {
     @Operation(summary = "Create Datasenteret image task",
                description = "Creates a new Datasenteret task using the image-verification format. " +
                             "Always associated with the Datasenteret chapter at HARD difficulty.")
-    public ResponseEntity<Task> createDatacenterImageTask(
+    public ResponseEntity<TaskAdminResponse> createDatacenterImageTask(
             @Valid @RequestBody CreateDatacenterImageTaskRequest request) {
-        Task task = taskAdminService.createDatacenterImageTask(request);
+        TaskAdminResponse task = taskAdminService.createDatacenterImageTask(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(task);
     }
 
@@ -141,9 +141,9 @@ public class TaskAdminController {
     @Operation(summary = "Create Datasenteret news task",
                description = "Creates a new Datasenteret task using the news-verification format. " +
                             "Always associated with the Datasenteret chapter at HARD difficulty.")
-    public ResponseEntity<Task> createDatacenterNewsTask(
+    public ResponseEntity<TaskAdminResponse> createDatacenterNewsTask(
             @Valid @RequestBody CreateDatacenterNewsTaskRequest request) {
-        Task task = taskAdminService.createDatacenterNewsTask(request);
+        TaskAdminResponse task = taskAdminService.createDatacenterNewsTask(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(task);
     }
 }

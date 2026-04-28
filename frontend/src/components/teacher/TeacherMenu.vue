@@ -3,9 +3,9 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Logo from '@/components/misc/Logo.vue'
 import OptionsMenu from '@/components/ui/OptionsMenu.vue'
-import gearIcon from '@/assets/icons/profile-cog.svg'
-import { useClassrooms } from '@/composables/useClassrooms'
-import { sanitizeClassroomName } from '@/composables/useClassroomName'
+import gearIcon from '@/assets/icons/topbar/profile-cog.svg'
+import { useClassrooms } from '@/composables/useClassrooms.ts'
+import { sanitizeClassroomName } from '@/composables/useClassroomName.ts'
 
 const settingsOpen = ref(false)
 const route = useRoute()

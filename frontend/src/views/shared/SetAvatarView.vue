@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import AvatarAssetsContainer from '@/components/AvatarAssetsContainer.vue'
+import AvatarAssetsContainer from '@/components/pupil/AvatarAssetsContainer.vue'
 import { put } from '@/utils/apiUtils'
 
 type AvatarAsset = {

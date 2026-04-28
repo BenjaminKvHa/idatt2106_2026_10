@@ -15,6 +15,8 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     List<Task> findByChapterIdAndDifficulty(Long chapterId, TaskDifficulty difficulty);
 
+    List<Task> findByChapterIdAndClassroomClassroomCode(Long chapterId, String classroomCode);
+
     @Query("SELECT t FROM Task t LEFT JOIN t.classroom c " +
            "WHERE t.chapter.id = :chapterId " +
            "AND t.difficulty = :difficulty " +

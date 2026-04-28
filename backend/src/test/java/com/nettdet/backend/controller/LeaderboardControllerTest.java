@@ -26,6 +26,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -71,9 +73,9 @@ class LeaderboardControllerTest {
 
     @DisplayName("Rejects unauthenticated global classroom leaderboard requests under current security configuration")
     @Test
-    void getGlobalClassroomLeaderboard_whenUnauthenticated_returnsForbidden() throws Exception {
+    void getGlobalClassroomLeaderboard_whenUnauthenticated_returnsUnauthorized() throws Exception {
         mockMvc.perform(get("/leaderboards/classrooms"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(leaderboardService);
     }
@@ -168,6 +170,7 @@ class LeaderboardControllerTest {
         SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
             return http
                     .csrf(csrf -> csrf.disable())
+                    .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                     .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
                     .build();
         }

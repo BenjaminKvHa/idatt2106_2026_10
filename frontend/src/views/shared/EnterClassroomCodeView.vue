@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import creatureSitting from '@/assets/creatureSitting.png'
+import creatureSitting from '@/assets/icons/blobby/creatureSitting.png'
 import { post } from '@/utils/apiUtils'
 
 const router = useRouter()

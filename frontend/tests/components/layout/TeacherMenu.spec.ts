@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils'
 import { ref } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import TeacherMenu from '@/components/layout/TeacherMenu.vue'
+import TeacherMenu from '@/components/teacher/TeacherMenu.vue'
 
 const routerPush = vi.fn()
 const fetchClassrooms = vi.fn()

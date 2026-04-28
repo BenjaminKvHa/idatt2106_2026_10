@@ -3,6 +3,11 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ClipboardList, Lock } from '@lucide/vue'
 
+import aliImg from '@/assets/icons/detectives_and_thief/detective_ali.png'
+import suryaImg from '@/assets/icons/detectives_and_thief/detective_surya.png'
+import villainImg from '@/assets/icons/detectives_and_thief/Datatyven.png'
+import bgImg from '@/assets/backgrounds/welcomeBackground.png'
+
 const router = useRouter()
 const activeCharacter = ref<string | null>(null)
 
@@ -16,13 +21,13 @@ function toggleCharacter(character: string): void {
 </script>
 
 <template>
-  <div class="center-container">
+  <div class="center-container" :style="{ backgroundImage: `url(${bgImg})` }">
     <div class="scene">
-
+      
       <div class="heroes">
         <div class="character ali" @click="toggleCharacter('ali')">
           <span class="character-name">Detektiv Ali</span>
-          <img src="/src/assets/detective_ali.png" alt="Detektiv Ali" />
+          <img :src="aliImg" alt="Detektiv Ali" />
 
           <div v-if="activeCharacter === 'ali'" class="speech">
             Hei, jeg er Detektiv Ali, og trenger din hjelp til å bekjempe datatyven!
@@ -31,7 +36,7 @@ function toggleCharacter(character: string): void {
 
         <div class="character surya" @click="toggleCharacter('surya')">
           <span class="character-name">Detektiv Surya</span>
-          <img src="/src/assets/detective_surya.png" alt="Detektiv Surya" />
+          <img :src="suryaImg" alt="Detektiv Surya" />
 
           <div v-if="activeCharacter === 'surya'" class="speech">
             Hei, jeg er Detektiv Surya, og trenger din hjelp til å bekjempe datatyven!
@@ -41,7 +46,7 @@ function toggleCharacter(character: string): void {
 
       <div class="villain" @click="toggleCharacter('villain')">
         <span class="character-name villain-name">Datatyven</span>
-        <img src="/src/assets/Datatyven.png" alt="Datatyven" />
+        <img :src="villainImg" alt="Datatyven" />
 
         <div v-if="activeCharacter === 'villain'" class="speech villain-speech">
           Dere klarer aldri å stoppe meg!
@@ -98,7 +103,6 @@ function toggleCharacter(character: string): void {
   position: relative;
   padding: 3rem 1.5rem;
   overflow: hidden;
-  background-image: url('/src/assets/welcomeBackground.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

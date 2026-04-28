@@ -28,6 +28,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -183,11 +185,70 @@ class TaskAdminControllerTest {
 
     @DisplayName("Denies unauthenticated requests to /admin/tasks endpoints")
     @Test
-    void anyAdminEndpoint_whenUnauthenticated_returnsForbidden() throws Exception {
+    void anyAdminEndpoint_whenUnauthenticated_returnsUnauthorized() throws Exception {
         mockMvc.perform(get("/admin/tasks/files/reference")
                         .param("objectKey", "k")
                         .param("contentType", "image/png")
                         .param("fileName", "x.png"))
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(taskAdminService);
+    }
+
+    @DisplayName("Allows teachers to list Fotografen tasks scoped to a classroom")
+    @Test
+    void listFotografenTasks_whenTeacher_returnsTasks() throws Exception {
+        when(taskAdminService.listFotografenTasksForClassroom("teacher@example.com", "ABCABC"))
+                .thenReturn(List.of(taskWithId(1L), taskWithId(2L)));
+
+        mockMvc.perform(get("/admin/tasks/fotografen")
+                        .param("classroomCode", "ABCABC")
+                        .with(authentication(authFor(teacherPrincipal(), "TEACHER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].id").value(1));
+
+        verify(taskAdminService).listFotografenTasksForClassroom("teacher@example.com", "ABCABC");
+    }
+
+    @DisplayName("Allows teachers to list Nyhetskvartalet tasks scoped to a classroom")
+    @Test
+    void listNyhetskvartaletTasks_whenTeacher_returnsTasks() throws Exception {
+        when(taskAdminService.listNyhetskvartaletTasksForClassroom("teacher@example.com", "ABCABC"))
+                .thenReturn(List.of(taskWithId(7L)));
+
+        mockMvc.perform(get("/admin/tasks/nyhetskvartalet")
+                        .param("classroomCode", "ABCABC")
+                        .with(authentication(authFor(teacherPrincipal(), "TEACHER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(7));
+
+        verify(taskAdminService).listNyhetskvartaletTasksForClassroom("teacher@example.com", "ABCABC");
+    }
+
+    @DisplayName("Allows teachers to list Datasenteret tasks scoped to a classroom")
+    @Test
+    void listDatasenteretTasks_whenTeacher_returnsTasks() throws Exception {
+        when(taskAdminService.listDatasenteretTasksForClassroom("teacher@example.com", "ABCABC"))
+                .thenReturn(List.of());
+
+        mockMvc.perform(get("/admin/tasks/datasenteret")
+                        .param("classroomCode", "ABCABC")
+                        .with(authentication(authFor(teacherPrincipal(), "TEACHER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+
+        verify(taskAdminService).listDatasenteretTasksForClassroom("teacher@example.com", "ABCABC");
+    }
+
+    @DisplayName("Denies pupils from listing classroom tasks")
+    @Test
+    void listFotografenTasks_whenPupil_returnsForbidden() throws Exception {
+        JwtUserPrincipal pupil = new JwtUserPrincipal("Pupil", "pupil@example.com", "PUPIL");
+
+        mockMvc.perform(get("/admin/tasks/fotografen")
+                        .param("classroomCode", "ABCABC")
+                        .with(authentication(authFor(pupil, "PUPIL"))))
                 .andExpect(status().isForbidden());
 
         verifyNoInteractions(taskAdminService);
@@ -216,6 +277,7 @@ class TaskAdminControllerTest {
         SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
             return http
                     .csrf(csrf -> csrf.disable())
+                    .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                     .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
                     .build();
         }

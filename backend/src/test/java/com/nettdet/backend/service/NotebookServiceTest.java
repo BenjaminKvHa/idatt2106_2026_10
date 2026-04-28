@@ -71,7 +71,7 @@ class NotebookServiceTest {
                 membershipRepository,
                 chapterRepository,
                 teacherBridgeRepository,
-                objectMapper);
+                new NotebookJsonService(objectMapper));
     }
 
     @DisplayName("Returns existing pupil notebook for confirmed classroom membership")

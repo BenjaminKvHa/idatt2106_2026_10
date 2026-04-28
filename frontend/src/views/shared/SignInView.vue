@@ -73,7 +73,7 @@ const goToSignup = (): void => {
             <div class="affiliation">
               <p class="label">Din tilhørighet</p>
               <div class="affiliation-box">
-                <img src="@/assets/NTNU.png" alt="NTNU" class="affiliation-logo" />
+                <img src="@/assets/logo/NTNU.png" alt="NTNU" class="affiliation-logo" />
               </div>
             </div>
 
@@ -104,7 +104,7 @@ const goToSignup = (): void => {
 
         <section v-else-if="step === 2" class="card auth-card small-card">
           <div class="auth-body">
-            <img src="@/assets/NTNU.png" alt="NTNU" class="brand-logo" />
+            <img src="@/assets/logo/NTNU.png" alt="NTNU" class="brand-logo" />
             <h2>Logg på</h2>
 
             <form @submit.prevent="goToPassword">
@@ -135,7 +135,7 @@ const goToSignup = (): void => {
 
         <section v-else class="card auth-card password-card">
           <div class="auth-body password-body">
-            <img src="@/assets/NTNU.png" alt="NTNU" class="brand-logo" />
+            <img src="@/assets/logo/NTNU.png" alt="NTNU" class="brand-logo" />
             <p class="signed-in-as">{{ email || 'eksempel@epost.no' }}</p>
             <h2>Skriv inn passord</h2>
 

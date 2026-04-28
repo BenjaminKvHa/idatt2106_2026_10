@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import TopBar from '@/components/TopBar.vue'
-import TaskGuide from '@/components/TaskGuide.vue'
-import CompleteLevelPopup from '@/components/CompleteLevelPopup.vue'
+import TopBar from '@/components/pupil/TopBar.vue'
+import TaskGuide from '@/components/pupil/TaskGuide.vue'
+import CompleteLevelPopup from '@/components/pupil/CompleteLevelPopup.vue'
 import { get, getBlob, post } from '@/utils/apiUtils'
 import type {
   NewsVerificationRequest,
@@ -11,8 +11,9 @@ import type {
   TaskDifficulty,
   ValidationResult,
 } from '@/types/chapter'
-import thumbsUpNews from '@/assets/ThumbsUpNews.png'
-import thumbsDownNews from '@/assets/ThumbsDownNews.png'
+import thumbsUpNews from '@/assets/icons/detectives_and_thief/ThumbsUpNews.png'
+import thumbsDownNews from '@/assets/icons/detectives_and_thief/ThumbsDownNews.png'
+import PupilNewsTask from '@/components/pupil/task/PupilNewsTask.vue'
 
 const router = useRouter()
 
@@ -57,16 +58,8 @@ const progressPercent = computed(() => {
   return ((stepIndex.value + 1) / DIFFICULTIES.length) * 100
 })
 
-function openHelpPopup(): void {
-  showHelpPopup.value = true
-}
-
 function closeHelpPopup(): void {
   showHelpPopup.value = false
-}
-
-function openHintPopup(): void {
-  showHintPopup.value = true
 }
 
 function closeHintPopup(): void {
@@ -93,9 +86,7 @@ async function loadTask(): Promise<void> {
 
     currentTask.value = task
 
-    const blobs = await Promise.all(
-      task.fileIds.map((id) => getBlob(`/api/objects/${id}`)),
-    )
+    const blobs = await Promise.all(task.fileIds.map((id) => getBlob(`/api/objects/${id}`)))
 
     imageUrls.value = blobs.map((blob) => URL.createObjectURL(blob))
   } catch (e) {
@@ -134,17 +125,10 @@ async function choose(fileId: number): Promise<void> {
   }
 }
 
-function cardClass(fileId: number): string {
-  if (selectedFileId.value !== fileId) return ''
-  if (!lastResult.value) return 'selected'
-
-  return lastResult.value.correct ? 'selected correct' : 'selected wrong'
-}
-
 async function next(): Promise<void> {
   if (!lastResult.value) return
 
-  if (lastResult.value.runCompleted || stepIndex.value === DIFFICULTIES.length - 1) {
+  if (stepIndex.value === DIFFICULTIES.length - 1) {
     showFinalResult()
     return
   }
@@ -157,9 +141,9 @@ async function next(): Promise<void> {
 }
 
 function showFinalResult(): void {
-  runDone.value = true
+  const success = runCorrect.value === DIFFICULTIES.length
 
-  const success = runCorrect.value === runAttempts.value
+  runDone.value = success
 
   popupSuccess.value = success
   popupTitle.value = success ? 'Du klarte det!' : 'Du klarte det ikke'
@@ -168,7 +152,7 @@ function showFinalResult(): void {
     : 'Du må ha rett på alle oppgavene for å bestå nyhetskvartalet.'
   popupSubMessage.value = success
     ? 'Du har nå fullført stoppestedet.'
-    : "Trykk 'prøv på nytt' for å prøve igjen, eller gå tilbake til kartet."
+    : "Trykk 'Prøv på nytt' for å prøve igjen, eller gå tilbake til kartet."
 
   showCompletePopup.value = true
 }
@@ -205,83 +189,44 @@ onBeforeUnmount(revokeImageUrls)
 <template>
   <TopBar
     title="Nyhetskvartalet"
-    @help="openHelpPopup"
-    @hint="openHintPopup"
+    help="På dette stoppestedet skal du prøve å se hvilken av nyhetsartiklene som er falsk. Det kan være noe i teksten, feil bilde, eller rar URL."
+    hint="Se nøye på de ulike artiklene, det kan være noe smått som skiller de."
   />
 
   <div class="page">
     <div class="center-container">
       <template v-if="currentTask && !runDone">
-        <div class="task-wrapper">
-          <p>{{ currentTask.taskDescription }}</p>
-        </div>
+        <PupilNewsTask
+          :task-description="currentTask.taskDescription"
+          :file-ids="currentTask.fileIds"
+          :image-urls="imageUrls"
+          :selected-file-id="selectedFileId"
+          :result="lastResult"
+          :submitting="submitting"
+          select-button-text="Velg dette bildet"
+          @select-file="choose"
+        />
 
         <div class="progress-container">
           <div class="progress-bar">
-            <div
-              class="progress-fill"
-              :style="{ width: progressPercent + '%' }"
-            ></div>
+            <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
           </div>
 
           <p class="progress-text">
             Nivå {{ stepIndex + 1 }} / {{ DIFFICULTIES.length }} — {{ difficultyLabel }}
           </p>
         </div>
-
         <div
           v-if="lastResult"
           class="mini-feedback"
           :class="{ success: lastResult.correct, fail: !lastResult.correct }"
         >
-          <strong>{{ lastResult.correct ? 'Riktig!' : 'Feil.' }}</strong>
-          <span v-if="lastResult.feedback"> {{ lastResult.feedback }}</span>
+          <span>{{ lastResult.feedback }}</span>
         </div>
-
-        <div class="picture-wrapper">
-          <div
-            v-for="(fileId, idx) in currentTask.fileIds"
-            :key="fileId"
-            class="picture-card"
-            :class="cardClass(fileId)"
-          >
-            <div class="picture-placeholder">
-              <img
-                v-if="imageUrls[idx]"
-                :src="imageUrls[idx]"
-                :alt="`Bilde ${Number(idx) + 1}`"
-                class="picture"
-              />
-              <span v-else>Laster…</span>
-            </div>
-
-            <p
-              v-if="lastResult && selectedFileId === fileId"
-              class="answer-label"
-              :class="lastResult.correct ? 'correct-label' : 'wrong-label'"
-            >
-              {{ lastResult.correct ? 'Riktig svar' : 'Ditt valg' }}
-            </p>
-
-            <button
-              class="fake-button"
-              :disabled="!!lastResult || submitting"
-              @click="choose(fileId)"
-            >
-              Velg dette bildet
-            </button>
-          </div>
-        </div>
-
-        <button
-          v-if="lastResult"
-          class="next-level-button"
-          @click="next"
-        >
+        <button v-if="lastResult" class="next-level-button" @click="next">
           {{ stepIndex === DIFFICULTIES.length - 1 ? 'Se resultat' : 'Gå til neste nivå' }}
         </button>
       </template>
-
       <p v-else-if="loading">Laster oppgave…</p>
       <p v-else-if="error" class="error">{{ error }}</p>
     </div>
@@ -290,10 +235,9 @@ onBeforeUnmount(revokeImageUrls)
   <TaskGuide v-if="showGuidePopup" @close="showGuidePopup = false">
     <h2>Velkommen til nyhetskvartalet!</h2>
     <p>
-      I nyhetskvartalet vil du få oppgaver som handler om å skille ekte
-      avisforsider og uekte avisforsider. I hver oppgave vil du få én ekte
-      avisforside og én falsk. Du skal velge hvilken du tror er falsk.
-      Er du klar for å løse oppgaver?
+      I nyhetskvartalet vil du få oppgaver som handler om å skille ekte avisforsider og uekte
+      avisforsider. I hver oppgave vil du få én ekte avisforside og én falsk. Du skal velge hvilken
+      du tror er falsk. Er du klar for å løse oppgaver?
     </p>
   </TaskGuide>
 
@@ -303,8 +247,7 @@ onBeforeUnmount(revokeImageUrls)
 
       <div class="hint-text">
         <p>
-          I Nyhetskvartalet skal du undersøke informasjon og finne ut hva som er
-          ekte og falskt.
+          I Nyhetskvartalet skal du undersøke informasjon og finne ut hva som er ekte og falskt.
         </p>
         <ul>
           <li>Les oppgaven nøye før du svarer</li>
@@ -314,9 +257,7 @@ onBeforeUnmount(revokeImageUrls)
       </div>
 
       <div class="popup-actions">
-        <button class="popup-btn popup-btn-play" @click="closeHelpPopup">
-          Ok
-        </button>
+        <button class="popup-btn popup-btn-play" @click="closeHelpPopup">Ok</button>
       </div>
     </div>
   </div>
@@ -335,9 +276,7 @@ onBeforeUnmount(revokeImageUrls)
       </div>
 
       <div class="popup-actions">
-        <button class="popup-btn popup-btn-play" @click="closeHintPopup">
-          Ok
-        </button>
+        <button class="popup-btn popup-btn-play" @click="closeHintPopup">Ok</button>
       </div>
     </div>
   </div>
@@ -351,17 +290,9 @@ onBeforeUnmount(revokeImageUrls)
     :success-image="thumbsUpNews"
     :fail-image="thumbsDownNews"
     @close="closeCompletePopup"
+    @retry="retryLevel"
+    @map="goToMap"
   />
-
-  <div v-if="showCompletePopup && !popupSuccess" class="popup-button-layer">
-    <button class="popup-btn popup-btn-play" @click="retryLevel">
-      Prøv på nytt
-    </button>
-
-    <button class="popup-btn popup-btn-map" @click="goToMap">
-      Tilbake til kartet
-    </button>
-  </div>
 </template>
 
 <style scoped>
@@ -386,21 +317,6 @@ onBeforeUnmount(revokeImageUrls)
   width: 100%;
   max-width: 1100px;
   gap: 1.5rem;
-}
-
-.task-wrapper {
-  position: relative;
-  width: min(100%, 800px);
-  padding: 1.4rem 2rem;
-  background: var(--orange-medium);
-  border: 5px solid var(--brown-dark);
-  border-radius: 38px;
-  box-sizing: border-box;
-  box-shadow: 0 8px 0 var(--brown-dark);
-}
-
-.task-wrapper p {
-  margin: 0;
 }
 
 .progress-container {
@@ -446,89 +362,6 @@ onBeforeUnmount(revokeImageUrls)
   color: white;
 }
 
-.picture-wrapper {
-  display: flex;
-  gap: 2rem;
-  margin-top: 1rem;
-  flex-wrap: wrap;
-  justify-content: center;
-  width: 100%;
-}
-
-.picture-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  flex: 1 1 300px;
-  max-width: 420px;
-  width: 100%;
-  padding: 1rem;
-  border-radius: 30px;
-  background: rgb(255 255 255 / 35%);
-  border: 3px solid rgb(91 62 43 / 25%);
-  box-shadow: 0 10px 20px rgb(0 0 0 / 10%);
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
-}
-
-.picture-card:hover {
-  transform: translateY(-4px);
-}
-
-.picture-card.selected {
-  box-shadow: 0 0 0 5px var(--orange-medium);
-}
-
-.picture-card.correct {
-  box-shadow: 0 0 0 6px var(--green-confirm);
-  background: rgb(120 190 120 / 22%);
-}
-
-.picture-card.wrong {
-  box-shadow: 0 0 0 6px #d95b43;
-  background: rgb(217 91 67 / 18%);
-}
-
-.picture-placeholder {
-  width: min(100%, 420px);
-  aspect-ratio: 420 / 320;
-  background-color: var(--beige-light);
-  border: 4px solid var(--brown-dark);
-  border-radius: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  overflow: hidden;
-}
-
-.picture {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.answer-label {
-  margin: 0;
-  padding: 0.45rem 1.2rem;
-  border: 3px solid var(--brown-dark);
-  border-radius: 999px;
-  font-weight: 700;
-}
-
-.correct-label {
-  background: var(--green-confirm);
-}
-
-.wrong-label {
-  background: #d95b43;
-  color: white;
-}
-
-.fake-button,
 .next-level-button {
   width: 100%;
   max-width: 420px;
@@ -550,25 +383,15 @@ onBeforeUnmount(revokeImageUrls)
   background: var(--green-confirm);
 }
 
-.fake-button:hover:not(:disabled),
 .next-level-button:hover {
   filter: brightness(1.1);
   transform: translateY(-3px);
   box-shadow: 0 9px 0 var(--brown-dark);
 }
 
-.fake-button:active:not(:disabled),
 .next-level-button:active {
   transform: translateY(3px);
   box-shadow: 0 3px 0 var(--brown-dark);
-}
-
-.fake-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.75;
-  transform: none;
-  filter: none;
-  box-shadow: 0 6px 0 var(--brown-dark);
 }
 
 .error {
@@ -619,24 +442,12 @@ onBeforeUnmount(revokeImageUrls)
   margin-bottom: 6px;
 }
 
-.popup-actions,
-.popup-button-layer {
+.popup-actions {
   display: flex;
   justify-content: center;
   gap: 22px;
   flex-wrap: wrap;
-}
-
-.popup-actions {
   margin-top: 26px;
-}
-
-.popup-button-layer {
-  position: fixed;
-  left: 50%;
-  bottom: 16vh;
-  transform: translateX(-50%);
-  z-index: 2000;
 }
 
 .popup-btn {
@@ -675,25 +486,9 @@ onBeforeUnmount(revokeImageUrls)
     background-attachment: scroll;
   }
 
-  .picture-wrapper {
-    gap: 1rem;
-  }
-
-  .task-wrapper {
-    padding: 1rem;
-    border-width: 3px;
-    border-radius: 24px;
-  }
-
-  .fake-button,
   .next-level-button {
     border-width: 3px;
     border-radius: 24px;
-  }
-
-  .popup-button-layer {
-    bottom: 8vh;
-    width: calc(100vw - 32px);
   }
 }
 </style>

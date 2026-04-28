@@ -1,0 +1,27 @@
+@import 'base.css';
+@import 'teacherStyle.css';
+@import 'pupilTaskStyle.css';
+@import 'pupilStyle.css';
+
+.transition {
+  transition: all 0.1s;
+}
+button {
+  cursor: pointer;
+  outline: none;
+}
+.center-content {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+}
+.horizontal-space-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.heavy-shadow {
+  box-shadow: 0px .25rem .75rem rgba(0, 0, 0, 0.25);
+}

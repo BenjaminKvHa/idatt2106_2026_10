@@ -66,6 +66,7 @@ public class ChapterService {
     private final ObjectMapper objectMapper;
     private final Map<String, TaskValidator<?, ?>> validators;
     private final NotificationService notificationService;
+    private final TipService tipService;
 
     public ChapterService(TaskRepository taskRepository,
                           PupilClassroomMembershipRepository membershipRepository,
@@ -73,7 +74,8 @@ public class ChapterService {
                           ChapterRepository chapterRepository,
                           ObjectMapper objectMapper,
                           List<TaskValidator<?, ?>> validatorList,
-                          NotificationService notificationService) {
+                          NotificationService notificationService,
+                          TipService tipService) {
         this.taskRepository = taskRepository;
         this.membershipRepository = membershipRepository;
         this.progressionRepository = progressionRepository;
@@ -82,6 +84,7 @@ public class ChapterService {
         this.validators = validatorList.stream()
             .collect(Collectors.toMap(TaskValidator::getChapterType, v -> v));
         this.notificationService = notificationService;
+        this.tipService = tipService;
     }
 
     // -------------------------------------------
@@ -437,6 +440,7 @@ public class ChapterService {
             if (correctCount == tasksPerRun) {
                 progression.setSuccessfulRuns(progression.getSuccessfulRuns() + 1);
                 progression.setUnsuccessfulStreak(0);
+                tipService.addAllConfiguredTipsToNotebook(progression);
                 if (previousSuccessfulRuns == 0) {
                     notifyFirstChapterCompletion(progression);
                 }

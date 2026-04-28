@@ -1,8 +1,15 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import TopBar from '@/components/TopBar.vue'
-import { clearAuthSessionStorage, del, get, post, put, type BackendAccountRole } from '@/utils/apiUtils'
+import TopBar from '@/components/pupil/TopBar.vue'
+import {
+  clearAuthSessionStorage,
+  del,
+  get,
+  post,
+  put,
+  type BackendAccountRole,
+} from '@/utils/apiUtils'
 
 type ProfileResponse = {
   email: string
@@ -36,6 +43,7 @@ const avatarUrl = computed(() =>
     ? `/api/objects/${profile.value.avatarFileObjectId}`
     : '/api/avatar-assets/costume/detective.png',
 )
+
 const isInClassroom = computed(() => Boolean(profile.value?.classroomCode))
 
 async function loadProfile() {
@@ -88,7 +96,8 @@ async function leaveClassroom() {
     await del(`/api/classrooms/${profile.value.classroomCode}/pupils/me`)
     await router.push('/pupil')
   } catch (requestError) {
-    actionError.value = requestError instanceof Error ? requestError.message : 'Could not leave classroom'
+    actionError.value =
+      requestError instanceof Error ? requestError.message : 'Could not leave classroom'
   } finally {
     leavingClassroom.value = false
   }
@@ -139,7 +148,8 @@ async function saveNickname() {
     nicknameDraft.value = profile.value.username ?? ''
     editingNickname.value = false
   } catch (requestError) {
-    actionError.value = requestError instanceof Error ? requestError.message : 'Could not update nickname'
+    actionError.value =
+      requestError instanceof Error ? requestError.message : 'Could not update nickname'
   } finally {
     savingNickname.value = false
   }
@@ -149,33 +159,57 @@ async function saveNickname() {
 <template>
   <TopBar title="Profil" />
 
-  <main class="page">
-    <section class="profile-card">
+  <main class="page pupil-page-center">
+    <section class="profile-card pupil-card">
       <p v-if="loading">Loading profile...</p>
-      <p v-else-if="error" class="error">{{ error }}</p>
+      <p v-else-if="error" class="pupil-error">{{ error }}</p>
 
       <div v-else-if="profile" class="profile-layout">
-        <section class="avatar-panel">
+        <section class="avatar-panel pupil-panel">
           <img class="profile-img" :src="avatarUrl" alt="Profile avatar" />
-          <p class="meta-text">{{ profile.legalName || "No name" }} - {{ profile.email }}</p>
-          <p class="meta-text">{{ profile.role }}</p>
+          <p class="pupil-meta-text">{{ profile.legalName || 'No name' }} - {{ profile.email }}</p>
+          <p class="pupil-meta-text">{{ profile.role }}</p>
+
           <RouterLink :to="`/join-classroom/set-avatar?classroomCode=${profile.classroomCode}`">
-            <button v-if="isInClassroom" class="secondary-button" type="button">Bytt avatar</button>
+            <button
+              v-if="isInClassroom"
+              class="pupil-button pupil-button-secondary"
+              type="button"
+            >
+              Bytt avatar
+            </button>
           </RouterLink>
         </section>
 
-        <section class="settings-panel">
-          <div v-if="isInClassroom" class="setting-card">
-            <span class="setting-label">Kallenavn for klasserom</span>
+        <section class="settings-panel pupil-panel">
+          <div v-if="isInClassroom" class="setting-card pupil-inner-card">
+            <span class="pupil-label">Kallenavn for klasserom</span>
             <p>{{ profile.username ?? 'Ikke satt enda' }}</p>
 
             <div v-if="isInClassroom && editingNickname" class="nickname-editor">
-              <input v-model="nicknameDraft" class="text-input" type="text" placeholder="Skriv nytt kallenavn" />
+              <input
+                v-model="nicknameDraft"
+                class="pupil-input"
+                type="text"
+                placeholder="Skriv nytt kallenavn"
+              />
+
               <div class="nickname-actions">
-                <button class="secondary-button" type="button" :disabled="savingNickname" @click="cancelNicknameEdit">
+                <button
+                  class="pupil-button pupil-button-secondary"
+                  type="button"
+                  :disabled="savingNickname"
+                  @click="cancelNicknameEdit"
+                >
                   Avbryt
                 </button>
-                <button class="secondary-button" type="button" :disabled="savingNickname" @click="saveNickname">
+
+                <button
+                  class="pupil-button pupil-button-secondary"
+                  type="button"
+                  :disabled="savingNickname"
+                  @click="saveNickname"
+                >
                   {{ savingNickname ? 'Lagrer...' : 'Lagre kallenavn' }}
                 </button>
               </div>
@@ -183,7 +217,7 @@ async function saveNickname() {
 
             <button
               v-else-if="isInClassroom"
-              class="secondary-button"
+              class="pupil-button pupil-button-secondary"
               type="button"
               @click="startNicknameEdit"
             >
@@ -191,30 +225,43 @@ async function saveNickname() {
             </button>
           </div>
 
-          <div v-if="isInClassroom" class="setting-card">
-            <span class="setting-label">Klasseromskode</span>
+          <div v-if="isInClassroom" class="setting-card pupil-inner-card">
+            <span class="pupil-label">Klasseromskode</span>
             <p>{{ profile.classroomCode }}</p>
           </div>
 
-          <div class="setting-card">
-            <label class="setting-label" for="volume-slider">Volum</label>
-            <input id="volume-slider" v-model.number="volumeValue" type="range" min="0" max="100" @input="persistVolume" />
+          <div class="setting-card pupil-inner-card">
+            <label class="pupil-label" for="volume-slider">Volum</label>
+            <input
+              id="volume-slider"
+              v-model.number="volumeValue"
+              type="range"
+              min="0"
+              max="100"
+              @input="persistVolume"
+            />
             <p>{{ volumeValue }}%</p>
           </div>
 
-          <p v-if="actionError" class="error action-error">{{ actionError }}</p>
+          <p v-if="actionError" class="action-error pupil-error">{{ actionError }}</p>
 
           <div class="actions">
             <button
               v-if="isInClassroom"
-              class="danger-button"
+              class="pupil-button pupil-button-danger"
               type="button"
               :disabled="leavingClassroom"
               @click="leaveClassroom"
             >
               {{ leavingClassroom ? 'Forlater...' : 'Forlat klasserom' }}
             </button>
-            <button class="danger-button" type="button" :disabled="signingOut" @click="signOut">
+
+            <button
+              class="pupil-button pupil-button-danger"
+              type="button"
+              :disabled="signingOut"
+              @click="signOut"
+            >
               {{ signingOut ? 'Logger ut...' : 'Logg ut' }}
             </button>
           </div>
@@ -225,35 +272,15 @@ async function saveNickname() {
 </template>
 
 <style scoped>
-.page {
-  min-height: calc(100vh - 4rem);
-  display: flex;
-  justify-content: center;
-  padding: 1.5rem;
-}
-
 .profile-card {
   width: min(64rem, 100%);
-  height: fit-content;
   padding: 1.25rem;
-  border-radius: 1.25rem;
-  border: var(--border-wide) solid var(--brown-dark);
-  background: linear-gradient(180deg, var(--beige-light), var(--beige-medium));
-  box-shadow: 0 1rem 2rem rgba(55, 32, 18, 0.15);
 }
 
 .profile-layout {
   display: grid;
   grid-template-columns: minmax(16rem, 22rem) minmax(0, 1fr);
   gap: 1.25rem;
-}
-
-.avatar-panel,
-.settings-panel {
-  border: var(--border-thin) solid var(--brown-dark);
-  border-radius: 1rem;
-  background: rgba(255, 248, 235, 0.82);
-  padding: 1.25rem;
 }
 
 .avatar-panel {
@@ -264,7 +291,6 @@ async function saveNickname() {
   gap: 0.75rem;
 }
 
-.avatar-panel h1,
 .avatar-panel p,
 .setting-card p {
   margin: 0;
@@ -275,12 +301,8 @@ async function saveNickname() {
   aspect-ratio: 1;
   object-fit: cover;
   border-radius: 999px;
-  background-color: white;
+  background-color: var(--beige-light);
   border: var(--border-thin) solid var(--brown-dark);
-}
-
-.meta-text {
-  color: var(--brown-dark);
 }
 
 .settings-panel {
@@ -293,15 +315,6 @@ async function saveNickname() {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding: 1rem;
-  border-radius: 0.9rem;
-  background: var(--beige-light);
-  border: 1px solid rgba(85, 50, 27, 0.22);
-}
-
-.setting-label {
-  font-weight: 700;
-  color: var(--brown-dark);
 }
 
 input[type='range'] {
@@ -314,22 +327,7 @@ input[type='range'] {
   gap: 0.6rem;
 }
 
-.nickname-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-}
-
-.text-input {
-  width: 100%;
-  box-sizing: border-box;
-  border: var(--border-thin) solid var(--brown-dark);
-  border-radius: 0.85rem;
-  padding: 0.8rem 0.9rem;
-  background: white;
-  font: inherit;
-}
-
+.nickname-actions,
 .actions {
   display: flex;
   flex-wrap: wrap;

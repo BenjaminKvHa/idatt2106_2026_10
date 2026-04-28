@@ -29,7 +29,7 @@
                   v-for="starIndex in stop.maxStars"
                   :key="starIndex"
                   :class="['star', starIndex <= stop.stars ? 'filled' : 'empty']"
-                  >★</span
+                >★</span
                 >
               </div>
 
@@ -62,27 +62,35 @@
       </div>
 
       <p v-if="loadingProgress" class="map-status" role="status">Laster progresjon...</p>
-      <p v-else-if="progressError" class="map-status error" role="alert">{{ progressError }}</p>
+      <p v-else-if="progressError" class="map-status pupil-error" role="alert">{{ progressError }}</p>
     </div>
     <p v-if="loadingProgress" class="map-status" role="status">Laster progresjon...</p>
-    <p v-else-if="progressError" class="map-status error" role="alert">{{ progressError }}</p>
+    <p v-else-if="progressError" class="map-status pupil-error" role="alert">{{ progressError }}</p>
 
-    <div v-if="activeLockedStop" class="popup-overlay" @click="closeLockedPopup">
+    <div
+      v-if="activeLockedStop"
+      class="pupil-popup-overlay"
+      @click="closeLockedPopup"
+    >
       <div class="locked-popup" @click.stop>
-        <h2 class="popup-title">{{ activeLockedStop.name }} er låst.</h2>
-        <p class="popup-text">
+        <h2 class="pupil-popup-title">{{ activeLockedStop.name }} er låst.</h2>
+        <p class="pupil-popup-text">
           Få 3 stjerner på {{ activeLockedStop.requiredPreviousStop }} for å låse det opp!
         </p>
-        <div class="popup-actions">
-          <button class="popup-btn popup-btn-back" @click="closeLockedPopup">Tilbake</button>
-          <button class="popup-btn popup-btn-play" @click="goToRequiredStop">Spill</button>
+        <div class="pupil-popup-actions">
+          <button class="pupil-popup-btn popup-btn-back" @click="closeLockedPopup">
+            Tilbake
+          </button>
+          <button class="pupil-popup-btn popup-btn-play" @click="goToRequiredStop">
+            Spill
+          </button>
         </div>
       </div>
     </div>
 
-    <div v-if="showHelpPopup" class="popup-overlay" @click="closeHelpPopup">
-      <div class="hint-popup" @click.stop>
-        <h2 class="popup-title">Trenger du hjelp?</h2>
+    <div v-if="showHelpPopup" class="pupil-popup-overlay" @click="closeHelpPopup">
+      <div class="pupil-hint-popup" @click.stop>
+        <h2 class="pupil-popup-title">Trenger du hjelp?</h2>
         <div class="hint-text">
           <p>
             Inne på denne siden kan du trykke deg inn på de ulike stoppestedene og gjøre ulike
@@ -112,8 +120,8 @@
             <li>Se på stjernene under hvert stoppested for å følge progresjonen din.</li>
           </ul>
         </div>
-        <div class="popup-actions">
-          <button class="popup-btn popup-btn-play" @click="closeHintPopup">Ok</button>
+        <div class="pupil-popup-actions">
+          <button class="pupil-popup-btn popup-btn-play" @click="closeHintPopup">Ok</button>
         </div>
       </div>
     </div>
@@ -123,15 +131,15 @@
 <script setup lang="ts">
 import { computed, onActivated, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import TopBar from '@/components/TopBar.vue'
+import TopBar from '@/components/pupil/TopBar.vue'
 import { get } from '@/utils/apiUtils'
 
-import detektivkontoretImage from '@/assets/stoppesteder/detektivkontoret.png'
-import lockImage from '@/assets/icons/lock.png'
-import nyhetskvartaletImage from '@/assets/stoppesteder/nyhetskvartalet.png'
-import fotografenImage from '@/assets/stoppesteder/fotografen.png'
-import postkontoretImage from '@/assets/stoppesteder/postkontoret.png'
-import datasenteretImage from '@/assets/stoppesteder/datasenteret.png'
+import detektivkontoretImage from '@/assets/icons/stoppesteder/detektivkontoret.png'
+import lockImage from '@/assets/icons/topbar/lock.png'
+import nyhetskvartaletImage from '@/assets/icons/stoppesteder/nyhetskvartalet.png'
+import fotografenImage from '@/assets/icons/stoppesteder/fotografen.png'
+import postkontoretImage from '@/assets/icons/stoppesteder/postkontoret.png'
+import datasenteretImage from '@/assets/icons/stoppesteder/datasenteret.png'
 
 type StopSide = 'top' | 'bottom'
 
@@ -956,60 +964,14 @@ onMounted(() => {
   object-fit: contain;
 }
 
-.popup-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.18);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
 .locked-popup {
   width: min(520px, calc(100vw - 32px));
-  background: var(--orange-medium, #ea9447);
-  border: 4px solid var(--brown-dark, #6f4d33);
+  background: var(--orange-medium);
+  border: var(--border-wide) solid var(--brown-dark);
   border-radius: 28px;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 24px var(--brown-dark-20);
   padding: 28px 24px 20px;
   text-align: center;
-}
-
-.popup-title {
-  margin: 0 0 10px;
-  font-size: 2rem;
-  line-height: 1.15;
-  font-weight: 800;
-  color: var(--color-text, #111);
-}
-
-.popup-text {
-  margin: 0;
-  font-size: 1.8rem;
-  line-height: 1.2;
-  font-weight: 700;
-  color: var(--color-text, #111);
-}
-
-.popup-actions {
-  margin-top: 26px;
-  display: flex;
-  justify-content: center;
-  gap: 22px;
-  flex-wrap: wrap;
-}
-
-.popup-btn {
-  min-width: 130px;
-  padding: 14px 24px;
-  border-radius: 22px;
-  border: 4px solid var(--color-text, #111);
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: var(--color-text, #111);
-  cursor: pointer;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.18);
 }
 
 .popup-btn-back {
@@ -1028,14 +990,6 @@ onMounted(() => {
   .locked-popup {
     padding: 22px 16px 18px;
     border-radius: 22px;
-  }
-
-  .popup-title {
-    font-size: 1.45rem;
-  }
-
-  .popup-text {
-    font-size: 1.3rem;
   }
 
   .popup-btn {

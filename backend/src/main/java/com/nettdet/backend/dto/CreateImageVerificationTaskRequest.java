@@ -7,7 +7,7 @@ import com.nettdet.backend.domain.enums.TaskDifficulty;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(description = "Request to create a new Fotografen (Image Verification) task.")
+@Schema(description = "Metadata for creating a Fotografen (Image Verification) task. The image bytes are sent as a separate `file` multipart part.")
 public record CreateImageVerificationTaskRequest(
     @Schema(description = "Chapter ID to associate the task with.", example = "1")
     Long chapterId,
@@ -17,9 +17,6 @@ public record CreateImageVerificationTaskRequest(
 
     @Schema(description = "Task description shown to the pupil.", example = "Vurder om bildet virker ekte eller manipulert.")
     String taskDescription,
-
-    @Schema(description = "File object ID for the image to verify.", example = "42")
-    Long fileId,
 
     @Schema(description = "Correct category for the image.", example = "AI_GENERATED")
     ImageCategory correctCategory,

@@ -440,10 +440,10 @@ onMounted(async () => {
   flex: 1 1 auto;
   min-height: 0;
   resize: none;
-  border: 2px solid rgba(90, 62, 43, 0.38);
-  border-radius: 0.65rem;
-  padding: 0.7rem;
-  background: rgba(255, 252, 241, 0.68);
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
   color: var(--brown-dark);
   font: inherit;
   font-size: clamp(0.85rem, 1.15vw, 1rem);
@@ -452,7 +452,7 @@ onMounted(async () => {
 }
 
 .notes-input:focus {
-  outline: 3px solid rgba(163, 104, 52, 0.26);
+  outline: none;
 }
 
 .notes-actions {

@@ -209,6 +209,36 @@ SET
     highscore = EXCLUDED.highscore,
     unsuccessful_streak = EXCLUDED.unsuccessful_streak;
 
+UPDATE pupil_chapter_bridge_progression AS progression
+SET notebook_json = jsonb_set(
+    COALESCE(progression.notebook_json, '{"tips":[],"ownNotes":""}'::jsonb),
+    '{tips}',
+    CASE progression.chapter_id
+        WHEN 1 THEN '[
+            "Se nøye på kilden før du bestemmer deg.",
+            "Sammenlign overskrift og innhold. De bør fortelle samme historie.",
+            "Let etter tegn på at saken prøver å lure deg med sterke følelser."
+        ]'::jsonb
+        WHEN 2 THEN '[
+            "Se etter detaljer i bildet som ikke passer med resten.",
+            "Sjekk lys, skygger og kanter rundt viktige objekter.",
+            "Tenk over om bildet kan være tatt ut av sin opprinnelige sammenheng."
+        ]'::jsonb
+        WHEN 3 THEN '[
+            "Les hele oppgaven før du velger svar.",
+            "Bruk det du lærte i de tidligere kapitlene.",
+            "Ta deg tid til å sjekke både tekst og bilde.",
+            "Hvis noe virker for godt eller rart til å være sant, undersøk det ekstra nøye.",
+            "Se etter små detaljer som avslører hva som faktisk skjer."
+        ]'::jsonb
+        ELSE '[]'::jsonb
+    END,
+    true
+)
+FROM chapter
+WHERE chapter.id = progression.chapter_id
+  AND progression.successful_runs >= chapter.successful_runs_needed_for_completion;
+
 DELETE FROM notification
 WHERE classroom_code = 'MAPAAA'
   AND notification_text IN (

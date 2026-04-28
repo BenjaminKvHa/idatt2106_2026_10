@@ -47,8 +47,7 @@ const hasUnsavedOwnNotes = computed(() => {
 const mockChapters: Chapter[] = [
   { chapterId: 1, name: 'Nyhetskvartalet' },
   { chapterId: 2, name: 'Fotografen' },
-  { chapterId: 3, name: 'Postkontoret' },
-  { chapterId: 4, name: 'Passordbanken' },
+  { chapterId: 3, name: 'Datasenteret' },
 ]
 
 async function mockFetchChapters(): Promise<Chapter[]> {

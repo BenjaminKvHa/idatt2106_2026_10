@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,6 +12,7 @@ import com.nettdet.backend.domain.Chapter;
 import com.nettdet.backend.domain.FileObject;
 import com.nettdet.backend.domain.Task;
 import com.nettdet.backend.domain.enums.ClassroomAccess;
+import com.nettdet.backend.domain.enums.CorrectFileSlot;
 import com.nettdet.backend.domain.enums.DatacenterTaskFormat;
 import com.nettdet.backend.domain.enums.TaskDifficulty;
 import com.nettdet.backend.dto.CreateDatacenterImageTaskRequest;
@@ -20,12 +22,13 @@ import com.nettdet.backend.dto.CreateNewsVerificationTaskRequest;
 import com.nettdet.backend.dto.DatacenterTask;
 import com.nettdet.backend.dto.ImageVerificationTask;
 import com.nettdet.backend.dto.NewsVerificationTask;
-import com.nettdet.backend.dto.FileReferenceResponse;
 import com.nettdet.backend.dto.TaskAdminResponse;
+import com.nettdet.backend.dto.UpdateImageVerificationTaskRequest;
+import com.nettdet.backend.dto.UpdateNewsVerificationTaskRequest;
 import com.nettdet.backend.repository.AccountClassroomBridgeTeacherRepository;
 import com.nettdet.backend.repository.ChapterRepository;
-import com.nettdet.backend.repository.FileObjectRepository;
 import com.nettdet.backend.repository.TaskRepository;
+import com.nettdet.backend.security.JwtUserPrincipal;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.security.access.AccessDeniedException;
@@ -41,21 +44,21 @@ public class TaskAdminService {
 
     private final TaskRepository taskRepository;
     private final ChapterRepository chapterRepository;
-    private final FileObjectRepository fileObjectRepository;
     private final FileObjectService fileObjectService;
+    private final FileObjectAccessControlService fileObjectAccessControlService;
     private final AccountClassroomBridgeTeacherRepository teacherBridgeRepository;
     private final ObjectMapper objectMapper;
 
     public TaskAdminService(TaskRepository taskRepository,
                             ChapterRepository chapterRepository,
-                            FileObjectRepository fileObjectRepository,
                             FileObjectService fileObjectService,
+                            FileObjectAccessControlService fileObjectAccessControlService,
                             AccountClassroomBridgeTeacherRepository teacherBridgeRepository,
                             ObjectMapper objectMapper) {
         this.taskRepository = taskRepository;
         this.chapterRepository = chapterRepository;
-        this.fileObjectRepository = fileObjectRepository;
         this.fileObjectService = fileObjectService;
+        this.fileObjectAccessControlService = fileObjectAccessControlService;
         this.teacherBridgeRepository = teacherBridgeRepository;
         this.objectMapper = objectMapper;
     }
@@ -90,56 +93,21 @@ public class TaskAdminService {
     }
 
     // --------------------------------------------------
-    // FILE REFERENCE FROM MINIO
-    // --------------------------------------------------
-
-    /**
-     * Gets or creates a file object reference from MinIO by object key.
-     * This allows referencing files already stored in MinIO without needing
-     * to know their database IDs beforehand.
-     *
-     * @param objectKey the S3/MinIO object key (e.g., "task-assets/fotografen/easy/task1/image.png")
-     * @param contentType the MIME type of the file
-     * @param fileName the original file name
-     * @return response containing the file ID and creation status
-     */
-    @Transactional
-    public FileReferenceResponse getOrCreateFileReference(String objectKey, String contentType, String fileName) {
-        FileObjectService.FileObjectResult result = fileObjectService.getOrCreateFileObject(
-                objectKey,
-                contentType,
-                null, // uploadedBy - system reference
-                null, // classroom - global task asset
-                ClassroomAccess.PUBLIC,
-                fileName);
-
-        FileObject fileObject = result.fileObject();
-        logger.info("File reference for {}: id={}, newlyCreated={}",
-                objectKey, fileObject.getId(), result.newlyCreated());
-
-        return new FileReferenceResponse(fileObject.getId(), objectKey, result.newlyCreated());
-    }
-
-    // --------------------------------------------------
     // TASK CREATION: FOTOGRAFEN
     // --------------------------------------------------
 
-    /**
-     * Creates a new Fotografen (Image Verification) task.
-     *
-     * @param request the task creation request containing chapter_id, difficulty, and task data
-     * @return the created task with its generated ID
-     */
     @Transactional
-    public TaskAdminResponse createImageVerificationTask(CreateImageVerificationTaskRequest request) {
+    public TaskAdminResponse createImageVerificationTask(CreateImageVerificationTaskRequest request,
+                                                         MultipartFile file,
+                                                         JwtUserPrincipal principal) {
         Chapter chapter = chapterRepository.findById(request.chapterId())
                 .orElseThrow(() -> new EntityNotFoundException("Chapter not found: " + request.chapterId()));
 
-        validateFileExists(request.fileId());
+        Long fileId = storeAndIndex(file, principal);
 
         ImageVerificationTask taskData = new ImageVerificationTask(
                 request.taskDescription(),
-                request.fileId(),
+                fileId,
                 request.correctCategory(),
                 request.correctJustification(),
                 request.justifications(),
@@ -154,29 +122,23 @@ public class TaskAdminService {
     // TASK CREATION: NYHETSKVARTALET
     // --------------------------------------------------
 
-    /**
-     * Creates a new Nyhetskvartalet (News Verification) task.
-     *
-     * @param request the task creation request containing chapter_id, difficulty, and task data
-     * @return the created task with its generated ID
-     */
     @Transactional
-    public TaskAdminResponse createNewsVerificationTask(CreateNewsVerificationTaskRequest request) {
+    public TaskAdminResponse createNewsVerificationTask(CreateNewsVerificationTaskRequest request,
+                                                        MultipartFile file1,
+                                                        MultipartFile file2,
+                                                        JwtUserPrincipal principal) {
         Chapter chapter = chapterRepository.findById(request.chapterId())
                 .orElseThrow(() -> new EntityNotFoundException("Chapter not found: " + request.chapterId()));
 
-        validateFileExists(request.fileId_1());
-        validateFileExists(request.fileId_2());
-
-        if (!request.correctFileId().equals(request.fileId_1()) && !request.correctFileId().equals(request.fileId_2())) {
-            throw new IllegalArgumentException("correctFileId must match either fileId_1 or fileId_2");
-        }
+        Long fileId1 = storeAndIndex(file1, principal);
+        Long fileId2 = storeAndIndex(file2, principal);
+        Long correctFileId = resolveCorrectFileId(request.correctFileSlot(), fileId1, fileId2);
 
         NewsVerificationTask taskData = new NewsVerificationTask(
                 request.taskDescription(),
-                request.fileId_1(),
-                request.fileId_2(),
-                request.correctFileId(),
+                fileId1,
+                fileId2,
+                correctFileId,
                 request.correctDescription(),
                 request.incorrectDescription()
         );
@@ -185,23 +147,21 @@ public class TaskAdminService {
     }
 
     // --------------------------------------------------
-    // TASK CREATION: DATASENTERET (final boss)
+    // TASK CREATION: DATASENTERET
     // --------------------------------------------------
 
-    /**
-     * Creates a Datasenteret task using the image-verification format.
-     * Always associated with the Datasenteret chapter at HARD difficulty.
-     */
     @Transactional
-    public TaskAdminResponse createDatacenterImageTask(CreateDatacenterImageTaskRequest request) {
+    public TaskAdminResponse createDatacenterImageTask(CreateDatacenterImageTaskRequest request,
+                                                       MultipartFile file,
+                                                       JwtUserPrincipal principal) {
         Chapter chapter = chapterRepository.findById(DATACENTER_CHAPTER_ID)
                 .orElseThrow(() -> new EntityNotFoundException("Datasenteret chapter not found"));
 
-        validateFileExists(request.fileId());
+        Long fileId = storeAndIndex(file, principal);
 
         ImageVerificationTask inner = new ImageVerificationTask(
                 request.taskDescription(),
-                request.fileId(),
+                fileId,
                 request.correctCategory(),
                 request.correctJustification(),
                 request.justifications(),
@@ -214,28 +174,23 @@ public class TaskAdminService {
         return TaskAdminResponse.from(createTask(chapter, TaskDifficulty.HARD, wrapped));
     }
 
-    /**
-     * Creates a Datasenteret task using the news-verification format.
-     * Always associated with the Datasenteret chapter at HARD difficulty.
-     */
     @Transactional
-    public TaskAdminResponse createDatacenterNewsTask(CreateDatacenterNewsTaskRequest request) {
+    public TaskAdminResponse createDatacenterNewsTask(CreateDatacenterNewsTaskRequest request,
+                                                      MultipartFile file1,
+                                                      MultipartFile file2,
+                                                      JwtUserPrincipal principal) {
         Chapter chapter = chapterRepository.findById(DATACENTER_CHAPTER_ID)
                 .orElseThrow(() -> new EntityNotFoundException("Datasenteret chapter not found"));
 
-        validateFileExists(request.fileId_1());
-        validateFileExists(request.fileId_2());
-
-        if (!request.correctFileId().equals(request.fileId_1())
-                && !request.correctFileId().equals(request.fileId_2())) {
-            throw new IllegalArgumentException("correctFileId must match either fileId_1 or fileId_2");
-        }
+        Long fileId1 = storeAndIndex(file1, principal);
+        Long fileId2 = storeAndIndex(file2, principal);
+        Long correctFileId = resolveCorrectFileId(request.correctFileSlot(), fileId1, fileId2);
 
         NewsVerificationTask inner = new NewsVerificationTask(
                 request.taskDescription(),
-                request.fileId_1(),
-                request.fileId_2(),
-                request.correctFileId(),
+                fileId1,
+                fileId2,
+                correctFileId,
                 request.correctDescription(),
                 request.incorrectDescription()
         );
@@ -246,38 +201,145 @@ public class TaskAdminService {
     }
 
     // --------------------------------------------------
+    // TASK UPDATE: FOTOGRAFEN / DATASENTERET (image format)
+    // --------------------------------------------------
+
+    @Transactional
+    public TaskAdminResponse updateImageVerificationTask(Long taskId,
+                                                         UpdateImageVerificationTaskRequest request,
+                                                         MultipartFile file,
+                                                         JwtUserPrincipal principal) {
+        Task task = loadTaskForChapter(taskId, FOTOGRAFEN_CHAPTER_ID);
+        authorizeTaskMutation(task, principal);
+
+        ImageVerificationTask current = deserialize(task.getTaskJson(), ImageVerificationTask.class);
+        Long fileId = replaceFileIfPresent(file, current.fileId(), principal);
+
+        ImageVerificationTask updated = new ImageVerificationTask(
+                request.taskDescription(),
+                fileId,
+                request.correctCategory(),
+                request.correctJustification(),
+                request.justifications(),
+                request.correctDescription(),
+                request.falseDescription()
+        );
+
+        task.setDifficulty(request.difficulty());
+        task.setTaskJson(serialize(updated));
+        return TaskAdminResponse.from(taskRepository.save(task));
+    }
+
+    @Transactional
+    public TaskAdminResponse updateDatacenterImageTask(Long taskId,
+                                                       UpdateImageVerificationTaskRequest request,
+                                                       MultipartFile file,
+                                                       JwtUserPrincipal principal) {
+        Task task = loadTaskForChapter(taskId, DATACENTER_CHAPTER_ID);
+        authorizeTaskMutation(task, principal);
+
+        DatacenterTask currentWrapper = deserialize(task.getTaskJson(), DatacenterTask.class);
+        if (currentWrapper.format() != DatacenterTaskFormat.IMAGE_VERIFICATION || currentWrapper.imageTask() == null) {
+            throw new IllegalArgumentException("Task " + taskId + " is not an image-format Datasenteret task");
+        }
+
+        Long fileId = replaceFileIfPresent(file, currentWrapper.imageTask().fileId(), principal);
+
+        ImageVerificationTask updated = new ImageVerificationTask(
+                request.taskDescription(),
+                fileId,
+                request.correctCategory(),
+                request.correctJustification(),
+                request.justifications(),
+                request.correctDescription(),
+                request.falseDescription()
+        );
+        DatacenterTask wrapped = new DatacenterTask(DatacenterTaskFormat.IMAGE_VERIFICATION, updated, null);
+
+        task.setTaskJson(serialize(wrapped));
+        return TaskAdminResponse.from(taskRepository.save(task));
+    }
+
+    // --------------------------------------------------
+    // TASK UPDATE: NYHETSKVARTALET / DATASENTERET (news format)
+    // --------------------------------------------------
+
+    @Transactional
+    public TaskAdminResponse updateNewsVerificationTask(Long taskId,
+                                                        UpdateNewsVerificationTaskRequest request,
+                                                        MultipartFile file1,
+                                                        MultipartFile file2,
+                                                        JwtUserPrincipal principal) {
+        Task task = loadTaskForChapter(taskId, NYHETSKVARTALET_CHAPTER_ID);
+        authorizeTaskMutation(task, principal);
+
+        NewsVerificationTask current = deserialize(task.getTaskJson(), NewsVerificationTask.class);
+        Long fileId1 = replaceFileIfPresent(file1, current.fileId_1(), principal);
+        Long fileId2 = replaceFileIfPresent(file2, current.fileId_2(), principal);
+        Long correctFileId = resolveCorrectFileId(request.correctFileSlot(), fileId1, fileId2);
+
+        NewsVerificationTask updated = new NewsVerificationTask(
+                request.taskDescription(),
+                fileId1,
+                fileId2,
+                correctFileId,
+                request.correctDescription(),
+                request.incorrectDescription()
+        );
+
+        task.setDifficulty(request.difficulty());
+        task.setTaskJson(serialize(updated));
+        return TaskAdminResponse.from(taskRepository.save(task));
+    }
+
+    @Transactional
+    public TaskAdminResponse updateDatacenterNewsTask(Long taskId,
+                                                      UpdateNewsVerificationTaskRequest request,
+                                                      MultipartFile file1,
+                                                      MultipartFile file2,
+                                                      JwtUserPrincipal principal) {
+        Task task = loadTaskForChapter(taskId, DATACENTER_CHAPTER_ID);
+        authorizeTaskMutation(task, principal);
+
+        DatacenterTask currentWrapper = deserialize(task.getTaskJson(), DatacenterTask.class);
+        if (currentWrapper.format() != DatacenterTaskFormat.NEWS_VERIFICATION || currentWrapper.newsTask() == null) {
+            throw new IllegalArgumentException("Task " + taskId + " is not a news-format Datasenteret task");
+        }
+
+        NewsVerificationTask current = currentWrapper.newsTask();
+        Long fileId1 = replaceFileIfPresent(file1, current.fileId_1(), principal);
+        Long fileId2 = replaceFileIfPresent(file2, current.fileId_2(), principal);
+        Long correctFileId = resolveCorrectFileId(request.correctFileSlot(), fileId1, fileId2);
+
+        NewsVerificationTask updated = new NewsVerificationTask(
+                request.taskDescription(),
+                fileId1,
+                fileId2,
+                correctFileId,
+                request.correctDescription(),
+                request.incorrectDescription()
+        );
+        DatacenterTask wrapped = new DatacenterTask(DatacenterTaskFormat.NEWS_VERIFICATION, null, updated);
+
+        task.setTaskJson(serialize(wrapped));
+        return TaskAdminResponse.from(taskRepository.save(task));
+    }
+
+    // --------------------------------------------------
     // TASK CREATION: GENERIC
     // --------------------------------------------------
 
-    /**
-     * Creates a task with the given chapter, difficulty, and task data.
-     * The task data object will be serialized to JSON and stored in task_json column.
-     *
-     * @param chapter the chapter to associate the task with
-     * @param difficulty the difficulty level
-     * @param taskData the task data object (ImageVerificationTask, NewsVerificationTask, etc.)
-     * @return the created task
-     */
     @Transactional
     public Task createTask(Chapter chapter, TaskDifficulty difficulty, Object taskData) {
-        String taskJson;
-        try {
-            taskJson = objectMapper.writeValueAsString(taskData);
-        } catch (JsonProcessingException e) {
-            logger.error("Failed to serialize task data for chapter {}: {}", chapter.getId(), e.getMessage());
-            throw new IllegalArgumentException("Failed to serialize task data", e);
-        }
-
         Task task = new Task();
         task.setChapter(chapter);
         task.setDifficulty(difficulty);
-        task.setClassroom(null); // Global task (not classroom-specific)
-        task.setTaskJson(taskJson);
+        task.setClassroom(null);
+        task.setTaskJson(serialize(taskData));
 
         Task saved = taskRepository.save(task);
         logger.info("Created task id={} for chapter id={} with difficulty={}",
                 saved.getId(), chapter.getId(), difficulty);
-
         return saved;
     }
 
@@ -285,9 +347,69 @@ public class TaskAdminService {
     // HELPERS
     // --------------------------------------------------
 
-    private void validateFileExists(Long fileId) {
-        if (!fileObjectRepository.existsById(fileId)) {
-            throw new EntityNotFoundException("File object not found: " + fileId);
+    private Long storeAndIndex(MultipartFile file, JwtUserPrincipal principal) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("File must not be empty");
+        }
+        FileObject stored = fileObjectAccessControlService.upload(file, null, ClassroomAccess.PUBLIC, principal);
+        return stored.getId();
+    }
+
+    private Long replaceFileIfPresent(MultipartFile file, Long currentFileId, JwtUserPrincipal principal) {
+        if (file == null || file.isEmpty()) {
+            return currentFileId;
+        }
+        Long newId = storeAndIndex(file, principal);
+        if (currentFileId != null) {
+            try {
+                fileObjectService.delete(currentFileId);
+            } catch (RuntimeException e) {
+                logger.warn("Failed to delete previous file id={}: {}", currentFileId, e.getMessage());
+            }
+        }
+        return newId;
+    }
+
+    private Long resolveCorrectFileId(CorrectFileSlot slot, Long fileId1, Long fileId2) {
+        if (slot == null) {
+            throw new IllegalArgumentException("correctFileSlot is required");
+        }
+        return slot == CorrectFileSlot.FILE_1 ? fileId1 : fileId2;
+    }
+
+    private Task loadTaskForChapter(Long taskId, Long expectedChapterId) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new EntityNotFoundException("Task not found: " + taskId));
+        if (task.getChapter() == null || !expectedChapterId.equals(task.getChapter().getId())) {
+            throw new IllegalArgumentException(
+                    "Task " + taskId + " does not belong to chapter " + expectedChapterId);
+        }
+        return task;
+    }
+
+    private void authorizeTaskMutation(Task task, JwtUserPrincipal principal) {
+        if (task.getClassroom() == null) {
+            return;
+        }
+        String code = task.getClassroom().getClassroomCode();
+        if (!teacherBridgeRepository.existsByIdAccountEmailAndIdClassroomCode(principal.email(), code)) {
+            throw new AccessDeniedException("Teacher does not belong to classroom: " + code);
+        }
+    }
+
+    private String serialize(Object value) {
+        try {
+            return objectMapper.writeValueAsString(value);
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException("Failed to serialize task data", e);
+        }
+    }
+
+    private <T> T deserialize(String json, Class<T> type) {
+        try {
+            return objectMapper.readValue(json, type);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Failed to deserialize stored task_json", e);
         }
     }
 }

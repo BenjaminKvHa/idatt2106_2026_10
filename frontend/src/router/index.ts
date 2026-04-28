@@ -28,7 +28,6 @@ import SignInView from '@/views/shared/SignInView.vue'
 import SignUpView from '@/views/shared/SignUpView.vue'
 import NewsView from '@/views/pupil/map_locations/NewsView.vue'
 import DatacenterView from '@/views/pupil/map_locations/DatacenterView.vue'
-import PostofficeView from '@/views/pupil/map_locations/PostofficeView.vue'
 import PhotographerView from '@/views/pupil/map_locations/PhotographerView.vue'
 import PupilsWaitingPageView from '@/views/pupil/PupilsWaitingPageView.vue'
 import PupilsWelcomeGuideView from '@/views/pupil/PupilsWelcomeGuideView.vue'
@@ -223,10 +222,6 @@ const router = createRouter({
             {
               path: 'map/datacenter',
               component: DatacenterView,
-            },
-            {
-              path: 'map/postoffice',
-              component: PostofficeView,
             },
             {
               path: 'map/photographer',

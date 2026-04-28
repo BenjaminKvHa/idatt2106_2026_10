@@ -6,13 +6,10 @@ import com.nettdet.backend.domain.enums.ImageCategory;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(description = "Request to create a new Datasenteret task using the image-verification format.")
+@Schema(description = "Metadata for creating a Datasenteret task in image-verification format. The image bytes are sent as a separate `file` multipart part.")
 public record CreateDatacenterImageTaskRequest(
     @Schema(description = "Task description shown to the pupil.", example = "Er dette bildet ekte, KI-generert eller manipulert?")
     String taskDescription,
-
-    @Schema(description = "File object ID for the image to verify.", example = "42")
-    Long fileId,
 
     @Schema(description = "Correct category for the image.", example = "AI_GENERATED")
     ImageCategory correctCategory,

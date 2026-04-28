@@ -5,13 +5,17 @@ import Logo from '@/components/misc/Logo.vue'
 import OptionsMenu from '@/components/ui/OptionsMenu.vue'
 import NotificationsMenu from '@/components/ui/NotificationsMenu.vue'
 import { BellIcon, Settings } from '@lucide/vue'
+import volume2Icon from '@/assets/icons/volume-2.svg'
+import volumeXIcon from '@/assets/icons/volume-x.svg'
 import { useClassrooms } from '@/composables/useClassrooms.ts'
+import { useAudio } from '@/composables/useAudio'
 
 const settingsOpen = ref(false)
 const notificationsOpen = ref(false)
 const route = useRoute()
 const router = useRouter()
 const { classrooms, fetchClassrooms } = useClassrooms()
+const { isMuted, toggleMute } = useAudio()
 
 onMounted(() => {
   fetchClassrooms()
@@ -84,6 +88,15 @@ const activeClassroomCode = computed(() => {
             >
                 <BellIcon class="teacher-menu-icon" />
             </button>
+            <button
+                type="button"
+                class="icon-btn-circle"
+                :aria-label="isMuted ? 'Skru på lyd' : 'Demp lyd'"
+                @click="toggleMute"
+            >
+                <img :src="isMuted ? volumeXIcon : volume2Icon" alt="" class="teacher-menu-icon" aria-hidden="true" />
+            </button>
+            <button type="button" class="icon-btn-circle" aria-label="Varsler"></button>
             <button
                 type="button"
                 class="icon-btn-circle"

@@ -16,16 +16,20 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.nettdet.backend.domain.Chapter;
 import com.nettdet.backend.domain.enums.ClassroomAccess;
+import com.nettdet.backend.domain.enums.DatacenterTaskFormat;
 import com.nettdet.backend.domain.enums.ImageCategory;
 import com.nettdet.backend.domain.enums.TaskDifficulty;
-import com.nettdet.backend.dto.CreateDatacenterImageTaskRequest;
-import com.nettdet.backend.dto.CreateDatacenterNewsTaskRequest;
-import com.nettdet.backend.dto.CreateImageVerificationTaskRequest;
-import com.nettdet.backend.dto.CreateNewsVerificationTaskRequest;
+import com.nettdet.backend.dto.DatacenterTask;
+import com.nettdet.backend.dto.ImageVerificationTask;
+import com.nettdet.backend.dto.NewsVerificationTask;
+import com.nettdet.backend.repository.ChapterRepository;
 import com.nettdet.backend.repository.FileObjectRepository;
 import com.nettdet.backend.service.FileObjectService;
 import com.nettdet.backend.service.TaskAdminService;
+
+import jakarta.persistence.EntityNotFoundException;
 
 @Component
 @Order(4)
@@ -40,17 +44,26 @@ public class TaskSeeder implements ApplicationRunner {
 
     private static final Long CHAPTER_ID_NYHETSKVARTALET = 1L;
     private static final Long CHAPTER_ID_FOTOGRAFEN = 2L;
+    private static final Long CHAPTER_ID_DATASENTERET = 3L;
 
     private final FileObjectService fileObjectService;
     private final FileObjectRepository fileObjectRepository;
+    private final ChapterRepository chapterRepository;
     private final TaskAdminService taskAdminService;
 
     public TaskSeeder(FileObjectService fileObjectService,
                       FileObjectRepository fileObjectRepository,
+                      ChapterRepository chapterRepository,
                       TaskAdminService taskAdminService) {
         this.fileObjectService = fileObjectService;
         this.fileObjectRepository = fileObjectRepository;
+        this.chapterRepository = chapterRepository;
         this.taskAdminService = taskAdminService;
+    }
+
+    private Chapter loadChapter(Long id) {
+        return chapterRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Chapter not found: " + id));
     }
 
     @Override
@@ -114,9 +127,7 @@ public class TaskSeeder implements ApplicationRunner {
             Long falskFileId = getOrUploadFile(falskObjectKey, falskFile);
 
             String ekteName = ekteFile.getFileName().toString();
-            CreateNewsVerificationTaskRequest request = new CreateNewsVerificationTaskRequest(
-                    CHAPTER_ID_NYHETSKVARTALET,
-                    difficulty,
+            NewsVerificationTask taskData = new NewsVerificationTask(
                     "To avisforsider ligger foran deg. Én er ekte og én er falsk. Hvilken er falsk?",
                     ekteFileId,
                     falskFileId,
@@ -125,7 +136,7 @@ public class TaskSeeder implements ApplicationRunner {
                     getNewsFalseDescription(ekteName)
             );
 
-            taskAdminService.createNewsVerificationTask(request);
+            taskAdminService.createTask(loadChapter(CHAPTER_ID_NYHETSKVARTALET), difficulty, taskData);
             logger.info("Created Nyhetskvartalet task for {} {} {}", difficulty, taskName, ekteFileId);
 
         } catch (IOException e) {
@@ -175,9 +186,7 @@ public class TaskSeeder implements ApplicationRunner {
                 List<String> justifications = getJustifications(fileName);
                 String correctJustification = getCorrectJustification(fileName, correctCategory);
 
-                CreateImageVerificationTaskRequest request = new CreateImageVerificationTaskRequest(
-                        CHAPTER_ID_FOTOGRAFEN,
-                        difficulty,
+                ImageVerificationTask taskData = new ImageVerificationTask(
                         "Er dette bildet ekte, KI-generert eller manipulert?",
                         fileId,
                         correctCategory,
@@ -187,7 +196,7 @@ public class TaskSeeder implements ApplicationRunner {
                         getImageFalseDescription(fileName, correctCategory)
                 );
 
-                taskAdminService.createImageVerificationTask(request);
+                taskAdminService.createTask(loadChapter(CHAPTER_ID_FOTOGRAFEN), difficulty, taskData);
                 logger.info("Created Fotografen task for {} {} {} (category={})", difficulty, taskName, fileId, correctCategory);
             }
 
@@ -240,7 +249,7 @@ public class TaskSeeder implements ApplicationRunner {
             Long falskFileId = getOrUploadFile(falskObjectKey, falskFile);
 
             String ekteName = ekteFile.getFileName().toString();
-            CreateDatacenterNewsTaskRequest request = new CreateDatacenterNewsTaskRequest(
+            NewsVerificationTask inner = new NewsVerificationTask(
                     "To avisforsider ligger foran deg. Én er ekte og én er falsk. Hvilken er falsk?",
                     ekteFileId,
                     falskFileId,
@@ -248,8 +257,9 @@ public class TaskSeeder implements ApplicationRunner {
                     getNewsCorrectDescription(ekteName),
                     getNewsFalseDescription(ekteName)
             );
+            DatacenterTask wrapped = new DatacenterTask(DatacenterTaskFormat.NEWS_VERIFICATION, null, inner);
 
-            taskAdminService.createDatacenterNewsTask(request);
+            taskAdminService.createTask(loadChapter(CHAPTER_ID_DATASENTERET), TaskDifficulty.HARD, wrapped);
             logger.info("Created Datasenteret news task for {} (ekte={}, falsk={})", taskName, ekteFileId, falskFileId);
 
         } catch (IOException e) {
@@ -278,7 +288,7 @@ public class TaskSeeder implements ApplicationRunner {
                 List<String> justifications = getJustifications(fileName);
                 String correctJustification = getCorrectJustification(fileName, correctCategory);
 
-                CreateDatacenterImageTaskRequest request = new CreateDatacenterImageTaskRequest(
+                ImageVerificationTask inner = new ImageVerificationTask(
                         "Er dette bildet ekte, KI-generert eller manipulert?",
                         fileId,
                         correctCategory,
@@ -287,8 +297,9 @@ public class TaskSeeder implements ApplicationRunner {
                         getImageCorrectDescription(fileName, correctCategory),
                         getImageFalseDescription(fileName, correctCategory)
                 );
+                DatacenterTask wrapped = new DatacenterTask(DatacenterTaskFormat.IMAGE_VERIFICATION, inner, null);
 
-                taskAdminService.createDatacenterImageTask(request);
+                taskAdminService.createTask(loadChapter(CHAPTER_ID_DATASENTERET), TaskDifficulty.HARD, wrapped);
                 logger.info("Created Datasenteret image task for {} {} (category={})", taskName, fileId, correctCategory);
             }
 

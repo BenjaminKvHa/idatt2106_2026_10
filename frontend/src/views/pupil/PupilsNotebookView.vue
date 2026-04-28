@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { ChevronLeftIcon, ChevronRightIcon } from '@lucide/vue'
+import bookImage from '@/assets/book.png'
+import woodBackground from '@/assets/backgrounds/woodBackground.png'
 import TopBar from '@/components/pupil/TopBar.vue'
 import { get, put } from '@/utils/apiUtils'
 
@@ -32,7 +35,9 @@ const saveStatus = ref<string | null>(null)
 const currentChapter = computed(() => chapters.value[currentChapterIndex.value] ?? null)
 const hasPreviousChapter = computed(() => currentChapterIndex.value > 0)
 const hasNextChapter = computed(() => currentChapterIndex.value < chapters.value.length - 1)
-const currentPageNumber = computed(() => (chapters.value.length === 0 ? 0 : currentChapterIndex.value + 1))
+const currentPageNumber = computed(() =>
+  chapters.value.length === 0 ? 0 : currentChapterIndex.value + 1,
+)
 const totalPages = computed(() => chapters.value.length)
 const hasUnsavedOwnNotes = computed(() => {
   if (!notebook.value) return false
@@ -79,7 +84,9 @@ async function loadNotebookForCurrentChapter() {
   saveStatus.value = null
 
   try {
-    const chapterNotebook = await get<NotebookResponse>(getNotebookEndpoint(currentChapter.value.chapterId))
+    const chapterNotebook = await get<NotebookResponse>(
+      getNotebookEndpoint(currentChapter.value.chapterId),
+    )
     notebook.value = chapterNotebook
     ownNotesDraft.value = chapterNotebook.ownNotes
   } catch (fetchError) {
@@ -94,7 +101,9 @@ function shouldStayOnCurrentChapter(): boolean {
     return false
   }
 
-  return !window.confirm('You have unsaved notes. If you continue, your unsaved changes will be lost.')
+  return !window.confirm(
+    'You have unsaved notes. If you continue, your unsaved changes will be lost.',
+  )
 }
 
 async function saveOwnNotes() {
@@ -109,7 +118,10 @@ async function saveOwnNotes() {
       ownNotes: ownNotesDraft.value,
     }
 
-    const updatedNotebook = await put<NotebookResponse>(getNotebookEndpoint(currentChapter.value.chapterId), payload)
+    const updatedNotebook = await put<NotebookResponse>(
+      getNotebookEndpoint(currentChapter.value.chapterId),
+      payload,
+    )
     notebook.value = updatedNotebook
     ownNotesDraft.value = updatedNotebook.ownNotes
     saveStatus.value = 'Notes saved'
@@ -142,146 +154,365 @@ onMounted(async () => {
 </script>
 
 <template>
-  <TopBar />
+  <div class="pupil-scene-screen">
+    <TopBar title="Notatbok" />
 
-  <main class="page pupil-page-center notebook-page">
-    <section class="notebook-card pupil-card">
-      <header class="chapter-header">
-        <button
-          v-if="hasPreviousChapter"
-          type="button"
-          class="pupil-button pupil-button-secondary nav-button"
-          @click="goToPreviousChapter"
-        >
-          Backward
-        </button>
-        <span v-else class="nav-placeholder" aria-hidden="true"></span>
+    <main
+      class="notebook-page pupil-scene-page"
+      :style="{ backgroundImage: `url(${woodBackground})` }"
+    >
+      <section class="book-stage" aria-labelledby="chapter-title">
+        <img class="book-image" :src="bookImage" alt="" aria-hidden="true" />
 
-        <h1>{{ currentChapter?.name ?? 'Notebook' }}</h1>
+        <div class="book-content">
+          <p v-if="loadingChapters || loadingNotebook" class="state-message pupil-state-message">
+            Loading...
+          </p>
+          <p v-else-if="loadError" class="state-message pupil-state-message pupil-error">
+            {{ loadError }}
+          </p>
 
-        <button
-          v-if="hasNextChapter"
-          type="button"
-          class="pupil-button pupil-button-secondary nav-button"
-          @click="goToNextChapter"
-        >
-          Forward
-        </button>
-        <span v-else class="nav-placeholder" aria-hidden="true"></span>
-      </header>
-
-      <p class="page-number">Page {{ currentPageNumber }} / {{ totalPages }}</p>
-
-      <p v-if="loadingChapters || loadingNotebook" class="pupil-state-message">Loading...</p>
-      <p v-else-if="loadError" class="pupil-state-message pupil-error">{{ loadError }}</p>
-
-      <div v-else-if="notebook" class="content-grid">
-        <section class="panel pupil-panel">
-          <h2>System Tips</h2>
-          <ul>
-            <li v-for="tip in notebook.tips" :key="tip">{{ tip }}</li>
-          </ul>
-        </section>
-
-        <section class="panel pupil-panel">
-          <h2>My Notes</h2>
-          <textarea
-            v-model="ownNotesDraft"
-            class="pupil-textarea"
-            rows="8"
-            placeholder="Write your notes here"
-          ></textarea>
-
-          <div class="notes-actions">
-            <button
-              type="button"
-              class="pupil-button pupil-button-secondary"
-              :disabled="savingNotebook || !hasUnsavedOwnNotes"
-              @click="saveOwnNotes"
+          <template v-else-if="notebook">
+            <section
+              class="book-page book-page-left"
+              :class="{ 'book-page--has-previous': hasPreviousChapter }"
             >
-              {{ savingNotebook ? 'Saving...' : 'Save notes' }}
-            </button>
-            <span v-if="saveStatus" class="save-status">{{ saveStatus }}</span>
-            <span v-if="saveError" class="save-error">{{ saveError }}</span>
-          </div>
-        </section>
-      </div>
-    </section>
-  </main>
+              <button
+                v-if="hasPreviousChapter"
+                type="button"
+                class="nav-button nav-button-back pupil-round-icon-button"
+                aria-label="Forrige kapittel"
+                @click="goToPreviousChapter"
+              >
+                <ChevronLeftIcon aria-hidden="true" />
+                <span class="sr-only">Backward</span>
+              </button>
+              <span v-else class="nav-placeholder" aria-hidden="true"></span>
+
+              <header class="chapter-header">
+                <h1 id="chapter-title">{{ currentChapter?.name ?? 'Notatbok' }}</h1>
+                <p class="page-number">Page {{ currentPageNumber }} / {{ totalPages }}</p>
+              </header>
+
+              <div class="page-section pupil-thin-scroll">
+                <h2>Tips</h2>
+                <ul class="tips-list">
+                  <li v-for="tip in notebook.tips" :key="tip">{{ tip }}</li>
+                </ul>
+                <p v-if="notebook.tips.length === 0" class="empty-text">Ingen tips enda.</p>
+              </div>
+            </section>
+
+            <section
+              class="book-page book-page-right"
+              :class="{ 'book-page--has-next': hasNextChapter }"
+            >
+              <button
+                v-if="hasNextChapter"
+                type="button"
+                class="nav-button nav-button-forward pupil-round-icon-button"
+                aria-label="Neste kapittel"
+                @click="goToNextChapter"
+              >
+                <span class="sr-only">Forward</span>
+                <ChevronRightIcon aria-hidden="true" />
+              </button>
+              <span v-else class="nav-placeholder" aria-hidden="true"></span>
+
+              <div class="page-section notes-section pupil-thin-scroll">
+                <h2>Egne notater</h2>
+                <textarea
+                  v-model="ownNotesDraft"
+                  class="notes-input"
+                  rows="8"
+                  placeholder="Skriv dine egne notater her"
+                ></textarea>
+
+                <div class="notes-actions">
+                  <button
+                    type="button"
+                    class="save-button"
+                    :disabled="savingNotebook || !hasUnsavedOwnNotes"
+                    @click="saveOwnNotes"
+                  >
+                    {{ savingNotebook ? 'Lagrer...' : 'Lagre' }}
+                  </button>
+                  <span v-if="saveStatus" class="save-status">{{ saveStatus }}</span>
+                  <span v-if="saveError" class="save-error">{{ saveError }}</span>
+                </div>
+              </div>
+            </section>
+          </template>
+        </div>
+      </section>
+    </main>
+  </div>
 </template>
 
 <style scoped>
 .notebook-page {
-  margin-top: 2rem;
+  padding: clamp(0.35rem, 1vw, 0.85rem);
 }
 
-.notebook-card {
-  width: min(56rem, 100%);
-  padding: 1rem;
+.book-stage {
+  position: relative;
+  width: min(99vw, calc((100dvh - 5.4rem) * 1.5), 1700px);
+  aspect-ratio: 3 / 2;
+}
+
+.book-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.book-content {
+  position: absolute;
+  inset: 21.5% 16% 22% 16%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 5%;
+  min-height: 0;
+}
+
+.book-page {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: clamp(2.2rem, 3.2vw, 3rem) clamp(1.2rem, 2.2vw, 2.1rem) clamp(1.1rem, 2vw, 1.9rem);
+}
+
+.book-page-right {
+  padding-top: clamp(1.25rem, 2vw, 1.8rem);
+  padding-bottom: clamp(2.25rem, 3.6vw, 3.25rem);
 }
 
 .chapter-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+  padding-right: clamp(1.5rem, 3vw, 3rem);
 }
 
 .chapter-header h1 {
   margin: 0;
-  text-align: center;
+  color: var(--brown-dark);
+  font-size: clamp(1.55rem, 3.2vw, 3.25rem);
+  line-height: 1;
+}
+
+.page-section {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: clamp(0.65rem, 1.4vw, 1.25rem);
+  overflow-y: auto;
+  padding-right: 0.35rem;
+}
+
+.page-section h2 {
+  margin: 0 0 0.6rem;
+  color: var(--brown-dark);
+  font-size: clamp(1.1rem, 1.8vw, 1.65rem);
+}
+
+.tips-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--brown-dark);
+  font-size: clamp(0.85rem, 1.2vw, 1rem);
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.tips-list li + li {
+  margin-top: 0.55rem;
+}
+
+.empty-text {
+  margin: 0;
+  color: var(--brown-dark-80);
+  font-weight: 600;
+}
+
+.nav-button {
+  position: absolute;
+  top: clamp(0.15rem, 0.55vw, 0.55rem);
+}
+
+.nav-button-back {
+  left: clamp(1.6rem, 2.8vw, 2.7rem);
+}
+
+.nav-button-forward {
+  right: clamp(1.6rem, 2.8vw, 2.7rem);
 }
 
 .nav-placeholder {
-  width: 5.75rem;
-  height: 2.1rem;
+  position: absolute;
+  top: clamp(0.15rem, 0.55vw, 0.55rem);
+  width: clamp(2.15rem, 3.7vw, 3rem);
+  height: clamp(2.15rem, 3.7vw, 3rem);
 }
 
 .page-number {
-  margin: 0.5rem 0 0;
-  text-align: center;
+  margin: 0.35rem 0 0;
+  color: var(--brown-dark-80);
+  font-weight: 800;
+  line-height: 1.1;
 }
 
-.content-grid {
-  margin-top: 1rem;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+.state-message {
+  grid-column: 1 / -1;
+  align-self: center;
+  justify-self: center;
+  width: min(28rem, 100%);
+  margin: 0;
+  border: var(--border-thin) solid var(--brown-dark);
+  border-radius: 1rem;
+  background: rgba(255, 248, 235, 0.92);
+  color: var(--brown-dark);
+  font-weight: 800;
+  padding: 1rem;
 }
 
-.panel h2 {
+.notes-section {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   margin-top: 0;
 }
 
-.panel ul {
-  margin: 0;
-  padding-left: 1rem;
+.notes-input {
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  resize: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--brown-dark);
+  font: inherit;
+  font-size: clamp(0.85rem, 1.15vw, 1rem);
+  line-height: 1.4;
+  box-sizing: border-box;
+}
+
+.notes-input:focus {
+  outline: none;
 }
 
 .notes-actions {
-  margin-top: 0.6rem;
+  flex: 0 0 auto;
+  margin-top: 0.55rem;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 0.6rem;
 }
 
-.save-status,
+.save-button {
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  border: var(--border-thin) solid var(--brown-dark);
+  background: rgba(255, 248, 235, 0.9);
+  color: var(--brown-dark);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.save-button:hover:not(:disabled) {
+  background: var(--brown-dark);
+  color: var(--beige-light);
+}
+
+.save-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.save-status {
+  font-size: 0.95rem;
+  color: var(--brown-dark);
+  font-weight: 700;
+}
+
 .save-error {
   font-size: 0.95rem;
+  color: #9f1d1d;
+  font-weight: 700;
 }
 
-.save-error {
-  color: var(--red-danger);
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
-@media (max-width: 768px) {
-  .content-grid {
-    grid-template-columns: 1fr;
+@media (max-width: 900px) {
+  .book-stage {
+    width: min(99vw, calc((100dvh - 5.2rem) * 1.5));
   }
 
-  .chapter-header {
-    flex-wrap: wrap;
-    justify-content: center;
+  .book-content {
+    inset: 22% 15.5% 23% 15.5%;
+    column-gap: 4.5%;
+  }
+
+  .book-page {
+    padding-top: clamp(1.7rem, 3vw, 2.2rem);
+    padding-inline: clamp(0.7rem, 1.6vw, 1.2rem);
+  }
+}
+
+@media (max-width: 640px) {
+  .notebook-page {
+    padding: 0.5rem;
+  }
+
+  .book-stage {
+    width: min(64rem, 195vw);
+    flex: 0 0 auto;
+  }
+
+  .book-content {
+    inset: 23% 15.5% 23% 15.5%;
+  }
+
+  .chapter-header h1 {
+    font-size: clamp(1.05rem, 5vw, 1.55rem);
+  }
+
+  .page-section h2 {
+    font-size: clamp(0.9rem, 4vw, 1.15rem);
+  }
+
+  .tips-list,
+  .notes-input {
+    font-size: clamp(0.68rem, 3.2vw, 0.82rem);
+  }
+
+  .notes-actions {
+    gap: 0.35rem;
+  }
+
+  .save-button {
+    padding: 0.3rem 0.6rem;
+  }
+
+  .save-status,
+  .save-error {
+    font-size: 0.75rem;
   }
 }
 </style>

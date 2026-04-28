@@ -113,6 +113,7 @@ public class TaskSeeder implements ApplicationRunner {
             Long ekteFileId = getOrUploadFile(ekteObjectKey, ekteFile);
             Long falskFileId = getOrUploadFile(falskObjectKey, falskFile);
 
+            String ekteName = ekteFile.getFileName().toString();
             CreateNewsVerificationTaskRequest request = new CreateNewsVerificationTaskRequest(
                     CHAPTER_ID_NYHETSKVARTALET,
                     difficulty,
@@ -120,8 +121,8 @@ public class TaskSeeder implements ApplicationRunner {
                     ekteFileId,
                     falskFileId,
                     falskFileId, // correct = the fake one
-                    "Riktig! Avisforsiden du valgte var den falske.",
-                    "Ikke helt. Den andre forsiden var faktisk den falske."
+                    getNewsCorrectDescription(ekteName),
+                    getNewsFalseDescription(ekteName)
             );
 
             taskAdminService.createNewsVerificationTask(request);
@@ -182,8 +183,8 @@ public class TaskSeeder implements ApplicationRunner {
                         correctCategory,
                         correctJustification,
                         justifications,
-                        "Riktig! " + getCorrectDescription(correctCategory),
-                        "Ikke helt. " + getFalseDescription(correctCategory)
+                        getImageCorrectDescription(fileName, correctCategory),
+                        getImageFalseDescription(fileName, correctCategory)
                 );
 
                 taskAdminService.createImageVerificationTask(request);
@@ -238,13 +239,14 @@ public class TaskSeeder implements ApplicationRunner {
             Long ekteFileId = getOrUploadFile(ekteObjectKey, ekteFile);
             Long falskFileId = getOrUploadFile(falskObjectKey, falskFile);
 
+            String ekteName = ekteFile.getFileName().toString();
             CreateDatacenterNewsTaskRequest request = new CreateDatacenterNewsTaskRequest(
                     "To avisforsider ligger foran deg. Én er ekte og én er falsk. Hvilken er falsk?",
                     ekteFileId,
                     falskFileId,
                     falskFileId,
-                    "Riktig! Avisforsiden du valgte var den falske.",
-                    "Ikke helt. Den andre forsiden var faktisk den falske."
+                    getNewsCorrectDescription(ekteName),
+                    getNewsFalseDescription(ekteName)
             );
 
             taskAdminService.createDatacenterNewsTask(request);
@@ -282,8 +284,8 @@ public class TaskSeeder implements ApplicationRunner {
                         correctCategory,
                         correctJustification,
                         justifications,
-                        "Riktig! " + getCorrectDescription(correctCategory),
-                        "Ikke helt. " + getFalseDescription(correctCategory)
+                        getImageCorrectDescription(fileName, correctCategory),
+                        getImageFalseDescription(fileName, correctCategory)
                 );
 
                 taskAdminService.createDatacenterImageTask(request);
@@ -346,20 +348,157 @@ public class TaskSeeder implements ApplicationRunner {
                         + " (expected suffix _ekte, _falsk, _ki, or _manipulert before extension)");
     }
 
-    private String getCorrectDescription(ImageCategory category) {
-        return switch (category) {
+    private record DescriptionPair(String correct, String wrong) {}
+
+    // Per-image unique correct/wrong descriptions (Fotografen + Datasenteret image tasks).
+    // Keyed by lowercased filename. Falls back to a category-based generic if no entry exists.
+    private static final java.util.Map<String, DescriptionPair> IMAGE_DESCRIPTIONS = java.util.Map.ofEntries(
+            // Fotografen — easy
+            java.util.Map.entry("fotografen_dame_ekte.png", new DescriptionPair(
+                    "Riktig! Skygger og hudtekstur i ansiktet er konsistente – dette bildet er ekte.",
+                    "Ikke helt. Selv om damen ser litt rar ut, er bildet faktisk ekte.")),
+            java.util.Map.entry("fotografen_dame_manipulert.png", new DescriptionPair(
+                    "Riktig! Ansiktstrekkene er tydelig redigert – dette bildet er manipulert.",
+                    "Ikke helt. Se nøye på ansiktet – det er klart manipulert.")),
+            java.util.Map.entry("fotografen_folkemengde_ekte.jpg", new DescriptionPair(
+                    "Riktig! Folkemengden ser variert og naturlig ut – bildet er ekte.",
+                    "Ikke helt. Selv om scenen er travel, er bildet faktisk ekte.")),
+            java.util.Map.entry("fotografen_folkemengde_falsk.png", new DescriptionPair(
+                    "Riktig! Folkene smiler unaturlig likt og perspektivet er rart – bildet er KI-generert.",
+                    "Ikke helt. Se hvor like ansiktene er – bildet er KI-generert.")),
+            java.util.Map.entry("fotografen_jorda_ekte.jpg", new DescriptionPair(
+                    "Riktig! Skydekket og fargene er typiske for satellittbilder – bildet er ekte.",
+                    "Ikke helt. Bildet er faktisk et ekte satellittbilde av jorda.")),
+            java.util.Map.entry("fotografen_jorda_falsk.png", new DescriptionPair(
+                    "Riktig! Skarpheten er for perfekt for et satellittbilde – dette er KI-generert.",
+                    "Ikke helt. Det er for skarpt og rent til å være et ekte satellittbilde.")),
+
+            // Fotografen — medium
+            java.util.Map.entry("fotografen_asiatisk_dame_ekte.jpg", new DescriptionPair(
+                    "Riktig! Hudtekstur og lys passer naturlig sammen – bildet er ekte.",
+                    "Ikke helt. Bildet er faktisk et ekte portrett.")),
+            java.util.Map.entry("fotografen_asiatisk_dame_manipulert.jpg", new DescriptionPair(
+                    "Riktig! Hudteksturen passer ikke med resten av ansiktet – bildet er manipulert.",
+                    "Ikke helt. Hudteksturen avslører at bildet er manipulert.")),
+            java.util.Map.entry("fotografen_blomster_ekte.jpg", new DescriptionPair(
+                    "Riktig! Blader og kronblader har naturlige variasjoner – bildet er ekte.",
+                    "Ikke helt. Variasjonene i blomstene viser at bildet er ekte.")),
+            java.util.Map.entry("fotografen_blomster_falsk.png", new DescriptionPair(
+                    "Riktig! Teksturene er for glatte og symmetriske – dette er KI-generert.",
+                    "Ikke helt. Den unaturlige glattheten røper at bildet er KI-generert.")),
+            java.util.Map.entry("fotografen_naturen_falsk.png", new DescriptionPair(
+                    "Riktig! Trærne er duplisert og himmelen virker kunstig – bildet er KI-generert.",
+                    "Ikke helt. Dupliserte detaljer viser at bildet er KI-generert.")),
+
+            // Fotografen — hard
+            java.util.Map.entry("fotografen_katt_ekte.jpg", new DescriptionPair(
+                    "Riktig! Pels og øyne har naturlige uregelmessigheter – bildet er ekte.",
+                    "Ikke helt. De små feilene i pelsen viser at bildet er ekte.")),
+            java.util.Map.entry("fotografen_katt_falsk.png", new DescriptionPair(
+                    "Riktig! Pelsen og øynene er unaturlig perfekte – bildet er KI-generert.",
+                    "Ikke helt. Den glatte pelsen avslører at bildet er KI-generert.")),
+            java.util.Map.entry("fotografen_naturbilde_ekte.jpg", new DescriptionPair(
+                    "Riktig! Lys, dybde og detaljer ser naturlige ut – bildet er ekte.",
+                    "Ikke helt. Bildet er faktisk et ekte naturfoto.")),
+            java.util.Map.entry("fotografen_naturbilde_falsk.png", new DescriptionPair(
+                    "Riktig! Den uvirkelige skarpheten røper at dette er KI-generert.",
+                    "Ikke helt. Den unaturlige skarpheten viser at bildet er KI-generert.")),
+            java.util.Map.entry("fotografen_ulykke_ekte.jpg", new DescriptionPair(
+                    "Riktig! Skygger, røyk og sløring stemmer med en ekte hendelse – bildet er ekte.",
+                    "Ikke helt. Detaljene i scenen viser at hendelsen er ekte.")),
+
+            // Datasenteret (chap3) image tasks
+            java.util.Map.entry("datasenteret_foto_maleri_ekte.jpg", new DescriptionPair(
+                    "Riktig! Penselstrøk og lerretstekstur er autentiske – maleriet er ekte.",
+                    "Ikke helt. Penselstrøkene avslører at maleriet er ekte.")),
+            java.util.Map.entry("datasenteret_foto_maleri_ki.png", new DescriptionPair(
+                    "Riktig! Detaljene er for symmetriske til å være malt for hånd – KI-generert.",
+                    "Ikke helt. Den jevne symmetrien røper at maleriet er KI-generert.")),
+            java.util.Map.entry("datasenteret_foto_bygning_ekte.jpg", new DescriptionPair(
+                    "Riktig! Materialer og perspektiv ser realistiske ut – bygningen er ekte.",
+                    "Ikke helt. Detaljene i fasaden viser at bygningen er ekte.")),
+            java.util.Map.entry("datasenteret_foto_bygning_ki.png", new DescriptionPair(
+                    "Riktig! Vinduer og geometri er for perfekte – bygningen er KI-generert.",
+                    "Ikke helt. Den uvirkelig perfekte geometrien røper at bygningen er KI-generert.")),
+            java.util.Map.entry("datasenteret_foto_dame_manipulert.png", new DescriptionPair(
+                    "Riktig! Ansiktstrekk og bakgrunn er tydelig redigert – bildet er manipulert.",
+                    "Ikke helt. Den synlige redigeringen viser at bildet er manipulert.")),
+            java.util.Map.entry("datasenteret_foto_mcdonalds_ki.png", new DescriptionPair(
+                    "Riktig! Logo og typografi er forvrengt på en typisk KI-måte – KI-generert.",
+                    "Ikke helt. Den forvrengte logoen røper at bildet er KI-generert."))
+    );
+
+    // Per-news-pair unique correct/wrong descriptions, keyed by the ekte file's name.
+    private static final java.util.Map<String, DescriptionPair> NEWS_DESCRIPTIONS = java.util.Map.ofEntries(
+            // Nyhetskvartalet (chap1)
+            java.util.Map.entry("nyhetsartikkel_ekte_1.png", new DescriptionPair(
+                    "Riktig! Den falske forsiden hadde overdrevne overskrifter og en mistenkelig kilde.",
+                    "Ikke helt. Den andre forsiden hadde tydelige tegn på å være falsk.")),
+            java.util.Map.entry("nyhetsartikkel_ekte_2.png", new DescriptionPair(
+                    "Riktig! Den falske forsiden brukte sensasjonelt språk og uklare bilder.",
+                    "Ikke helt. Den andre forsiden var den falske – legg merke til språkbruken.")),
+            java.util.Map.entry("nyhetsartikkel_ekte_3.png", new DescriptionPair(
+                    "Riktig! Datoen og bylinje på den falske forsiden stemte ikke.",
+                    "Ikke helt. Den andre forsiden hadde inkonsistente datoer.")),
+            java.util.Map.entry("nyhetsartikkel_ekte_4.png", new DescriptionPair(
+                    "Riktig! Den falske forsiden manglet kildehenvisning og hadde rare bildevalg.",
+                    "Ikke helt. Manglende kilder avslørte den andre forsiden som falsk.")),
+            java.util.Map.entry("nyhetsartikkel_ekte_5.png", new DescriptionPair(
+                    "Riktig! Logoen var forvrengt og typografien feil på den falske forsiden.",
+                    "Ikke helt. Logoen på den andre forsiden var forvrengt.")),
+            java.util.Map.entry("nyhetsartikkel_ekte_6.png", new DescriptionPair(
+                    "Riktig! Den falske forsiden hadde påfallende skrivefeil og uvanlig layout.",
+                    "Ikke helt. Skrivefeilene avslørte den andre forsiden som falsk.")),
+            java.util.Map.entry("nyhetsartikkel_ekte_7.png", new DescriptionPair(
+                    "Riktig! Den falske forsiden brukte et bilde som ikke passet med saken.",
+                    "Ikke helt. Bildevalget på den andre forsiden røpet at den var falsk.")),
+            java.util.Map.entry("nyhetsartikkel_ekte_8.png", new DescriptionPair(
+                    "Riktig! Den falske forsiden hadde påstander uten kilder.",
+                    "Ikke helt. Påstandene på den andre forsiden manglet kildebelegg.")),
+            java.util.Map.entry("nyhetsartikkel_ekte_9.png", new DescriptionPair(
+                    "Riktig! Layout og fontvalg på den falske forsiden var inkonsistent.",
+                    "Ikke helt. Inkonsistent layout avslørte den andre forsiden som falsk.")),
+
+            // Datasenteret (chap3) news
+            java.util.Map.entry("datasenteret_nyhet_ekte_1.png", new DescriptionPair(
+                    "Riktig! Den falske forsiden hadde sensasjonelle påstander uten kilder.",
+                    "Ikke helt. Manglende kilder på den andre forsiden røpet at den var falsk.")),
+            java.util.Map.entry("datasenteret_nyhet_ekte_2.png", new DescriptionPair(
+                    "Riktig! Datoer og navn på den falske forsiden stemte ikke overens.",
+                    "Ikke helt. Inkonsistensene på den andre forsiden viste at den var falsk.")),
+            java.util.Map.entry("datasenteret_nyhet_ekte_3.png", new DescriptionPair(
+                    "Riktig! Bildet på den falske forsiden var manipulert og passet ikke saken.",
+                    "Ikke helt. Det manipulerte bildet avslørte at den andre forsiden var falsk."))
+    );
+
+    private String getImageCorrectDescription(String fileName, ImageCategory category) {
+        DescriptionPair pair = IMAGE_DESCRIPTIONS.get(fileName.toLowerCase());
+        if (pair != null) return pair.correct();
+        return "Riktig! " + switch (category) {
             case REAL -> "Dette bildet er ekte.";
             case AI_GENERATED -> "Dette bildet er KI-generert.";
             case MANIPULATED -> "Dette bildet er manipulert.";
         };
     }
 
-    private String getFalseDescription(ImageCategory category) {
-        return switch (category) {
+    private String getImageFalseDescription(String fileName, ImageCategory category) {
+        DescriptionPair pair = IMAGE_DESCRIPTIONS.get(fileName.toLowerCase());
+        if (pair != null) return pair.wrong();
+        return "Ikke helt. " + switch (category) {
             case REAL -> "Dette bildet er faktisk ekte.";
             case AI_GENERATED -> "Dette bildet er KI-generert.";
             case MANIPULATED -> "Dette bildet er manipulert.";
         };
+    }
+
+    private String getNewsCorrectDescription(String ekteFileName) {
+        DescriptionPair pair = NEWS_DESCRIPTIONS.get(ekteFileName.toLowerCase());
+        return pair != null ? pair.correct() : "Riktig! Avisforsiden du valgte var den falske.";
+    }
+
+    private String getNewsFalseDescription(String ekteFileName) {
+        DescriptionPair pair = NEWS_DESCRIPTIONS.get(ekteFileName.toLowerCase());
+        return pair != null ? pair.wrong() : "Ikke helt. Den andre forsiden var faktisk den falske.";
     }
 
     private List<String> getJustifications(String fileName) {

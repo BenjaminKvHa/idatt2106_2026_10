@@ -3,7 +3,6 @@ package com.nettdet.backend.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -36,6 +35,7 @@ import com.nettdet.backend.dto.CreateDatacenterNewsTaskRequest;
 import com.nettdet.backend.dto.CreateImageVerificationTaskRequest;
 import com.nettdet.backend.dto.CreateNewsVerificationTaskRequest;
 import com.nettdet.backend.dto.FileReferenceResponse;
+import com.nettdet.backend.dto.TaskAdminResponse;
 import com.nettdet.backend.repository.AccountClassroomBridgeTeacherRepository;
 import com.nettdet.backend.repository.ChapterRepository;
 import com.nettdet.backend.repository.FileObjectRepository;
@@ -91,12 +91,14 @@ class TaskAdminServiceTest {
                 "ok",
                 "nope");
 
-        Task saved = taskAdminService.createImageVerificationTask(request);
+        TaskAdminResponse saved = taskAdminService.createImageVerificationTask(request);
 
         ArgumentCaptor<Task> captor = ArgumentCaptor.forClass(Task.class);
         verify(taskRepository).save(captor.capture());
         Task captured = captor.getValue();
-        assertSame(captured, saved);
+        assertEquals(FOTOGRAFEN_ID, saved.chapterId());
+        assertEquals(TaskDifficulty.MEDIUM, saved.difficulty());
+        assertNull(saved.classroomCode());
         assertEquals(FOTOGRAFEN_ID, captured.getChapter().getId());
         assertEquals(TaskDifficulty.MEDIUM, captured.getDifficulty());
         assertNull(captured.getClassroom());
@@ -149,11 +151,11 @@ class TaskAdminServiceTest {
                 NYHETSKVARTALET_ID, TaskDifficulty.HARD, "Velg",
                 101L, 102L, 102L, "good", "bad");
 
-        Task saved = taskAdminService.createNewsVerificationTask(request);
+        TaskAdminResponse saved = taskAdminService.createNewsVerificationTask(request);
 
         ArgumentCaptor<Task> captor = ArgumentCaptor.forClass(Task.class);
         verify(taskRepository).save(captor.capture());
-        assertSame(captor.getValue(), saved);
+        assertEquals(captor.getValue().getTaskJson(), saved.taskJson());
 
         JsonNode json = objectMapper.readTree(captor.getValue().getTaskJson());
         assertEquals(101L, json.get("fileId_1").asLong());
@@ -188,12 +190,13 @@ class TaskAdminServiceTest {
                 "desc", 7L, ImageCategory.MANIPULATED, "j",
                 List.of("j", "x", "y"), "ok", "nope");
 
-        Task saved = taskAdminService.createDatacenterImageTask(request);
+        TaskAdminResponse saved = taskAdminService.createDatacenterImageTask(request);
 
         ArgumentCaptor<Task> captor = ArgumentCaptor.forClass(Task.class);
         verify(taskRepository).save(captor.capture());
         Task captured = captor.getValue();
-        assertSame(captured, saved);
+        assertEquals(DATACENTER_ID, saved.chapterId());
+        assertEquals(TaskDifficulty.HARD, saved.difficulty());
         assertEquals(DATACENTER_ID, captured.getChapter().getId());
         assertEquals(TaskDifficulty.HARD, captured.getDifficulty());
 
@@ -215,12 +218,12 @@ class TaskAdminServiceTest {
         CreateDatacenterNewsTaskRequest request = new CreateDatacenterNewsTaskRequest(
                 "desc", 11L, 12L, 11L, "good", "bad");
 
-        Task saved = taskAdminService.createDatacenterNewsTask(request);
+        TaskAdminResponse saved = taskAdminService.createDatacenterNewsTask(request);
 
         ArgumentCaptor<Task> captor = ArgumentCaptor.forClass(Task.class);
         verify(taskRepository).save(captor.capture());
         Task captured = captor.getValue();
-        assertSame(captured, saved);
+        assertEquals(TaskDifficulty.HARD, saved.difficulty());
         assertEquals(TaskDifficulty.HARD, captured.getDifficulty());
 
         JsonNode json = objectMapper.readTree(captured.getTaskJson());
@@ -274,14 +277,18 @@ class TaskAdminServiceTest {
         String email = "teacher@example.com";
         String code = "ABCABC";
         Task t = new Task();
+        t.setDifficulty(TaskDifficulty.EASY);
+        t.setChapter(chapter(FOTOGRAFEN_ID, "Fotografen"));
+        t.setTaskJson("{}");
         when(teacherBridgeRepository.existsByIdAccountEmailAndIdClassroomCode(email, code)).thenReturn(true);
         when(taskRepository.findByChapterIdAndClassroomClassroomCode(FOTOGRAFEN_ID, code))
                 .thenReturn(List.of(t));
 
-        List<Task> result = taskAdminService.listFotografenTasksForClassroom(email, code);
+        List<TaskAdminResponse> result = taskAdminService.listFotografenTasksForClassroom(email, code);
 
         assertEquals(1, result.size());
-        assertSame(t, result.get(0));
+        assertEquals(FOTOGRAFEN_ID, result.get(0).chapterId());
+        assertEquals(TaskDifficulty.EASY, result.get(0).difficulty());
     }
 
     @DisplayName("Listing tasks for a classroom rejects callers who do not teach that classroom")

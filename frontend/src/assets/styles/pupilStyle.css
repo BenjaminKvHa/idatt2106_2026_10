@@ -12,6 +12,109 @@
   align-items: center;
 }
 
+.pupil-scene-screen {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.pupil-scene-page {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  padding: clamp(0.5rem, 2vw, 2rem);
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+}
+
+.pupil-scene-page--dimmed::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--color-text);
+  opacity: 0.4;
+  z-index: 0;
+}
+
+.pupil-pinboard-stage {
+  position: relative;
+  z-index: 1;
+  width: min(96vw, 1400px);
+  aspect-ratio: 1400 / 900;
+}
+
+.pupil-pinboard-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.pupil-board-blobby-wrapper {
+  position: absolute;
+  top: 10.5%;
+  right: 6%;
+  width: 30%;
+  z-index: 10;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.pupil-board-blobby-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 4px 0 var(--brown-dark-20));
+}
+
+.pupil-round-icon-button {
+  z-index: 2;
+  width: clamp(2rem, 3.2vw, 2.8rem);
+  height: clamp(2rem, 3.2vw, 2.8rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 999px;
+  border: var(--border-thin) solid var(--brown-dark);
+  background: var(--beige-light-80);
+  color: var(--brown-dark);
+  cursor: pointer;
+  box-shadow: 0 0.2rem 0 var(--brown-dark-20);
+}
+
+.pupil-round-icon-button:hover {
+  background: var(--brown-dark);
+  color: var(--beige-light);
+}
+
+.pupil-round-icon-button > svg {
+  width: 68%;
+  height: 68%;
+  stroke: currentColor;
+}
+
+.pupil-thin-scroll {
+  scrollbar-color: var(--brown-dark-60) transparent;
+  scrollbar-width: thin;
+}
+
+.pupil-thin-scroll::-webkit-scrollbar {
+  width: 0.55rem;
+}
+
+.pupil-thin-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--brown-dark-60);
+}
+
 .pupil-card {
   height: fit-content;
   border: var(--border-wide) solid var(--brown-dark);
@@ -179,6 +282,15 @@
     padding: 1rem;
   }
 
+  .pupil-board-blobby-wrapper {
+    top: -40px;
+    right: 20px;
+  }
+
+  .pupil-board-blobby-image {
+    width: 105px;
+  }
+
   .pupil-popup-title {
     font-size: 1.45rem;
   }
@@ -197,5 +309,16 @@
 @media (max-width: 680px) {
   .pupil-responsive-button-row {
     flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .pupil-board-blobby-wrapper {
+    top: -30px;
+    right: 10px;
+  }
+
+  .pupil-board-blobby-image {
+    width: 90px;
   }
 }

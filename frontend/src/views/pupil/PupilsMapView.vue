@@ -1,8 +1,8 @@
 <template>
   <div class="stops-page">
-    <div class="stops-card">
-      <TopBar title="Kart" @help="openHelpPopup" @hint="openHintPopup" />
+    <TopBar title="Kart" />
 
+    <div class="stops-card">
       <div class="map-wrapper">
         <div class="map-area">
           <div class="path-line"></div>
@@ -67,12 +67,13 @@
       </p>
     </div>
     <p v-if="loadingProgress" class="map-status" role="status">Laster progresjon...</p>
-    <p v-else-if="progressError" class="map-status pupil-error" role="alert">{{ progressError }}</p>
+    <p v-else-if="progressError" class="map-status error" role="alert">{{ progressError }}</p>
 
     <div v-if="activeLockedStop" class="pupil-popup-overlay" @click="closeLockedPopup">
+
       <div class="locked-popup" @click.stop>
-        <h2 class="pupil-popup-title">{{ activeLockedStop.name }} er låst.</h2>
-        <p class="pupil-popup-text">
+        <h2 class="popup-title">{{ activeLockedStop.name }} er låst.</h2>
+        <p class="popup-text">
           Få 3 stjerner på {{ activeLockedStop.requiredPreviousStop }} for å låse det opp!
         </p>
         <div class="pupil-popup-actions">
@@ -82,9 +83,9 @@
       </div>
     </div>
 
-    <div v-if="showHelpPopup" class="pupil-popup-overlay" @click="closeHelpPopup">
-      <div class="pupil-hint-popup" @click.stop>
-        <h2 class="pupil-popup-title">Trenger du hjelp?</h2>
+    <div v-if="showHelpPopup" class="popup-overlay" @click="closeHelpPopup">
+      <div class="hint-popup" @click.stop>
+        <h2 class="popup-title">Trenger du hjelp?</h2>
         <div class="hint-text">
           <p>
             Inne på denne siden kan du trykke deg inn på de ulike stoppestedene og gjøre ulike
@@ -114,8 +115,8 @@
             <li>Se på stjernene under hvert stoppested for å følge progresjonen din.</li>
           </ul>
         </div>
-        <div class="pupil-popup-actions">
-          <button class="pupil-popup-btn popup-btn-play" @click="closeHintPopup">Ok</button>
+        <div class="popup-actions">
+          <button class="popup-btn popup-btn-play" @click="closeHintPopup">Ok</button>
         </div>
       </div>
     </div>
@@ -333,18 +334,19 @@ onMounted(() => {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-
-  background-image: url('@/assets/backgrounds/map-bg.png');
-  background-size: cover;
-  background-position: center top;
-  background-repeat: no-repeat;
-  background-attachment: scroll;
+  background: var(--beige-medium);
 }
 
 .stops-card {
   width: 100%;
-  min-height: 100vh;
-  background: rgba(234, 211, 180, 0.35);
+  min-height: calc(100vh - 5rem);
+  background:
+    linear-gradient(rgba(234, 211, 180, 0.35), rgba(234, 211, 180, 0.35)),
+    url('@/assets/backgrounds/map-bg.png');
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-attachment: scroll;
   box-sizing: border-box;
   padding: 28px 36px 24px;
   overflow: visible;
@@ -886,14 +888,60 @@ onMounted(() => {
   object-fit: contain;
 }
 
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.18);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
 .locked-popup {
   width: min(520px, calc(100vw - 32px));
-  background: var(--orange-medium);
-  border: var(--border-wide) solid var(--brown-dark);
+  background: var(--orange-medium, #ea9447);
+  border: 4px solid var(--brown-dark, #6f4d33);
   border-radius: 28px;
-  box-shadow: 0 10px 24px var(--brown-dark-20);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
   padding: 28px 24px 20px;
   text-align: center;
+}
+
+.popup-title {
+  margin: 0 0 10px;
+  font-size: 2rem;
+  line-height: 1.15;
+  font-weight: 800;
+  color: var(--color-text, #111);
+}
+
+.popup-text {
+  margin: 0;
+  font-size: 1.8rem;
+  line-height: 1.2;
+  font-weight: 700;
+  color: var(--color-text, #111);
+}
+
+.popup-actions {
+  margin-top: 26px;
+  display: flex;
+  justify-content: center;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+
+.popup-btn {
+  min-width: 130px;
+  padding: 14px 24px;
+  border-radius: 22px;
+  border: 4px solid var(--color-text, #111);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--color-text, #111);
+  cursor: pointer;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.18);
 }
 
 .popup-btn-back {
@@ -912,6 +960,14 @@ onMounted(() => {
   .locked-popup {
     padding: 22px 16px 18px;
     border-radius: 22px;
+  }
+
+  .popup-title {
+    font-size: 1.45rem;
+  }
+
+  .popup-text {
+    font-size: 1.3rem;
   }
 
   .popup-btn {

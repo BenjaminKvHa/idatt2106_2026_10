@@ -3,6 +3,7 @@ import { watch } from 'vue'
 import confetti from 'canvas-confetti'
 import victorySoundFile from '@/assets/sounds/levels/victory-sound.mp3'
 import defeatSoundFile from '@/assets/sounds/levels/evil-laugh.mp3'
+import { useAudio } from '@/composables/useAudio'
 
 const props = defineProps<{
   show: boolean
@@ -23,17 +24,15 @@ const emit = defineEmits<{
   map: []
 }>()
 
-const victorySound = new Audio(victorySoundFile)
-victorySound.volume = 0.3
-
-const defeatSound = new Audio(defeatSoundFile)
-defeatSound.volume = 0.3
+const { playSound, stopSound } = useAudio()
+let victorySoundRef: HTMLAudioElement | null = null
+let defeatSoundRef: HTMLAudioElement | null = null
 
 function stopSounds() {
-  victorySound.pause()
-  defeatSound.pause()
-  victorySound.currentTime = 0
-  defeatSound.currentTime = 0
+  stopSound(victorySoundRef)
+  stopSound(defeatSoundRef)
+  victorySoundRef = null
+  defeatSoundRef = null
 }
 
 function closePopup() {
@@ -90,10 +89,10 @@ watch(
     stopSounds()
 
     if (props.success) {
-      void victorySound.play()
+      victorySoundRef = playSound(victorySoundFile, 0.3)
       fireVictoryConfetti()
     } else {
-      void defeatSound.play()
+      defeatSoundRef = playSound(defeatSoundFile, 0.3)
     }
   },
 )

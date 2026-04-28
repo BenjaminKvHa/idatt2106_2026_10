@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/components/pupil/TopBar.vue'
+import HintCreature from '@/components/pupil/task/BlobbyQuestion.vue'
 import TaskGuide from '@/components/pupil/TaskGuide.vue'
 import CompleteLevelPopup from '@/components/pupil/CompleteLevelPopup.vue'
 import { get, getBlob, post } from '@/utils/apiUtils'
@@ -187,15 +188,23 @@ onBeforeUnmount(revokeImageUrls)
 </script>
 
 <template>
-  <TopBar
-    title="Nyhetskvartalet"
-    help="På dette stoppestedet skal du prøve å se hvilken av nyhetsartiklene som er falsk. Det kan være noe i teksten, feil bilde, eller rar URL."
-    hint="Se nøye på de ulike artiklene, det kan være noe smått som skiller de."
-  />
+  <TopBar title="Nyhetskvartalet" />
 
   <div class="page">
     <div class="center-container">
       <template v-if="currentTask && !runDone">
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
+          </div>
+
+          <p class="progress-text">
+            Nivå {{ stepIndex + 1 }} / {{ DIFFICULTIES.length }} — {{ difficultyLabel }}
+          </p>
+        </div>
+
+        <HintCreature hint="Se nøye etter rare detaljer i tekst, bilde og overskrift." />
+
         <PupilNewsTask
           :task-description="currentTask.taskDescription"
           :file-ids="currentTask.fileIds"
@@ -207,15 +216,6 @@ onBeforeUnmount(revokeImageUrls)
           @select-file="choose"
         />
 
-        <div class="progress-container">
-          <div class="progress-bar">
-            <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
-          </div>
-
-          <p class="progress-text">
-            Nivå {{ stepIndex + 1 }} / {{ DIFFICULTIES.length }} — {{ difficultyLabel }}
-          </p>
-        </div>
         <div
           v-if="lastResult"
           class="mini-feedback"
@@ -223,10 +223,12 @@ onBeforeUnmount(revokeImageUrls)
         >
           <span>{{ lastResult.feedback }}</span>
         </div>
+
         <button v-if="lastResult" class="next-level-button" @click="next">
           {{ stepIndex === DIFFICULTIES.length - 1 ? 'Se resultat' : 'Gå til neste nivå' }}
         </button>
       </template>
+
       <p v-else-if="loading">Laster oppgave…</p>
       <p v-else-if="error" class="error">{{ error }}</p>
     </div>
@@ -364,32 +366,35 @@ onBeforeUnmount(revokeImageUrls)
 
 .next-level-button {
   width: 100%;
-  max-width: 420px;
+  max-width: 360px;
   padding: 1rem 2rem;
   border-radius: 38px;
   border: 5px solid var(--brown-dark);
-  background-color: var(--orange-medium);
+
+  background-color: var(--beige-light); /* hvit/beige */
+  color: var(--brown-dark); /* brun tekst */
+
   cursor: pointer;
   font-weight: 700;
-  box-shadow: 0 6px 0 var(--brown-dark);
-  transition:
-    transform 0.2s ease,
-    filter 0.2s ease,
-    box-shadow 0.2s ease;
-}
 
-.next-level-button {
-  max-width: 360px;
-  background: var(--green-confirm);
+  box-shadow: 0 6px 0 var(--brown-dark);
+
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .next-level-button:hover {
-  filter: brightness(1.1);
-  transform: translateY(-3px);
-  box-shadow: 0 9px 0 var(--brown-dark);
+  filter: brightness(0.95);
 }
 
 .next-level-button:active {
+  background-color: var(--brown-dark);
+  color: var(--beige-light);
+
   transform: translateY(3px);
   box-shadow: 0 3px 0 var(--brown-dark);
 }

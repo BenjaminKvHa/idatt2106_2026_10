@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/components/pupil/TopBar.vue'
+import HintCreature from '@/components/pupil/task/BlobbyQuestion.vue'
 import TaskGuide from '@/components/pupil/TaskGuide.vue'
 import PupilImageTask from '@/components/pupil/task/PupilImageTask.vue'
 import PupilNewsTask from '@/components/pupil/task/PupilNewsTask.vue'
@@ -10,6 +11,10 @@ import VictoryImage from '@/assets/icons/detectives_and_thief/Victory.png'
 import DefeatImage from '@/assets/icons/detectives_and_thief/Defeat.png'
 import DatatyvenImage from '@/assets/icons/detectives_and_thief/Datatyven.png'
 import datacenterBg from '@/assets/backgrounds/datasenteret-bg.png'
+import victorySoundFile from '@/assets/sounds/levels/victory-sound.mp3'
+import defeatSoundFile from '@/assets/sounds/levels/evil-laugh.mp3'
+import confetti from 'canvas-confetti'
+import { useAudio } from '@/composables/useAudio'
 import { get, getBlob, post } from '@/utils/apiUtils'
 import type {
   DatacenterAnswerRequest,
@@ -39,6 +44,10 @@ const CATEGORIES: { value: ImageCategory; label: string }[] = [
   { value: 'AI_GENERATED', label: 'KI-generert' },
   { value: 'MANIPULATED', label: 'Manipulert' },
 ]
+
+const { playSound, stopSound } = useAudio()
+let victorySoundRef: HTMLAudioElement | null = null
+let defeatSoundRef: HTMLAudioElement | null = null
 
 const showGuidePopup = ref(true)
 const showHelpPopup = ref(false)
@@ -189,18 +198,18 @@ async function submit() {
     const body: DatacenterAnswerRequest =
       level.task.format === 'IMAGE_VERIFICATION'
         ? {
-          format: 'IMAGE_VERIFICATION',
-          imageAnswer: {
-            selectedCategory: level.selectedCategory!,
-            selectedJustification: level.selectedJustification!,
-          },
-          newsAnswer: null,
-        }
+            format: 'IMAGE_VERIFICATION',
+            imageAnswer: {
+              selectedCategory: level.selectedCategory!,
+              selectedJustification: level.selectedJustification!,
+            },
+            newsAnswer: null,
+          }
         : {
-          format: 'NEWS_VERIFICATION',
-          imageAnswer: null,
-          newsAnswer: { selectedFileId: level.selectedFileId! },
-        }
+            format: 'NEWS_VERIFICATION',
+            imageAnswer: null,
+            newsAnswer: { selectedFileId: level.selectedFileId! },
+          }
 
     level.result = await post<ValidationResult>(
       `/api/chapters/datasenteret/tasks/${level.task.taskId}/validate`,
@@ -225,7 +234,62 @@ function goToPreviousLevel() {
 
 function finishGame() {
   if (!isCurrentLevelAnswered.value) return
-  resultType.value = allAnswersCorrect.value ? 'victory' : 'defeat'
+  openResultPopup(allAnswersCorrect.value ? 'victory' : 'defeat')
+}
+
+function stopResultSounds() {
+  stopSound(victorySoundRef)
+  stopSound(defeatSoundRef)
+  victorySoundRef = null
+  defeatSoundRef = null
+}
+
+function fireVictoryConfetti() {
+  const duration = 2000
+  const end = Date.now() + duration
+  const defaults = { zIndex: 3000 }
+
+  const frame = () => {
+    confetti({
+      ...defaults,
+      particleCount: 8,
+      angle: 60,
+      spread: 60,
+      origin: { x: 0, y: 0.6 },
+    })
+
+    confetti({
+      ...defaults,
+      particleCount: 8,
+      angle: 120,
+      spread: 60,
+      origin: { x: 1, y: 0.6 },
+    })
+
+    if (Date.now() < end) requestAnimationFrame(frame)
+  }
+
+  frame()
+}
+
+watch(showResultPopup, (isOpen) => {
+  if (!isOpen) {
+    stopResultSounds()
+    return
+  }
+
+  stopResultSounds()
+
+  if (resultType.value === 'victory') {
+    victorySoundRef = playSound(victorySoundFile, 0.3)
+    fireVictoryConfetti()
+  } else if (resultType.value === 'defeat') {
+    defeatSoundRef = playSound(defeatSoundFile, 0.3)
+  }
+})
+
+function openResultPopup(type: ResultType) {
+  resultType.value = type
   showResultPopup.value = true
 }
 
@@ -246,11 +310,12 @@ async function resetGame() {
 }
 
 onMounted(loadRun)
+onBeforeUnmount(stopResultSounds)
 onBeforeUnmount(revokeAllImageUrls)
 </script>
 
 <template>
-  <TopBar title="Datasenteret" @help="showHelpPopup = true" @hint="showHintPopup = true" />
+  <TopBar title="Datasenteret" />
 
   <div class="pupil-task-page" :style="pageStyle">
     <div class="pupil-center-container datacenter-container">
@@ -261,6 +326,10 @@ onBeforeUnmount(revokeAllImageUrls)
         <div class="progress-box pupil-panel">
           <p>Nivå {{ currentLevelIndex + 1 }}/{{ levels.length }}</p>
         </div>
+
+        <HintCreature
+          hint="Les oppgaven nøye. Se etter små detaljer som kan avsløre riktig svar."
+        />
 
         <div class="pupil-panel pupil-task-text-box">
           <p>
@@ -322,9 +391,7 @@ onBeforeUnmount(revokeAllImageUrls)
           <div
             v-if="currentLevel.result"
             class="pupil-feedback-box"
-            :class="
-              currentLevel.result.correct ? 'pupil-feedback-correct' : 'pupil-feedback-wrong'
-            "
+            :class="currentLevel.result.correct ? 'pupil-feedback-correct' : 'pupil-feedback-wrong'"
           >
             <p class="pupil-feedback-title">
               {{ currentLevel.result.correct ? 'Riktig!' : 'Feil!' }}

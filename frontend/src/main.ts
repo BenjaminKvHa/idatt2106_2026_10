@@ -1,36 +1,43 @@
 import './assets/styles/main.css'
 
-import { createApp } from 'vue'
+import { createApp, watch } from 'vue'
 import App from './App.vue'
 import router from './router'
 import clickSoundFile from '@/assets/sounds/shared/click-sound.mp3'
 import backgroundMusicFile from '@/assets/sounds/shared/backgroundMusic.mp3'
+import { useAudio } from '@/composables/useAudio'
+
+const { registerAudioElement, playSound, isMuted } = useAudio()
 
 const app = createApp(App)
 
 const backgroundMusic = new Audio(backgroundMusicFile)
 backgroundMusic.loop = true
-backgroundMusic.volume = 0.3
 backgroundMusic.preload = 'auto'
+registerAudioElement(backgroundMusic)
 
 let backgroundMusicStarted = false
 
 function startBackgroundMusic() {
   if (backgroundMusicStarted) return
-
   backgroundMusicStarted = true
-
+  if (isMuted.value) return
   backgroundMusic.play().catch((error) => {
     backgroundMusicStarted = false
     console.error('Kunne ikke starte bakgrunnsmusikk:', error)
   })
 }
 
+watch(isMuted, (muted) => {
+  if (muted) {
+    backgroundMusic.pause()
+  } else if (backgroundMusicStarted) {
+    backgroundMusic.play().catch(() => {})
+  }
+})
+
 function playClickSound() {
-  const sound = new Audio(clickSoundFile)
-  sound.volume = 1
-  sound.currentTime = 0.05
-  sound.play().catch(() => {})
+  playSound(clickSoundFile, 1, 0.05)
 }
 
 document.addEventListener(

@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 
 import blobbyImage from '@/assets/icons/blobby/creaturePeaking.png'
+import { useAudio } from '@/composables/useAudio'
 
 import blobbySound1 from '@/assets/sounds/blobby/blobby-grunt.mp3'
 import blobbySound2 from '@/assets/sounds/blobby/blobby-wow.mp3'
@@ -12,6 +13,8 @@ import blobbySound5 from '@/assets/sounds/blobby/blobby-blinking.mp3'
 const showBlobbyMessage = ref(false)
 const blobbyStep = ref(0)
 const isAnimatingBlobby = ref(false)
+
+const { playSound } = useAudio()
 
 const blobbyMessage = 'Hei mitt navn er Blobby. Trykk på meg for å høre hvilke lyder jeg kan lage!'
 
@@ -28,11 +31,8 @@ function handleBlobbyClick() {
     showBlobbyMessage.value = false
 
     const soundIndex = blobbyStep.value - 1
-    const audio = new Audio(blobbySounds[soundIndex])
-
-    audio.play().catch((error) => {
-      console.error('Kunne ikke spille av lyd:', error)
-    })
+    const soundFile = blobbySounds[soundIndex]
+    if (soundFile) playSound(soundFile)
 
     blobbyStep.value += 1
     return

@@ -1,10 +1,6 @@
 <template>
   <div class="page">
-    <TopBar
-      title="Fotografen"
-      help="Du skal trykke på om du tror bildet er ekte, KI eller manipulert. Så velger du begrunnelse under."
-      hint="Manipulert vil si at et ekte bilde er endret på. KI har ofte mer urealistiske trekk."
-    />
+    <TopBar title="Fotografen" />
 
     <div class="content">
       <div v-if="runDone" class="task-container">
@@ -17,26 +13,33 @@
 
       <div v-else-if="currentTask" class="task-container">
         <h1 class="level">Nivå {{ stepIndex + 1 }} — {{ difficultyLabel }}</h1>
-        <div class="task-box">
-          <PupilImageTask
-            :task-description="currentTask.taskDescription"
-            :image-url="imageUrl"
-            :categories="CATEGORIES"
-            :justifications="currentTask.justifications"
-            :selected-category="selectedCategory"
-            :selected-justification="selectedJustification"
-            :result="lastResult"
-            :submitting="submitting"
-            @select-category="selectCategory"
-            @select-justification="selectJustification"
-          />
-          <div v-if="lastResult" class="answer-feedback">
-            <p>
-              <strong>{{ lastResult.correct ? 'Riktig!' : 'Feil.' }}</strong>
-            </p>
-            <p>{{ lastResult.feedback }}</p>
+
+        <HintCreature
+          hint="Manipulert betyr at et ekte bilde er endret på. KI-bilder har ofte rare detaljer."
+        >
+          <div class="task-box">
+            <PupilImageTask
+              :task-description="currentTask.taskDescription"
+              :image-url="imageUrl"
+              :categories="CATEGORIES"
+              :justifications="currentTask.justifications"
+              :selected-category="selectedCategory"
+              :selected-justification="selectedJustification"
+              :result="lastResult"
+              :submitting="submitting"
+              @select-category="selectCategory"
+              @select-justification="selectJustification"
+            />
+
+            <div v-if="lastResult" class="answer-feedback">
+              <p>
+                <strong>{{ lastResult.correct ? 'Riktig!' : 'Feil.' }}</strong>
+              </p>
+              <p>{{ lastResult.feedback }}</p>
+            </div>
           </div>
-        </div>
+        </HintCreature>
+
         <div class="bottom-actions">
           <button v-if="!lastResult" @click="submit" :disabled="!canSubmit || submitting">
             Svar
@@ -82,6 +85,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/components/pupil/TopBar.vue'
+import HintCreature from '@/components/pupil/task/BlobbyQuestion.vue'
 import TaskGuide from '@/components/pupil/TaskGuide.vue'
 import CompleteLevelPopup from '@/components/pupil/CompleteLevelPopup.vue'
 import thumbsUpPhoto from '@/assets/icons/detectives_and_thief/ThumbsUpPhotographer.png'
@@ -290,6 +294,7 @@ onBeforeUnmount(revokeImageUrl)
   align-items: center;
   width: 100%;
   position: relative;
+  overflow: visible !important;
 }
 
 .task-box {
@@ -301,6 +306,7 @@ onBeforeUnmount(revokeImageUrl)
   padding: 28px 28px 36px;
   box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
   position: relative;
+  overflow: visible !important;
 }
 
 .answer-feedback {
@@ -311,6 +317,9 @@ onBeforeUnmount(revokeImageUrl)
   border: 2px solid #5c4033;
   width: 100%;
   max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
 }
 
 .bottom-actions {
@@ -350,4 +359,17 @@ onBeforeUnmount(revokeImageUrl)
   font-weight: 600;
 }
 
+.task-container {
+  align-items: center;
+}
+
+.hint-wrapper {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.task-box {
+  width: 100%;
+}
 </style>

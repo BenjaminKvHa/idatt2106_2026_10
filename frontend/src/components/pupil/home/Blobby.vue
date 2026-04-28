@@ -84,7 +84,7 @@ function handleBlobbyClick() {
   position: absolute;
   top: 10.5%;
   right: 6%;
-  width: 30%;
+  width: clamp(90px, 30%, 420px);
   z-index: 10;
   transform: translateY(-50%);
 }
@@ -181,35 +181,17 @@ function handleBlobbyClick() {
 }
 
 @media (max-width: 768px) {
-  .blobby-wrapper {
-    top: -40px;
-    right: 20px;
-  }
-
-  .blobby-image {
-    width: 105px;
-  }
-
   .blobby-message {
-    right: 105px;
+    right: 75%;
     max-width: 220px;
     font-size: 13px;
   }
 }
 
 @media (max-width: 480px) {
-  .blobby-wrapper {
-    top: -30px;
-    right: 10px;
-  }
-
-  .blobby-image {
-    width: 90px;
-  }
-
   .blobby-message {
     top: 15px;
-    right: 90px;
+    right: 75%;
     max-width: 180px;
     font-size: 12px;
     padding: 8px 10px;

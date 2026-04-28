@@ -61,7 +61,7 @@
   position: absolute;
   top: 10.5%;
   right: 6%;
-  width: 30%;
+  width: clamp(90px, 30%, 420px);
   z-index: 10;
   transform: translateY(-50%);
   pointer-events: none;
@@ -282,15 +282,6 @@
     padding: 1rem;
   }
 
-  .pupil-board-blobby-wrapper {
-    top: -40px;
-    right: 20px;
-  }
-
-  .pupil-board-blobby-image {
-    width: 105px;
-  }
-
   .pupil-popup-title {
     font-size: 1.45rem;
   }
@@ -309,16 +300,5 @@
 @media (max-width: 680px) {
   .pupil-responsive-button-row {
     flex-direction: column;
-  }
-}
-
-@media (max-width: 480px) {
-  .pupil-board-blobby-wrapper {
-    top: -30px;
-    right: 10px;
-  }
-
-  .pupil-board-blobby-image {
-    width: 90px;
   }
 }

@@ -39,6 +39,7 @@ import com.nettdet.backend.dto.ClassroomResponse;
 import com.nettdet.backend.dto.ClassroomTeacherResponse;
 import com.nettdet.backend.dto.CreateClassroomRequest;
 import com.nettdet.backend.dto.InviteTeacherRequest;
+import com.nettdet.backend.dto.PendingPupilRequestResponse;
 import com.nettdet.backend.dto.TeacherLeaveStatusResponse;
 import com.nettdet.backend.dto.UpdateClassroomRequest;
 import com.nettdet.backend.dto.ValidateClassroomCodeRequest;
@@ -289,6 +290,58 @@ class ClassroomServiceTest {
         TeacherLeaveStatusResponse response = classroomService.getTeacherLeaveStatus(CLASSROOM_CODE, teacherPrincipal());
 
         assertTrue(response.canLeave());
+    }
+
+    @DisplayName("Returns pending pupil requests with usernames and avatar object keys")
+    @Test
+    void getPendingPupilRequests_whenTeacherOwnsClassroom_returnsPendingRequestsWithUsernameAndAvatar() {
+        Classroom classroom = classroom(CLASSROOM_CODE, "8A", null);
+        PupilClassroomMembership bob = membership("bob@example.com", "Bob", "zulu", classroom, null);
+        bob.setMembershipConfirmedByTeacher(false);
+        PupilClassroomMembership alice = membership(
+                "alice@example.com",
+                "Alice",
+                "alpha",
+                classroom,
+                avatar("avatar-images/alice.png"));
+        alice.setMembershipConfirmedByTeacher(false);
+        when(classroomRepository.findById(CLASSROOM_CODE)).thenReturn(Optional.of(classroom));
+        when(bridgeRepository.existsByIdAccountEmailAndIdClassroomCode(TEACHER_EMAIL, CLASSROOM_CODE))
+                .thenReturn(true);
+        when(pupilClassroomMembershipRepository
+                .findAllByClassroomClassroomCodeAndMembershipConfirmedByTeacherFalse(CLASSROOM_CODE))
+                .thenReturn(List.of(bob, alice));
+
+        List<PendingPupilRequestResponse> response = classroomService.getPendingPupilRequests(
+                CLASSROOM_CODE,
+                teacherPrincipal());
+
+        assertEquals(List.of("alice@example.com", "bob@example.com"), response.stream()
+                .map(PendingPupilRequestResponse::accountEmail)
+                .toList());
+        assertEquals(List.of("Alice", "Bob"), response.stream()
+                .map(PendingPupilRequestResponse::legalName)
+                .toList());
+        assertEquals(List.of("alpha", "zulu"), response.stream()
+                .map(PendingPupilRequestResponse::username)
+                .toList());
+        assertEquals("avatar-images/alice.png", response.getFirst().avatarObjectKey());
+        assertNull(response.get(1).avatarObjectKey());
+    }
+
+    @DisplayName("Denies pending pupil request listing for teachers outside the classroom")
+    @Test
+    void getPendingPupilRequests_whenTeacherDoesNotOwnClassroom_throwsAccessDenied() {
+        when(classroomRepository.findById(CLASSROOM_CODE)).thenReturn(Optional.of(classroom(CLASSROOM_CODE, "8A", null)));
+        when(bridgeRepository.existsByIdAccountEmailAndIdClassroomCode(TEACHER_EMAIL, CLASSROOM_CODE))
+                .thenReturn(false);
+
+        assertThrows(AccessDeniedException.class, () -> classroomService.getPendingPupilRequests(
+                CLASSROOM_CODE,
+                teacherPrincipal()));
+
+        verify(pupilClassroomMembershipRepository, never())
+                .findAllByClassroomClassroomCodeAndMembershipConfirmedByTeacherFalse(any());
     }
 
     @DisplayName("Returns accepted pupils sorted by username with avatar object keys and XP")

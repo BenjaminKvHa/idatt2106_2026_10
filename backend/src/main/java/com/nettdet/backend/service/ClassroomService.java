@@ -394,9 +394,13 @@ public class ClassroomService {
     }
 
     private PendingPupilRequestResponse toPendingPupilRequestResponse(PupilClassroomMembership membership) {
+        FileObject avatarFileObject = membership.getAvatarFileObject();
+
         return new PendingPupilRequestResponse(
                 membership.getAccountEmail(),
-                membership.getAccount().getLegalName());
+                membership.getAccount().getLegalName(),
+                membership.getUsername(),
+                avatarFileObject != null ? avatarFileObject.getObjectKey() : null);
     }
 
     private AcceptedPupilMembershipResponse toAcceptedPupilMembershipResponse(PupilClassroomMembership membership) {

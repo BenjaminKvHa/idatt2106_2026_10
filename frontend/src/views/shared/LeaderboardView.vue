@@ -2,8 +2,8 @@
 import { computed, onMounted, ref } from 'vue'
 import TopBar from '@/components/pupil/TopBar.vue'
 import { get } from '@/utils/apiUtils'
+import blobbyImage from '@/assets/icons/blobby/creaturePeaking.png'
 import boardBackground from '@/assets/backgrounds/korktavle.png'
-import leaderboardBg from '@/assets/backgrounds/hjemskjerm-bg.png'
 
 type ClassroomLeaderboardEntry = {
   classroomCode: string
@@ -61,85 +61,66 @@ onMounted(loadLeaderboard)
 </script>
 
 <template>
-  <TopBar title="Ledertavle" />
+  <div class="pupil-scene-screen">
+    <TopBar title="Ledertavle" />
 
-  <div class="page" :style="{ backgroundImage: `url(${leaderboardBg})` }">
-    <div class="board-card">
-      <img class="board-image" :src="boardBackground" alt="Leaderboard board" />
+    <main class="leaderboard-page pupil-scene-page pupil-scene-page--dimmed">
+      <section class="pupil-pinboard-stage" aria-labelledby="leaderboard-title">
+        <img class="pupil-pinboard-image" :src="boardBackground" alt="" aria-hidden="true" />
+        <div class="pupil-board-blobby-wrapper" aria-hidden="true">
+          <img class="pupil-board-blobby-image" :src="blobbyImage" alt="" />
+        </div>
 
-      <div class="board-content">
-        <h1>Ledertavle</h1>
+        <div class="board-content">
+          <h1 id="leaderboard-title">Ledertavle</h1>
 
-        <p v-if="loading" class="state-message">Laster ledertavle...</p>
-        <p v-else-if="error" class="state-message error">{{ error }}</p>
+          <p v-if="loading" class="state-message">Laster ledertavle...</p>
+          <p v-else-if="error" class="state-message error">{{ error }}</p>
 
-        <template v-else>
-          <div v-if="leaderboard.length" class="list-wrap">
-            <ol>
-              <li v-for="(entry, index) in paginatedLeaderboard" :key="entry.classroomCode">
-                <span class="rank"> {{ (currentPage - 1) * itemsPerPage + index + 1 }}. </span>
+          <template v-else>
+            <div v-if="leaderboard.length" class="list-wrap pupil-thin-scroll">
+              <ol>
+                <li v-for="(entry, index) in paginatedLeaderboard" :key="entry.classroomCode">
+                  <span class="rank"> {{ (currentPage - 1) * itemsPerPage + index + 1 }}. </span>
 
-                <span class="classroom-name">
-                  {{ entry.classroomName }}
-                </span>
+                  <span class="classroom-name">
+                    {{ entry.classroomName }}
+                  </span>
 
-                <span class="xp-value"> {{ entry.totalXp }} XP </span>
-              </li>
-            </ol>
-          </div>
+                  <span class="xp-value"> {{ entry.totalXp }} XP </span>
+                </li>
+              </ol>
+            </div>
 
-          <p v-else class="state-message">Ingen klasserom funnet...</p>
-        </template>
+            <p v-else class="state-message">Ingen klasserom funnet...</p>
+          </template>
+        </div>
+      </section>
+
+      <div v-if="!loading && !error && leaderboard.length > itemsPerPage" class="pagination">
+        <button :disabled="currentPage === 1" @click="previousPage">Forrige</button>
+
+        <span>Side {{ currentPage }} av {{ totalPages }}</span>
+
+        <button :disabled="currentPage === totalPages" @click="nextPage">Neste</button>
       </div>
-    </div>
-
-    <div v-if="!loading && !error && leaderboard.length > itemsPerPage" class="pagination">
-      <button :disabled="currentPage === 1" @click="previousPage">Forrige</button>
-
-      <span>Side {{ currentPage }} av {{ totalPages }}</span>
-
-      <button :disabled="currentPage === totalPages" @click="nextPage">Neste</button>
-    </div>
+    </main>
   </div>
 </template>
 
 <style scoped>
-.page {
-  display: flex;
-  flex-direction: column;
-  min-height: calc(100vh - 4rem);
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem;
-
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-.board-card {
-  position: relative;
-  width: min(92vw, 70rem);
-  margin: auto 0;
-}
-
-.board-image {
-  display: block;
-  width: 100%;
-  height: auto;
+.leaderboard-page {
+  background-image: url('@/assets/backgrounds/hjemskjerm-bg.png');
 }
 
 .board-content {
   position: absolute;
-  inset: 8% 8% 8% 8%;
+  inset: 13% 10% 18% 10%;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: clamp(0.45rem, 1.1vw, 0.7rem);
   overflow: hidden;
-
-  padding-top: 12%;
-  padding-left: 9%;
-  padding-right: 9%;
+  padding: 5% 10% 0;
 }
 
 h1 {
@@ -161,7 +142,11 @@ h1 {
 }
 
 .list-wrap {
-  overflow: hidden;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 0.2rem 0.25rem;
 }
 
 ol {
@@ -170,7 +155,7 @@ ol {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: clamp(0.35rem, 0.8vw, 0.6rem);
 }
 
 li {
@@ -179,7 +164,8 @@ li {
   align-items: center;
   gap: 0.75rem;
 
-  padding: 0.65rem 0.9rem;
+  min-height: clamp(2.6rem, 5.2vw, 3.55rem);
+  padding: clamp(0.38rem, 0.8vw, 0.6rem) clamp(0.65rem, 1.2vw, 0.9rem);
   background: var(--beige-light);
   border-radius: 1rem;
   border: var(--border-thin) solid var(--brown-dark);
@@ -241,13 +227,9 @@ li {
 }
 
 @media (max-width: 640px) {
-  .board-card {
-    width: 98vw;
-  }
-
   .board-content {
-    inset: 9% 7% 10% 7%;
-    padding-top: 16%;
+    inset: 13% 9% 19% 9%;
+    padding: 5% 8% 0;
   }
 
   li {

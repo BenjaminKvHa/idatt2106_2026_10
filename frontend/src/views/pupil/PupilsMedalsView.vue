@@ -37,14 +37,14 @@ function medalImageUrl(medal: PupilMedal) {
 </script>
 
 <template>
-  <div class="medals-screen">
+  <div class="pupil-scene-screen">
     <TopBar title="Medaljer" previous-page-url="/pupil" />
 
-    <main class="medals-page">
-      <section class="board-shell" aria-labelledby="medals-title">
-        <img class="board-image" :src="boardBackground" alt="" aria-hidden="true" />
-        <div class="blobby-wrapper" aria-hidden="true">
-          <img class="blobby-image" :src="blobbyImage" alt="" />
+    <main class="medals-page pupil-scene-page pupil-scene-page--dimmed">
+      <section class="pupil-pinboard-stage" aria-labelledby="medals-title">
+        <img class="pupil-pinboard-image" :src="boardBackground" alt="" aria-hidden="true" />
+        <div class="pupil-board-blobby-wrapper" aria-hidden="true">
+          <img class="pupil-board-blobby-image" :src="blobbyImage" alt="" />
         </div>
 
         <div class="board-content">
@@ -58,13 +58,21 @@ function medalImageUrl(medal: PupilMedal) {
             </div>
           </header>
 
-          <p v-if="loading" class="state-message pupil-state-message" role="status">Laster medaljer...</p>
-          <p v-else-if="errorMessage" class="state-message pupil-state-message pupil-error" role="alert">
+          <p v-if="loading" class="state-message pupil-state-message" role="status">
+            Laster medaljer...
+          </p>
+          <p
+            v-else-if="errorMessage"
+            class="state-message pupil-state-message pupil-error"
+            role="alert"
+          >
             {{ errorMessage }}
           </p>
-          <p v-else-if="medals.length === 0" class="state-message pupil-state-message">Ingen medaljer funnet enda.</p>
+          <p v-else-if="medals.length === 0" class="state-message pupil-state-message">
+            Ingen medaljer funnet enda.
+          </p>
 
-          <ul v-else class="medal-grid">
+          <ul v-else class="medal-grid pupil-thin-scroll">
             <li
               v-for="medal in medals"
               :key="medal.medalKey"
@@ -99,64 +107,8 @@ function medalImageUrl(medal: PupilMedal) {
 </template>
 
 <style scoped>
-.medals-screen {
-  height: 100dvh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
 .medals-page {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-  background: url('@/assets/backgrounds/hjemskjerm-bg.png') no-repeat center center;
-  background-size: cover;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.medals-page::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: var(--color-text);
-  opacity: 0.4;
-}
-
-.board-shell {
-  position: relative;
-  z-index: 1;
-  width: min(96vw, 1400px);
-  max-height: 100%;
-}
-
-.board-image {
-  display: block;
-  width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  pointer-events: none;
-  user-select: none;
-}
-
-.blobby-wrapper {
-  position: absolute;
-  top: 10.5%;
-  right: 6%;
-  width: 30%;
-  z-index: 10;
-  transform: translateY(-50%);
-  pointer-events: none;
-}
-
-.blobby-image {
-  width: 100%;
-  height: auto;
-  display: block;
-  filter: drop-shadow(0 4px 0 var(--brown-dark-20));
+  background-image: url('@/assets/backgrounds/hjemskjerm-bg.png');
 }
 
 .board-content {
@@ -223,17 +175,6 @@ h1 {
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 0 0.35rem 0.45rem 0;
-  scrollbar-color: var(--brown-dark-60) transparent;
-  scrollbar-width: thin;
-}
-
-.medal-grid::-webkit-scrollbar {
-  width: 0.55rem;
-}
-
-.medal-grid::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-  background: var(--brown-dark-60);
 }
 
 .medal-slot {
@@ -330,17 +271,6 @@ h1 {
 
   .medal-grid {
     width: min(100%, 30rem);
-  }
-}
-
-@media (max-width: 768px) {
-  .blobby-wrapper {
-    top: -40px;
-    right: 20px;
-  }
-
-  .blobby-image {
-    width: 105px;
   }
 }
 

@@ -243,9 +243,9 @@ onBeforeUnmount(revokeImageUrls)
     </p>
   </TaskGuide>
 
-  <div v-if="showHelpPopup" class="popup-overlay" @click="closeHelpPopup">
-    <div class="hint-popup" @click.stop>
-      <h2 class="popup-title">Trenger du hjelp?</h2>
+  <div v-if="showHelpPopup" class="pupil-popup-overlay" @click="closeHelpPopup">
+    <div class="pupil-hint-popup" @click.stop>
+      <h2 class="pupil-popup-title">Trenger du hjelp?</h2>
 
       <div class="hint-text">
         <p>
@@ -258,15 +258,15 @@ onBeforeUnmount(revokeImageUrls)
         </ul>
       </div>
 
-      <div class="popup-actions">
-        <button class="popup-btn popup-btn-play" @click="closeHelpPopup">Ok</button>
+      <div class="pupil-popup-actions">
+        <button class="pupil-popup-btn popup-btn-play" @click="closeHelpPopup">Ok</button>
       </div>
     </div>
   </div>
 
-  <div v-if="showHintPopup" class="popup-overlay" @click="closeHintPopup">
-    <div class="hint-popup" @click.stop>
-      <h2 class="popup-title">Tips 💡</h2>
+  <div v-if="showHintPopup" class="pupil-popup-overlay" @click="closeHintPopup">
+    <div class="pupil-hint-popup" @click.stop>
+      <h2 class="pupil-popup-title">Tips 💡</h2>
 
       <div class="hint-text">
         <p>Tenk som en detektiv.</p>
@@ -277,8 +277,8 @@ onBeforeUnmount(revokeImageUrls)
         </ul>
       </div>
 
-      <div class="popup-actions">
-        <button class="popup-btn popup-btn-play" @click="closeHintPopup">Ok</button>
+      <div class="pupil-popup-actions">
+        <button class="pupil-popup-btn popup-btn-play" @click="closeHintPopup">Ok</button>
       </div>
     </div>
   </div>
@@ -404,31 +404,6 @@ onBeforeUnmount(revokeImageUrls)
   font-weight: 600;
 }
 
-.popup-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgb(0 0 0 / 18%);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.hint-popup {
-  width: min(560px, calc(100vw - 32px));
-  background: var(--orange-medium-80);
-  border: 4px solid var(--brown-dark);
-  border-radius: 28px;
-  box-shadow: 0 10px 24px rgb(0 0 0 / 20%);
-  padding: 28px 24px 20px;
-  text-align: center;
-  backdrop-filter: blur(2px);
-}
-
-.popup-title {
-  margin: 0 0 10px;
-}
-
 .hint-text {
   margin-top: 10px;
   text-align: left;
@@ -445,36 +420,6 @@ onBeforeUnmount(revokeImageUrls)
 
 .hint-text li {
   margin-bottom: 6px;
-}
-
-.popup-actions {
-  display: flex;
-  justify-content: center;
-  gap: 22px;
-  flex-wrap: wrap;
-  margin-top: 26px;
-}
-
-.popup-btn {
-  min-width: 150px;
-  padding: 14px 24px;
-  border-radius: 22px;
-  border: 4px solid var(--brown-dark);
-  cursor: pointer;
-  font-weight: 700;
-  box-shadow: 0 6px 12px rgb(0 0 0 / 18%);
-  transition:
-    transform 0.2s ease,
-    filter 0.2s ease;
-}
-
-.popup-btn:hover {
-  transform: scale(1.04);
-  filter: brightness(1.08);
-}
-
-.popup-btn:active {
-  transform: scale(0.97);
 }
 
 .popup-btn-play {

@@ -193,32 +193,52 @@ SET
     highscore = EXCLUDED.highscore,
     unsuccessful_streak = EXCLUDED.unsuccessful_streak;
 
-UPDATE pupil_chapter_bridge_progression AS progression
-SET notebook_json = jsonb_set(
-    COALESCE(progression.notebook_json, '{"tips":[],"ownNotes":""}'::jsonb),
-    '{tips}',
-    CASE progression.chapter_id
-        WHEN 1 THEN '[
-            "Se nøye på kilden før du bestemmer deg.",
-            "Sammenlign overskrift og innhold. De bør fortelle samme historie.",
-            "Let etter tegn på at saken prøver å lure deg med sterke følelser."
-        ]'::jsonb
-        WHEN 2 THEN '[
-            "Se etter detaljer i bildet som ikke passer med resten.",
-            "Sjekk lys, skygger og kanter rundt viktige objekter.",
-            "Tenk over om bildet kan være tatt ut av sin opprinnelige sammenheng."
-        ]'::jsonb
-        WHEN 3 THEN '[
-            "Les hele oppgaven før du velger svar.",
-            "Bruk det du lærte i de tidligere kapitlene.",
-            "Ta deg tid til å sjekke både tekst og bilde.",
-            "Hvis noe virker for godt eller rart til å være sant, undersøk det ekstra nøye.",
-            "Se etter små detaljer som avslører hva som faktisk skjer."
-        ]'::jsonb
-        ELSE '[]'::jsonb
-    END,
-    true
+-- Weekly mysteries: a mix of approved (different ISO weeks) and pending,
+-- across the TESTAA classroom so demo.alice / demo.bob / demo.pending pupils see them.
+-- file_object ids 1..10 come from TaskSeeder. weekly_mystery.file_object_id is UNIQUE,
+-- so each id is used at most once below.
+DELETE FROM weekly_mystery WHERE classroom_code IN ('TESTAA', 'TESTBB');
+
+INSERT INTO weekly_mystery (
+    file_object_id,
+    classroom_code,
+    account_email,
+    comment,
+    approved,
+    approved_at,
+    created_at
 )
+
+VALUES
+    -- Current week (TESTAA): two approved + one pending
+    (1, 'TESTAA', 'demo.alice@example.com',
+     'Bildet ser veldig ekte ut, men jeg er litt usikker på øynene.',
+     TRUE,  NOW() - INTERVAL '1 day',  NOW() - INTERVAL '1 day 2 hours'),
+    (2, 'TESTAA', 'demo.bob@example.com',
+     'Folkene i mengden ser nesten identiske ut – ser KI-generert ut.',
+     TRUE,  NOW() - INTERVAL '2 days', NOW() - INTERVAL '2 days 3 hours'),
+    (3, 'TESTAA', 'demo.alice@example.com',
+     'Skarpheten på jorda er for perfekt. Jeg tror dette er KI.',
+     FALSE, NULL,                       NOW() - INTERVAL '4 hours'),
+
+    -- Last week (TESTAA): one approved
+    (4, 'TESTAA', 'demo.bob@example.com',
+     'Blomstene har for glatte teksturer.',
+     TRUE,  NOW() - INTERVAL '8 days',  NOW() - INTERVAL '8 days 2 hours'),
+
+    -- Two weeks ago (TESTAA): one approved
+    (5, 'TESTAA', 'demo.alice@example.com',
+     'Trærne ser duplisert ut og himmelen er rar.',
+     TRUE,  NOW() - INTERVAL '15 days', NOW() - INTERVAL '15 days 4 hours'),
+
+    -- TESTBB: one approved this week + one pending
+    (6, 'TESTBB', 'demo.carla@example.com',
+     'Ansiktet i bakgrunnen ser litt forvrengt ut.',
+     TRUE,  NOW() - INTERVAL '1 day',   NOW() - INTERVAL '1 day 1 hour'),
+    (7, 'TESTBB', 'demo.carla@example.com',
+     'Logoen på skiltet ser ikke riktig ut.',
+     FALSE, NULL,                       NOW() - INTERVAL '6 hours');
+
 FROM chapter
 WHERE chapter.id = progression.chapter_id
   AND progression.successful_runs >= 1
@@ -231,6 +251,7 @@ WHERE chapter.id = progression.chapter_id
       'rank.two@example.com',
       'rank.three@example.com'
   );
+
 
 DELETE FROM notification
 WHERE classroom_code = 'MAPAAA'

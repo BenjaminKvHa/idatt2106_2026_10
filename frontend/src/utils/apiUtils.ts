@@ -150,6 +150,38 @@ export async function getBlob(endpoint: string): Promise<Blob> {
   return await res.blob()
 }
 
+export async function postForm<T = unknown>(endpoint: string, formData: FormData): Promise<T> {
+  if (!hasAccessToken()) {
+    await getNewTokens()
+  }
+
+  const buildInit = (): RequestInit => {
+    const headers: Record<string, string> = {}
+    const token = getAccessToken()
+    if (token) headers.Authorization = `Bearer ${token}`
+    return { method: 'POST', credentials: 'include', headers, body: formData }
+  }
+
+  let res = await fetch(endpoint, buildInit())
+  if (res.status === 401) {
+    await getNewTokens()
+    if (!getAccessToken()) {
+      clearAuthSessionStorage()
+      throw new Error('Unauthorized')
+    }
+    res = await fetch(endpoint, buildInit())
+  }
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      clearAuthSessionStorage()
+    }
+    throw new Error(await parseErrorMessage(res))
+  }
+
+  return (await parseResponse(res)) as T
+}
+
 export async function get<T = unknown>(endpoint: string): Promise<T> {
   return await requestWithOptions(endpoint, 'GET')
 }

@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/components/pupil/TopBar.vue'
+import HintCreature from '@/components/pupil/task/BlobbyQuestion.vue'
 import TaskGuide from '@/components/pupil/TaskGuide.vue'
 import PupilImageTask from '@/components/pupil/task/PupilImageTask.vue'
 import PupilNewsTask from '@/components/pupil/task/PupilNewsTask.vue'
@@ -189,18 +190,18 @@ async function submit() {
     const body: DatacenterAnswerRequest =
       level.task.format === 'IMAGE_VERIFICATION'
         ? {
-          format: 'IMAGE_VERIFICATION',
-          imageAnswer: {
-            selectedCategory: level.selectedCategory!,
-            selectedJustification: level.selectedJustification!,
-          },
-          newsAnswer: null,
-        }
+            format: 'IMAGE_VERIFICATION',
+            imageAnswer: {
+              selectedCategory: level.selectedCategory!,
+              selectedJustification: level.selectedJustification!,
+            },
+            newsAnswer: null,
+          }
         : {
-          format: 'NEWS_VERIFICATION',
-          imageAnswer: null,
-          newsAnswer: { selectedFileId: level.selectedFileId! },
-        }
+            format: 'NEWS_VERIFICATION',
+            imageAnswer: null,
+            newsAnswer: { selectedFileId: level.selectedFileId! },
+          }
 
     level.result = await post<ValidationResult>(
       `/api/chapters/datasenteret/tasks/${level.task.taskId}/validate`,
@@ -250,7 +251,7 @@ onBeforeUnmount(revokeAllImageUrls)
 </script>
 
 <template>
-  <TopBar title="Datasenteret" @help="showHelpPopup = true" @hint="showHintPopup = true" />
+  <TopBar title="Datasenteret" />
 
   <div class="pupil-task-page" :style="pageStyle">
     <div class="pupil-center-container datacenter-container">
@@ -261,6 +262,10 @@ onBeforeUnmount(revokeAllImageUrls)
         <div class="progress-box pupil-panel">
           <p>Nivå {{ currentLevelIndex + 1 }}/{{ levels.length }}</p>
         </div>
+
+        <HintCreature
+          hint="Les oppgaven nøye. Se etter små detaljer som kan avsløre riktig svar."
+        />
 
         <div class="pupil-panel pupil-task-text-box">
           <p>
@@ -322,9 +327,7 @@ onBeforeUnmount(revokeAllImageUrls)
           <div
             v-if="currentLevel.result"
             class="pupil-feedback-box"
-            :class="
-              currentLevel.result.correct ? 'pupil-feedback-correct' : 'pupil-feedback-wrong'
-            "
+            :class="currentLevel.result.correct ? 'pupil-feedback-correct' : 'pupil-feedback-wrong'"
           >
             <p class="pupil-feedback-title">
               {{ currentLevel.result.correct ? 'Riktig!' : 'Feil!' }}

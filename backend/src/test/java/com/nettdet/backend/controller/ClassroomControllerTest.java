@@ -44,6 +44,7 @@ import com.nettdet.backend.dto.AcceptedPupilMembershipResponse;
 import com.nettdet.backend.dto.ClassroomResponse;
 import com.nettdet.backend.dto.ClassroomTeacherResponse;
 import com.nettdet.backend.dto.CreateClassroomRequest;
+import com.nettdet.backend.dto.PendingPupilRequestResponse;
 import com.nettdet.backend.dto.TeacherLeaveStatusResponse;
 import com.nettdet.backend.dto.UpdatePupilUsernameRequest;
 import com.nettdet.backend.dto.ValidateClassroomCodeRequest;
@@ -219,6 +220,40 @@ class ClassroomControllerTest {
                         .with(authentication(authenticationFor(principal, "PUPIL")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new UpdatePupilUsernameRequest("nydetektiv"))))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(classroomService);
+    }
+
+    @DisplayName("Allows authenticated teachers to list pending pupil requests with avatar and username")
+    @Test
+    void getPendingPupilRequests_whenAuthenticatedTeacher_returnsPendingRequestJson() throws Exception {
+        JwtUserPrincipal principal = teacherPrincipal();
+        when(classroomService.getPendingPupilRequests("ABCABC", principal)).thenReturn(List.of(
+                new PendingPupilRequestResponse(
+                        "pupil@example.com",
+                        "Pupil Name",
+                        "detektiv1",
+                        "avatar-images/boy_hair1_costume1.png")));
+
+        mockMvc.perform(get("/classrooms/ABCABC/pupils/pending")
+                        .with(authentication(authenticationFor(principal, "TEACHER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].accountEmail").value("pupil@example.com"))
+                .andExpect(jsonPath("$[0].legalName").value("Pupil Name"))
+                .andExpect(jsonPath("$[0].username").value("detektiv1"))
+                .andExpect(jsonPath("$[0].avatarObjectKey").value("avatar-images/boy_hair1_costume1.png"));
+
+        verify(classroomService).getPendingPupilRequests("ABCABC", principal);
+    }
+
+    @DisplayName("Denies pupils from pending pupil request listing")
+    @Test
+    void getPendingPupilRequests_whenAuthenticatedPupil_returnsForbidden() throws Exception {
+        JwtUserPrincipal principal = new JwtUserPrincipal("Pupil Name", "pupil@example.com", "PUPIL");
+
+        mockMvc.perform(get("/classrooms/ABCABC/pupils/pending")
+                        .with(authentication(authenticationFor(principal, "PUPIL"))))
                 .andExpect(status().isForbidden());
 
         verifyNoInteractions(classroomService);

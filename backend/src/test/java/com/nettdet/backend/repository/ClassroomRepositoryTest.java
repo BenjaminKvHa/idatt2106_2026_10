@@ -101,6 +101,29 @@ class ClassroomRepositoryTest {
         assertEquals("Pending Pupil", membership.orElseThrow().getAccount().getLegalName());
     }
 
+    @DisplayName("Finds pending pupils with account and avatar object data")
+    @Test
+    void findAllByClassroomClassroomCodeAndMembershipConfirmedByTeacherFalse_whenPendingPupilsExist_loadsAccountAndAvatar() {
+        insertClassroomData();
+        insertPupilAccount("pending.avatar@example.com", "Pending Avatar");
+        insertPupilAccount("pending.noavatar@example.com", "Pending No Avatar");
+        Long avatarId = insertAvatarFile("avatar-images/pending.png");
+        insertMembership("pending.avatar@example.com", "ABCABC", "avatar-user", false, avatarId);
+        insertMembership("pending.noavatar@example.com", "ABCABC", "no-avatar-user", false);
+
+        List<PupilClassroomMembership> memberships = membershipRepository
+                .findAllByClassroomClassroomCodeAndMembershipConfirmedByTeacherFalse("ABCABC");
+
+        assertEquals(2, memberships.size());
+        PupilClassroomMembership avatarMembership = memberships.stream()
+                .filter(membership -> membership.getAccountEmail().equals("pending.avatar@example.com"))
+                .findFirst()
+                .orElseThrow();
+        assertEquals("Pending Avatar", avatarMembership.getAccount().getLegalName());
+        assertEquals("avatar-user", avatarMembership.getUsername());
+        assertEquals("avatar-images/pending.png", avatarMembership.getAvatarFileObject().getObjectKey());
+    }
+
     @DisplayName("Rejects classroom codes that contain numbers")
     @Test
     void classroomCodeConstraint_whenCodeContainsNumbers_rejectsInsert() {
@@ -156,5 +179,24 @@ class ClassroomRepositoryTest {
                 classroomCode,
                 username,
                 confirmed);
+    }
+
+    private void insertMembership(String email, String classroomCode, String username, boolean confirmed, Long avatarFileObjectId) {
+        jdbcTemplate.update(
+                "INSERT INTO pupil_classroom_membership (account_email, classroom_code, username, membership_confirmed_by_teacher, avatar_file_object_id) VALUES (?, ?, ?, ?, ?)",
+                email,
+                classroomCode,
+                username,
+                confirmed,
+                avatarFileObjectId);
+    }
+
+    private Long insertAvatarFile(String objectKey) {
+        return jdbcTemplate.queryForObject(
+                "INSERT INTO file_object (object_key, access_level, file_name) VALUES (?, ?::classroom_access_enum, ?) RETURNING id",
+                Long.class,
+                objectKey,
+                "PUBLIC",
+                objectKey.substring(objectKey.lastIndexOf('/') + 1));
     }
 }

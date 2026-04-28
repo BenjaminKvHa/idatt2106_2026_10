@@ -20,7 +20,7 @@ import com.nettdet.backend.repository.FileObjectRepository;
 import com.nettdet.backend.service.FileObjectService;
 
 @Component
-@Order(2)
+@Order(3)
 public class MedalAssetInitializer implements ApplicationRunner {
 
     private static final Logger logger = LoggerFactory.getLogger(MedalAssetInitializer.class);

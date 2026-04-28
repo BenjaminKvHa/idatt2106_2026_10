@@ -32,7 +32,7 @@ public interface PupilClassroomMembershipRepository extends JpaRepository<PupilC
     @EntityGraph(attributePaths = {"account", "avatarFileObject", "chapterProgressions"})
     List<PupilClassroomMembership> findAllByClassroomClassroomCodeAndMembershipConfirmedByTeacherTrue(String classroomCode);
 
-    @EntityGraph(attributePaths = "account")
+    @EntityGraph(attributePaths = {"account", "avatarFileObject"})
     List<PupilClassroomMembership> findAllByClassroomClassroomCodeAndMembershipConfirmedByTeacherFalse(String classroomCode);
 
     @Query("SELECT m.classroom.classroomCode FROM PupilClassroomMembership m " +

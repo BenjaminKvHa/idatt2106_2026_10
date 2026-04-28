@@ -74,7 +74,7 @@ onMounted(loadLeaderboard)
         <p v-else-if="error" class="state-message error">{{ error }}</p>
 
         <template v-else>
-          <div v-if="leaderboard.length" class="list-wrap">
+          <div v-if="leaderboard.length" class="list-wrap pupil-thin-scroll">
             <ol>
               <li v-for="(entry, index) in paginatedLeaderboard" :key="entry.classroomCode">
                 <span class="rank"> {{ (currentPage - 1) * itemsPerPage + index + 1 }}. </span>
@@ -131,15 +131,12 @@ onMounted(loadLeaderboard)
 
 .board-content {
   position: absolute;
-  inset: 8% 8% 8% 8%;
+  inset: 13% 10% 18% 10%;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: clamp(0.45rem, 1.1vw, 0.7rem);
   overflow: hidden;
-
-  padding-top: 12%;
-  padding-left: 9%;
-  padding-right: 9%;
+  padding: 5% 10% 0;
 }
 
 h1 {
@@ -161,7 +158,11 @@ h1 {
 }
 
 .list-wrap {
-  overflow: hidden;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 0.2rem 0.25rem;
 }
 
 ol {
@@ -170,7 +171,7 @@ ol {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: clamp(0.35rem, 0.8vw, 0.6rem);
 }
 
 li {
@@ -179,7 +180,8 @@ li {
   align-items: center;
   gap: 0.75rem;
 
-  padding: 0.65rem 0.9rem;
+  min-height: clamp(2.6rem, 5.2vw, 3.55rem);
+  padding: clamp(0.38rem, 0.8vw, 0.6rem) clamp(0.65rem, 1.2vw, 0.9rem);
   background: var(--beige-light);
   border-radius: 1rem;
   border: var(--border-thin) solid var(--brown-dark);
@@ -246,8 +248,8 @@ li {
   }
 
   .board-content {
-    inset: 9% 7% 10% 7%;
-    padding-top: 16%;
+    inset: 13% 9% 19% 9%;
+    padding: 5% 8% 0;
   }
 
   li {

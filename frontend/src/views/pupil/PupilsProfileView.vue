@@ -10,6 +10,9 @@ import {
   put,
   type BackendAccountRole,
 } from '@/utils/apiUtils'
+import { useAudio } from '@/composables/useAudio'
+import volume2Icon from '@/assets/icons/volume-2.svg'
+import volumeXIcon from '@/assets/icons/volume-x.svg'
 
 type ProfileResponse = {
   email: string
@@ -24,8 +27,6 @@ type UpdateMeRequest = {
   username: string
 }
 
-const NETTDET_VOLUME_KEY = 'nettdet_volume'
-
 const router = useRouter()
 const profile = ref<ProfileResponse | null>(null)
 const loading = ref(true)
@@ -33,8 +34,9 @@ const error = ref<string | null>(null)
 const actionError = ref<string | null>(null)
 const leavingClassroom = ref(false)
 const signingOut = ref(false)
-const volumeValue = ref(65)
 const editingNickname = ref(false)
+
+const { volume, isMuted, setVolume, toggleMute } = useAudio()
 const nicknameDraft = ref('')
 const savingNickname = ref(false)
 
@@ -61,25 +63,7 @@ async function loadProfile() {
   }
 }
 
-function loadSavedVolume() {
-  if (typeof window === 'undefined') return
-
-  const savedVolume = window.localStorage.getItem(NETTDET_VOLUME_KEY)
-  if (!savedVolume) return
-
-  const parsedVolume = Number(savedVolume)
-  if (!Number.isNaN(parsedVolume) && parsedVolume >= 0 && parsedVolume <= 100) {
-    volumeValue.value = parsedVolume
-  }
-}
-
-function persistVolume() {
-  if (typeof window === 'undefined') return
-  window.localStorage.setItem(NETTDET_VOLUME_KEY, String(volumeValue.value))
-}
-
 onMounted(async () => {
-  loadSavedVolume()
   await loadProfile()
 })
 
@@ -232,15 +216,21 @@ async function saveNickname() {
 
           <div class="setting-card pupil-inner-card">
             <label class="pupil-label" for="volume-slider">Volum</label>
-            <input
-              id="volume-slider"
-              v-model.number="volumeValue"
-              type="range"
-              min="0"
-              max="100"
-              @input="persistVolume"
-            />
-            <p>{{ volumeValue }}%</p>
+            <div class="volume-row">
+              <button type="button" class="mute-btn" :aria-label="isMuted ? 'Skru på lyd' : 'Demp lyd'" @click="toggleMute">
+                <img :src="isMuted ? volumeXIcon : volume2Icon" alt="" aria-hidden="true" class="volume-icon" />
+              </button>
+              <input
+                id="volume-slider"
+                :value="volume"
+                type="range"
+                min="0"
+                max="100"
+                :disabled="isMuted"
+                @input="setVolume(+($event.target as HTMLInputElement).value)"
+              />
+            </div>
+            <p>{{ isMuted ? 'Dempet' : volume + '%' }}</p>
           </div>
 
           <p v-if="actionError" class="action-error pupil-error">{{ actionError }}</p>

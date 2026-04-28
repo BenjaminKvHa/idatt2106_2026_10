@@ -143,6 +143,8 @@ public class NotebookService {
         progression.setSuccessfulRuns(0);
         progression.setHighscore(0);
         progression.setUnsuccessfulStreak(0);
+        progression.setCurrentRunAttempts(0);
+        progression.setCurrentRunCorrect(0);
         progression.setNotebookJson(notebookJsonService.defaultNotebookJson());
         return progressionRepository.save(progression);
     }
@@ -164,3 +166,4 @@ public class NotebookService {
         return email.trim();
     }
 }
+

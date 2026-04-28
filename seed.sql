@@ -174,19 +174,19 @@ INSERT INTO pupil_chapter_bridge_progression (
 )
 VALUES
     ('demo.alice@example.com', 1, 3, 3, 0),
-    ('demo.alice@example.com', 2, 2, 2, 0),
-    ('demo.bob@example.com', 1, 1, 1, 0),
+    ('demo.alice@example.com', 2, 0, 2, 1),
+    ('demo.bob@example.com', 1, 0, 1, 1),
     ('demo.carla@example.com', 1, 3, 3, 0),
     ('demo.carla@example.com', 2, 3, 3, 0),
-    ('demo.carla@example.com', 3, 1, 2, 0),
+    ('demo.carla@example.com', 3, 0, 2, 1),
     ('map.partial@example.com', 1, 3, 3, 0),
     ('map.partial@example.com', 2, 3, 3, 0),
     ('map.complete@example.com', 1, 3, 3, 0),
     ('map.complete@example.com', 2, 3, 3, 0),
     ('map.complete@example.com', 3, 5, 5, 0),
-    ('rank.two@example.com', 1, 1, 2, 0),
-    ('rank.two@example.com', 2, 1, 1, 0),
-    ('rank.three@example.com', 1, 1, 1, 0)
+    ('rank.two@example.com', 1, 1, 3, 0),
+    ('rank.two@example.com', 2, 0, 1, 1),
+    ('rank.three@example.com', 1, 0, 1, 1)
 ON CONFLICT (email, chapter_id) DO UPDATE
 SET
     successful_runs = EXCLUDED.successful_runs,
@@ -221,7 +221,7 @@ SET notebook_json = jsonb_set(
 )
 FROM chapter
 WHERE chapter.id = progression.chapter_id
-  AND progression.successful_runs >= chapter.successful_runs_needed_for_completion
+  AND progression.successful_runs >= 1
   AND progression.email IN (
       'demo.alice@example.com',
       'demo.bob@example.com',

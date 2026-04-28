@@ -352,6 +352,7 @@ async function resetGame() {
 }
 
 onMounted(loadRun)
+onBeforeUnmount(stopResultSounds)
 onBeforeUnmount(revokeAllImageUrls)
 </script>
 

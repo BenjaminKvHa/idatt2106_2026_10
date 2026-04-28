@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import confetti from 'canvas-confetti'
 import completedSoundFile from '@/assets/completedSound.mp3'
@@ -57,6 +57,8 @@ function retry() {
   stopAllSounds()
   emit('retry')
 }
+
+onUnmounted(stopAllSounds)
 
 watch(
   () => props.show,

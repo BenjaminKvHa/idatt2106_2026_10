@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import TopBar from '@/components/TopBar.vue'
+import TopBar from '@/components/pupil/TopBar.vue'
 import { get } from '@/utils/apiUtils'
-import boardBackground from '@/assets/korktavle.png'
+import boardBackground from '@/assets/backgrounds/korktavle.png'
 import leaderboardBg from '@/assets/backgrounds/hjemskjerm-bg.png'
 
 type ClassroomLeaderboardEntry = {

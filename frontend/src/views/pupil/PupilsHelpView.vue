@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import TopBar from '@/components/TopBar.vue'
-import boardBackground from '@/assets/korktavle.png'
+import TopBar from '@/components/pupil/TopBar.vue'
+import boardBackground from '@/assets/backgrounds/korktavle.png'
 import homeBg from '@/assets/backgrounds/hjemskjerm-bg.png'
 </script>
 

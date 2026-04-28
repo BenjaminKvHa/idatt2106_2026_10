@@ -174,7 +174,7 @@ INSERT INTO pupil_chapter_bridge_progression (
 )
 VALUES
     ('demo.alice@example.com', 1, 3, 3, 0),
-    ('demo.alice@example.com', 2, 2, 2, 0),
+    ('demo.alice@example.com', 2, 0, 2, 0),
     ('demo.bob@example.com', 1, 1, 1, 0),
     ('demo.carla@example.com', 1, 3, 3, 0),
     ('demo.carla@example.com', 2, 3, 3, 0),

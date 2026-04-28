@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 
-import TopBar from '@/components/TopBar.vue'
-import blobbyImage from '@/assets/creaturePeaking.png'
-import boardBackground from '@/assets/korktavle.png'
-import medalsIcon from '@/assets/homescreen/icon_medals.png'
+import TopBar from '@/components/pupil/TopBar.vue'
+import blobbyImage from '@/assets/icons/blobby/creaturePeaking.png'
+import boardBackground from '@/assets/backgrounds/korktavle.png'
+import medalsIcon from '@/assets/icons/homescreen/icon_medals.png'
 import { get } from '@/utils/apiUtils'
 
 type PupilMedal = {
@@ -58,11 +58,11 @@ function medalImageUrl(medal: PupilMedal) {
             </div>
           </header>
 
-          <p v-if="loading" class="state-message" role="status">Laster medaljer...</p>
-          <p v-else-if="errorMessage" class="state-message error" role="alert">
+          <p v-if="loading" class="state-message pupil-state-message" role="status">Laster medaljer...</p>
+          <p v-else-if="errorMessage" class="state-message pupil-state-message pupil-error" role="alert">
             {{ errorMessage }}
           </p>
-          <p v-else-if="medals.length === 0" class="state-message">Ingen medaljer funnet enda.</p>
+          <p v-else-if="medals.length === 0" class="state-message pupil-state-message">Ingen medaljer funnet enda.</p>
 
           <ul v-else class="medal-grid">
             <li
@@ -122,7 +122,8 @@ function medalImageUrl(medal: PupilMedal) {
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--color-text);
+  opacity: 0.4;
 }
 
 .board-shell {
@@ -155,7 +156,7 @@ function medalImageUrl(medal: PupilMedal) {
   width: 100%;
   height: auto;
   display: block;
-  filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.2));
+  filter: drop-shadow(0 4px 0 var(--brown-dark-20));
 }
 
 .board-content {
@@ -203,14 +204,10 @@ h1 {
   align-items: center;
   border: var(--border-thin) solid var(--brown-dark);
   border-radius: 0.75rem;
-  background: rgba(255, 248, 235, 0.82);
+  background: var(--beige-light-80);
   color: var(--brown-dark);
   font-weight: 700;
   text-align: center;
-}
-
-.state-message.error {
-  color: #9b1c1c;
 }
 
 .medal-grid {
@@ -254,13 +251,13 @@ h1 {
   overflow: hidden;
   border: var(--border-thin) solid var(--brown-dark);
   border-radius: 1.1rem;
-  background: rgba(255, 238, 211, 0.74);
-  box-shadow: 0 0.35rem 0 rgba(72, 47, 31, 0.22);
+  background: var(--beige-light-80);
+  box-shadow: 0 0.35rem 0 var(--brown-dark-20);
   padding: clamp(0.55rem, 1.2vw, 0.85rem);
 }
 
 .medal-slot--locked .medal-card {
-  background: rgba(232, 213, 188, 0.66);
+  background: var(--beige-medium-60);
 }
 
 .medal-art {
@@ -276,7 +273,7 @@ h1 {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 0.2rem 0 rgba(0, 0, 0, 0.18));
+  filter: drop-shadow(0 0.2rem 0 var(--brown-dark-20));
 }
 
 .missing-image {
@@ -286,7 +283,7 @@ h1 {
   width: 100%;
   height: 100%;
   border-radius: 1rem;
-  background: rgba(245, 234, 216, 0.85);
+  background: var(--beige-light-80);
   color: var(--brown-dark);
   font-size: 2rem;
   font-weight: 800;
@@ -318,7 +315,7 @@ h1 {
   right: 0.45rem;
   border: 2px solid var(--brown-dark);
   border-radius: 999px;
-  background: rgba(255, 248, 235, 0.94);
+  background: var(--beige-light-80);
   color: var(--brown-dark);
   font-size: clamp(0.62rem, 0.85vw, 0.72rem);
   font-weight: 800;

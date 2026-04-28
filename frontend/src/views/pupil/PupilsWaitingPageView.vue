@@ -2,6 +2,7 @@
 import {useRoute, useRouter} from 'vue-router'
 import { onMounted, onUnmounted } from 'vue'
 import { get } from '@/utils/apiUtils'
+import bgImg from '@/assets/backgrounds/welcomeBackground.png'
 
 const router = useRouter()
 const route = useRoute()
@@ -47,7 +48,7 @@ function goBack(): void {
 </script>
 
 <template>
-  <div class="page">
+  <div class="page" :style="{ backgroundImage: `url(${bgImg})` }">
     <div class="center-container">
       <div class="waiting-container">
         <div class="text-container">
@@ -86,7 +87,6 @@ function goBack(): void {
   justify-content: center;
   padding: clamp(1rem, 4vw, 3rem);
   overflow-y: auto;
-  background-image: url('/src/assets/welcomeBackground.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

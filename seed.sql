@@ -174,19 +174,19 @@ INSERT INTO pupil_chapter_bridge_progression (
 )
 VALUES
     ('demo.alice@example.com', 1, 3, 3, 0),
-    ('demo.alice@example.com', 2, 0, 2, 0),
-    ('demo.bob@example.com', 1, 1, 1, 0),
+    ('demo.alice@example.com', 2, 0, 2, 1),
+    ('demo.bob@example.com', 1, 0, 1, 1),
     ('demo.carla@example.com', 1, 3, 3, 0),
     ('demo.carla@example.com', 2, 3, 3, 0),
-    ('demo.carla@example.com', 3, 1, 2, 0),
+    ('demo.carla@example.com', 3, 0, 2, 1),
     ('map.partial@example.com', 1, 3, 3, 0),
     ('map.partial@example.com', 2, 3, 3, 0),
     ('map.complete@example.com', 1, 3, 3, 0),
     ('map.complete@example.com', 2, 3, 3, 0),
     ('map.complete@example.com', 3, 5, 5, 0),
-    ('rank.two@example.com', 1, 1, 2, 0),
-    ('rank.two@example.com', 2, 1, 1, 0),
-    ('rank.three@example.com', 1, 1, 1, 0)
+    ('rank.two@example.com', 1, 1, 3, 0),
+    ('rank.two@example.com', 2, 0, 1, 1),
+    ('rank.three@example.com', 1, 0, 1, 1)
 ON CONFLICT (email, chapter_id) DO UPDATE
 SET
     successful_runs = EXCLUDED.successful_runs,
@@ -208,6 +208,7 @@ INSERT INTO weekly_mystery (
     approved_at,
     created_at
 )
+
 VALUES
     -- Current week (TESTAA): two approved + one pending
     (1, 'TESTAA', 'demo.alice@example.com',
@@ -237,6 +238,20 @@ VALUES
     (7, 'TESTBB', 'demo.carla@example.com',
      'Logoen på skiltet ser ikke riktig ut.',
      FALSE, NULL,                       NOW() - INTERVAL '6 hours');
+
+FROM chapter
+WHERE chapter.id = progression.chapter_id
+  AND progression.successful_runs >= 1
+  AND progression.email IN (
+      'demo.alice@example.com',
+      'demo.bob@example.com',
+      'demo.carla@example.com',
+      'map.partial@example.com',
+      'map.complete@example.com',
+      'rank.two@example.com',
+      'rank.three@example.com'
+  );
+
 
 DELETE FROM notification
 WHERE classroom_code = 'MAPAAA'

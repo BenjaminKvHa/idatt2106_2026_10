@@ -154,16 +154,23 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="notebook-screen">
+  <div class="pupil-scene-screen">
     <TopBar title="Notatbok" />
 
-    <main class="page" :style="{ backgroundImage: `url(${woodBackground})` }">
+    <main
+      class="notebook-page pupil-scene-page"
+      :style="{ backgroundImage: `url(${woodBackground})` }"
+    >
       <section class="book-stage" aria-labelledby="chapter-title">
         <img class="book-image" :src="bookImage" alt="" aria-hidden="true" />
 
         <div class="book-content">
-          <p v-if="loadingChapters || loadingNotebook" class="state-message">Loading...</p>
-          <p v-else-if="loadError" class="state-message error">{{ loadError }}</p>
+          <p v-if="loadingChapters || loadingNotebook" class="state-message pupil-state-message">
+            Loading...
+          </p>
+          <p v-else-if="loadError" class="state-message pupil-state-message pupil-error">
+            {{ loadError }}
+          </p>
 
           <template v-else-if="notebook">
             <section
@@ -173,7 +180,7 @@ onMounted(async () => {
               <button
                 v-if="hasPreviousChapter"
                 type="button"
-                class="nav-button nav-button-back"
+                class="nav-button nav-button-back pupil-round-icon-button"
                 aria-label="Forrige kapittel"
                 @click="goToPreviousChapter"
               >
@@ -187,7 +194,7 @@ onMounted(async () => {
                 <p class="page-number">Page {{ currentPageNumber }} / {{ totalPages }}</p>
               </header>
 
-              <div class="page-section">
+              <div class="page-section pupil-thin-scroll">
                 <h2>Tips</h2>
                 <ul class="tips-list">
                   <li v-for="tip in notebook.tips" :key="tip">{{ tip }}</li>
@@ -203,7 +210,7 @@ onMounted(async () => {
               <button
                 v-if="hasNextChapter"
                 type="button"
-                class="nav-button nav-button-forward"
+                class="nav-button nav-button-forward pupil-round-icon-button"
                 aria-label="Neste kapittel"
                 @click="goToNextChapter"
               >
@@ -212,7 +219,7 @@ onMounted(async () => {
               </button>
               <span v-else class="nav-placeholder" aria-hidden="true"></span>
 
-              <div class="page-section notes-section">
+              <div class="page-section notes-section pupil-thin-scroll">
                 <h2>Egne notater</h2>
                 <textarea
                   v-model="ownNotesDraft"
@@ -243,24 +250,7 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.notebook-screen {
-  height: 100dvh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.page {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  background-repeat: no-repeat;
-  background-position: center center;
-  background-size: cover;
+.notebook-page {
   padding: clamp(0.35rem, 1vw, 0.85rem);
 }
 
@@ -320,17 +310,6 @@ onMounted(async () => {
   margin-top: clamp(0.65rem, 1.4vw, 1.25rem);
   overflow-y: auto;
   padding-right: 0.35rem;
-  scrollbar-color: var(--brown-dark-60) transparent;
-  scrollbar-width: thin;
-}
-
-.page-section::-webkit-scrollbar {
-  width: 0.45rem;
-}
-
-.page-section::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-  background: var(--brown-dark-60);
 }
 
 .page-section h2 {
@@ -361,30 +340,6 @@ onMounted(async () => {
 .nav-button {
   position: absolute;
   top: clamp(0.15rem, 0.55vw, 0.55rem);
-  z-index: 2;
-  width: clamp(2rem, 3.2vw, 2.8rem);
-  height: clamp(2rem, 3.2vw, 2.8rem);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border-radius: 999px;
-  border: var(--border-thin) solid var(--brown-dark);
-  background: rgba(255, 248, 235, 0.88);
-  color: var(--brown-dark);
-  cursor: pointer;
-  box-shadow: 0 0.2rem 0 rgba(90, 62, 43, 0.18);
-}
-
-.nav-button:hover {
-  background: var(--brown-dark);
-  color: var(--beige-light);
-}
-
-.nav-button svg {
-  width: 68%;
-  height: 68%;
-  stroke: currentColor;
 }
 
 .nav-button-back {
@@ -421,11 +376,6 @@ onMounted(async () => {
   color: var(--brown-dark);
   font-weight: 800;
   padding: 1rem;
-  text-align: center;
-}
-
-.state-message.error {
-  color: #9f1d1d;
 }
 
 .notes-section {
@@ -526,7 +476,7 @@ onMounted(async () => {
 }
 
 @media (max-width: 640px) {
-  .page {
+  .notebook-page {
     padding: 0.5rem;
   }
 

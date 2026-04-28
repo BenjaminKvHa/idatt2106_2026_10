@@ -119,9 +119,40 @@ class NotebookServiceTest {
         assertEquals(0, saved.getSuccessfulRuns());
         assertEquals(0, saved.getHighscore());
         assertEquals(0, saved.getUnsuccessfulStreak());
+        assertEquals(0, saved.getCurrentRunAttempts());
+        assertEquals(0, saved.getCurrentRunCorrect());
         assertEquals("Chapter 2", response.chapterName());
         assertEquals(List.of(), response.tips());
         assertEquals("", response.ownNotes());
+    }
+
+    @DisplayName("Auto-creates default progression before updating notes when pupil progression is missing")
+    @Test
+    void updatePupilNotebook_whenProgressionIsMissing_createsDefaultProgressionAndSavesNotes() throws Exception {
+        Chapter chapter = chapter(CHAPTER_ID);
+        PupilClassroomMembership membership = membership(PUPIL_EMAIL, classroom(CLASSROOM_CODE));
+        when(membershipRepository.findByAccountEmailAndMembershipConfirmedByTeacherTrue(PUPIL_EMAIL))
+                .thenReturn(Optional.of(membership));
+        when(chapterRepository.findById(CHAPTER_ID)).thenReturn(Optional.of(chapter));
+        when(progressionRepository.findByIdEmailAndIdChapterId(PUPIL_EMAIL, CHAPTER_ID))
+                .thenReturn(Optional.empty());
+        when(progressionRepository.save(any(PupilChapterBridgeProgression.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        ChapterNotebookResponse response = notebookService.updatePupilNotebook(
+                CHAPTER_ID,
+                new UpdateChapterNotebookRequest("New notes"),
+                pupilPrincipal());
+
+        ArgumentCaptor<PupilChapterBridgeProgression> progressionCaptor =
+                ArgumentCaptor.forClass(PupilChapterBridgeProgression.class);
+        verify(progressionRepository, org.mockito.Mockito.times(2)).save(progressionCaptor.capture());
+        PupilChapterBridgeProgression saved = progressionCaptor.getAllValues().getLast();
+        ChapterNotebookData stored = objectMapper.readValue(saved.getNotebookJson(), ChapterNotebookData.class);
+        assertEquals(0, saved.getCurrentRunAttempts());
+        assertEquals(0, saved.getCurrentRunCorrect());
+        assertEquals("New notes", response.ownNotes());
+        assertEquals("New notes", stored.ownNotes());
     }
 
     @DisplayName("Initializes blank notebook JSON on existing progression before returning notebook")
@@ -259,6 +290,41 @@ class NotebookServiceTest {
         assertEquals("Pupil note", response.ownNotes());
     }
 
+    @DisplayName("Auto-creates default progression when teacher opens notebook for confirmed pupil without progression")
+    @Test
+    void getTeacherNotebook_whenProgressionIsMissing_createsDefaultProgression() {
+        Classroom classroom = classroom(CLASSROOM_CODE);
+        PupilClassroomMembership membership = membership(PUPIL_EMAIL, classroom);
+        Chapter chapter = chapter(CHAPTER_ID);
+        when(teacherBridgeRepository.existsByIdAccountEmailAndIdClassroomCode(TEACHER_EMAIL, CLASSROOM_CODE))
+                .thenReturn(true);
+        when(membershipRepository.findByAccountEmailAndClassroomClassroomCodeAndMembershipConfirmedByTeacherTrue(
+                PUPIL_EMAIL,
+                CLASSROOM_CODE))
+                .thenReturn(Optional.of(membership));
+        when(chapterRepository.findById(CHAPTER_ID)).thenReturn(Optional.of(chapter));
+        when(progressionRepository.findByIdEmailAndIdChapterId(PUPIL_EMAIL, CHAPTER_ID))
+                .thenReturn(Optional.empty());
+        when(progressionRepository.save(any(PupilChapterBridgeProgression.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        ChapterNotebookResponse response = notebookService.getTeacherNotebook(
+                CLASSROOM_CODE,
+                PUPIL_EMAIL,
+                CHAPTER_ID,
+                teacherPrincipal());
+
+        ArgumentCaptor<PupilChapterBridgeProgression> progressionCaptor =
+                ArgumentCaptor.forClass(PupilChapterBridgeProgression.class);
+        verify(progressionRepository).save(progressionCaptor.capture());
+        PupilChapterBridgeProgression saved = progressionCaptor.getValue();
+        assertEquals(0, saved.getCurrentRunAttempts());
+        assertEquals(0, saved.getCurrentRunCorrect());
+        assertEquals("Chapter 2", response.chapterName());
+        assertEquals(List.of(), response.tips());
+        assertEquals("", response.ownNotes());
+    }
+
     @DisplayName("Rejects teacher notebook access when teacher does not belong to classroom")
     @Test
     void getTeacherNotebook_whenTeacherDoesNotOwnClassroom_throwsAccessDenied() {
@@ -350,3 +416,4 @@ class NotebookServiceTest {
         }
     }
 }
+

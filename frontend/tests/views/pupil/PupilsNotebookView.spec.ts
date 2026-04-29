@@ -64,7 +64,7 @@ describe('PupilsNotebookView', () => {
 
     expect(mockedGet).toHaveBeenCalledWith('/api/pupil/chapters/1/notebook')
     expect(wrapper.text()).toContain('Nyhetskvartalet')
-    expect(wrapper.text()).toContain('Page 1 / 4')
+    expect(wrapper.text()).toContain('Page 1 / 3')
     expect(wrapper.text()).toContain('Look closely')
     expect(wrapper.text()).toContain('Check the sender')
     expect(wrapper.find('textarea').element.value).toBe('My first clue')

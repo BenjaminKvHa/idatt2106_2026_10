@@ -264,6 +264,7 @@ onMounted(async () => {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  filter: brightness(0.9) saturate(0.96);
   pointer-events: none;
   user-select: none;
 }

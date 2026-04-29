@@ -144,14 +144,6 @@ function goBack(): void {
   max-width: 100%;
 }
 
-.loading-container {
-  margin-top: 0.4rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.8rem;
-}
-
 .button-container {
   margin-top: 0.4rem;
   display: flex;

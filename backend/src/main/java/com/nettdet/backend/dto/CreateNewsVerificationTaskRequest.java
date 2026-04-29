@@ -10,6 +10,9 @@ public record CreateNewsVerificationTaskRequest(
     @Schema(description = "Chapter ID to associate the task with.", example = "2")
     Long chapterId,
 
+    @Schema(description = "Classroom code that scopes this task.", example = "ABC123")
+    String classroomCode,
+
     @Schema(description = "Difficulty level for the task.", example = "MEDIUM")
     TaskDifficulty difficulty,
 

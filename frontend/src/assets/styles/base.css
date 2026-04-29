@@ -2,6 +2,7 @@
 
 :root {
   --color-text: #000;
+  --topbar-height: 5rem;
 
   --green-confirm-100: rgb(130 223 48 / 100%);
   --green-confirm-80: rgb(130 223 48 / 80%);

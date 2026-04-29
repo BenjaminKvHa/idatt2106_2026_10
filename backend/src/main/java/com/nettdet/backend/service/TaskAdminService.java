@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nettdet.backend.domain.Chapter;
+import com.nettdet.backend.domain.Classroom;
 import com.nettdet.backend.domain.FileObject;
 import com.nettdet.backend.domain.Task;
 import com.nettdet.backend.domain.enums.ClassroomAccess;
@@ -27,6 +28,7 @@ import com.nettdet.backend.dto.UpdateImageVerificationTaskRequest;
 import com.nettdet.backend.dto.UpdateNewsVerificationTaskRequest;
 import com.nettdet.backend.repository.AccountClassroomBridgeTeacherRepository;
 import com.nettdet.backend.repository.ChapterRepository;
+import com.nettdet.backend.repository.ClassroomRepository;
 import com.nettdet.backend.repository.TaskRepository;
 import com.nettdet.backend.security.JwtUserPrincipal;
 
@@ -44,6 +46,7 @@ public class TaskAdminService {
 
     private final TaskRepository taskRepository;
     private final ChapterRepository chapterRepository;
+    private final ClassroomRepository classroomRepository;
     private final FileObjectService fileObjectService;
     private final FileObjectAccessControlService fileObjectAccessControlService;
     private final AccountClassroomBridgeTeacherRepository teacherBridgeRepository;
@@ -51,12 +54,14 @@ public class TaskAdminService {
 
     public TaskAdminService(TaskRepository taskRepository,
                             ChapterRepository chapterRepository,
+                            ClassroomRepository classroomRepository,
                             FileObjectService fileObjectService,
                             FileObjectAccessControlService fileObjectAccessControlService,
                             AccountClassroomBridgeTeacherRepository teacherBridgeRepository,
                             ObjectMapper objectMapper) {
         this.taskRepository = taskRepository;
         this.chapterRepository = chapterRepository;
+        this.classroomRepository = classroomRepository;
         this.fileObjectService = fileObjectService;
         this.fileObjectAccessControlService = fileObjectAccessControlService;
         this.teacherBridgeRepository = teacherBridgeRepository;
@@ -103,6 +108,7 @@ public class TaskAdminService {
         Chapter chapter = chapterRepository.findById(request.chapterId())
                 .orElseThrow(() -> new EntityNotFoundException("Chapter not found: " + request.chapterId()));
 
+        Classroom classroom = resolveClassroomForTeacher(request.classroomCode(), principal);
         Long fileId = storeAndIndex(file, principal);
 
         ImageVerificationTask taskData = new ImageVerificationTask(
@@ -115,7 +121,7 @@ public class TaskAdminService {
                 request.falseDescription()
         );
 
-        return TaskAdminResponse.from(createTask(chapter, request.difficulty(), taskData));
+        return TaskAdminResponse.from(createTask(chapter, request.difficulty(), taskData, classroom));
     }
 
     // --------------------------------------------------
@@ -130,6 +136,7 @@ public class TaskAdminService {
         Chapter chapter = chapterRepository.findById(request.chapterId())
                 .orElseThrow(() -> new EntityNotFoundException("Chapter not found: " + request.chapterId()));
 
+        Classroom classroom = resolveClassroomForTeacher(request.classroomCode(), principal);
         Long fileId1 = storeAndIndex(file1, principal);
         Long fileId2 = storeAndIndex(file2, principal);
         Long correctFileId = resolveCorrectFileId(request.correctFileSlot(), fileId1, fileId2);
@@ -143,7 +150,7 @@ public class TaskAdminService {
                 request.incorrectDescription()
         );
 
-        return TaskAdminResponse.from(createTask(chapter, request.difficulty(), taskData));
+        return TaskAdminResponse.from(createTask(chapter, request.difficulty(), taskData, classroom));
     }
 
     // --------------------------------------------------
@@ -171,7 +178,8 @@ public class TaskAdminService {
         DatacenterTask wrapped = new DatacenterTask(
                 DatacenterTaskFormat.IMAGE_VERIFICATION, inner, null);
 
-        return TaskAdminResponse.from(createTask(chapter, TaskDifficulty.HARD, wrapped));
+        Classroom classroom = resolveClassroomForTeacher(request.classroomCode(), principal);
+        return TaskAdminResponse.from(createTask(chapter, TaskDifficulty.HARD, wrapped, classroom));
     }
 
     @Transactional
@@ -197,7 +205,8 @@ public class TaskAdminService {
         DatacenterTask wrapped = new DatacenterTask(
                 DatacenterTaskFormat.NEWS_VERIFICATION, null, inner);
 
-        return TaskAdminResponse.from(createTask(chapter, TaskDifficulty.HARD, wrapped));
+        Classroom classroom = resolveClassroomForTeacher(request.classroomCode(), principal);
+        return TaskAdminResponse.from(createTask(chapter, TaskDifficulty.HARD, wrapped, classroom));
     }
 
     // --------------------------------------------------
@@ -331,10 +340,15 @@ public class TaskAdminService {
 
     @Transactional
     public Task createTask(Chapter chapter, TaskDifficulty difficulty, Object taskData) {
+        return createTask(chapter, difficulty, taskData, null);
+    }
+
+    @Transactional
+    public Task createTask(Chapter chapter, TaskDifficulty difficulty, Object taskData, Classroom classroom) {
         Task task = new Task();
         task.setChapter(chapter);
         task.setDifficulty(difficulty);
-        task.setClassroom(null);
+        task.setClassroom(classroom);
         task.setTaskJson(serialize(taskData));
 
         Task saved = taskRepository.save(task);
@@ -346,6 +360,17 @@ public class TaskAdminService {
     // --------------------------------------------------
     // HELPERS
     // --------------------------------------------------
+
+    private Classroom resolveClassroomForTeacher(String classroomCode, JwtUserPrincipal principal) {
+        if (classroomCode == null || classroomCode.isBlank()) {
+            throw new IllegalArgumentException("classroomCode is required");
+        }
+        if (!teacherBridgeRepository.existsByIdAccountEmailAndIdClassroomCode(principal.email(), classroomCode)) {
+            throw new AccessDeniedException("Teacher does not belong to classroom: " + classroomCode);
+        }
+        return classroomRepository.findById(classroomCode)
+                .orElseThrow(() -> new EntityNotFoundException("Classroom not found: " + classroomCode));
+    }
 
     private Long storeAndIndex(MultipartFile file, JwtUserPrincipal principal) {
         if (file == null || file.isEmpty()) {

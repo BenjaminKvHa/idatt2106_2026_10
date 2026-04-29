@@ -70,7 +70,6 @@
     <p v-else-if="progressError" class="map-status error" role="alert">{{ progressError }}</p>
 
     <div v-if="activeLockedStop" class="pupil-popup-overlay" @click="closeLockedPopup">
-
       <div class="locked-popup" @click.stop>
         <h2 class="popup-title">{{ activeLockedStop.name }} er låst.</h2>
         <p class="popup-text">
@@ -341,7 +340,7 @@ onMounted(() => {
   width: 100%;
   min-height: calc(100vh - 5rem);
   background:
-    linear-gradient(rgba(234, 211, 180, 0.35), rgba(234, 211, 180, 0.35)),
+    linear-gradient(var(--beige-medium-40), var(--beige-medium-40)),
     url('@/assets/backgrounds/map-bg.png');
   background-size: cover;
   background-position: center top;
@@ -368,7 +367,7 @@ onMounted(() => {
   width: 92px;
   height: 92px;
   border-radius: 22px;
-  border: 4px solid var(--brown-dark, #7a5b43);
+  border: 4px solid var(--brown-dark);
   background: #ffffff;
   display: flex;
   align-items: center;
@@ -386,13 +385,13 @@ onMounted(() => {
 .help-btn {
   font-size: 2.6rem;
   font-weight: 800;
-  color: var(--color-text, #111);
+  color: var(--color-text);
 }
 
 .back-btn {
-  background: var(--red-danger, #ff433b);
-  color: var(--color-text, #111);
-  border: 5px solid var(--color-text, #111);
+  background: var(--red-danger);
+  color: var(--color-text);
+  border: 5px solid var(--color-text);
   border-radius: 26px;
   padding: 18px 38px;
   font-size: 2rem;
@@ -415,7 +414,7 @@ onMounted(() => {
 }
 
 .homeNode .stop-content {
-  top: 260px;
+  top: 290px;
 }
 
 .endNode {
@@ -424,7 +423,7 @@ onMounted(() => {
 }
 
 .endNode .stop-content {
-  top: 200px;
+  top: 225px;
 }
 
 .endNode .path-point {
@@ -474,7 +473,7 @@ onMounted(() => {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: var(--brown-medium, #bf7b33);
+  background: var(--brown-medium);
   z-index: 3;
 }
 
@@ -483,7 +482,7 @@ onMounted(() => {
   left: 50%;
   transform: translateX(-50%);
   width: 0;
-  border-left: 5px dotted var(--brown-medium, #8a6546);
+  border-left: 5px dotted var(--brown-medium);
   z-index: 1;
   display: none;
 }
@@ -501,6 +500,10 @@ onMounted(() => {
 
 .stop-node.pos-1 {
   left: var(--road-one-third-x);
+}
+
+.stop-node.pos-1 .stop-content {
+  top: 55px;
 }
 
 .stop-node.pos-2 {
@@ -573,13 +576,13 @@ onMounted(() => {
 }
 
 .star.empty {
-  color: rgba(245, 237, 224, 0.98);
-  -webkit-text-stroke: 2.5px var(--brown-dark, #7a5b43);
+  color: var(--beige-light);
+  -webkit-text-stroke: 2.5px var(--brown-dark);
 }
 
 .star.filled {
-  color: var(--yellow-award, #f0c33a);
-  -webkit-text-stroke: 1.5px var(--brown-dark, #7a5b43);
+  color: var(--yellow-award);
+  -webkit-text-stroke: 1.5px var(--brown-dark);
 }
 
 .stop-circle {
@@ -614,8 +617,8 @@ onMounted(() => {
 }
 
 .stop-circle.home {
-  border: 4px solid var(--brown-medium, #bf7b33);
-  background: rgba(245, 237, 224, 1);
+  border: 4px solid var(--brown-medium);
+  background: var(--beige-light);
 }
 
 .stop-image {
@@ -629,12 +632,12 @@ onMounted(() => {
   font-size: 1.75rem;
   font-weight: 800;
   line-height: 1.1;
-  color: var(--color-text, #111);
+  color: var(--color-text);
   text-align: center;
   max-width: 260px;
 
-  background: rgba(245, 237, 224, 0.92);
-  border: 3px solid rgba(122, 91, 67, 0.25);
+  background: var(--beige-light-80);
+  border: 3px solid var(--brown-dark-20);
   border-radius: 18px;
   padding: 10px 18px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
@@ -650,9 +653,9 @@ onMounted(() => {
   width: 66px;
   height: 66px;
   border-radius: 50%;
-  border: 3px solid var(--brown-medium, #bf7b33);
-  background: rgba(245, 237, 224, 0.95);
-  color: var(--brown-medium, #bf7b33);
+  border: 3px solid var(--brown-medium);
+  background: var(--beige-light-80);
+  color: var(--brown-medium);
   font-size: 2.2rem;
   font-weight: 800;
   cursor: pointer;
@@ -681,11 +684,11 @@ onMounted(() => {
   margin: 12px 0 0;
   text-align: center;
   font-size: 1rem;
-  color: var(--color-text, #111);
+  color: var(--color-text);
 }
 
 .map-status.error {
-  color: #a12a2a;
+  color: var(--red-danger);
 }
 
 .pagination-dot {
@@ -693,7 +696,7 @@ onMounted(() => {
   height: 16px;
   border-radius: 50%;
   border: none;
-  background: var(--brown-medium, #bf7b33);
+  background: var(--brown-medium);
   opacity: 0.45;
   cursor: pointer;
 }
@@ -900,8 +903,8 @@ onMounted(() => {
 
 .locked-popup {
   width: min(520px, calc(100vw - 32px));
-  background: var(--orange-medium, #ea9447);
-  border: 4px solid var(--brown-dark, #6f4d33);
+  background: var(--orange-medium);
+  border: 4px solid var(--brown-dark);
   border-radius: 28px;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
   padding: 28px 24px 20px;
@@ -913,7 +916,7 @@ onMounted(() => {
   font-size: 2rem;
   line-height: 1.15;
   font-weight: 800;
-  color: var(--color-text, #111);
+  color: var(--color-text);
 }
 
 .popup-text {
@@ -921,7 +924,7 @@ onMounted(() => {
   font-size: 1.8rem;
   line-height: 1.2;
   font-weight: 700;
-  color: var(--color-text, #111);
+  color: var(--color-text);
 }
 
 .popup-actions {
@@ -936,20 +939,20 @@ onMounted(() => {
   min-width: 130px;
   padding: 14px 24px;
   border-radius: 22px;
-  border: 4px solid var(--color-text, #111);
+  border: 4px solid var(--color-text);
   font-size: 1.15rem;
   font-weight: 800;
-  color: var(--color-text, #111);
+  color: var(--color-text);
   cursor: pointer;
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.18);
 }
 
 .popup-btn-back {
-  background: var(--red-danger, #ef3b37);
+  background: var(--red-danger);
 }
 
 .popup-btn-play {
-  background: var(--green-confirm, #8ee22d);
+  background: var(--green-confirm);
 }
 
 .home-stars-spacer {
@@ -979,9 +982,8 @@ onMounted(() => {
 
 .hint-popup {
   width: min(560px, calc(100vw - 32px));
-  background: rgba(234, 148, 71, 0.72);
-  background: var(--orange-medium-80, rgba(234, 148, 71, 0.72));
-  border: 4px solid var(--brown-dark, #6f4d33);
+  background: var(--orange-medium-80);
+  border: 4px solid var(--brown-dark);
   border-radius: 28px;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
   padding: 28px 24px 20px;
@@ -994,7 +996,7 @@ onMounted(() => {
   font-size: 1.1rem;
   line-height: 1.35;
   font-weight: 700;
-  color: var(--color-text, #111);
+  color: var(--color-text);
   text-align: left;
 }
 

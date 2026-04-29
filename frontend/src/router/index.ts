@@ -32,7 +32,9 @@ import PhotographerView from '@/views/pupil/map_locations/PhotographerView.vue'
 import PupilsWaitingPageView from '@/views/pupil/PupilsWaitingPageView.vue'
 import PupilsWelcomeGuideView from '@/views/pupil/PupilsWelcomeGuideView.vue'
 import PupilsProfileView from '@/views/pupil/PupilsProfileView.vue'
+import PupilsEditAvatarView from '@/views/pupil/PupilsEditAvatarView.vue'
 import TeachersEditClassroom from '@/views/teacher/TeachersEditClassroom.vue'
+import { getJwtDataWithRefresh } from '@/utils/jwtUtils'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -180,6 +182,10 @@ const router = createRouter({
           component: PupilsProfileView,
         },
         {
+          path: 'profile/avatar',
+          component: PupilsEditAvatarView,
+        },
+        {
           path: 'classroom',
           children: [
             {
@@ -245,6 +251,21 @@ const router = createRouter({
       component: NotFoundView,
     },
   ],
+})
+
+router.beforeEach(async (to) => {
+  const requiresPupil = to.path.startsWith('/pupil') || to.path.startsWith('/join-classroom')
+  const requiresTeacher = to.path.startsWith('/teacher')
+
+  if (!requiresPupil && !requiresTeacher) return true
+
+  const jwt = await getJwtDataWithRefresh()
+  if (!jwt?.role) return '/sign-in'
+
+  if (requiresTeacher && jwt.role !== 'TEACHER') return '/pupil'
+  if (requiresPupil && jwt.role !== 'PUPIL') return '/teacher/classrooms'
+
+  return true
 })
 
 export default router

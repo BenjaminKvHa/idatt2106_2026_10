@@ -14,9 +14,7 @@
       <div v-else-if="currentTask" class="task-container">
         <h1 class="level">Nivå {{ stepIndex + 1 }} — {{ difficultyLabel }}</h1>
 
-        <HintCreature
-          hint="Manipulert betyr at et ekte bilde er endret på. KI-bilder har ofte rare detaljer."
-        >
+        <HintCreature :chapter-id="FOTOGRAFEN_CHAPTER_ID">
           <div class="task-box">
             <PupilImageTask
               :task-description="currentTask.taskDescription"

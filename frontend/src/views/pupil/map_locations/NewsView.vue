@@ -46,7 +46,6 @@ const {
 } = useDifficultyProgression()
 
 const showHelpPopup = ref(false)
-const showHintPopup = ref(false)
 
 const currentTask = ref<NewsVerificationResponse | null>(null)
 const imageUrls = ref<string[]>([])
@@ -54,10 +53,6 @@ const selectedFileId = ref<number | null>(null)
 
 function closeHelpPopup(): void {
   showHelpPopup.value = false
-}
-
-function closeHintPopup(): void {
-  showHintPopup.value = false
 }
 
 function revokeImageUrls(): void {
@@ -183,7 +178,7 @@ onBeforeUnmount(revokeImageUrls)
           </p>
         </div>
 
-        <HintCreature hint="Se nøye etter rare detaljer i tekst, bilde og overskrift." />
+        <HintCreature :chapter-id="NYHETSKVARTALET_CHAPTER_ID" />
 
         <PupilNewsTask
           :task-description="currentTask.taskDescription"
@@ -240,25 +235,6 @@ onBeforeUnmount(revokeImageUrls)
 
       <div class="pupil-popup-actions">
         <button class="pupil-popup-btn popup-btn-play" @click="closeHelpPopup">Ok</button>
-      </div>
-    </div>
-  </div>
-
-  <div v-if="showHintPopup" class="pupil-popup-overlay" @click="closeHintPopup">
-    <div class="pupil-hint-popup" @click.stop>
-      <h2 class="pupil-popup-title">Tips 💡</h2>
-
-      <div class="hint-text">
-        <p>Tenk som en detektiv.</p>
-        <ul>
-          <li>Se etter detaljer som ikke passer inn</li>
-          <li>Vær ekstra obs på tekst, bilder og overskrifter</li>
-          <li>Det som virker litt rart, er ofte verdt å undersøke nærmere</li>
-        </ul>
-      </div>
-
-      <div class="pupil-popup-actions">
-        <button class="pupil-popup-btn popup-btn-play" @click="closeHintPopup">Ok</button>
       </div>
     </div>
   </div>

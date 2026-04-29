@@ -40,52 +40,57 @@ function medalImageUrl(medal: PupilMedal) {
   <div class="pupil-scene-screen">
     <TopBar title="Medaljer" previous-page-url="/pupil" />
 
-    <main class="medals-page pupil-scene-page">
-      <section class="pupil-pinboard-stage" aria-labelledby="medals-title">
-        <img class="pupil-pinboard-image" :src="boardBackground" alt="" aria-hidden="true" />
-        <div class="pupil-board-blobby-wrapper" aria-hidden="true">
-          <img class="pupil-board-blobby-image" :src="blobbyImage" alt="" />
-        </div>
-      </header>
+    <PinboardLayout heading-id="medals-title">
+      <div class="board-content">
+        <header class="medals-header">
+          <img class="medals-icon" :src="medalsIcon" alt="" aria-hidden="true" />
+          <div>
+            <h1 id="medals-title">Medaljer</h1>
+            <p v-if="!loading && !errorMessage && medals.length" class="medal-progress">
+              {{ unlockedCount }} av {{ medals.length }} låst opp
+            </p>
+          </div>
+        </header>
 
-          <StateDisplay
-            :loading="loading"
-            :error="errorMessage"
-            :empty="medals.length === 0"
-            loading-text="Laster medaljer..."
-            empty-text="Ingen medaljer funnet enda."
-          />
+        <StateDisplay
+          :loading="loading"
+          :error="errorMessage"
+          :empty="medals.length === 0"
+          loading-text="Laster medaljer..."
+          empty-text="Ingen medaljer funnet enda."
+        />
 
-          <ul v-if="!loading && !errorMessage && medals.length" class="medal-grid pupil-thin-scroll">
-            <li
-              v-for="medal in medals"
-              :key="medal.medalKey"
-              class="medal-slot"
-              :class="{
-                'medal-slot--locked': !medal.unlocked,
-              }"
-            >
-              <article class="medal-card">
-                <span class="medal-status">{{ medal.unlocked ? 'Låst opp' : 'Låst' }}</span>
-                <div class="medal-art">
-                  <img
-                    v-if="medal.imageFileObjectId !== null"
-                    :src="medalImageUrl(medal)"
-                    :alt="medal.name"
-                    class="medal-image"
-                  />
-                  <span v-else class="missing-image">?</span>
-                </div>
+        <ul v-if="!loading && !errorMessage && medals.length" class="medal-grid pupil-thin-scroll">
+          <li
+            v-for="medal in medals"
+            :key="medal.medalKey"
+            class="medal-slot"
+            :class="{
+              'medal-slot--locked': !medal.unlocked,
+            }"
+          >
+            <article class="medal-card">
+              <span class="medal-status">{{ medal.unlocked ? 'Låst opp' : 'Låst' }}</span>
+              <div class="medal-art">
+                <img
+                  v-if="medal.imageFileObjectId !== null"
+                  :src="medalImageUrl(medal)"
+                  :alt="medal.name"
+                  class="medal-image"
+                />
+                <span v-else class="missing-image">?</span>
+              </div>
 
-                <div class="medal-copy">
-                  <h2>{{ medal.name }}</h2>
-                  <p>{{ medal.description }}</p>
-                </div>
-              </article>
-            </li>
-          </ul>
+              <div class="medal-copy">
+                <h2>{{ medal.name }}</h2>
+                <p>{{ medal.description }}</p>
+              </div>
+            </article>
+          </li>
+        </ul>
       </div>
-  </PinboardLayout>
+    </PinboardLayout>
+  </div>
 </template>
 
 <style scoped>

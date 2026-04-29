@@ -7,39 +7,32 @@ import TopBar from '@/components/pupil/TopBar.vue'
   <div class="pupil-scene-screen">
     <TopBar title="Hjelp" />
 
-    <main class="help-page pupil-scene-page">
-      <section class="pupil-pinboard-stage" aria-labelledby="help-title">
-        <img class="pupil-pinboard-image" :src="boardBackground" alt="" aria-hidden="true" />
-        <div class="pupil-board-blobby-wrapper" aria-hidden="true">
-          <img class="pupil-board-blobby-image" :src="blobbyImage" alt="" />
+    <PinboardLayout heading-id="help-title">
+      <div class="text-box">
+        <h1 id="help-title">Hva går spillet ut på?</h1>
+
+        <div class="scroll-content pupil-thin-scroll">
+          <p>
+            I dette spillet skal du hjelpe til med å avsløre falsk informasjon og lære hvordan du
+            vurderer kilder kritisk.
+          </p>
+
+          <p>Du beveger deg gjennom ulike stoppesteder:</p>
+
+          <ul>
+            <li><strong>Nyhetskvartalet:</strong> Vurder om nyheter er ekte eller falske.</li>
+            <li><strong>Fotografen:</strong> Se om bilder er manipulerte eller ekte.</li>
+            <li><strong>Datasenteret:</strong> Løs oppgaver knyttet til digital sikkerhet.</li>
+          </ul>
+
+          <p>Underveis samler du poeng (XP) og konkurrerer mot andre klasser på leaderboardet.</p>
+
+          <p>Målet er å lære hvordan du kan navigere trygt i en digital verden.</p>
+
+          <p>Lykke til!</p>
         </div>
-
-        <div class="text-box">
-          <h1 id="help-title">Hva går spillet ut på?</h1>
-
-          <div class="scroll-content pupil-thin-scroll">
-            <p>
-              I dette spillet skal du hjelpe til med å avsløre falsk informasjon og lære hvordan du
-              vurderer kilder kritisk.
-            </p>
-
-            <p>Du beveger deg gjennom ulike stoppesteder:</p>
-
-            <ul>
-              <li><strong>Nyhetskvartalet:</strong> Vurder om nyheter er ekte eller falske.</li>
-              <li><strong>Fotografen:</strong> Se om bilder er manipulerte eller ekte.</li>
-              <li><strong>Datasenteret:</strong> Løs oppgaver knyttet til digital sikkerhet.</li>
-            </ul>
-
-            <p>Underveis samler du poeng (XP) og konkurrerer mot andre klasser på leaderboardet.</p>
-
-            <p>Målet er å lære hvordan du kan navigere trygt i en digital verden.</p>
-
-            <p>Lykke til!</p>
-          </div>
-        </div>
-      </section>
-    </main>
+      </div>
+    </PinboardLayout>
   </div>
 </template>
 

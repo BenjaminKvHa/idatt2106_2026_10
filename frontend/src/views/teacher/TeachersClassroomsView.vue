@@ -12,13 +12,6 @@ onMounted(() => {
   fetchClassrooms()
 })
 
-const navigateToClassroom = (classroomCode: string) => {
-  const classroom = classrooms.value.find((c) => c.classroomCode === classroomCode)
-  if (classroom) {
-    const classroomName = sanitizeClassroomName(classroom.classroomName)
-    router.push(`/teacher/classrooms/${classroomName}/leaderboard`)
-  }
-}
 </script>
 
 <template>
@@ -48,13 +41,14 @@ const navigateToClassroom = (classroomCode: string) => {
           <span>Rangering:</span>
           <span class="value">#{{ classroom.globalRank }}</span>
         </div>
-        <button
-          type="button"
-          class="button-variant-1 teacher-menu-button"
-          @click="navigateToClassroom(classroom.classroomCode)"
-        >
-          Gå til klasserom
-        </button>
+        <RouterLink :to="`/teacher/classrooms/${classroom.classroomCode}/leaderboard`">
+          <button
+            type="button"
+            class="button-variant-1 teacher-menu-button"
+          >
+            Gå til klasserom
+          </button>
+        </RouterLink>
       </div>
     </div>
   </div>

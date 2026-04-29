@@ -303,7 +303,34 @@ async function saveNickname() {
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.6rem;
+  gap: 0.75rem;
+}
+
+.secondary-button,
+.danger-button {
+  border: var(--border-thin) solid var(--brown-dark);
+  padding: 0.85rem 1rem;
+  color: black !important;
+  border-radius: 1rem;
+  font-weight: 600;
+}
+
+.secondary-button {
+  background-color: var(--beige-medium);
+}
+
+.danger-button {
+  background-color: var(--red-danger);
+}
+
+.secondary-button:disabled,
+.danger-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.error {
+  color: #9f1d1d;
 }
 
 .action-error {

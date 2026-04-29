@@ -3,14 +3,13 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Logo from '@/components/misc/Logo.vue'
 import OptionsMenu from '@/components/ui/OptionsMenu.vue'
-import gearIcon from '@/assets/icons/topbar/profile-cog.svg'
-import volume2Icon from '@/assets/icons/volume-2.svg'
-import volumeXIcon from '@/assets/icons/volume-x.svg'
+import NotificationsMenu from '@/components/ui/NotificationsMenu.vue'
+import { BellIcon, Settings, Volume2, VolumeX } from '@lucide/vue'
 import { useClassrooms } from '@/composables/useClassrooms.ts'
-import { sanitizeClassroomName } from '@/composables/useClassroomName.ts'
 import { useAudio } from '@/composables/useAudio'
 
 const settingsOpen = ref(false)
+const notificationsOpen = ref(false)
 const route = useRoute()
 const router = useRouter()
 const { classrooms, fetchClassrooms } = useClassrooms()
@@ -28,28 +27,18 @@ const isNewClassroomActive = computed(() => {
   return route.path.endsWith('/classrooms/new')
 })
 
-const navigateToClassrooms = () => {
-  router.push(`/teacher/classrooms`)
-}
-
-const navigateToNewClassroom = () => {
-  router.push(`/teacher/classrooms/new`)
-}
-
-const navigateToClassroom = (classroomCode: string) => {
-  const classroom = classrooms.value.find((c) => c.classroomCode === classroomCode)
-  if (classroom) {
-    const classroomName = sanitizeClassroomName(classroom.classroomName)
-    router.push(`/teacher/classrooms/${classroomName}/leaderboard`)
-  }
-}
-
 const isClassroomActive = (classroomCode: string) => {
-  const classroom = classrooms.value.find((c) => c.classroomCode === classroomCode)
-  if (!classroom) return false
-  const kebabName = sanitizeClassroomName(classroom.classroomName)
-  return route.path.includes(`/classrooms/${kebabName}`)
+  return route.path.includes(`/classrooms/${classroomCode}`)
 }
+
+const activeClassroomCode = computed(() => {
+  const classroomCodeSlug = typeof route.params.classroomCode === 'string' ? route.params.classroomCode : ''
+  if (!classroomCodeSlug) {
+    return null
+  }
+
+  return classroomCodeSlug
+})
 </script>
 
 <template>
@@ -57,59 +46,68 @@ const isClassroomActive = (classroomCode: string) => {
         <Logo />
 
         <section class="teacher-card teacher-card-menu">
-            <button
+            <RouterLink
                 type="button"
                 :class="['teacher-card-title', isClassroomsActive ? 'button-variant-2' : 'button-variant-1']"
-                @click="navigateToClassrooms"
+                :to="`/teacher/classrooms`"
             >
                 Klasserom
-            </button>
+            </RouterLink>
             <div class="teacher-card-body teacher-card-menu-body">
-                <button
+                <RouterLink
                     v-for="classroom in classrooms"
                     :key="classroom.classroomCode"
                     type="button"
-                    :class="['button-variant-1 teacher-card-item-var-1', isClassroomActive(classroom.classroomCode) && 'button-variant-2 teacher-card-item-var-2']"
-                    @click="navigateToClassroom(classroom.classroomCode)"
+                    :to="`/teacher/classrooms/${classroom.classroomCode}/leaderboard`"
+                    :class="['button-variant-1 inika teacher-card-item-var-1', isClassroomActive(classroom.classroomCode) && 'button-variant-2 teacher-card-item-var-2']"
                 >
                     {{ classroom.classroomName }}
-                </button>
+                </RouterLink>
                 <div v-if="classrooms.length === 0" class="empty-message">
                     Ingen klasserom
                 </div>
             </div>
         </section>
 
-        <button
+        <RouterLink
             type="button"
-            :class="['button-variant-1', 'teacher-menu-button', isNewClassroomActive && 'button-variant-2']"
-            @click="navigateToNewClassroom"
+            :class="['button-variant-1', 'teacher-menu-button', 'inika', isNewClassroomActive && 'button-variant-2']"
+            :to="`/teacher/classrooms/new`"
         >
             Nytt klasserom
-        </button>
+        </RouterLink>
 
         <div class="teacher-menu-bottom">
+            <button 
+            type="button" 
+            class="icon-btn-circle" 
+            aria-label="Varsler"
+            @click="notificationsOpen = true"
+            >
+                <BellIcon class="teacher-menu-icon" />
+            </button>
             <button
                 type="button"
                 class="icon-btn-circle"
                 :aria-label="isMuted ? 'Skru på lyd' : 'Demp lyd'"
                 @click="toggleMute"
             >
-                <img :src="isMuted ? volumeXIcon : volume2Icon" alt="" class="teacher-menu-icon" aria-hidden="true" />
+                <VolumeX v-if="isMuted" class="teacher-menu-icon" />
+                <Volume2 v-else class="teacher-menu-icon" />
             </button>
-            <button type="button" class="icon-btn-circle" aria-label="Varsler"></button>
             <button
                 type="button"
                 class="icon-btn-circle"
                 aria-label="Innstillinger"
                 @click="settingsOpen = true"
             >
-                <img :src="gearIcon" alt="" class="teacher-menu-icon" aria-hidden="true" />
+                <Settings class="teacher-menu-icon" />
             </button>
         </div>
     </div>
 
     <OptionsMenu v-if="settingsOpen" @close="settingsOpen = false" />
+    <NotificationsMenu v-if="notificationsOpen" :classroom-code="activeClassroomCode" @close="notificationsOpen = false" />
 </template>
 
 <style scoped>
@@ -152,6 +150,8 @@ const isClassroomActive = (classroomCode: string) => {
 .teacher-menu-button {
     width: 100%;
     padding: 0.85rem 1rem;
+    text-align: center;
+    font-weight: 600;
 }
 
 .teacher-menu-bottom {
@@ -160,6 +160,10 @@ const isClassroomActive = (classroomCode: string) => {
     gap: var(--thin-gap);
     justify-content: center;
     padding-top: var(--medium-padding);
+
+    > .icon-btn-circle:hover {
+        box-shadow: 0 .5rem 1rem rgba(0, 0, 0, 0.25);
+    }
 }
 
 .teacher-menu-icon {

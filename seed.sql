@@ -27,6 +27,22 @@ SET
     classroom_name = EXCLUDED.classroom_name,
     classroom_description = EXCLUDED.classroom_description;
 
+INSERT INTO chapter (id, chapter_name, successful_runs_needed_for_completion)
+VALUES
+    (1, 'Nyhetskvartalet', 3),
+    (2, 'Fotografen', 3),
+    (3, 'Datasenteret', 5)
+ON CONFLICT (id) DO UPDATE
+SET
+    chapter_name = EXCLUDED.chapter_name,
+    successful_runs_needed_for_completion = EXCLUDED.successful_runs_needed_for_completion;
+
+SELECT setval(
+    'chapter_id_seq',
+    GREATEST(COALESCE((SELECT MAX(id) FROM chapter), 0), 3),
+    TRUE
+);
+
 INSERT INTO account (email, password_data, legal_name, account_role)
 VALUES
     (
@@ -165,33 +181,88 @@ SET
     membership_confirmed_by_teacher = EXCLUDED.membership_confirmed_by_teacher,
     avatar_file_object_id = EXCLUDED.avatar_file_object_id;
 
-INSERT INTO pupil_chapter_bridge_progression (
+WITH progression_seed (
     email,
     chapter_id,
     successful_runs,
     highscore,
     unsuccessful_streak
 )
-VALUES
-    ('demo.alice@example.com', 1, 3, 3, 0),
-    ('demo.alice@example.com', 2, 0, 2, 1),
-    ('demo.bob@example.com', 1, 0, 1, 1),
-    ('demo.carla@example.com', 1, 3, 3, 0),
-    ('demo.carla@example.com', 2, 3, 3, 0),
-    ('demo.carla@example.com', 3, 0, 2, 1),
-    ('map.partial@example.com', 1, 3, 3, 0),
-    ('map.partial@example.com', 2, 3, 3, 0),
-    ('map.complete@example.com', 1, 3, 3, 0),
-    ('map.complete@example.com', 2, 3, 3, 0),
-    ('map.complete@example.com', 3, 5, 5, 0),
-    ('rank.two@example.com', 1, 1, 3, 0),
-    ('rank.two@example.com', 2, 0, 1, 1),
-    ('rank.three@example.com', 1, 0, 1, 1)
+AS (
+    VALUES
+        ('demo.alice@example.com', 1, 3, 3, 0),
+        ('demo.alice@example.com', 2, 0, 2, 1),
+        ('demo.bob@example.com', 1, 0, 1, 1),
+        ('demo.carla@example.com', 1, 3, 3, 0),
+        ('demo.carla@example.com', 2, 3, 3, 0),
+        ('demo.carla@example.com', 3, 0, 2, 1),
+        ('map.partial@example.com', 1, 3, 3, 0),
+        ('map.partial@example.com', 2, 3, 3, 0),
+        ('map.complete@example.com', 1, 3, 3, 0),
+        ('map.complete@example.com', 2, 3, 3, 0),
+        ('map.complete@example.com', 3, 5, 5, 0),
+        ('rank.two@example.com', 1, 1, 3, 0),
+        ('rank.two@example.com', 2, 0, 1, 1),
+        ('rank.three@example.com', 1, 0, 1, 1)
+),
+chapter_tips (chapter_id, tips)
+AS (
+    VALUES
+        (1, ARRAY[
+            'Se nøye på kilden før du bestemmer deg.',
+            'Sammenlign overskrift og innhold. De bør fortelle samme historie.',
+            'Let etter tegn på at saken prøver å lure deg med sterke følelser.',
+            'Sjekk om bildet faktisk passer til saken som blir fortalt.',
+            'Vær ekstra kritisk hvis overskriften lover noe veldig dramatisk.'
+        ]::TEXT[]),
+        (2, ARRAY[
+            'Se etter detaljer i bildet som ikke passer med resten.',
+            'Sjekk lys, skygger og kanter rundt viktige objekter.',
+            'Tenk over om bildet kan være tatt ut av sin opprinnelige sammenheng.',
+            'Zoom mentalt inn på hender, ansikter og tekst. Der dukker feil ofte opp.',
+            'Sammenlign speilinger og bakgrunn med resten av bildet.'
+        ]::TEXT[]),
+        (3, ARRAY[
+            'Les hele oppgaven før du velger svar.',
+            'Bruk det du lærte i de tidligere kapitlene.',
+            'Ta deg tid til å sjekke både tekst og bilde.',
+            'Hvis noe virker for godt eller rart til å være sant, undersøk det ekstra nøye.',
+            'Se etter små detaljer som avslører hva som faktisk skjer.',
+            'Tenk gjennom hvem som kan tjene på at du tror på innholdet.'
+        ]::TEXT[])
+)
+INSERT INTO pupil_chapter_bridge_progression (
+    email,
+    chapter_id,
+    successful_runs,
+    highscore,
+    unsuccessful_streak,
+    notebook_json
+)
+SELECT
+    progression_seed.email,
+    progression_seed.chapter_id,
+    progression_seed.successful_runs,
+    progression_seed.highscore,
+    progression_seed.unsuccessful_streak,
+    jsonb_build_object(
+        'tips',
+        CASE
+            WHEN progression_seed.successful_runs >= 1
+                THEN to_jsonb(COALESCE(chapter_tips.tips, ARRAY[]::TEXT[]))
+            ELSE '[]'::jsonb
+        END,
+        'ownNotes',
+        ''
+    )
+FROM progression_seed
+LEFT JOIN chapter_tips ON chapter_tips.chapter_id = progression_seed.chapter_id
 ON CONFLICT (email, chapter_id) DO UPDATE
 SET
     successful_runs = EXCLUDED.successful_runs,
     highscore = EXCLUDED.highscore,
-    unsuccessful_streak = EXCLUDED.unsuccessful_streak;
+    unsuccessful_streak = EXCLUDED.unsuccessful_streak,
+    notebook_json = EXCLUDED.notebook_json;
 
 -- Weekly mysteries: a mix of approved (different ISO weeks) and pending,
 -- across the TESTAA classroom so demo.alice / demo.bob / demo.pending pupils see them.

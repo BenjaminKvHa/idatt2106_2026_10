@@ -124,6 +124,14 @@
 
 }
 
+.hr-brown {
+    width: 100%;
+    margin: 0;
+    border: none;
+    height: 2px;
+    background: var(--accent);
+    opacity: .5;
+}
 
 .teacher-card-item-var-1 {
     display: inline-flex;

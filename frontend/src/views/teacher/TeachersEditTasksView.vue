@@ -7,9 +7,12 @@ import TeacherNyhetskvartaletTaskForm from '@/components/teacher/mystery/Teacher
 import {
   CHAPTER_ID_BY_TASK_KEY,
   CHAPTER_LABELS,
+  DATACENTER_FORMAT_LABELS,
+  parseDatacenterTask,
   parseImageVerificationTask,
   parseNewsVerificationTask,
   type ChapterTaskKey,
+  type DatacenterTaskFormat,
   type FotografenTaskFormValues,
   type ImageVerificationTask,
   type NewsVerificationTask,
@@ -22,11 +25,13 @@ type VisibleTaskCard = {
   task: TaskAdminResponse
   imageTask: ImageVerificationTask | null
   newsTask: NewsVerificationTask | null
+  format: DatacenterTaskFormat | null
 }
 
 const route = useRoute()
 
 const activeChapter = ref<ChapterTaskKey>('nyhetskvartalet')
+const datacenterCreateFormat = ref<DatacenterTaskFormat>('NEWS_VERIFICATION')
 const loading = ref(true)
 const error = ref('')
 const actionError = ref('')
@@ -35,21 +40,25 @@ const submitting = ref(false)
 const tasksByChapter = ref<Record<ChapterTaskKey, TaskAdminResponse[]>>({
   nyhetskvartalet: [],
   fotografen: [],
+  datasenteret: [],
 })
 const formResetTokenByChapter = ref<Record<ChapterTaskKey, number>>({
   nyhetskvartalet: 0,
   fotografen: 0,
+  datasenteret: 0,
 })
 const selectedTaskIdByChapter = ref<Record<ChapterTaskKey, number | null>>({
   nyhetskvartalet: null,
   fotografen: null,
+  datasenteret: null,
 })
 
 const classroomCode = computed(() =>
   typeof route.params.classroomCode === 'string' ? route.params.classroomCode : '',
 )
 
-const chapterOrder: ChapterTaskKey[] = ['nyhetskvartalet', 'fotografen']
+const chapterOrder: ChapterTaskKey[] = ['nyhetskvartalet', 'fotografen', 'datasenteret']
+const datacenterFormatOrder: DatacenterTaskFormat[] = ['NEWS_VERIFICATION', 'IMAGE_VERIFICATION']
 
 const visibleTaskCards = computed<VisibleTaskCard[]>(() => {
   if (activeChapter.value === 'fotografen') {
@@ -57,14 +66,29 @@ const visibleTaskCards = computed<VisibleTaskCard[]>(() => {
       task,
       imageTask: parseImageVerificationTask(task.taskJson),
       newsTask: null,
+      format: null,
     }))
   }
 
-  return tasksByChapter.value.nyhetskvartalet.map((task) => ({
-    task,
-    imageTask: null,
-    newsTask: parseNewsVerificationTask(task.taskJson),
-  }))
+  if (activeChapter.value === 'nyhetskvartalet') {
+    return tasksByChapter.value.nyhetskvartalet.map((task) => ({
+      task,
+      imageTask: null,
+      newsTask: parseNewsVerificationTask(task.taskJson),
+      format: null,
+    }))
+  }
+
+  return tasksByChapter.value.datasenteret.map((task) => {
+    const parsedTask = parseDatacenterTask(task.taskJson)
+
+    return {
+      task,
+      imageTask: parsedTask?.imageTask ?? null,
+      newsTask: parsedTask?.newsTask ?? null,
+      format: parsedTask?.format ?? null,
+    }
+  })
 })
 
 const selectedFotografenTask = computed(() => {
@@ -101,6 +125,35 @@ const selectedNyhetsTask = computed(() => {
   }
 })
 
+const selectedDatacenterTask = computed(() => {
+  const taskId = selectedTaskIdByChapter.value.datasenteret
+  if (taskId === null) {
+    return null
+  }
+
+  const task = tasksByChapter.value.datasenteret.find((entry) => entry.id === taskId)
+  if (!task) {
+    return null
+  }
+
+  const parsedTask = parseDatacenterTask(task.taskJson)
+  if (!parsedTask?.format) {
+    return null
+  }
+
+  return {
+    task,
+    parsedTask,
+    format: parsedTask.format,
+    imageTask: parsedTask.imageTask ?? null,
+    newsTask: parsedTask.newsTask ?? null,
+  }
+})
+
+const activeDatacenterFormat = computed<DatacenterTaskFormat>(() => {
+  return selectedDatacenterTask.value?.format ?? datacenterCreateFormat.value
+})
+
 function clearMessages() {
   actionError.value = ''
   actionSuccess.value = ''
@@ -114,6 +167,12 @@ function buildMetadataPart(metadata: Record<string, unknown>): Blob {
 
 function setActiveChapter(chapter: ChapterTaskKey) {
   activeChapter.value = chapter
+  clearMessages()
+}
+
+function setDatacenterCreateFormat(format: DatacenterTaskFormat) {
+  datacenterCreateFormat.value = format
+  clearMessages()
 }
 
 function toggleTaskEditor(taskId: number) {
@@ -138,19 +197,22 @@ async function loadTasks() {
     }
 
     const encodedClassroomCode = encodeURIComponent(classroomCode.value)
-    const [nyhetskvartaletTasks, fotografenTasks] = await Promise.all([
+    const [nyhetskvartaletTasks, fotografenTasks, datasenteretTasks] = await Promise.all([
       get<TaskAdminResponse[]>(`/api/admin/tasks/nyhetskvartalet?classroomCode=${encodedClassroomCode}`),
       get<TaskAdminResponse[]>(`/api/admin/tasks/fotografen?classroomCode=${encodedClassroomCode}`),
+      get<TaskAdminResponse[]>(`/api/admin/tasks/datasenteret?classroomCode=${encodedClassroomCode}`),
     ])
 
     tasksByChapter.value = {
       nyhetskvartalet: nyhetskvartaletTasks,
       fotografen: fotografenTasks,
+      datasenteret: datasenteretTasks,
     }
   } catch (fetchError) {
     tasksByChapter.value = {
       nyhetskvartalet: [],
       fotografen: [],
+      datasenteret: [],
     }
     error.value = fetchError instanceof Error ? fetchError.message : 'Failed to load tasks'
   } finally {
@@ -274,6 +336,118 @@ async function submitNyhetsTask(values: NyhetskvartaletTaskFormValues) {
   }
 }
 
+async function submitDatacenterImageTask(values: FotografenTaskFormValues) {
+  submitting.value = true
+  clearMessages()
+
+  try {
+    const formData = new FormData()
+    const editingTask = selectedDatacenterTask.value?.task ?? null
+
+    formData.append(
+      'metadata',
+      buildMetadataPart(
+        editingTask
+          ? {
+              difficulty: values.difficulty,
+              taskDescription: values.taskDescription,
+              correctCategory: values.correctCategory,
+              correctJustification: values.correctJustification,
+              justifications: values.justifications,
+              correctDescription: values.correctDescription,
+              falseDescription: values.falseDescription,
+            }
+          : {
+              taskDescription: values.taskDescription,
+              correctCategory: values.correctCategory,
+              correctJustification: values.correctJustification,
+              justifications: values.justifications,
+              correctDescription: values.correctDescription,
+              falseDescription: values.falseDescription,
+            },
+      ),
+    )
+
+    if (values.file) {
+      formData.append('file', values.file)
+    }
+
+    const response = editingTask
+      ? await patchForm<TaskAdminResponse>(`/api/admin/tasks/datasenteret/image/${editingTask.id}`, formData)
+      : await postForm<TaskAdminResponse>('/api/admin/tasks/datasenteret/image', formData)
+
+    selectedTaskIdByChapter.value.datasenteret = null
+    if (!editingTask) {
+      formResetTokenByChapter.value.datasenteret += 1
+    }
+    actionSuccess.value = editingTask
+      ? `Datasenteret fotografen-oppgave #${response.id} ble oppdatert.`
+      : `Datasenteret fotografen-oppgave #${response.id} ble opprettet.`
+
+    await loadTasks()
+  } catch (requestError) {
+    actionError.value = requestError instanceof Error ? requestError.message : 'Failed to save task'
+  } finally {
+    submitting.value = false
+  }
+}
+
+async function submitDatacenterNewsTask(values: NyhetskvartaletTaskFormValues) {
+  submitting.value = true
+  clearMessages()
+
+  try {
+    const formData = new FormData()
+    const editingTask = selectedDatacenterTask.value?.task ?? null
+
+    formData.append(
+      'metadata',
+      buildMetadataPart(
+        editingTask
+          ? {
+              difficulty: values.difficulty,
+              taskDescription: values.taskDescription,
+              correctFileSlot: values.correctFileSlot,
+              correctDescription: values.correctDescription,
+              incorrectDescription: values.incorrectDescription,
+            }
+          : {
+              taskDescription: values.taskDescription,
+              correctFileSlot: values.correctFileSlot,
+              correctDescription: values.correctDescription,
+              incorrectDescription: values.incorrectDescription,
+            },
+      ),
+    )
+
+    if (values.file1) {
+      formData.append('file1', values.file1)
+    }
+
+    if (values.file2) {
+      formData.append('file2', values.file2)
+    }
+
+    const response = editingTask
+      ? await patchForm<TaskAdminResponse>(`/api/admin/tasks/datasenteret/news/${editingTask.id}`, formData)
+      : await postForm<TaskAdminResponse>('/api/admin/tasks/datasenteret/news', formData)
+
+    selectedTaskIdByChapter.value.datasenteret = null
+    if (!editingTask) {
+      formResetTokenByChapter.value.datasenteret += 1
+    }
+    actionSuccess.value = editingTask
+      ? `Datasenteret nyhetsoppgave #${response.id} ble oppdatert.`
+      : `Datasenteret nyhetsoppgave #${response.id} ble opprettet.`
+
+    await loadTasks()
+  } catch (requestError) {
+    actionError.value = requestError instanceof Error ? requestError.message : 'Failed to save task'
+  } finally {
+    submitting.value = false
+  }
+}
+
 onMounted(async () => {
   await loadTasks()
 })
@@ -284,11 +458,14 @@ watch(
     selectedTaskIdByChapter.value = {
       nyhetskvartalet: null,
       fotografen: null,
+      datasenteret: null,
     }
     formResetTokenByChapter.value = {
       nyhetskvartalet: 0,
       fotografen: 0,
+      datasenteret: 0,
     }
+    datacenterCreateFormat.value = 'NEWS_VERIFICATION'
     clearMessages()
     await loadTasks()
   },
@@ -300,7 +477,7 @@ watch(
     <section class="page-header">
       <div>
         <h1>Rediger oppgaver</h1>
-        <p class="header-copy">Opprett, rediger og kvalitetssikre oppgaver for Nyhetskvartalet og Fotografen.</p>
+        <p class="header-copy">Opprett, rediger og kvalitetssikre oppgaver for Nyhetskvartalet, Fotografen og Datasenteret.</p>
       </div>
     </section>
 
@@ -324,6 +501,8 @@ watch(
         </div>
       </div>
 
+      <hr class="hr-brown" />
+
       <p v-if="actionSuccess" class="status-banner success">{{ actionSuccess }}</p>
       <p v-if="actionError" class="status-banner error">{{ actionError }}</p>
 
@@ -340,7 +519,7 @@ watch(
           />
 
           <TeacherFotografenTaskForm
-            v-else
+            v-else-if="activeChapter === 'fotografen'"
             :task="selectedFotografenTask?.task ?? null"
             :parsed-task="selectedFotografenTask?.parsedTask ?? null"
             :submitting="submitting"
@@ -348,6 +527,50 @@ watch(
             @submit="submitFotografenTask"
             @cancel-edit="clearTaskEditor('fotografen')"
           />
+
+          <div v-else class="datacenter-form-shell">
+            <div v-if="!selectedDatacenterTask" class="datacenter-format-tabs">
+              <button
+                v-for="format in datacenterFormatOrder"
+                :key="format"
+                type="button"
+                :class="['chapter-tab', activeDatacenterFormat === format ? 'button-variant-2' : 'button-variant-1']"
+                @click="setDatacenterCreateFormat(format)"
+              >
+                {{ DATACENTER_FORMAT_LABELS[format] }}
+              </button>
+            </div>
+
+            <p v-else class="datacenter-format-note">
+              Redigerer {{ DATACENTER_FORMAT_LABELS[activeDatacenterFormat] }} i Datasenteret.
+            </p>
+
+            <TeacherNyhetskvartaletTaskForm
+              v-if="activeDatacenterFormat === 'NEWS_VERIFICATION'"
+              :task="selectedDatacenterTask?.task ?? null"
+              :parsed-task="selectedDatacenterTask?.newsTask ?? null"
+              :submitting="submitting"
+              :reset-token="formResetTokenByChapter.datasenteret"
+              :title="selectedDatacenterTask ? 'Redigerer datasenteret nyhetsoppgave' : 'Datasenteret nyhetsoppgave'"
+              :locked-difficulty="'HARD'"
+              hide-difficulty
+              @submit="submitDatacenterNewsTask"
+              @cancel-edit="clearTaskEditor('datasenteret')"
+            />
+
+            <TeacherFotografenTaskForm
+              v-else
+              :task="selectedDatacenterTask?.task ?? null"
+              :parsed-task="selectedDatacenterTask?.imageTask ?? null"
+              :submitting="submitting"
+              :reset-token="formResetTokenByChapter.datasenteret"
+              :title="selectedDatacenterTask ? 'Redigerer datasenteret fotografen-oppgave' : 'Datasenteret fotografen-oppgave'"
+              :locked-difficulty="'HARD'"
+              hide-difficulty
+              @submit="submitDatacenterImageTask"
+              @cancel-edit="clearTaskEditor('datasenteret')"
+            />
+          </div>
         </div>
 
         <div class="task-list-panel">
@@ -370,6 +593,7 @@ watch(
               :task="card.task"
               :image-task="card.imageTask"
               :news-task="card.newsTask"
+              :format="card.format"
               :selected="selectedTaskIdByChapter[activeChapter] === card.task.id"
               @edit="toggleTaskEditor"
             />
@@ -406,15 +630,9 @@ watch(
 .list-header-row p,
 .status-banner,
 .state-message,
-.empty-state {
+.empty-state,
+.datacenter-format-note {
   margin: 0;
-}
-
-.eyebrow {
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  opacity: 0.74;
 }
 
 .header-copy {
@@ -434,7 +652,8 @@ watch(
   gap: 1rem;
 }
 
-.chapter-tabs {
+.chapter-tabs,
+.datacenter-format-tabs {
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
@@ -448,14 +667,21 @@ watch(
 }
 
 .task-form-panel,
-.task-list-panel {
+.task-list-panel,
+.datacenter-form-shell {
   min-width: 0;
 }
 
+.datacenter-form-shell,
 .task-list-panel {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.datacenter-format-note {
+  color: var(--brown-dark);
+  font-weight: 700;
 }
 
 .task-list {

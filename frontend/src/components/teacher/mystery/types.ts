@@ -1,10 +1,12 @@
-export type ChapterTaskKey = 'nyhetskvartalet' | 'fotografen'
+export type ChapterTaskKey = 'nyhetskvartalet' | 'fotografen' | 'datasenteret'
 
 export type TaskDifficulty = 'EASY' | 'MEDIUM' | 'HARD'
 
 export type ImageCategory = 'REAL' | 'AI_GENERATED' | 'MANIPULATED'
 
 export type CorrectFileSlot = 'FILE_1' | 'FILE_2'
+
+export type DatacenterTaskFormat = 'NEWS_VERIFICATION' | 'IMAGE_VERIFICATION'
 
 export type TaskAdminResponse = {
   id: number
@@ -34,6 +36,12 @@ export type NewsVerificationTask = {
   incorrectDescription?: string
 }
 
+export type DatacenterTask = {
+  format?: DatacenterTaskFormat
+  imageTask?: ImageVerificationTask | null
+  newsTask?: NewsVerificationTask | null
+}
+
 export type FotografenTaskFormValues = {
   difficulty: TaskDifficulty
   taskDescription: string
@@ -58,11 +66,18 @@ export type NyhetskvartaletTaskFormValues = {
 export const CHAPTER_ID_BY_TASK_KEY: Record<ChapterTaskKey, number> = {
   nyhetskvartalet: 1,
   fotografen: 2,
+  datasenteret: 3,
 }
 
 export const CHAPTER_LABELS: Record<ChapterTaskKey, string> = {
   nyhetskvartalet: 'Nyhetskvartalet',
   fotografen: 'Fotografen',
+  datasenteret: 'Datasenteret',
+}
+
+export const DATACENTER_FORMAT_LABELS: Record<DatacenterTaskFormat, string> = {
+  NEWS_VERIFICATION: 'Nyhetsoppgave',
+  IMAGE_VERIFICATION: 'Fotografen-oppgave',
 }
 
 function parseTaskJson<T>(taskJson: string): T | null {
@@ -79,6 +94,10 @@ export function parseImageVerificationTask(taskJson: string): ImageVerificationT
 
 export function parseNewsVerificationTask(taskJson: string): NewsVerificationTask | null {
   return parseTaskJson<NewsVerificationTask>(taskJson)
+}
+
+export function parseDatacenterTask(taskJson: string): DatacenterTask | null {
+  return parseTaskJson<DatacenterTask>(taskJson)
 }
 
 export function getCorrectFileSlot(task: NewsVerificationTask): CorrectFileSlot | null {

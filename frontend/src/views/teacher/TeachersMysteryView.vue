@@ -109,7 +109,6 @@ watch(
     <section class="mystery-section">
       <div class="section-header">
         <div>
-          <p class="eyebrow">Klasserom {{ classroomCode }}</p>
           <h1>Ukens mysterium</h1>
           <p>Godkjenn eller fjern elevforslag for dette klasserommet.</p>
         </div>

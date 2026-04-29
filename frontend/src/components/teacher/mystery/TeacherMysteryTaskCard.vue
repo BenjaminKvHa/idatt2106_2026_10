@@ -2,9 +2,11 @@
 import { computed } from 'vue'
 import {
   CHAPTER_LABELS,
+  DATACENTER_FORMAT_LABELS,
   formatTimestamp,
   getCorrectFileSlot,
   type ChapterTaskKey,
+  type DatacenterTaskFormat,
   type ImageVerificationTask,
   type NewsVerificationTask,
   type TaskAdminResponse,
@@ -15,6 +17,7 @@ const props = defineProps<{
   task: TaskAdminResponse
   imageTask?: ImageVerificationTask | null
   newsTask?: NewsVerificationTask | null
+  format?: DatacenterTaskFormat | null
   selected?: boolean
 }>()
 
@@ -40,11 +43,13 @@ const correctFileSlot = computed(() => {
     </div>
 
     <div class="task-meta-row">
+      <span>{{ CHAPTER_LABELS[chapter] }}</span>
+      <span v-if="format">{{ DATACENTER_FORMAT_LABELS[format] }}</span>
       <span>Vanskelighetsgrad: {{ task.difficulty }}</span>
       <span>Opprettet: {{ formatTimestamp(task.createdAt) }}</span>
     </div>
 
-    <template v-if="chapter === 'fotografen' && imageTask">
+    <template v-if="imageTask">
       <div class="image-task-layout">
         <img
           v-if="imageTask.fileId"
@@ -73,7 +78,7 @@ const correctFileSlot = computed(() => {
       </div>
     </template>
 
-    <template v-else-if="chapter === 'nyhetskvartalet' && newsTask">
+    <template v-else-if="newsTask">
       <div class="task-details">
         <p><strong>Beskrivelse:</strong> {{ newsTask.taskDescription || 'Ingen beskrivelse' }}</p>
         <p><strong>Ved riktig svar:</strong> {{ newsTask.correctDescription || 'Ingen tekst' }}</p>

@@ -11,14 +11,6 @@ const emit = defineEmits<{
   select: [email: string]
 }>()
 
-const secondaryText = computed(() => {
-  if (props.pupil.username.trim().length > 0) {
-    return `@${props.pupil.username}`
-  }
-
-  return props.pupil.email
-})
-
 function selectPupil() {
   emit('select', props.pupil.email)
 }
@@ -35,13 +27,12 @@ function selectPupil() {
     @click="selectPupil"
   >
     <span class="pupil-icon">
-      <img v-if="pupil.avatarUrl" :src="pupil.avatarUrl" :alt="pupil.legalName" class="pupil-icon-image" />
-      <span v-else class="pupil-icon-fallback">{{ pupil.legalName }}</span>
+      <img :src="pupil.avatarUrl || '/api/objects/1'" :alt="pupil.legalName" class="pupil-icon-image" />
     </span>
 
     <span class="pupil-text">
-      <span class="pupil-name" :class="{ 'pending-name': pupil.status === 'PENDING' }">{{ pupil.legalName }}</span>
-      <span class="pupil-username" :class="{ 'pending-username': pupil.status === 'PENDING' }">{{ secondaryText }}</span>
+      <span class="pupil-name" :class="{ 'pending-name': pupil.status === 'PENDING' }">{{ props.pupil.username }}</span>
+      <span class="pupil-username" :class="{ 'pending-username': pupil.status === 'PENDING' }">Juridisk navn: <b>{{ pupil.legalName }}</b></span>
     </span>
   </button>
 </template>

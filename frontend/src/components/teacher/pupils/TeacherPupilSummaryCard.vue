@@ -29,10 +29,10 @@ function updateUsername(event: Event) {
 
       <div class="profile-text">
         <div class="profile-header-row">
-          <p class="profile-name inika">{{ props.pupil.username }}</p>
+          <p class="profile-name inika">{{ editUsername }}</p>
           <p v-if="showSaveButton" class="xp-inline inika">{{ pupil.totalXp }} XP</p>
         </div>
-        <p class="username-display inika">Juridisk navn: {{ pupil.legalName }}</p>
+        <p class="username-display inika">Juridisk navn: <b>{{ pupil.legalName }}</b></p>
       </div>
 
       <div 
@@ -52,6 +52,7 @@ function updateUsername(event: Event) {
           />
 
           <button
+            v-if="editUsername !== props.pupil.username"
             class="save-btn inika"
             type="button"
             aria-label="Lagre endringer"
@@ -141,7 +142,6 @@ function updateUsername(event: Event) {
 .username-display {
   margin: 4px 0 0;
   font-size: 0.95rem;
-  font-weight: 700;
   opacity: 0.72;
 }
 

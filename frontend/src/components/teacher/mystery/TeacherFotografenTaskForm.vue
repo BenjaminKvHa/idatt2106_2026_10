@@ -18,6 +18,9 @@ const props = defineProps<{
   parsedTask?: ImageVerificationTask | null
   submitting?: boolean
   resetToken?: number
+  title?: string
+  lockedDifficulty?: TaskDifficulty | null
+  hideDifficulty?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -99,7 +102,7 @@ function resetForm() {
     fileInput.value.value = ''
   }
 
-  difficulty.value = props.task?.difficulty ?? 'EASY'
+  difficulty.value = props.lockedDifficulty ?? props.task?.difficulty ?? 'EASY'
   taskDescription.value = props.parsedTask?.taskDescription ?? ''
   correctCategory.value = props.parsedTask?.correctCategory ?? 'REAL'
 
@@ -191,18 +194,14 @@ function submitForm() {
   <section class="task-form-card">
     <div class="form-header-row">
       <div>
-        <h2>{{ task ? 'Rediger Fotografen-oppgave' : 'Opprett Fotografen-oppgave' }}</h2>
+        <h2>{{ title ?? (task ? 'Rediger Fotografen-oppgave' : 'Opprett Fotografen-oppgave') }}</h2>
       </div>
-
-      <button v-if="task" type="button" class="button-variant-1 secondary-button" @click="emit('cancelEdit')">
-        Ny oppgave
-      </button>
     </div>
 
     <p v-if="validationError" class="form-message error">{{ validationError }}</p>
 
     <div class="form-layout">
-      <label class="form-field">
+      <label v-if="!hideDifficulty" class="form-field">
         <span>Vanskelighetsgrad</span>
         <select v-model="difficulty" :disabled="submitting">
           <option v-for="option in difficultyOptions" :key="option" :value="option">{{ option }}</option>

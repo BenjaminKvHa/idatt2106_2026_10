@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import PinboardLayout from '@/components/pupil/PinboardLayout.vue'
 import StateDisplay from '@/components/ui/StateDisplay.vue'
+import TopBar from '@/components/pupil/TopBar.vue'
 import { get } from '@/utils/apiUtils'
 
 type ClassroomLeaderboardEntry = {
@@ -60,7 +61,8 @@ onMounted(loadLeaderboard)
 </script>
 
 <template>
-  <PinboardLayout title="Ledertavle" heading-id="leaderboard-title">
+  <TopBar title="Ledertavle" />
+  <PinboardLayout heading-id="leaderboard-title">
     <div class="board-content">
       <h1 id="leaderboard-title">Ledertavle</h1>
 

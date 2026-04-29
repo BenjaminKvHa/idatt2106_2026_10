@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import PinboardLayout from '@/components/pupil/PinboardLayout.vue'
+import TopBar from '@/components/pupil/TopBar.vue'
 </script>
 
 <template>
-  <PinboardLayout title="Hjelp" heading-id="help-title">
+  <TopBar title="Hjelp" />
+  <PinboardLayout heading-id="help-title">
     <div class="text-box">
       <h1 id="help-title">Hva går spillet ut på?</h1>
 

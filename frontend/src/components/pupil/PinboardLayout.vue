@@ -1,19 +1,14 @@
 <script setup lang="ts">
-import TopBar from '@/components/pupil/TopBar.vue'
 import blobbyImage from '@/assets/icons/blobby/creaturePeaking.png'
 import boardBackground from '@/assets/backgrounds/korktavle.png'
 
 defineProps<{
-  title: string
-  previousPageUrl?: string
   headingId?: string
 }>()
 </script>
 
 <template>
   <div class="pupil-scene-screen">
-    <TopBar :title="title" :previous-page-url="previousPageUrl" />
-
     <main class="pinboard-layout-page pupil-scene-page pupil-scene-page--dimmed">
       <section class="pupil-pinboard-stage" :aria-labelledby="headingId">
         <img class="pupil-pinboard-image" :src="boardBackground" alt="" aria-hidden="true" />

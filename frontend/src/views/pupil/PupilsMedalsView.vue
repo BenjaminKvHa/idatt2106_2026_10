@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 
 import PinboardLayout from '@/components/pupil/PinboardLayout.vue'
 import StateDisplay from '@/components/ui/StateDisplay.vue'
+import TopBar from '@/components/pupil/TopBar.vue'
 import medalsIcon from '@/assets/icons/homescreen/icon_medals.png'
 import { get } from '@/utils/apiUtils'
 
@@ -36,7 +37,8 @@ function medalImageUrl(medal: PupilMedal) {
 </script>
 
 <template>
-  <PinboardLayout title="Medaljer" previous-page-url="/pupil" heading-id="medals-title">
+  <TopBar title="Medaljer" previous-page-url="/pupil" />
+  <PinboardLayout heading-id="medals-title">
     <div class="board-content">
       <header class="medals-header">
         <img class="medals-icon" :src="medalsIcon" alt="" aria-hidden="true" />

@@ -209,14 +209,45 @@ const handleRegister = async (): Promise<void> => {
   box-sizing: border-box;
 }
 
-.signup-page {
+.signup-page,
+.page {
+  position: relative;
+  overflow: hidden;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 32px 16px;
-  background: rgb(239 211 175 / 100%);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.signup-page::before,
+.page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('@/assets/backgrounds/welcomeBackground.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(8px);
+  transform: scale(1.04);
+  z-index: 0;
+}
+
+.signup-page::after,
+.page::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgb(239 211 175 / 35%);
+  z-index: 1;
+}
+
+.signup-card,
+.frame {
+  position: relative;
+  z-index: 2;
 }
 
 .signup-card {

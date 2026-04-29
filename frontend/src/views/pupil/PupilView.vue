@@ -32,7 +32,8 @@ const buttons = [
             :key="btn.to"
             :to="btn.to"
             class="overlay-button"
-            :class="btn.class">
+            :class="btn.class"
+          >
             <img :src="btn.icon" />
           </router-link>
         </div>
@@ -47,28 +48,36 @@ const buttons = [
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-}
-
-/* page */
-.page {
   position: relative;
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
+
   background: url('@/assets/backgrounds/hjemskjerm-bg.png') no-repeat center center;
   background-size: cover;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: clamp(0.5rem, 2vw, 2rem);
 }
 
-.page::before {
+.screen::before {
   content: '';
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.4);
   z-index: 0;
+  pointer-events: none;
+}
+
+.screen > * {
+  position: relative;
+  z-index: 1;
+}
+
+.page {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: transparent;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: clamp(0.5rem, 2vw, 2rem);
 }
 
 .center-container {

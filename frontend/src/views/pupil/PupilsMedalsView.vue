@@ -37,7 +37,7 @@ function medalImageUrl(medal: PupilMedal) {
 </script>
 
 <template>
-  <div class="pupil-scene-screen">
+  <div class="medals-page-bg pupil-scene-screen">
     <TopBar title="Medaljer" previous-page-url="/pupil" />
 
     <main class="medals-page pupil-scene-page pupil-scene-page--dimmed">
@@ -107,8 +107,17 @@ function medalImageUrl(medal: PupilMedal) {
 </template>
 
 <style scoped>
-.medals-page {
+.medals-page-bg {
+  min-height: 100vh;
   background-image: url('@/assets/backgrounds/hjemskjerm-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+.medals-page {
+  background: transparent;
 }
 
 .board-content {

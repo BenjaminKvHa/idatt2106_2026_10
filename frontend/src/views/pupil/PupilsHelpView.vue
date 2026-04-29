@@ -5,7 +5,7 @@ import boardBackground from '@/assets/backgrounds/korktavle.png'
 </script>
 
 <template>
-  <div class="pupil-scene-screen">
+  <div class="help-page-bg pupil-scene-screen">
     <TopBar title="Hjelp" />
 
     <main class="help-page pupil-scene-page pupil-scene-page--dimmed">
@@ -45,8 +45,17 @@ import boardBackground from '@/assets/backgrounds/korktavle.png'
 </template>
 
 <style scoped>
-.help-page {
+.help-page-bg {
+  min-height: 100vh;
+
   background-image: url('@/assets/backgrounds/hjemskjerm-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+.help-page {
+  background: transparent;
 }
 
 .text-box {

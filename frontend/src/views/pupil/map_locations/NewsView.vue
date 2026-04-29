@@ -188,127 +188,134 @@ onBeforeUnmount(revokeImageUrls)
 </script>
 
 <template>
-  <TopBar title="Nyhetskvartalet" />
+  <div class="nyhetskvartalet-page-bg">
+    <TopBar title="Nyhetskvartalet" />
 
-  <div class="page">
-    <div class="center-container">
-      <template v-if="currentTask && !runDone">
-        <div class="progress-container">
-          <div class="progress-bar">
-            <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
+    <div class="page">
+      <div class="center-container">
+        <template v-if="currentTask && !runDone">
+          <div class="progress-container">
+            <div class="progress-bar">
+              <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
+            </div>
+
+            <p class="progress-text">
+              Nivå {{ stepIndex + 1 }} / {{ DIFFICULTIES.length }} — {{ difficultyLabel }}
+            </p>
           </div>
 
-          <p class="progress-text">
-            Nivå {{ stepIndex + 1 }} / {{ DIFFICULTIES.length }} — {{ difficultyLabel }}
+          <HintCreature hint="Se nøye etter rare detaljer i tekst, bilde og overskrift." />
+
+          <PupilNewsTask
+            :task-description="currentTask.taskDescription"
+            :file-ids="currentTask.fileIds"
+            :image-urls="imageUrls"
+            :selected-file-id="selectedFileId"
+            :result="lastResult"
+            :submitting="submitting"
+            select-button-text="Velg dette bildet"
+            @select-file="choose"
+          />
+
+          <div
+            v-if="lastResult"
+            class="mini-feedback"
+            :class="{ success: lastResult.correct, fail: !lastResult.correct }"
+          >
+            <span>{{ lastResult.feedback }}</span>
+          </div>
+
+          <button v-if="lastResult" class="next-level-button" @click="next">
+            {{ stepIndex === DIFFICULTIES.length - 1 ? 'Se resultat' : 'Gå til neste nivå' }}
+          </button>
+        </template>
+
+        <p v-else-if="loading">Laster oppgave…</p>
+        <p v-else-if="error" class="error">{{ error }}</p>
+      </div>
+    </div>
+
+    <TaskGuide v-if="showGuidePopup" @close="showGuidePopup = false">
+      <h2>Velkommen til nyhetskvartalet!</h2>
+      <p>
+        I nyhetskvartalet vil du få oppgaver som handler om å skille ekte avisforsider og uekte
+        avisforsider. I hver oppgave vil du få én ekte avisforside og én falsk. Du skal velge
+        hvilken du tror er falsk. Er du klar for å løse oppgaver?
+      </p>
+    </TaskGuide>
+
+    <div v-if="showHelpPopup" class="popup-overlay" @click="closeHelpPopup">
+      <div class="hint-popup" @click.stop>
+        <h2 class="popup-title">Trenger du hjelp?</h2>
+
+        <div class="hint-text">
+          <p>
+            I Nyhetskvartalet skal du undersøke informasjon og finne ut hva som er ekte og falskt.
           </p>
+          <ul>
+            <li>Les oppgaven nøye før du svarer</li>
+            <li>Sammenlign bildene og se etter rare detaljer</li>
+            <li>Velg det alternativet du mener er falskt</li>
+          </ul>
         </div>
 
-        <HintCreature hint="Se nøye etter rare detaljer i tekst, bilde og overskrift." />
+        <div class="popup-actions">
+          <button class="popup-btn popup-btn-play" @click="closeHelpPopup">Ok</button>
+        </div>
+      </div>
+    </div>
 
-        <PupilNewsTask
-          :task-description="currentTask.taskDescription"
-          :file-ids="currentTask.fileIds"
-          :image-urls="imageUrls"
-          :selected-file-id="selectedFileId"
-          :result="lastResult"
-          :submitting="submitting"
-          select-button-text="Velg dette bildet"
-          @select-file="choose"
-        />
+    <div v-if="showHintPopup" class="popup-overlay" @click="closeHintPopup">
+      <div class="hint-popup" @click.stop>
+        <h2 class="popup-title">Tips 💡</h2>
 
-        <div
-          v-if="lastResult"
-          class="mini-feedback"
-          :class="{ success: lastResult.correct, fail: !lastResult.correct }"
-        >
-          <span>{{ lastResult.feedback }}</span>
+        <div class="hint-text">
+          <p>Tenk som en detektiv.</p>
+          <ul>
+            <li>Se etter detaljer som ikke passer inn</li>
+            <li>Vær ekstra obs på tekst, bilder og overskrifter</li>
+            <li>Det som virker litt rart, er ofte verdt å undersøke nærmere</li>
+          </ul>
         </div>
 
-        <button v-if="lastResult" class="next-level-button" @click="next">
-          {{ stepIndex === DIFFICULTIES.length - 1 ? 'Se resultat' : 'Gå til neste nivå' }}
-        </button>
-      </template>
-
-      <p v-else-if="loading">Laster oppgave…</p>
-      <p v-else-if="error" class="error">{{ error }}</p>
-    </div>
-  </div>
-
-  <TaskGuide v-if="showGuidePopup" @close="showGuidePopup = false">
-    <h2>Velkommen til nyhetskvartalet!</h2>
-    <p>
-      I nyhetskvartalet vil du få oppgaver som handler om å skille ekte avisforsider og uekte
-      avisforsider. I hver oppgave vil du få én ekte avisforside og én falsk. Du skal velge hvilken
-      du tror er falsk. Er du klar for å løse oppgaver?
-    </p>
-  </TaskGuide>
-
-  <div v-if="showHelpPopup" class="popup-overlay" @click="closeHelpPopup">
-    <div class="hint-popup" @click.stop>
-      <h2 class="popup-title">Trenger du hjelp?</h2>
-
-      <div class="hint-text">
-        <p>
-          I Nyhetskvartalet skal du undersøke informasjon og finne ut hva som er ekte og falskt.
-        </p>
-        <ul>
-          <li>Les oppgaven nøye før du svarer</li>
-          <li>Sammenlign bildene og se etter rare detaljer</li>
-          <li>Velg det alternativet du mener er falskt</li>
-        </ul>
-      </div>
-
-      <div class="popup-actions">
-        <button class="popup-btn popup-btn-play" @click="closeHelpPopup">Ok</button>
+        <div class="popup-actions">
+          <button class="popup-btn popup-btn-play" @click="closeHintPopup">Ok</button>
+        </div>
       </div>
     </div>
+
+    <CompleteLevelPopup
+      :show="showCompletePopup"
+      :title="popupTitle"
+      :message="popupMessage"
+      :sub-message="popupSubMessage"
+      :success="popupSuccess"
+      :success-image="thumbsUpNews"
+      :fail-image="thumbsDownNews"
+      @close="closeCompletePopup"
+      @retry="retryLevel"
+      @map="goToMap"
+    />
   </div>
-
-  <div v-if="showHintPopup" class="popup-overlay" @click="closeHintPopup">
-    <div class="hint-popup" @click.stop>
-      <h2 class="popup-title">Tips 💡</h2>
-
-      <div class="hint-text">
-        <p>Tenk som en detektiv.</p>
-        <ul>
-          <li>Se etter detaljer som ikke passer inn</li>
-          <li>Vær ekstra obs på tekst, bilder og overskrifter</li>
-          <li>Det som virker litt rart, er ofte verdt å undersøke nærmere</li>
-        </ul>
-      </div>
-
-      <div class="popup-actions">
-        <button class="popup-btn popup-btn-play" @click="closeHintPopup">Ok</button>
-      </div>
-    </div>
-  </div>
-
-  <CompleteLevelPopup
-    :show="showCompletePopup"
-    :title="popupTitle"
-    :message="popupMessage"
-    :sub-message="popupSubMessage"
-    :success="popupSuccess"
-    :success-image="thumbsUpNews"
-    :fail-image="thumbsDownNews"
-    @close="closeCompletePopup"
-    @retry="retryLevel"
-    @map="goToMap"
-  />
 </template>
 
 <style scoped>
-.page {
-  min-height: calc(100vh - 80px);
-  display: flex;
-  justify-content: center;
-  padding: 2rem 1rem;
+.nyhetskvartalet-page-bg {
+  min-height: 100vh;
   background:
     linear-gradient(rgb(255 255 255 / 60%), rgb(255 255 255 / 60%)),
     url('@/assets/backgrounds/nyhetskvartalet-bg.png');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
+}
+
+.page {
+  min-height: calc(100vh - 4.2rem);
+  display: flex;
+  justify-content: center;
+  padding: 2rem 1rem;
+  background: transparent;
 }
 
 .center-container {

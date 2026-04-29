@@ -68,119 +68,227 @@ const isOnHome = computed(
 </script>
 
 <template>
-  <div class="mega-nav-container">
-    <div class="nav-container heavy-shadow">
-      <!-- VENSTRE -->
-      <div>
-        <button v-if="!isOnHome" @click="goBack" class="nav-icon-parent transition">
-          <ChevronLeftIcon />
-        </button>
+  <header class="topbar">
+    <div class="topbar-shade"></div>
 
-        <RouterLink v-if="!isOnHome" :to="homeRoute" class="nav-icon-parent transition">
-          <HomeIcon />
-        </RouterLink>
-      </div>
+    <div class="topbar-left">
+      <button
+        v-if="!isOnHome"
+        @click="goBack"
+        class="nav-icon-parent transition"
+        aria-label="Tilbake"
+      >
+        <ChevronLeftIcon :size="42" :stroke-width="3" />
+      </button>
 
-      <!-- MIDTEN -->
-      <div class="nav-center-text">
-        {{ title }}
-      </div>
-
-      <!-- HØYRE -->
-      <div>
-        <RouterLink :to="profileRoute" class="avatar-button transition">
-          <img :src="profileAvatarUrl" />
-          <span class="username-text">{{ displayName }}</span>
-        </RouterLink>
-      </div>
+      <RouterLink
+        v-if="!isOnHome"
+        :to="homeRoute"
+        class="nav-icon-parent transition"
+        aria-label="Hjem"
+      >
+        <HomeIcon :size="36" :stroke-width="3" />
+      </RouterLink>
     </div>
-  </div>
+
+    <h1 class="nav-center-text">
+      {{ title }}
+    </h1>
+
+    <div class="topbar-right">
+      <RouterLink :to="profileRoute" class="avatar-button transition">
+        <img :src="profileAvatarUrl" />
+        <span class="username-text">{{ displayName }}</span>
+      </RouterLink>
+    </div>
+  </header>
 </template>
 
 <style scoped>
-.mega-nav-container {
+.topbar {
   position: relative;
-}
-
-/* MAIN BAR */
-.nav-container {
-  position: relative;
-  background-color: var(--beige-medium);
   width: 100%;
-  height: 5rem;
-  display: flex;
-  justify-content: space-between;
-  padding-left: 2rem;
-  padding-right: 2rem;
-  border-bottom: var(--border-wide) solid var(--brown-dark);
+  height: 4.2rem;
+
+  display: grid;
+  grid-template-columns: 12rem 1fr 12rem;
+  align-items: center;
+
+  padding: 0 1rem;
+  box-sizing: border-box;
+  overflow: hidden;
+  z-index: 50;
+
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(30px);
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+
+  box-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.4),
+    0 6px 12px rgba(0, 0, 0, 0.35);
 }
 
-/* FLEX CHILDREN */
-.nav-container > div {
+.topbar > * {
+  position: relative;
+  z-index: 2;
+}
+
+.topbar-left {
+  grid-column: 1;
   display: flex;
   align-items: center;
-  gap: 1rem;
-}
-
-/* CENTER TITLE */
-.nav-center-text {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-  color: var(--brown-dark);
-  font-weight: 600;
-  white-space: nowrap;
-  text-decoration: none;
-}
-
-.nav-icon-parent {
-  width: 3rem;
-  height: 3rem;
-  border-radius: 100%;
-  border: var(--border-thin) solid var(--brown-dark);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: var(--beige-light);
-
-  color: var(--brown-dark);
-}
-
-.nav-icon-parent:hover {
-  background-color: var(--brown-dark);
-  color: var(--beige-light);
-}
-
-.avatar-button {
-  border: var(--border-thin) solid var(--brown-dark);
-  border-radius: 1rem;
-  background-color: var(--beige-light);
-  color: var(--brown-dark);
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  padding: 0.25rem 1rem;
-  font-weight: 600;
+  justify-self: start;
   gap: 0.5rem;
 }
 
+.topbar-left,
+.topbar-right {
+  align-self: center;
+  transform: translateY(-4px);
+}
+
+.nav-center-text {
+  grid-column: 2;
+  margin: 0;
+  justify-self: center;
+  text-align: center;
+
+  font-family: 'Inika', serif;
+  font-size: clamp(1.1rem, 2vw, 1.5rem);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  transform: translateY(-4px);
+
+  color: #ffffff;
+
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+
+  white-space: nowrap;
+}
+
+.topbar-right {
+  grid-column: 3;
+  display: flex;
+  align-items: center;
+  justify-self: end;
+}
+
+.nav-icon-parent {
+  width: 3.1rem;
+  height: 3.1rem;
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.65);
+
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
+  border: 2px solid rgba(0, 0, 0, 0.7);
+
+  box-shadow:
+    0 3px 0 rgba(0, 0, 0, 0.5),
+    0 6px 12px rgba(0, 0, 0, 0.25);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  color: #111;
+
+  transition: all 0.15s ease;
+}
+
+.nav-icon-parent:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.nav-icon-parent:active {
+  background: #ffffff;
+
+  transform: translateY(2px);
+
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.5),
+    0 3px 8px rgba(0, 0, 0, 0.2);
+}
+
+.nav-icon-parent svg {
+  width: 1.4rem;
+  height: 1.4rem;
+  stroke-width: 1.75;
+  stroke: #111;
+  color: #111;
+}
+
+.avatar-button {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+
+  padding: 0.35rem 0.9rem;
+
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.65);
+
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
+  border: 2px solid rgba(0, 0, 0, 0.7);
+
+  box-shadow:
+    0 3px 0 rgba(0, 0, 0, 0.5),
+    0 6px 12px rgba(0, 0, 0, 0.25);
+
+  color: #111;
+  font-weight: 600;
+
+  transition: all 0.15s ease;
+}
+
 .avatar-button:hover {
-  color: var(--beige-light);
-  background-color: var(--brown-dark);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.avatar-button:active {
+  background: #ffffff;
+
+  transform: translateY(2px);
+
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.5),
+    0 3px 8px rgba(0, 0, 0, 0.2);
 }
 
 .avatar-button img {
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 100%;
-  background-color: white;
-  border: 1px solid var(--brown-dark-40);
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 50%;
+  border: 2px solid #1a1a1a;
 }
 
-.username-text {
-  text-decoration: none;
+@media (max-width: 800px) {
+  .topbar {
+    height: 3rem;
+    grid-template-columns: 6rem 1fr 6rem;
+    padding: 0 0.5rem;
+  }
+
+  .nav-icon-parent {
+    width: 2.4rem;
+    height: 2.4rem;
+  }
+
+  .nav-center-text {
+    font-size: 1rem;
+  }
+
+  .username-text {
+    display: none;
+  }
 }
 </style>

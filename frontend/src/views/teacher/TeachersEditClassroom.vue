@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { del, get, post } from '@/utils/apiUtils'
+import { del, get, post, put } from '@/utils/apiUtils'
 
 type ClassroomDetailsResponse = {
   classroomCode: string
@@ -22,6 +22,11 @@ type InviteTeacherRequest = {
   email: string
 }
 
+type UpdateClassroomRequest = {
+  name: string
+  description: string
+}
+
 const route = useRoute()
 const router = useRouter()
 
@@ -37,6 +42,27 @@ const loadingTeachers = ref(false)
 const teachersError = ref('')
 const inviteTeacherEmail = ref('')
 const invitingTeacher = ref(false)
+const editOpen = ref(false)
+const savingClassroom = ref(false)
+const editName = ref('')
+const editDescription = ref('')
+
+function syncEditForm() {
+  editName.value = classroom.value?.classroomName ?? ''
+  editDescription.value = classroom.value?.classroomDescription ?? ''
+}
+
+function openEditCard() {
+  syncEditForm()
+  actionError.value = ''
+  editOpen.value = true
+}
+
+function closeEditCard() {
+  syncEditForm()
+  actionError.value = ''
+  editOpen.value = false
+}
 
 async function loadClassroom() {
   loading.value = true
@@ -61,6 +87,7 @@ async function loadClassroom() {
       classroomName: response.classroomName,
       classroomDescription: response.classroomDescription,
     }
+    syncEditForm()
 
     const leaveStatus = await get<TeacherLeaveStatusResponse>(
       `/api/classrooms/${classroomCodeSlug}/teachers/me/can-leave`,
@@ -75,6 +102,35 @@ async function loadClassroom() {
     error.value = fetchError instanceof Error ? fetchError.message : 'Failed to load classroom'
   } finally {
     loading.value = false
+  }
+}
+
+async function saveClassroomDetails() {
+  if (!classroom.value || savingClassroom.value) return
+
+  const normalizedName = editName.value.trim()
+  if (!normalizedName) {
+    actionError.value = 'Klasseromsnavn kan ikke være tomt.'
+    return
+  }
+
+  savingClassroom.value = true
+  actionError.value = ''
+
+  try {
+    const payload: UpdateClassroomRequest = {
+      name: normalizedName,
+      description: editDescription.value.trim(),
+    }
+
+    const updated = await put<ClassroomDetailsResponse>(`/api/classrooms/${classroom.value.classroomCode}`, payload)
+    classroom.value = updated
+    syncEditForm()
+    editOpen.value = false
+  } catch (requestError) {
+    actionError.value = requestError instanceof Error ? requestError.message : 'Failed to update classroom'
+  } finally {
+    savingClassroom.value = false
   }
 }
 
@@ -173,7 +229,38 @@ watch(
       <p v-if="classroom.classroomDescription">{{ classroom.classroomDescription }}</p>
       <p><b>Romkode:</b> {{ classroom.classroomCode }}</p>
 
-      <h2>Rediger klasserom</h2>
+      <button v-if="!editOpen" type="button" class="action-button edit-classroom-btn" @click="openEditCard">
+        Rediger klasserom
+      </button>
+
+      <section v-if="editOpen" class="edit-card">
+        <h2>Rediger klasserom</h2>
+
+        <label class="form-field">
+          <span>Klasseromsnavn</span>
+          <input v-model="editName" type="text" class="teacher-input" :disabled="savingClassroom" />
+        </label>
+
+        <label class="form-field">
+          <span>Beskrivelse</span>
+          <textarea v-model="editDescription" rows="3" class="teacher-textarea" :disabled="savingClassroom" />
+        </label>
+
+        <div class="edit-actions">
+          <button
+            type="button"
+            class="action-button"
+            :disabled="savingClassroom || editName.trim().length === 0"
+            @click="saveClassroomDetails"
+          >
+            {{ savingClassroom ? 'Lagrer...' : 'Lagre endringer' }}
+          </button>
+
+          <button type="button" class="action-button secondary-button" :disabled="savingClassroom" @click="closeEditCard">
+            Avbryt
+          </button>
+        </div>
+      </section>
 
       <section class="teacher-section">
         <div class="teacher-section-header">
@@ -225,6 +312,10 @@ watch(
 </template>
 
 <style scoped>
+.edit-classroom-btn {
+  width: max-content;
+  height: max-content;
+}
 .edit-classroom-view {
   display: flex;
   flex-direction: column;
@@ -241,6 +332,27 @@ watch(
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+}
+
+.edit-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: rgba(255, 248, 235, 0.82);
+  border: 2px solid rgba(90, 64, 47, 0.16);
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.form-field span {
+  font-weight: 700;
+  color: var(--brown-dark);
 }
 
 .teacher-section-header h3 {
@@ -298,6 +410,24 @@ watch(
   color: var(--brown-dark);
 }
 
+.teacher-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 1rem;
+  border: 3px solid var(--brown-dark);
+  background: var(--beige-light);
+  padding: 0.75rem 1rem;
+  font: inherit;
+  color: var(--brown-dark);
+  resize: vertical;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
 .action-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
@@ -319,6 +449,10 @@ watch(
 .action-button:focus, .action-button:hover {
   color: var(--beige-light);
   background-color: var(--brown-dark);
+}
+
+.secondary-button {
+  background: transparent;
 }
 
 .destructive-button {

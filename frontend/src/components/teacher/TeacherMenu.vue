@@ -4,9 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import Logo from '@/components/misc/Logo.vue'
 import OptionsMenu from '@/components/ui/OptionsMenu.vue'
 import NotificationsMenu from '@/components/ui/NotificationsMenu.vue'
-import { BellIcon, Settings } from '@lucide/vue'
-import volume2Icon from '@/assets/icons/volume-2.svg'
-import volumeXIcon from '@/assets/icons/volume-x.svg'
+import { BellIcon, Settings, Volume2, VolumeX } from '@lucide/vue'
 import { useClassrooms } from '@/composables/useClassrooms.ts'
 import { useAudio } from '@/composables/useAudio'
 
@@ -94,7 +92,8 @@ const activeClassroomCode = computed(() => {
                 :aria-label="isMuted ? 'Skru på lyd' : 'Demp lyd'"
                 @click="toggleMute"
             >
-                <img :src="isMuted ? volumeXIcon : volume2Icon" alt="" class="teacher-menu-icon" aria-hidden="true" />
+                <VolumeX v-if="isMuted" class="teacher-menu-icon" />
+                <Volume2 v-else class="teacher-menu-icon" />
             </button>
             <button
                 type="button"

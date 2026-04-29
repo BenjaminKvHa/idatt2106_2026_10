@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { onBeforeRouteLeave, useRoute } from 'vue-router'
 import TeacherPupilsLeftPanel from '@/components/teacher/pupils/TeacherPupilsLeftPanel.vue'
 import TeacherPupilsRightPanel from '@/components/teacher/pupils/TeacherPupilsRightPanel.vue'
 import type { ActivePanel, Pupil, StopName } from '@/components/teacher/pupils/types'
@@ -75,6 +75,10 @@ const selectedStopNote = computed(() => {
   return selectedNotebookNote.value
 })
 
+const hasUnsavedUsernameChanges = computed(() => {
+  return selectedPupil.value?.status === 'APPROVED' && editUsername.value !== selectedPupil.value.username
+})
+
 const editUsername = ref('')
 
 watch(
@@ -86,6 +90,10 @@ watch(
 )
 
 const selectPupil = (email: string): void => {
+  if (email !== selectedPupilEmail.value && !confirmDiscardUsernameChanges()) {
+    return
+  }
+
   selectedPupilEmail.value = email
   activePanel.value = 'NONE'
   selectedStopName.value = ''
@@ -113,6 +121,23 @@ const openNotes = (): void => {
 
 const selectStopNote = (stopName: StopName): void => {
   selectedStopName.value = stopName
+}
+
+function confirmDiscardUsernameChanges(): boolean {
+  if (!hasUnsavedUsernameChanges.value) {
+    return true
+  }
+
+  return window.confirm('Er du sikker på at du vil forlate uten å lagre endringene dine')
+}
+
+function handleBeforeUnload(event: BeforeUnloadEvent) {
+  if (!hasUnsavedUsernameChanges.value) {
+    return
+  }
+
+  event.preventDefault()
+  event.returnValue = ''
 }
 
 function mapAcceptedPupil(response: AcceptedPupilResponse): Pupil {
@@ -294,7 +319,16 @@ const rejectPendingPupil = async (): Promise<void> => {
 }
 
 onMounted(async () => {
+  window.addEventListener('beforeunload', handleBeforeUnload)
   await loadPupils()
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('beforeunload', handleBeforeUnload)
+})
+
+onBeforeRouteLeave(() => {
+  return confirmDiscardUsernameChanges()
 })
 
 watch(

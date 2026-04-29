@@ -84,7 +84,7 @@ describe('SignInView', () => {
     const wrapper = mountSignInView()
 
     await goToEmailStep(wrapper)
-    await wrapper.find('.secondary-btn').trigger('click')
+    await wrapper.find('.feide-btn-secondary').trigger('click')
 
     expect(wrapper.text()).toContain('Logg inn med Feide')
     expect(wrapper.find('input[type="email"]').exists()).toBe(false)
@@ -139,13 +139,13 @@ describe('SignInView', () => {
     await wrapper.find('input[type="password"]').setValue('Secret123')
     await wrapper.find('form').trigger('submit')
 
-    expect(wrapper.find('.login-button-row .primary-btn').attributes('disabled')).toBeDefined()
-    expect(wrapper.find('.login-button-row .primary-btn').text()).toBe('Logger inn...')
+    expect(wrapper.find('.login-button-row .feide-btn-primary').attributes('disabled')).toBeDefined()
+    expect(wrapper.find('.login-button-row .feide-btn-primary').text()).toBe('Logger inn...')
 
     loginRequest.resolve('token')
     await flushPromises()
 
-    expect(wrapper.find('.login-button-row .primary-btn').attributes('disabled')).toBeUndefined()
+    expect(wrapper.find('.login-button-row .feide-btn-primary').attributes('disabled')).toBeUndefined()
   })
 
   it('shows the backend-safe login error and does not mark login as registered when login fails', async () => {
@@ -159,5 +159,66 @@ describe('SignInView', () => {
 
     expect(wrapper.find('[role="alert"]').text()).toContain('Invalid credentials')
     expect(wrapper.text()).not.toContain('Innlogging registrert.')
+  })
+
+  it('does not call login API before submitting password form', async () => {
+    const wrapper = mountSignInView()
+
+    await goToPasswordStep(wrapper)
+    await wrapper.find('input[type="password"]').setValue('Secret123')
+
+    expect(mockedLoginWithCredentials).not.toHaveBeenCalled()
+  })
+
+  it('keeps the email visible when changing account back and forth', async () => {
+    const wrapper = mountSignInView()
+
+    await goToPasswordStep(wrapper, 'pupil@example.com')
+    await wrapper.find('.clickable').trigger('click')
+
+    expect((wrapper.find('input[type="email"]').element as HTMLInputElement).value).toBe(
+      'pupil@example.com',
+    )
+  })
+
+  it('clears previous error when moving from email step to password step', async () => {
+    const wrapper = mountSignInView()
+
+    await goToPasswordStep(wrapper)
+    await wrapper.find('input[type="password"]').setValue('Wrong123')
+
+    mockedLoginWithCredentials.mockRejectedValueOnce(new Error('Invalid credentials'))
+
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(wrapper.find('[role="alert"]').exists()).toBe(true)
+
+    await wrapper.find('.clickable').trigger('click')
+    await wrapper.find('form').trigger('submit')
+
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+  })
+
+  it('navigates to default route after successful login', async () => {
+    mockedLoginWithCredentials.mockResolvedValue('token')
+    const wrapper = mountSignInView()
+
+    await goToPasswordStep(wrapper)
+    await wrapper.find('input[type="password"]').setValue('Secret123')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(routerPush).toHaveBeenCalledWith('/ignored-after-login-route')
+  })
+
+  it('shows disabled ID-porten button', () => {
+    const wrapper = mountSignInView()
+
+    const disabledButton = wrapper.find('.disabled-option')
+
+    expect(disabledButton.exists()).toBe(true)
+    expect(disabledButton.attributes('disabled')).toBeDefined()
+    expect(disabledButton.text()).toContain('Logg inn med ID-porten')
   })
 })

@@ -69,7 +69,8 @@ class MeControllerTest {
                         AccountRole.PUPIL,
                         "detektiv1",
                         "ABCABC",
-                        42L));
+                        42L,
+                        true));
 
         // Act: Perform GET /me with authentication
         mockMvc.perform(get("/me").with(authentication(authenticationFor(principal, "PUPIL"))))
@@ -98,7 +99,8 @@ class MeControllerTest {
                         AccountRole.TEACHER,
                         null,
                         null,
-                        null));
+                        null,
+                        false));
 
         // Act: Perform GET /me with teacher authentication
         mockMvc.perform(get("/me").with(authentication(authenticationFor(principal, "TEACHER"))))
@@ -142,7 +144,8 @@ class MeControllerTest {
                         AccountRole.PUPIL,
                         "newUsername",
                         "ABCABC",
-                        42L));
+                        42L,
+                        true));
 
         // Act: Perform PUT /me with pupil authentication
         mockMvc.perform(put("/me")
@@ -211,7 +214,8 @@ class MeControllerTest {
                         AccountRole.PUPIL,
                         "detektiv1",
                         "ABCABC",
-                        42L));
+                        42L,
+                        true));
 
         // Act: Perform PUT /me with different email in query param (should be ignored)
         mockMvc.perform(put("/me?email=other@example.com")

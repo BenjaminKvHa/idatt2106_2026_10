@@ -1,5 +1,9 @@
 package com.nettdet.backend.service;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -9,11 +13,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.nettdet.backend.domain.Account;
+import com.nettdet.backend.domain.FileObject;
 import com.nettdet.backend.domain.PupilClassroomMembership;
 import com.nettdet.backend.domain.enums.AccountRole;
 import com.nettdet.backend.dto.AuthMeResponse;
 import com.nettdet.backend.dto.LoginRequest;
 import com.nettdet.backend.dto.RegisterRequest;
+import com.nettdet.backend.dto.UpdateAvatarRequest;
 import com.nettdet.backend.dto.UpdateMeRequest;
 import com.nettdet.backend.repository.AccountRepository;
 import com.nettdet.backend.repository.PupilClassroomMembershipRepository;
@@ -27,14 +33,19 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final PupilClassroomMembershipRepository pupilClassroomMembershipRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AvatarService avatarService;
+    private static final Duration AVATAR_UPDATE_COOLDOWN = Duration.ofSeconds(2);
+    private final ConcurrentHashMap<String, Instant> lastAvatarUpdateByEmail = new ConcurrentHashMap<>();
 
     public AccountService(
             AccountRepository accountRepository,
             PupilClassroomMembershipRepository pupilClassroomMembershipRepository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            AvatarService avatarService) {
         this.accountRepository = accountRepository;
         this.pupilClassroomMembershipRepository = pupilClassroomMembershipRepository;
         this.passwordEncoder = passwordEncoder;
+        this.avatarService = avatarService;
     }
 
     public Account register(RegisterRequest request) {
@@ -89,8 +100,9 @@ public class AccountService {
         Long avatarFileObjectId = membership != null && membership.getAvatarFileObject() != null
                 ? membership.getAvatarFileObject().getId()
                 : null;
+        boolean membershipConfirmed = membership != null && membership.isMembershipConfirmedByTeacher();
 
-        return AuthMeResponse.from(account, username, classroomCode, avatarFileObjectId);
+        return AuthMeResponse.from(account, username, classroomCode, avatarFileObjectId, membershipConfirmed);
     }
 
     @Transactional
@@ -111,6 +123,37 @@ public class AccountService {
                 .orElseThrow(() -> new IllegalArgumentException("You are not currently in a classroom"));
 
         membership.setUsername(request.username().trim());
+        pupilClassroomMembershipRepository.save(membership);
+
+        return getAuthenticatedProfile(principal.email());
+    }
+
+    @Transactional
+    public AuthMeResponse updateAvatar(JwtUserPrincipal principal, UpdateAvatarRequest request) {
+        if (principal == null || principal.email() == null) {
+            throw new AccessDeniedException("Authenticated access is required");
+        }
+
+        if (!AccountRole.PUPIL.name().equals(principal.role())) {
+            throw new AccessDeniedException("Pupil access is required");
+        }
+
+        if (request == null || request.avatar() == null || request.avatar().isBlank()) {
+            throw new IllegalArgumentException("Avatar must not be blank");
+        }
+
+        Instant now = Instant.now();
+        Instant previous = lastAvatarUpdateByEmail.get(principal.email());
+        if (previous != null && Duration.between(previous, now).compareTo(AVATAR_UPDATE_COOLDOWN) < 0) {
+            throw new IllegalStateException("Avatar updates are rate-limited; please wait before retrying");
+        }
+        lastAvatarUpdateByEmail.put(principal.email(), now);
+
+        PupilClassroomMembership membership = pupilClassroomMembershipRepository.findByAccountEmail(principal.email())
+                .orElseThrow(() -> new IllegalArgumentException("You are not currently in a classroom"));
+
+        FileObject avatarFileObject = avatarService.getOrCreateAvatar(request.avatar());
+        membership.setAvatarFileObject(avatarFileObject);
         pupilClassroomMembershipRepository.save(membership);
 
         return getAuthenticatedProfile(principal.email());

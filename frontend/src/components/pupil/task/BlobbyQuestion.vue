@@ -10,60 +10,44 @@ const showHintPopup = ref(false)
 </script>
 
 <template>
-  <div class="hint-wrapper">
-    <!-- Rosa figur -->
-    <div class="hint-creature">
-      <button class="hint-creature-button" @click="showHintPopup = true">
-        <img :src="hintCreature" alt="Få hint" />
-      </button>
-    </div>
-
-    <!-- Innhold -->
-    <div class="hint-content">
-      <slot />
-    </div>
+  <div class="hint-creature-wrapper">
+    <button type="button" class="hint-creature-button" @click="showHintPopup = true">
+      <img :src="hintCreature" alt="Få hint" />
+    </button>
   </div>
 
-  <!-- Popup -->
-  <div v-if="showHintPopup" class="hint-overlay" @click="showHintPopup = false">
-    <div class="hint-popup" @click.stop>
-      <h2>Tips 💡</h2>
-      <p>{{ hint }}</p>
-
-      <button class="hint-close-button" @click="showHintPopup = false">Ok</button>
+  <Teleport to="body">
+    <div v-if="showHintPopup" class="hint-overlay" @click="showHintPopup = false">
+      <div class="hint-popup" @click.stop>
+        <h2>Tips 💡</h2>
+        <p>{{ hint }}</p>
+        <button class="hint-close-button" @click="showHintPopup = false">Ok</button>
+      </div>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <style scoped>
-/* Wrapper som sentrerer innhold */
-.hint-wrapper {
-  position: relative;
-  width: min(100%, 760px);
-  margin: 0 auto;
-}
-
-/* Innhold (task-box) */
-.hint-content {
-  width: 100%;
-}
-
-/* Rosa figur */
-.hint-creature {
+.hint-creature-wrapper {
   position: absolute;
-  top: -80px;
+  top: 0;
   left: 0;
-  transform: translateX(-140%);
-  z-index: 20;
+  width: 0;
+  height: 0;
 }
 
 .hint-creature-button {
-  width: 130px;
-  height: 130px;
+  position: absolute;
+  top: calc(var(--topbar-height) + 10px);
+  left: 12px;
+  z-index: 999;
+
+  width: 120px;
+  height: 120px;
   border: none;
   background: transparent;
-  cursor: pointer;
   padding: 0;
+  cursor: pointer;
 }
 
 .hint-creature-button img {
@@ -72,18 +56,16 @@ const showHintPopup = ref(false)
   object-fit: contain;
   pointer-events: none;
   filter: drop-shadow(0 8px 10px rgb(0 0 0 / 25%));
-  transition: transform 0.2s ease;
 }
 
 .hint-creature-button:hover img {
   transform: scale(1.08);
 }
 
-/* Popup */
 .hint-overlay {
   position: fixed;
   inset: 0;
-  z-index: 10000;
+  z-index: 1000000;
   background: rgb(0 0 0 / 35%);
   display: flex;
   justify-content: center;
@@ -100,6 +82,16 @@ const showHintPopup = ref(false)
   box-shadow: 0 14px 30px rgb(0 0 0 / 25%);
 }
 
+.hint-popup h2 {
+  margin: 0 0 1rem;
+}
+
+.hint-popup p {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.5;
+}
+
 .hint-close-button {
   margin-top: 1.5rem;
   padding: 1rem 1.5rem;
@@ -110,16 +102,12 @@ const showHintPopup = ref(false)
   cursor: pointer;
 }
 
-/* Mobil */
 @media (max-width: 768px) {
-  .hint-creature {
-    top: -50px;
-    transform: translateX(-60%);
-  }
-
   .hint-creature-button {
-    width: 90px;
-    height: 90px;
+    top: calc(var(--topbar-height) + 10px);
+    left: 8px;
+    width: 85px;
+    height: 85px;
   }
 }
 </style>

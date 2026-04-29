@@ -97,22 +97,37 @@ import type {
   ImageCategory,
   ImageVerificationRequest,
   ImageVerificationResponse,
-  TaskDifficulty,
   ValidationResult,
 } from '@/types/chapter'
 import PupilImageTask from '@/components/pupil/task/PupilImageTask.vue'
+import { useDifficultyProgression } from '@/composables/useDifficultyProgression'
 
 const router = useRouter()
-const showGuidePopup = ref(true)
 
-const showCompletePopup = ref(false)
-const popupTitle = ref('')
-const popupMessage = ref('')
-const popupSubMessage = ref('')
-const popupSuccess = ref(true)
+const {
+  DIFFICULTIES,
+  stepIndex,
+  lastResult,
+  runCorrect,
+  runAttempts,
+  runDone,
+  loading,
+  submitting,
+  error,
+  showGuidePopup,
+  showCompletePopup,
+  popupTitle,
+  popupMessage,
+  popupSubMessage,
+  popupSuccess,
+  currentDifficulty,
+  difficultyLabel,
+  isLastStep,
+  recordResult,
+  advanceStep,
+} = useDifficultyProgression()
 
 const FOTOGRAFEN_CHAPTER_ID = 2
-const DIFFICULTIES: TaskDifficulty[] = ['EASY', 'MEDIUM', 'HARD']
 
 const CATEGORIES: { value: ImageCategory; label: string }[] = [
   { value: 'REAL', label: 'Ekte' },
@@ -120,28 +135,10 @@ const CATEGORIES: { value: ImageCategory; label: string }[] = [
   { value: 'MANIPULATED', label: 'Manipulert' },
 ]
 
-const stepIndex = ref(0)
 const currentTask = ref<ImageVerificationResponse | null>(null)
 const imageUrl = ref('')
 const selectedCategory = ref<ImageCategory | null>(null)
 const selectedJustification = ref<string | null>(null)
-const lastResult = ref<ValidationResult | null>(null)
-const runCorrect = ref(0)
-const runAttempts = ref(0)
-const runDone = ref(false)
-const loading = ref(false)
-const submitting = ref(false)
-const error = ref<string | null>(null)
-
-const difficultyLabel = computed(() => {
-  const labels: Record<TaskDifficulty, string> = {
-    EASY: 'Lett',
-    MEDIUM: 'Middels',
-    HARD: 'Vanskelig',
-  }
-
-  return labels[DIFFICULTIES[stepIndex.value]!]
-})
 
 const canSubmit = computed(
   () => selectedCategory.value !== null && selectedJustification.value !== null,
@@ -161,10 +158,8 @@ async function loadTask() {
   currentTask.value = null
 
   try {
-    const difficulty = DIFFICULTIES[stepIndex.value]!
-
     const task = await get<ImageVerificationResponse>(
-      `/api/chapters/${FOTOGRAFEN_CHAPTER_ID}/fotografen?difficulty=${difficulty}`,
+      `/api/chapters/${FOTOGRAFEN_CHAPTER_ID}/fotografen?difficulty=${currentDifficulty.value}`,
     )
 
     currentTask.value = task
@@ -207,11 +202,7 @@ async function submit() {
     )
 
     lastResult.value = result
-    runAttempts.value++
-
-    if (result.correct) {
-      runCorrect.value++
-    }
+    recordResult(result.correct)
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Kunne ikke sende svar'
   } finally {
@@ -240,16 +231,15 @@ function openResultPopup() {
 async function next() {
   if (!lastResult.value) return
 
-  if (lastResult.value.runCompleted || stepIndex.value === DIFFICULTIES.length - 1) {
+  if (lastResult.value.runCompleted || isLastStep.value) {
     runDone.value = true
     openResultPopup()
     return
   }
 
-  stepIndex.value++
+  advanceStep()
   selectedCategory.value = null
   selectedJustification.value = null
-  lastResult.value = null
 
   await loadTask()
 }
@@ -324,10 +314,10 @@ onBeforeUnmount(revokeImageUrl)
   width: 100%;
   max-width: 760px;
   background: rgba(255, 255, 255, 0.65);
-  border: 3px solid #5c4033;
+  border: 3px solid var(--brown-dark);
   border-radius: 24px;
   padding: 28px 28px 36px;
-  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
+  box-shadow: 0 6px 0 var(--brown-dark-20);
   position: relative;
   overflow: visible !important;
 }
@@ -337,7 +327,7 @@ onBeforeUnmount(revokeImageUrl)
   padding: 16px;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.85);
-  border: 2px solid #5c4033;
+  border: 2px solid var(--brown-dark);
   width: 100%;
   max-width: 500px;
   margin-left: auto;
@@ -380,10 +370,6 @@ onBeforeUnmount(revokeImageUrl)
 .error {
   color: #c62828;
   font-weight: 600;
-}
-
-.task-container {
-  align-items: center;
 }
 
 .hint-wrapper {

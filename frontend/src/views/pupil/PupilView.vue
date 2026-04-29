@@ -141,6 +141,25 @@ const buttons = [
   .overlay-button {
     width: clamp(104px, 20vw, 178px);
   }
+
+  .map {
+    width: clamp(90px, 24vw, 160px);
+  }
+}
+
+/* phone screen */
+@media (max-width: 540px) {
+  .image-wrapper {
+    width: min(96vw, 900px);
+  }
+
+  .overlay-button {
+    width: clamp(48px, 11vw, 100px);
+  }
+
+  .map {
+    width: clamp(65px, 15vw, 135px);
+  }
 }
 
 @media (max-width: 480px) {

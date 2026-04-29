@@ -10,9 +10,8 @@ import {
   put,
   type BackendAccountRole,
 } from '@/utils/apiUtils'
-import { useAudio } from '@/composables/useAudio'
-import volume2Icon from '@/assets/icons/volume-2.svg'
-import volumeXIcon from '@/assets/icons/volume-x.svg'
+import { clearMeCache } from '@/router'
+import VolumeControl from '@/components/ui/VolumeControl.vue'
 
 type ProfileResponse = {
   email: string
@@ -36,7 +35,6 @@ const leavingClassroom = ref(false)
 const signingOut = ref(false)
 const editingNickname = ref(false)
 
-const { volume, isMuted, setVolume, toggleMute } = useAudio()
 const nicknameDraft = ref('')
 const savingNickname = ref(false)
 
@@ -78,6 +76,7 @@ async function leaveClassroom() {
 
   try {
     await del(`/api/classrooms/${profile.value.classroomCode}/pupils/me`)
+    clearMeCache()
     await router.push('/pupil')
   } catch (requestError) {
     actionError.value =
@@ -99,6 +98,7 @@ async function signOut() {
     // Clearing local auth state still signs the user out from the frontend.
   } finally {
     clearAuthSessionStorage()
+    clearMeCache()
     signingOut.value = false
     await router.push('/sign-in')
   }
@@ -154,7 +154,7 @@ async function saveNickname() {
           <p class="pupil-meta-text">{{ profile.legalName || 'No name' }} - {{ profile.email }}</p>
           <p class="pupil-meta-text">{{ profile.role }}</p>
 
-          <RouterLink :to="`/join-classroom/set-avatar?classroomCode=${profile.classroomCode}`">
+          <RouterLink to="/pupil/profile/avatar">
             <button
               v-if="isInClassroom"
               class="pupil-button pupil-button-secondary"
@@ -215,22 +215,8 @@ async function saveNickname() {
           </div>
 
           <div class="setting-card pupil-inner-card">
-            <label class="pupil-label" for="volume-slider">Volum</label>
-            <div class="volume-row">
-              <button type="button" class="mute-btn" :aria-label="isMuted ? 'Skru på lyd' : 'Demp lyd'" @click="toggleMute">
-                <img :src="isMuted ? volumeXIcon : volume2Icon" alt="" aria-hidden="true" class="volume-icon" />
-              </button>
-              <input
-                id="volume-slider"
-                :value="volume"
-                type="range"
-                min="0"
-                max="100"
-                :disabled="isMuted"
-                @input="setVolume(+($event.target as HTMLInputElement).value)"
-              />
-            </div>
-            <p>{{ isMuted ? 'Dempet' : volume + '%' }}</p>
+            <label class="pupil-label" for="profile-volume-slider">Volum</label>
+            <VolumeControl input-id="profile-volume-slider" />
           </div>
 
           <p v-if="actionError" class="action-error pupil-error">{{ actionError }}</p>
@@ -305,10 +291,6 @@ async function saveNickname() {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-}
-
-input[type='range'] {
-  width: 100%;
 }
 
 .nickname-editor {

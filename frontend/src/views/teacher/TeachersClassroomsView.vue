@@ -3,6 +3,7 @@ import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useClassrooms } from '@/composables/useClassrooms'
 import { sanitizeClassroomName } from '@/composables/useClassroomName'
+import StateDisplay from '@/components/ui/StateDisplay.vue'
 
 const router = useRouter()
 const { classrooms, loading, error, fetchClassrooms } = useClassrooms()
@@ -21,20 +22,18 @@ const navigateToClassroom = (classroomCode: string) => {
 </script>
 
 <template>
-  <div v-if="loading" class="state-message">
-    Laster klasserom...
-  </div>
+  <StateDisplay
+    :loading="loading"
+    :error="error"
+    loading-text="Laster klasserom..."
+  />
 
-  <div v-else-if="error" class="state-message error" role="alert">
-    {{ error }}
-  </div>
-
-  <div v-else-if="classrooms.length === 0" class="state-message">
+  <div v-if="!loading && !error && classrooms.length === 0" class="state-message">
     <p>Du har ingen klasserom ennå.</p>
     <p>Opprett ditt første klasserom ved å klikke "Nytt klasserom" i menyen.</p>
   </div>
 
-  <div v-else class="card-grid">
+  <div v-if="!loading && !error && classrooms.length > 0" class="card-grid">
     <div v-for="classroom in classrooms" :key="classroom.classroomCode" class="teacher-card">
       <div class="teacher-card-header">
         <div class="card-classroom-name">{{ classroom.classroomName }}</div>

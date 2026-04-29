@@ -86,7 +86,7 @@ function toggleCharacter(character: string): void {
           </div>
         </div>
 
-        <button class="ready-button" @click="confirm">
+        <button class="ready-button pupil-button-3d" @click="confirm">
           Start spillet
         </button>
       </div>
@@ -434,24 +434,6 @@ h1 {
   margin-top: 0.4rem;
   padding: 0.9rem 3rem;
   background: var(--green-confirm);
-  border: var(--border-wide) solid var(--brown-dark);
-  border-radius: 40px;
-  font-family: 'Inika', serif;
-  font-size: 1.35rem;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: -3px 3px 6px var(--brown-dark);
-  transition: transform 0.1s, box-shadow 0.1s;
-}
-
-.ready-button:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: -5px 5px 0 var(--brown-dark);
-}
-
-.ready-button:active {
-  transform: translate(3px, 3px);
-  box-shadow: -1px 1px 0 var(--brown-dark);
 }
 
 @keyframes glowPulse {

@@ -85,9 +85,9 @@ const handleRegister = async (): Promise<void> => {
 </script>
 
 <template>
-  <div class="signup-page">
-    <div class="signup-card">
-      <div class="signup-body">
+  <div class="feide-page">
+    <div class="feide-card">
+      <div class="feide-card-body">
         <img src="@/assets/logo/NTNU.png" alt="NTNU" class="brand-logo" />
 
         <div class="header-text">
@@ -96,7 +96,7 @@ const handleRegister = async (): Promise<void> => {
         </div>
 
         <form @submit.prevent="handleRegister" novalidate>
-          <div class="form-group">
+          <div class="feide-form-group">
             <label for="reg-legal-name">Fullt navn</label>
             <input
               id="reg-legal-name"
@@ -105,12 +105,13 @@ const handleRegister = async (): Promise<void> => {
               autocomplete="name"
               placeholder="Ola Nordmann"
               required
+              class="feide-input"
               :aria-invalid="!!error"
               :aria-describedby="error ? 'register-error' : undefined"
             />
           </div>
 
-          <div class="form-group">
+          <div class="feide-form-group">
             <label for="reg-email">E-post</label>
             <input
               id="reg-email"
@@ -119,12 +120,13 @@ const handleRegister = async (): Promise<void> => {
               autocomplete="email"
               placeholder="navn@ntnu.no"
               required
+              class="feide-input"
               :aria-invalid="!!error"
               :aria-describedby="error ? 'register-error' : undefined"
             />
           </div>
 
-          <div class="form-group">
+          <div class="feide-form-group">
             <label for="reg-password">Passord</label>
             <input
               id="reg-password"
@@ -133,6 +135,7 @@ const handleRegister = async (): Promise<void> => {
               autocomplete="new-password"
               placeholder="Minst 8 tegn"
               required
+              class="feide-input"
               :aria-invalid="!!error"
               :aria-describedby="error ? 'register-error password-help' : 'password-help'"
             />
@@ -143,7 +146,7 @@ const handleRegister = async (): Promise<void> => {
             </ul>
           </div>
 
-          <div class="form-group">
+          <div class="feide-form-group">
             <label for="reg-confirm-password">Bekreft passord</label>
             <input
               id="reg-confirm-password"
@@ -152,6 +155,7 @@ const handleRegister = async (): Promise<void> => {
               autocomplete="new-password"
               placeholder="Skriv inn passordet på nytt"
               required
+              class="feide-input"
               :aria-invalid="!!error || (!!confirmPassword && password !== confirmPassword)"
               :aria-describedby="
                 [
@@ -166,18 +170,19 @@ const handleRegister = async (): Promise<void> => {
             <p
               v-if="confirmPassword && password !== confirmPassword"
               id="confirm-password-error"
-              class="field-error"
+              class="feide-field-error"
               role="alert"
             >
               Passordene er ikke like.
             </p>
           </div>
 
-          <div class="form-group">
+          <div class="feide-form-group">
             <label for="reg-role">Din rolle</label>
             <select
               id="reg-role"
               v-model="role"
+              class="feide-input"
               :aria-invalid="!!error"
               :aria-describedby="error ? 'register-error' : undefined"
             >
@@ -186,17 +191,17 @@ const handleRegister = async (): Promise<void> => {
             </select>
           </div>
 
-          <button type="submit" :disabled="loading" class="signup-btn-primary">
+          <button type="submit" :disabled="loading" class="feide-btn-primary submit-btn">
             {{ loading ? 'Oppretter bruker...' : 'Registrer meg' }}
           </button>
         </form>
 
-        <p v-if="error" id="register-error" class="error-msg" role="alert" aria-live="assertive">
+        <p v-if="error" id="register-error" class="feide-error-banner" role="alert" aria-live="assertive">
           <span aria-hidden="true">⚠ </span>{{ error }}
         </p>
       </div>
 
-      <div class="signup-footer">
+      <div class="feide-card-footer">
         <span>Har du allerede en bruker?</span>
         <router-link to="/sign-in">Logg inn her</router-link>
       </div>
@@ -205,41 +210,7 @@ const handleRegister = async (): Promise<void> => {
 </template>
 
 <style scoped>
-* {
-  box-sizing: border-box;
-}
-
-.signup-page {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 32px 16px;
-  background: rgb(239 211 175 / 100%);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-.signup-card {
-  width: 340px;
-  background: #ffffff;
-  border: 1px solid #666;
-  display: flex;
-  flex-direction: column;
-}
-
-.signup-body {
-  padding: 28px 34px 30px;
-  background: #ffffff;
-}
-
-.brand-logo {
-  height: 36px;
-  margin-bottom: 18px;
-}
-
-.header-text {
-  margin-bottom: 18px;
-}
+@import '@/assets/styles/feideStyle.css';
 
 h1 {
   margin: 0 0 8px;
@@ -249,39 +220,15 @@ h1 {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.header-text {
+  margin-bottom: 18px;
+}
+
 .subtitle {
   margin: 0;
   font-size: 14px;
   line-height: 1.4;
   color: #444;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 16px;
-}
-
-label {
-  margin-bottom: 6px;
-  font-size: 13px;
-  color: #1f1f1f;
-}
-
-input,
-select {
-  width: 100%;
-  border: none;
-  border-bottom: 1px solid #7aa7dd;
-  background: transparent;
-  font-size: 14px;
-  padding: 10px 0 8px;
-  outline: none;
-  color: #222;
-}
-
-select {
-  cursor: pointer;
 }
 
 .password-requirements {
@@ -308,72 +255,8 @@ select {
   content: '✓ ';
 }
 
-.field-error {
-  color: #991b1b;
-  font-size: 12px;
-  margin-top: 6px;
-}
-
-.signup-btn-primary {
+.submit-btn {
   width: 100%;
-  min-height: 42px;
   margin-top: 12px;
-  border: none;
-  background: #0067b8;
-  color: #ffffff;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.signup-btn-primary:disabled {
-  background: #b9b9b9;
-  cursor: not-allowed;
-}
-
-.error-msg {
-  margin-top: 14px;
-  padding: 10px 12px;
-  border: 1px solid #fecaca;
-  background: #fff5f5;
-  color: #991b1b;
-  font-size: 13px;
-}
-
-.signup-footer {
-  border-top: 1px solid #d5d5d5;
-  padding: 14px 34px;
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  flex-wrap: wrap;
-  font-size: 14px;
-  color: #333;
-  background: #ffffff;
-}
-
-.signup-footer a {
-  color: #1967b3;
-  text-decoration: none;
-}
-
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-a:focus-visible {
-  outline: 2px solid #1967b3;
-  outline-offset: 2px;
-}
-
-@media (max-width: 480px) {
-  .signup-card {
-    width: 100%;
-    max-width: 390px;
-  }
-
-  .signup-body,
-  .signup-footer {
-    padding-left: 22px;
-    padding-right: 22px;
-  }
 }
 </style>

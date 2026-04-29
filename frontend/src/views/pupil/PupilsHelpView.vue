@@ -1,7 +1,6 @@
 <script setup lang="ts">
+import PinboardLayout from '@/components/pupil/PinboardLayout.vue'
 import TopBar from '@/components/pupil/TopBar.vue'
-import blobbyImage from '@/assets/icons/blobby/creaturePeaking.png'
-import boardBackground from '@/assets/backgrounds/korktavle.png'
 </script>
 
 <template>
@@ -45,9 +44,6 @@ import boardBackground from '@/assets/backgrounds/korktavle.png'
 </template>
 
 <style scoped>
-.help-page {
-  background-image: url('@/assets/backgrounds/hjemskjerm-bg.png');
-}
 
 .text-box {
   position: absolute;

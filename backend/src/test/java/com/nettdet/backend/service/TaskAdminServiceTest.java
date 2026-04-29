@@ -2,7 +2,6 @@ package com.nettdet.backend.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -46,6 +45,7 @@ import com.nettdet.backend.dto.UpdateImageVerificationTaskRequest;
 import com.nettdet.backend.dto.UpdateNewsVerificationTaskRequest;
 import com.nettdet.backend.repository.AccountClassroomBridgeTeacherRepository;
 import com.nettdet.backend.repository.ChapterRepository;
+import com.nettdet.backend.repository.ClassroomRepository;
 import com.nettdet.backend.repository.TaskRepository;
 import com.nettdet.backend.security.JwtUserPrincipal;
 
@@ -68,6 +68,10 @@ class TaskAdminServiceTest {
     private FileObjectAccessControlService fileObjectAccessControlService;
     @Mock
     private AccountClassroomBridgeTeacherRepository teacherBridgeRepository;
+    @Mock
+    private ClassroomRepository classroomRepository;
+
+    private static final String CLASSROOM_CODE = "ABCABC";
 
     private ObjectMapper objectMapper;
     private TaskAdminService taskAdminService;
@@ -77,10 +81,19 @@ class TaskAdminServiceTest {
     void setUp() {
         objectMapper = new ObjectMapper();
         taskAdminService = new TaskAdminService(
-                taskRepository, chapterRepository,
+                taskRepository, chapterRepository, classroomRepository,
                 fileObjectService, fileObjectAccessControlService,
                 teacherBridgeRepository, objectMapper);
         teacher = new JwtUserPrincipal("Teacher", "teacher@example.com", "TEACHER");
+    }
+
+    private Classroom stubClassroomLookup() {
+        Classroom c = new Classroom();
+        c.setClassroomCode(CLASSROOM_CODE);
+        when(teacherBridgeRepository.existsByIdAccountEmailAndIdClassroomCode(
+                "teacher@example.com", CLASSROOM_CODE)).thenReturn(true);
+        when(classroomRepository.findById(CLASSROOM_CODE)).thenReturn(Optional.of(c));
+        return c;
     }
 
     private MultipartFile mockFile(String name) {
@@ -110,11 +123,13 @@ class TaskAdminServiceTest {
     @Test
     void createImageVerificationTask_whenChapterAndFileExist_persistsTaskWithSerializedPayload() throws Exception {
         when(chapterRepository.findById(FOTOGRAFEN_ID)).thenReturn(Optional.of(chapter(FOTOGRAFEN_ID, "Fotografen")));
+        stubClassroomLookup();
         stubUploadReturning(42L);
         when(taskRepository.save(any(Task.class))).thenAnswer(inv -> inv.getArgument(0));
 
         CreateImageVerificationTaskRequest request = new CreateImageVerificationTaskRequest(
                 FOTOGRAFEN_ID,
+                CLASSROOM_CODE,
                 TaskDifficulty.MEDIUM,
                 "Vurder bildet",
                 ImageCategory.AI_GENERATED,
@@ -130,7 +145,7 @@ class TaskAdminServiceTest {
         Task captured = captor.getValue();
         assertEquals(FOTOGRAFEN_ID, saved.chapterId());
         assertEquals(TaskDifficulty.MEDIUM, saved.difficulty());
-        assertNull(saved.classroomCode());
+        assertEquals(CLASSROOM_CODE, saved.classroomCode());
 
         JsonNode json = objectMapper.readTree(captured.getTaskJson());
         assertEquals("Vurder bildet", json.get("taskDescription").asText());
@@ -144,7 +159,7 @@ class TaskAdminServiceTest {
         when(chapterRepository.findById(FOTOGRAFEN_ID)).thenReturn(Optional.empty());
 
         CreateImageVerificationTaskRequest request = new CreateImageVerificationTaskRequest(
-                FOTOGRAFEN_ID, TaskDifficulty.EASY, "x",
+                FOTOGRAFEN_ID, CLASSROOM_CODE, TaskDifficulty.EASY, "x",
                 ImageCategory.REAL, "j", List.of("j"), "ok", "nope");
 
         assertThrows(EntityNotFoundException.class,
@@ -156,9 +171,10 @@ class TaskAdminServiceTest {
     @Test
     void createImageVerificationTask_whenFileEmpty_throwsIllegalArgument() {
         when(chapterRepository.findById(FOTOGRAFEN_ID)).thenReturn(Optional.of(chapter(FOTOGRAFEN_ID, "Fotografen")));
+        stubClassroomLookup();
 
         CreateImageVerificationTaskRequest request = new CreateImageVerificationTaskRequest(
-                FOTOGRAFEN_ID, TaskDifficulty.EASY, "x",
+                FOTOGRAFEN_ID, CLASSROOM_CODE, TaskDifficulty.EASY, "x",
                 ImageCategory.REAL, "j", List.of("j"), "ok", "nope");
         MultipartFile empty = new MockMultipartFile("file", "x.png", "image/png", new byte[0]);
 
@@ -171,11 +187,12 @@ class TaskAdminServiceTest {
     @Test
     void createNewsVerificationTask_whenInputsValid_persistsTaskWithSerializedPayload() throws Exception {
         when(chapterRepository.findById(NYHETSKVARTALET_ID)).thenReturn(Optional.of(chapter(NYHETSKVARTALET_ID, "Nyhetskvartalet")));
+        stubClassroomLookup();
         stubUploadReturning(101L, 102L);
         when(taskRepository.save(any(Task.class))).thenAnswer(inv -> inv.getArgument(0));
 
         CreateNewsVerificationTaskRequest request = new CreateNewsVerificationTaskRequest(
-                NYHETSKVARTALET_ID, TaskDifficulty.HARD, "Velg",
+                NYHETSKVARTALET_ID, CLASSROOM_CODE, TaskDifficulty.HARD, "Velg",
                 CorrectFileSlot.FILE_2, "good", "bad");
 
         taskAdminService.createNewsVerificationTask(request, mockFile("a"), mockFile("b"), teacher);
@@ -193,10 +210,11 @@ class TaskAdminServiceTest {
     @Test
     void createNewsVerificationTask_whenSlotNull_throwsIllegalArgument() {
         when(chapterRepository.findById(NYHETSKVARTALET_ID)).thenReturn(Optional.of(chapter(NYHETSKVARTALET_ID, "Nyhetskvartalet")));
+        stubClassroomLookup();
         stubUploadReturning(101L, 102L);
 
         CreateNewsVerificationTaskRequest request = new CreateNewsVerificationTaskRequest(
-                NYHETSKVARTALET_ID, TaskDifficulty.HARD, "Velg",
+                NYHETSKVARTALET_ID, CLASSROOM_CODE, TaskDifficulty.HARD, "Velg",
                 null, "good", "bad");
 
         assertThrows(IllegalArgumentException.class,
@@ -208,11 +226,12 @@ class TaskAdminServiceTest {
     @Test
     void createDatacenterImageTask_whenInputsValid_persistsWrappedTaskAtHardDifficulty() throws Exception {
         when(chapterRepository.findById(DATACENTER_ID)).thenReturn(Optional.of(chapter(DATACENTER_ID, "Datasenteret")));
+        stubClassroomLookup();
         stubUploadReturning(7L);
         when(taskRepository.save(any(Task.class))).thenAnswer(inv -> inv.getArgument(0));
 
         CreateDatacenterImageTaskRequest request = new CreateDatacenterImageTaskRequest(
-                "desc", ImageCategory.MANIPULATED, "j",
+                CLASSROOM_CODE, "desc", ImageCategory.MANIPULATED, "j",
                 List.of("j", "x", "y"), "ok", "nope");
 
         TaskAdminResponse saved = taskAdminService.createDatacenterImageTask(request, mockFile("img"), teacher);
@@ -234,11 +253,12 @@ class TaskAdminServiceTest {
     @Test
     void createDatacenterNewsTask_whenInputsValid_persistsWrappedTaskAtHardDifficulty() throws Exception {
         when(chapterRepository.findById(DATACENTER_ID)).thenReturn(Optional.of(chapter(DATACENTER_ID, "Datasenteret")));
+        stubClassroomLookup();
         stubUploadReturning(11L, 12L);
         when(taskRepository.save(any(Task.class))).thenAnswer(inv -> inv.getArgument(0));
 
         CreateDatacenterNewsTaskRequest request = new CreateDatacenterNewsTaskRequest(
-                "desc", CorrectFileSlot.FILE_1, "good", "bad");
+                CLASSROOM_CODE, "desc", CorrectFileSlot.FILE_1, "good", "bad");
 
         taskAdminService.createDatacenterNewsTask(request, mockFile("a"), mockFile("b"), teacher);
 

@@ -10,10 +10,8 @@ import {
   put,
   type BackendAccountRole,
 } from '@/utils/apiUtils'
-import { useAudio } from '@/composables/useAudio'
 import { clearMeCache } from '@/router'
-import volume2Icon from '@/assets/icons/volume-2.svg'
-import volumeXIcon from '@/assets/icons/volume-x.svg'
+import VolumeControl from '@/components/ui/VolumeControl.vue'
 
 type ProfileResponse = {
   email: string
@@ -37,7 +35,6 @@ const leavingClassroom = ref(false)
 const signingOut = ref(false)
 const editingNickname = ref(false)
 
-const { volume, isMuted, setVolume, toggleMute } = useAudio()
 const nicknameDraft = ref('')
 const savingNickname = ref(false)
 
@@ -218,22 +215,8 @@ async function saveNickname() {
           </div>
 
           <div class="setting-card pupil-inner-card">
-            <label class="pupil-label" for="volume-slider">Volum</label>
-            <div class="volume-row">
-              <button type="button" class="mute-btn" :aria-label="isMuted ? 'Skru på lyd' : 'Demp lyd'" @click="toggleMute">
-                <img :src="isMuted ? volumeXIcon : volume2Icon" alt="" aria-hidden="true" class="volume-icon" />
-              </button>
-              <input
-                id="volume-slider"
-                :value="volume"
-                type="range"
-                min="0"
-                max="100"
-                :disabled="isMuted"
-                @input="setVolume(+($event.target as HTMLInputElement).value)"
-              />
-            </div>
-            <p>{{ isMuted ? 'Dempet' : volume + '%' }}</p>
+            <label class="pupil-label" for="profile-volume-slider">Volum</label>
+            <VolumeControl input-id="profile-volume-slider" />
           </div>
 
           <p v-if="actionError" class="action-error pupil-error">{{ actionError }}</p>
@@ -308,10 +291,6 @@ async function saveNickname() {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-}
-
-input[type='range'] {
-  width: 100%;
 }
 
 .nickname-editor {

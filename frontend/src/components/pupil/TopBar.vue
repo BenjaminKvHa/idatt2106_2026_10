@@ -125,9 +125,11 @@ const isOnHome = computed(
 /* CENTER TITLE */
 .nav-center-text {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
   color: var(--brown-dark);
   font-weight: 600;
   white-space: nowrap;

@@ -12,6 +12,9 @@ public record CreateImageVerificationTaskRequest(
     @Schema(description = "Chapter ID to associate the task with.", example = "1")
     Long chapterId,
 
+    @Schema(description = "Classroom code that scopes this task.", example = "ABC123")
+    String classroomCode,
+
     @Schema(description = "Difficulty level for the task.", example = "EASY")
     TaskDifficulty difficulty,
 

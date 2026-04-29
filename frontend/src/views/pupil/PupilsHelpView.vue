@@ -1,53 +1,39 @@
 <script setup lang="ts">
+import PinboardLayout from '@/components/pupil/PinboardLayout.vue'
 import TopBar from '@/components/pupil/TopBar.vue'
-import blobbyImage from '@/assets/icons/blobby/creaturePeaking.png'
-import boardBackground from '@/assets/backgrounds/korktavle.png'
 </script>
 
 <template>
-  <div class="pupil-scene-screen">
-    <TopBar title="Hjelp" />
+  <TopBar title="Hjelp" />
+  <PinboardLayout heading-id="help-title">
+    <div class="text-box">
+      <h1 id="help-title">Hva går spillet ut på?</h1>
 
-    <main class="help-page pupil-scene-page pupil-scene-page--dimmed">
-      <section class="pupil-pinboard-stage" aria-labelledby="help-title">
-        <img class="pupil-pinboard-image" :src="boardBackground" alt="" aria-hidden="true" />
-        <div class="pupil-board-blobby-wrapper" aria-hidden="true">
-          <img class="pupil-board-blobby-image" :src="blobbyImage" alt="" />
-        </div>
+      <div class="scroll-content pupil-thin-scroll">
+        <p>
+          I dette spillet skal du hjelpe til med å avsløre falsk informasjon og lære hvordan du
+          vurderer kilder kritisk.
+        </p>
 
-        <div class="text-box">
-          <h1 id="help-title">Hva går spillet ut på?</h1>
+        <p>Du beveger deg gjennom ulike stoppesteder:</p>
 
-          <div class="scroll-content pupil-thin-scroll">
-            <p>
-              I dette spillet skal du hjelpe til med å avsløre falsk informasjon og lære hvordan du
-              vurderer kilder kritisk.
-            </p>
+        <ul>
+          <li><strong>Nyhetskvartalet:</strong> Vurder om nyheter er ekte eller falske.</li>
+          <li><strong>Fotografen:</strong> Se om bilder er manipulerte eller ekte.</li>
+          <li><strong>Datasenteret:</strong> Løs oppgaver knyttet til digital sikkerhet.</li>
+        </ul>
 
-            <p>Du beveger deg gjennom ulike stoppesteder:</p>
+        <p>Underveis samler du poeng (XP) og konkurrerer mot andre klasser på leaderboardet.</p>
 
-            <ul>
-              <li><strong>Nyhetskvartalet:</strong> Vurder om nyheter er ekte eller falske.</li>
-              <li><strong>Fotografen:</strong> Se om bilder er manipulerte eller ekte.</li>
-              <li><strong>Datasenteret:</strong> Løs oppgaver knyttet til digital sikkerhet.</li>
-            </ul>
+        <p>Målet er å lære hvordan du kan navigere trygt i en digital verden.</p>
 
-            <p>Underveis samler du poeng (XP) og konkurrerer mot andre klasser på leaderboardet.</p>
-
-            <p>Målet er å lære hvordan du kan navigere trygt i en digital verden.</p>
-
-            <p>Lykke til!</p>
-          </div>
-        </div>
-      </section>
-    </main>
-  </div>
+        <p>Lykke til!</p>
+      </div>
+    </div>
+  </PinboardLayout>
 </template>
 
 <style scoped>
-.help-page {
-  background-image: url('@/assets/backgrounds/hjemskjerm-bg.png');
-}
 
 .text-box {
   position: absolute;

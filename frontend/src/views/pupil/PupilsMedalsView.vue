@@ -40,7 +40,7 @@ function medalImageUrl(medal: PupilMedal) {
   <div class="pupil-scene-screen">
     <TopBar title="Medaljer" previous-page-url="/pupil" />
 
-    <main class="medals-page pupil-scene-page pupil-scene-page--dimmed">
+    <main class="medals-page pupil-scene-page">
       <section class="pupil-pinboard-stage" aria-labelledby="medals-title">
         <img class="pupil-pinboard-image" :src="boardBackground" alt="" aria-hidden="true" />
         <div class="pupil-board-blobby-wrapper" aria-hidden="true">

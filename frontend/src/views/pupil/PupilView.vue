@@ -63,14 +63,6 @@ const buttons = [
   padding: clamp(0.5rem, 2vw, 2rem);
 }
 
-.page::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  z-index: 0;
-}
-
 .center-container {
   width: 100%;
   min-height: 100%;
@@ -99,7 +91,8 @@ const buttons = [
 .overlay-button {
   position: absolute;
   cursor: pointer;
-  width: clamp(70px, 13vw, 200px);
+  width: clamp(180px, 21vw, 340px);
+  transform: translateX(-50%);
 }
 
 .overlay-button img {
@@ -114,68 +107,39 @@ const buttons = [
 
 /* positions */
 .medals {
-  top: 22%;
-  left: 20%;
-  transform: rotate(-5deg);
+  top: 21%;
+  left: 28%;
 }
 
 .map {
-  top: 22%;
-  left: 40%;
-  width: clamp(90px, 18vw, 290px);
+  top: 21%;
+  left: 50%;
 }
 
 .leaderboard {
-  top: 22%;
-  right: 20%;
-  transform: rotate(10deg);
+  top: 21%;
+  left: 72%;
 }
 
 .mystery {
   top: 55%;
-  left: 20%;
-  transform: rotate(4deg);
+  left: 28%;
 }
 
 .notes {
   top: 55%;
-  right: 20%;
-  transform: rotate(-2deg);
+  left: 72%;
 }
 
 .help {
-  top: 60%;
-  left: 44%;
+  top: 55%;
+  left: 50%;
 }
 
 /* tablet screen */
 @media (max-width: 768px) {
-  .image-wrapper {
-    width: 120vw;
-    max-width: none;
-  }
-
   .overlay-button {
-    width: clamp(70px, 18vw, 130px);
-  }
-
-  .map {
-    width: clamp(90px, 24vw, 160px);
-  }
-}
-
-/* phone screen */
-@media (max-width: 768px) {
-  .image-wrapper {
-    width: min(96vw, 900px);
-  }
-
-  .overlay-button {
-    width: clamp(48px, 11vw, 100px);
-  }
-
-  .map {
-    width: clamp(65px, 15vw, 135px);
+    width: clamp(96px, 19vw, 165px);
   }
 }
 
@@ -190,41 +154,37 @@ const buttons = [
   }
 
   .overlay-button {
-    width: clamp(38px, 12vw, 70px);
-  }
-
-  .map {
-    width: clamp(52px, 17vw, 92px);
+    width: clamp(54px, 18vw, 88px);
   }
 
   .medals {
     top: 24%;
-    left: 21%;
+    left: 28%;
   }
 
   .map {
     top: 24%;
-    left: 41%;
+    left: 50%;
   }
 
   .leaderboard {
     top: 24%;
-    right: 21%;
+    left: 72%;
   }
 
   .mystery {
-    top: 56%;
-    left: 21%;
+    top: 57%;
+    left: 28%;
   }
 
   .notes {
-    top: 56%;
-    right: 21%;
+    top: 57%;
+    left: 72%;
   }
 
   .help {
-    top: 60%;
-    left: 45%;
+    top: 57%;
+    left: 50%;
   }
 }
 </style>

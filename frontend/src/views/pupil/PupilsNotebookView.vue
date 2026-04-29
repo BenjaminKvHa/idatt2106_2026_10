@@ -270,10 +270,10 @@ onMounted(async () => {
 
 .book-content {
   position: absolute;
-  inset: 21.5% 16% 22% 16%;
+  inset: 14% 14.5% 12% 14.5%;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  column-gap: 5%;
+  column-gap: 9%;
   min-height: 0;
 }
 
@@ -284,16 +284,16 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  padding: clamp(2.2rem, 3.2vw, 3rem) clamp(1.2rem, 2.2vw, 2.1rem) clamp(1.1rem, 2vw, 1.9rem);
+  padding: clamp(3.4rem, 4.6vw, 4.7rem) clamp(0.55rem, 1.25vw, 1.15rem) clamp(0.8rem, 1.45vw, 1.35rem);
 }
 
 .book-page-right {
-  padding-top: clamp(1.25rem, 2vw, 1.8rem);
-  padding-bottom: clamp(2.25rem, 3.6vw, 3.25rem);
+  padding-top: clamp(3.4rem, 4.6vw, 4.7rem);
+  padding-bottom: clamp(0.8rem, 1.45vw, 1.35rem);
 }
 
 .chapter-header {
-  padding-right: clamp(1.5rem, 3vw, 3rem);
+  padding-right: clamp(0.75rem, 1.6vw, 1.5rem);
 }
 
 .chapter-header h1 {
@@ -306,9 +306,9 @@ onMounted(async () => {
 .page-section {
   flex: 1 1 auto;
   min-height: 0;
-  margin-top: clamp(0.65rem, 1.4vw, 1.25rem);
+  margin-top: clamp(0.85rem, 1.35vw, 1.35rem);
   overflow-y: auto;
-  padding-right: 0.35rem;
+  padding-right: 0.25rem;
 }
 
 .page-section h2 {
@@ -338,15 +338,15 @@ onMounted(async () => {
 
 .nav-button {
   position: absolute;
-  top: clamp(0.15rem, 0.55vw, 0.55rem);
+  top: clamp(0.25rem, 0.75vw, 0.75rem);
 }
 
 .nav-button-back {
-  left: clamp(1.6rem, 2.8vw, 2.7rem);
+  left: clamp(0.35rem, 0.9vw, 0.95rem);
 }
 
 .nav-button-forward {
-  right: clamp(1.6rem, 2.8vw, 2.7rem);
+  right: clamp(0.35rem, 0.9vw, 0.95rem);
 }
 
 .nav-placeholder {
@@ -406,20 +406,22 @@ onMounted(async () => {
 
 .notes-actions {
   flex: 0 0 auto;
-  margin-top: 0.55rem;
+  margin-top: auto;
+  padding-top: clamp(0.65rem, 1vw, 1rem);
   display: flex;
   align-items: center;
   justify-content: flex-end;
   flex-wrap: wrap;
-  gap: 0.6rem;
+  gap: clamp(0.55rem, 1vw, 0.9rem);
 }
 
 .save-button {
-  padding: 0.4rem 0.8rem;
+  padding: clamp(0.45rem, 0.8vw, 0.65rem) clamp(0.9rem, 1.5vw, 1.35rem);
   border-radius: 999px;
   border: var(--border-thin) solid var(--brown-dark);
   background: rgba(255, 248, 235, 0.9);
   color: var(--brown-dark);
+  font-size: clamp(0.9rem, 1vw, 1.1rem);
   font-weight: 800;
   cursor: pointer;
 }
@@ -464,13 +466,13 @@ onMounted(async () => {
   }
 
   .book-content {
-    inset: 22% 15.5% 23% 15.5%;
-    column-gap: 4.5%;
+    inset: 14.5% 14.5% 12.5% 14.5%;
+    column-gap: 8.5%;
   }
 
   .book-page {
-    padding-top: clamp(1.7rem, 3vw, 2.2rem);
-    padding-inline: clamp(0.7rem, 1.6vw, 1.2rem);
+    padding-top: clamp(2.6rem, 4.7vw, 3.5rem);
+    padding-inline: clamp(0.4rem, 1.15vw, 0.85rem);
   }
 }
 
@@ -485,7 +487,12 @@ onMounted(async () => {
   }
 
   .book-content {
-    inset: 23% 15.5% 23% 15.5%;
+    inset: 15.5% 14.5% 13% 14.5%;
+    column-gap: 8%;
+  }
+
+  .book-page {
+    padding-top: clamp(2.1rem, 7vw, 2.7rem);
   }
 
   .chapter-header h1 {
@@ -503,10 +510,11 @@ onMounted(async () => {
 
   .notes-actions {
     gap: 0.35rem;
+    padding-top: 0.4rem;
   }
 
   .save-button {
-    padding: 0.3rem 0.6rem;
+    padding: 0.35rem 0.65rem;
   }
 
   .save-status,

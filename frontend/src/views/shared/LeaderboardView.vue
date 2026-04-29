@@ -64,7 +64,7 @@ onMounted(loadLeaderboard)
   <div class="pupil-scene-screen">
     <TopBar title="Ledertavle" />
 
-    <main class="leaderboard-page pupil-scene-page pupil-scene-page--dimmed">
+    <main class="leaderboard-page pupil-scene-page">
       <section class="pupil-pinboard-stage" aria-labelledby="leaderboard-title">
         <img class="pupil-pinboard-image" :src="boardBackground" alt="" aria-hidden="true" />
         <div class="pupil-board-blobby-wrapper" aria-hidden="true">

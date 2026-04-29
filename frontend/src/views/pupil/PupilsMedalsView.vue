@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 
+import PinboardLayout from '@/components/pupil/PinboardLayout.vue'
+import StateDisplay from '@/components/ui/StateDisplay.vue'
 import TopBar from '@/components/pupil/TopBar.vue'
-import blobbyImage from '@/assets/icons/blobby/creaturePeaking.png'
-import boardBackground from '@/assets/backgrounds/korktavle.png'
 import medalsIcon from '@/assets/icons/homescreen/icon_medals.png'
 import { get } from '@/utils/apiUtils'
 
@@ -37,42 +37,28 @@ function medalImageUrl(medal: PupilMedal) {
 </script>
 
 <template>
-  <div class="pupil-scene-screen">
-    <TopBar title="Medaljer" previous-page-url="/pupil" />
-
-    <main class="medals-page pupil-scene-page pupil-scene-page--dimmed">
-      <section class="pupil-pinboard-stage" aria-labelledby="medals-title">
-        <img class="pupil-pinboard-image" :src="boardBackground" alt="" aria-hidden="true" />
-        <div class="pupil-board-blobby-wrapper" aria-hidden="true">
-          <img class="pupil-board-blobby-image" :src="blobbyImage" alt="" />
+  <TopBar title="Medaljer" previous-page-url="/pupil" />
+  <PinboardLayout heading-id="medals-title">
+    <div class="board-content">
+      <header class="medals-header">
+        <img class="medals-icon" :src="medalsIcon" alt="" aria-hidden="true" />
+        <div>
+          <h1 id="medals-title">Medaljer</h1>
+          <p v-if="!loading && !errorMessage && medals.length" class="medal-progress">
+            {{ unlockedCount }} av {{ medals.length }} låst opp
+          </p>
         </div>
+      </header>
 
-        <div class="board-content">
-          <header class="medals-header">
-            <img class="medals-icon" :src="medalsIcon" alt="" aria-hidden="true" />
-            <div>
-              <h1 id="medals-title">Medaljer</h1>
-              <p v-if="!loading && !errorMessage && medals.length" class="medal-progress">
-                {{ unlockedCount }} av {{ medals.length }} låst opp
-              </p>
-            </div>
-          </header>
+          <StateDisplay
+            :loading="loading"
+            :error="errorMessage"
+            :empty="medals.length === 0"
+            loading-text="Laster medaljer..."
+            empty-text="Ingen medaljer funnet enda."
+          />
 
-          <p v-if="loading" class="state-message pupil-state-message" role="status">
-            Laster medaljer...
-          </p>
-          <p
-            v-else-if="errorMessage"
-            class="state-message pupil-state-message pupil-error"
-            role="alert"
-          >
-            {{ errorMessage }}
-          </p>
-          <p v-else-if="medals.length === 0" class="state-message pupil-state-message">
-            Ingen medaljer funnet enda.
-          </p>
-
-          <ul v-else class="medal-grid pupil-thin-scroll">
+          <ul v-if="!loading && !errorMessage && medals.length" class="medal-grid pupil-thin-scroll">
             <li
               v-for="medal in medals"
               :key="medal.medalKey"
@@ -100,16 +86,11 @@ function medalImageUrl(medal: PupilMedal) {
               </article>
             </li>
           </ul>
-        </div>
-      </section>
-    </main>
-  </div>
+      </div>
+  </PinboardLayout>
 </template>
 
 <style scoped>
-.medals-page {
-  background-image: url('@/assets/backgrounds/hjemskjerm-bg.png');
-}
 
 .board-content {
   position: absolute;

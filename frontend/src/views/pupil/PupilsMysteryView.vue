@@ -384,7 +384,7 @@ onBeforeUnmount(revokeObjectUrls)
 .mystery-panel {
   width: min(900px, 94vw);
   background: rgba(35, 22, 45, 0.9);
-  border: 4px solid #d99b54;
+  border: var(--border-wide) solid var(--brown-medium);
   border-radius: 28px;
   padding: 2rem;
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.45);
@@ -400,8 +400,7 @@ onBeforeUnmount(revokeObjectUrls)
 
 .eyebrow {
   margin: 0 0 0.3rem;
-  color: #f5c16c;
-  font-family: 'Inter', sans-serif;
+  color: var(--yellow-award);
   font-size: 0.95rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -416,36 +415,36 @@ button {
 
 h1 {
   margin: 0;
-  color: #fff2d2;
+  color: var(--beige-light);
   font-size: clamp(2rem, 4vw, 3.1rem);
   text-shadow: 0 3px 0 rgba(0, 0, 0, 0.35);
 }
 
 .create-button {
-  background: #fff2d2;
-  color: #2b1935;
-  border: 4px solid #9b6335;
+  background: var(--beige-light);
+  color: var(--brown-dark);
+  border: var(--border-wide) solid var(--brown-medium);
   border-radius: 20px;
   padding: 0.8rem 1.4rem;
   font-size: 1.15rem;
   font-weight: 700;
   cursor: pointer;
   box-shadow:
-    0 8px 0 #5b351d,
+    0 8px 0 var(--brown-dark),
     0 13px 18px rgba(0, 0, 0, 0.45);
 }
 
 .create-button:hover {
   transform: translateY(-2px);
   box-shadow:
-    0 10px 0 #5b351d,
+    0 10px 0 var(--brown-dark),
     0 15px 20px rgba(0, 0, 0, 0.5);
 }
 
 .create-button:active {
   transform: translateY(5px);
   box-shadow:
-    0 3px 0 #5b351d,
+    0 3px 0 var(--brown-dark),
     0 8px 12px rgba(0, 0, 0, 0.45);
 }
 
@@ -457,8 +456,8 @@ h1 {
 }
 
 .tab-button {
-  background: #fff2d2;
-  border: 3px solid #101010;
+  background: var(--beige-light);
+  border: var(--border-thin) solid var(--color-text);
   border-radius: 18px;
   padding: 0.65rem 1.5rem;
   font-size: 1.2rem;
@@ -468,8 +467,8 @@ h1 {
 }
 
 .tab-button.active {
-  background: #9b6335;
-  color: #fff2d2;
+  background: var(--brown-medium);
+  color: var(--beige-light);
 }
 
 .mystery-card {
@@ -488,14 +487,14 @@ h1 {
 
 .week-nav h2 {
   margin: 0;
-  color: #fff2d2;
+  color: var(--beige-light);
   font-size: 2rem;
 }
 
 .arrow-button {
   background: transparent;
   border: none;
-  color: #f5c16c;
+  color: var(--yellow-award);
   font-size: 2rem;
   font-weight: 700;
   cursor: pointer;
@@ -513,7 +512,7 @@ h1 {
   overflow-y: auto;
   padding: 1rem;
   background: rgba(18, 10, 24, 0.65);
-  border: 3px solid #9b6335;
+  border: var(--border-thin) solid var(--brown-medium);
   border-radius: 24px;
   box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.35);
 }
@@ -523,24 +522,24 @@ h1 {
 }
 
 .scroll-box::-webkit-scrollbar-track {
-  background: #fff2d2;
+  background: var(--beige-light);
   border-radius: 999px;
-  border: 3px solid #101010;
+  border: var(--border-thin) solid var(--color-text);
 }
 
 .scroll-box::-webkit-scrollbar-thumb {
-  background: #9b6335;
+  background: var(--brown-medium);
   border-radius: 999px;
-  border: 3px solid #fff2d2;
+  border: var(--border-thin) solid var(--beige-light);
 }
 
 .scroll-box::-webkit-scrollbar-thumb:hover {
-  background: #6f4324;
+  background: var(--brown-dark);
 }
 
 .submitted-card {
-  background: rgba(255, 242, 210, 0.96);
-  border: 3px solid #101010;
+  background: var(--beige-light);
+  border: var(--border-thin) solid var(--color-text);
   border-radius: 22px;
   padding: 1rem;
   margin-bottom: 1rem;
@@ -555,10 +554,10 @@ h1 {
 .image-placeholder {
   width: 100%;
   height: 230px;
-  border: 3px solid #101010;
+  border: var(--border-thin) solid var(--color-text);
   border-radius: 18px;
   overflow: hidden;
-  background: linear-gradient(135deg, #6f4324, #2b1935);
+  background: linear-gradient(135deg, var(--brown-dark), #2b1935);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -571,7 +570,7 @@ h1 {
 }
 
 .image-placeholder span {
-  color: #fff2d2;
+  color: var(--beige-light);
   font-family: 'Inika', serif;
   font-size: 1.6rem;
 }
@@ -583,13 +582,12 @@ h1 {
 
 .case-label {
   display: inline-block;
-  background: #9b6335;
-  color: #fff2d2;
-  border: 2px solid #101010;
+  background: var(--brown-medium);
+  color: var(--beige-light);
+  border: 2px solid var(--color-text);
   border-radius: 999px;
   padding: 0.25rem 0.9rem;
   margin-bottom: 0.6rem;
-  font-family: 'Inter', sans-serif;
   font-size: 0.9rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -597,26 +595,24 @@ h1 {
 
 .comment-box p {
   margin: 0;
-  font-family: 'Inter', sans-serif;
   font-size: 1.05rem;
   line-height: 1.45;
 }
 
 .page-number {
   margin: 1rem 0 0;
-  color: #fff2d2;
+  color: var(--beige-light);
   font-family: 'Inika', serif;
   font-size: 1.5rem;
   font-weight: 700;
 }
 
 .empty-state {
-  background: rgba(255, 242, 210, 0.96);
-  border: 3px solid #101010;
+  background: var(--beige-light);
+  border: var(--border-thin) solid var(--color-text);
   border-radius: 20px;
   padding: 2rem;
   text-align: center;
-  font-family: 'Inter', sans-serif;
   font-size: 1.2rem;
 }
 
@@ -624,8 +620,7 @@ h1 {
   margin: 1rem 0 0;
   padding: 0.7rem 1rem;
   border-radius: 14px;
-  border: 2px solid #101010;
-  font-family: 'Inter', sans-serif;
+  border: 2px solid var(--color-text);
   font-weight: 600;
   text-align: center;
 }
@@ -654,8 +649,8 @@ h1 {
   width: min(560px, 92vw);
   max-height: 90vh;
   overflow-y: auto;
-  background: #fff2d2;
-  border: 4px solid #101010;
+  background: var(--beige-light);
+  border: var(--border-wide) solid var(--color-text);
   border-radius: 24px;
   padding: 2rem;
   box-shadow: 0 12px 0 rgba(0, 0, 0, 0.45);
@@ -664,12 +659,11 @@ h1 {
 .popup h2 {
   margin: 0 0 0.5rem;
   font-size: 2rem;
-  color: #2b1935;
+  color: var(--brown-dark);
 }
 
 .popup-text {
   margin: 0 0 1.3rem;
-  font-family: 'Inter', sans-serif;
   line-height: 1.45;
 }
 
@@ -688,18 +682,16 @@ label {
   flex-direction: column;
   gap: 0.4rem;
   margin-bottom: 1rem;
-  font-family: 'Inter', sans-serif;
   font-weight: 700;
 }
 
 input,
 textarea {
-  border: 3px solid #101010;
+  border: var(--border-thin) solid var(--color-text);
   border-radius: 14px;
   padding: 0.8rem;
-  font-family: 'Inter', sans-serif;
   font-size: 1rem;
-  background: #fffaf0;
+  background: var(--beige-light);
 }
 
 textarea {
@@ -710,7 +702,7 @@ textarea {
 .popup-image-preview {
   width: 100%;
   height: 220px;
-  border: 3px solid #101010;
+  border: var(--border-thin) solid var(--color-text);
   border-radius: 18px;
   overflow: hidden;
   margin-bottom: 1rem;
@@ -724,7 +716,7 @@ textarea {
 
 .cancel-button,
 .submit-button {
-  border: 3px solid #101010;
+  border: var(--border-thin) solid var(--color-text);
   border-radius: 16px;
   padding: 0.65rem 1.2rem;
   font-size: 1.05rem;
@@ -733,12 +725,12 @@ textarea {
 }
 
 .cancel-button {
-  background: #e8d9bd;
+  background: var(--beige-medium);
 }
 
 .submit-button {
-  background: #9b6335;
-  color: #fff2d2;
+  background: var(--brown-medium);
+  color: var(--beige-light);
 }
 
 .submit-button:disabled {

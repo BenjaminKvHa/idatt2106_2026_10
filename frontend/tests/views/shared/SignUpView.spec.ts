@@ -169,13 +169,13 @@ describe('SignUpView', () => {
 
     await wrapper.find('form').trigger('submit')
 
-    expect(wrapper.find('.signup-btn-primary').attributes('disabled')).toBeDefined()
-    expect(wrapper.find('.signup-btn-primary').text()).toBe('Oppretter bruker...')
+    expect(wrapper.find('.feide-btn-primary').attributes('disabled')).toBeDefined()
+    expect(wrapper.find('.feide-btn-primary').text()).toBe('Oppretter bruker...')
 
     signupRequest.resolve('token')
     await flushPromises()
 
-    expect(wrapper.find('.signup-btn-primary').attributes('disabled')).toBeUndefined()
+    expect(wrapper.find('.feide-btn-primary').attributes('disabled')).toBeUndefined()
   })
 
   it('clears the form after a successful signup', async () => {
@@ -201,5 +201,29 @@ describe('SignUpView', () => {
 
     expect(wrapper.find('[role="alert"]').text()).toContain('Email already exists')
     expect((wrapper.find('#reg-email').element as HTMLInputElement).value).toBe('ola@example.com')
+  })
+
+  it('navigates to default route after successful signup', async () => {
+    mockedSignupWithCredentials.mockResolvedValue('token')
+    const wrapper = await fillValidSignupForm()
+
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(routerPush).toHaveBeenCalledWith('/ignored-after-signup-route')
+  })
+
+  it('marks password requirements as met while typing', async () => {
+    const wrapper = mountSignUpView()
+
+    await wrapper.find('#reg-password').setValue('Test1234')
+
+    const requirements = wrapper.findAll('.password-requirements li')
+
+    expect(requirements).toHaveLength(3)
+
+    requirements.forEach((req) => {
+      expect(req.classes()).toContain('met')
+    })
   })
 })

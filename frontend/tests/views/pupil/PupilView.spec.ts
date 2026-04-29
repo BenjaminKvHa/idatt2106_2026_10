@@ -29,16 +29,18 @@ describe('PupilView', () => {
 
     audioPlay = vi.fn().mockResolvedValue(undefined)
     audioConstructor = vi.fn(function (this: {
-      addEventListener: ReturnType<typeof vi.fn>
-      currentTime: number
-      pause: ReturnType<typeof vi.fn>
       play: typeof audioPlay
+      pause: ReturnType<typeof vi.fn>
+      addEventListener: ReturnType<typeof vi.fn>
+      removeEventListener: ReturnType<typeof vi.fn>
+      currentTime: number
       volume: number
     }) {
-      this.addEventListener = vi.fn()
-      this.currentTime = 0
-      this.pause = vi.fn()
       this.play = audioPlay
+      this.pause = vi.fn()
+      this.addEventListener = vi.fn()
+      this.removeEventListener = vi.fn()
+      this.currentTime = 0
       this.volume = 1
     })
 

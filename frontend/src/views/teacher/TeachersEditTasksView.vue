@@ -165,6 +165,15 @@ function buildMetadataPart(metadata: Record<string, unknown>): Blob {
   })
 }
 
+function getRequiredClassroomCode(): string | null {
+  if (!classroomCode.value) {
+    actionError.value = 'Could not find classroom for this route'
+    return null
+  }
+
+  return classroomCode.value
+}
+
 function setActiveChapter(chapter: ChapterTaskKey) {
   activeChapter.value = chapter
   clearMessages()
@@ -225,6 +234,11 @@ async function submitFotografenTask(values: FotografenTaskFormValues) {
   clearMessages()
 
   try {
+    const currentClassroomCode = getRequiredClassroomCode()
+    if (!currentClassroomCode) {
+      return
+    }
+
     const formData = new FormData()
     const editingTask = selectedFotografenTask.value?.task ?? null
 
@@ -234,6 +248,7 @@ async function submitFotografenTask(values: FotografenTaskFormValues) {
         editingTask
           ? {
               difficulty: values.difficulty,
+              classroomCode: currentClassroomCode,
               taskDescription: values.taskDescription,
               correctCategory: values.correctCategory,
               correctJustification: values.correctJustification,
@@ -244,6 +259,7 @@ async function submitFotografenTask(values: FotografenTaskFormValues) {
           : {
               chapterId: CHAPTER_ID_BY_TASK_KEY.fotografen,
               difficulty: values.difficulty,
+              classroomCode: currentClassroomCode,
               taskDescription: values.taskDescription,
               correctCategory: values.correctCategory,
               correctJustification: values.correctJustification,
@@ -283,6 +299,11 @@ async function submitNyhetsTask(values: NyhetskvartaletTaskFormValues) {
   clearMessages()
 
   try {
+    const currentClassroomCode = getRequiredClassroomCode()
+    if (!currentClassroomCode) {
+      return
+    }
+
     const formData = new FormData()
     const editingTask = selectedNyhetsTask.value?.task ?? null
 
@@ -292,6 +313,7 @@ async function submitNyhetsTask(values: NyhetskvartaletTaskFormValues) {
         editingTask
           ? {
               difficulty: values.difficulty,
+              classroomCode: currentClassroomCode,
               taskDescription: values.taskDescription,
               correctFileSlot: values.correctFileSlot,
               correctDescription: values.correctDescription,
@@ -300,6 +322,7 @@ async function submitNyhetsTask(values: NyhetskvartaletTaskFormValues) {
           : {
               chapterId: CHAPTER_ID_BY_TASK_KEY.nyhetskvartalet,
               difficulty: values.difficulty,
+              classroomCode: currentClassroomCode,
               taskDescription: values.taskDescription,
               correctFileSlot: values.correctFileSlot,
               correctDescription: values.correctDescription,
@@ -341,6 +364,11 @@ async function submitDatacenterImageTask(values: FotografenTaskFormValues) {
   clearMessages()
 
   try {
+    const currentClassroomCode = getRequiredClassroomCode()
+    if (!currentClassroomCode) {
+      return
+    }
+
     const formData = new FormData()
     const editingTask = selectedDatacenterTask.value?.task ?? null
 
@@ -350,6 +378,7 @@ async function submitDatacenterImageTask(values: FotografenTaskFormValues) {
         editingTask
           ? {
               difficulty: values.difficulty,
+              classroomCode: currentClassroomCode,
               taskDescription: values.taskDescription,
               correctCategory: values.correctCategory,
               correctJustification: values.correctJustification,
@@ -358,6 +387,7 @@ async function submitDatacenterImageTask(values: FotografenTaskFormValues) {
               falseDescription: values.falseDescription,
             }
           : {
+              classroomCode: currentClassroomCode,
               taskDescription: values.taskDescription,
               correctCategory: values.correctCategory,
               correctJustification: values.correctJustification,
@@ -397,6 +427,11 @@ async function submitDatacenterNewsTask(values: NyhetskvartaletTaskFormValues) {
   clearMessages()
 
   try {
+    const currentClassroomCode = getRequiredClassroomCode()
+    if (!currentClassroomCode) {
+      return
+    }
+
     const formData = new FormData()
     const editingTask = selectedDatacenterTask.value?.task ?? null
 
@@ -406,12 +441,14 @@ async function submitDatacenterNewsTask(values: NyhetskvartaletTaskFormValues) {
         editingTask
           ? {
               difficulty: values.difficulty,
+              classroomCode: currentClassroomCode,
               taskDescription: values.taskDescription,
               correctFileSlot: values.correctFileSlot,
               correctDescription: values.correctDescription,
               incorrectDescription: values.incorrectDescription,
             }
           : {
+              classroomCode: currentClassroomCode,
               taskDescription: values.taskDescription,
               correctFileSlot: values.correctFileSlot,
               correctDescription: values.correctDescription,

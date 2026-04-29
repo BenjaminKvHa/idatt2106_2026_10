@@ -159,7 +159,7 @@ function submitForm() {
 
       <label class="form-field">
         <span>Beskrivelse</span>
-        <textarea v-model="taskDescription" rows="3" :disabled="submitting" />
+        <textarea placeholder="Skriv beskrivelse her..." v-model="taskDescription" rows="3" :disabled="submitting" />
       </label>
 
       <label class="form-field">
@@ -171,12 +171,12 @@ function submitForm() {
 
       <label class="form-field">
         <span>Tilbakemelding ved riktig svar</span>
-        <textarea v-model="correctDescription" rows="3" :disabled="submitting" />
+        <textarea placeholder="Skriv tilbakemelding ved riktig svar her..." v-model="correctDescription" rows="3" :disabled="submitting" />
       </label>
 
       <label class="form-field">
         <span>Tilbakemelding ved feil svar</span>
-        <textarea v-model="incorrectDescription" rows="3" :disabled="submitting" />
+        <textarea v-model="incorrectDescription" placeholder="Skriv tilbakemelding ved feil svar her..." rows="3" :disabled="submitting"></textarea>
       </label>
 
       <label class="form-field">

@@ -223,7 +223,7 @@ function submitForm() {
       <fieldset class="justifications-fieldset">
         <div class="justifications-header">
           <p class="fieldset-title">Begrunnelser</p>
-          <button type="button" class="button-variant-1 add-button" :disabled="submitting" @click="addJustification()">
+          <button type="button" placeholder="Skriv begrunnelse her..." class="button-variant-1 add-button" :disabled="submitting" @click="addJustification()">
             Legg til begrunnelse
           </button>
         </div>
@@ -263,12 +263,12 @@ function submitForm() {
 
       <label class="form-field">
         <span>Tilbakemelding ved riktig svar</span>
-        <textarea v-model="correctDescription" rows="3" :disabled="submitting" />
+        <textarea v-model="correctDescription" placeholder="Skriv tilbakemelding ved riktig svar her..." rows="3" :disabled="submitting"></textarea>
       </label>
 
       <label class="form-field">
         <span>Tilbakemelding ved feil svar</span>
-        <textarea v-model="falseDescription" rows="3" :disabled="submitting" />
+        <textarea v-model="falseDescription" placeholder="Skriv tilbakemelding ved feil svar her..." rows="3" :disabled="submitting"></textarea>
       </label>
 
       <label class="form-field">

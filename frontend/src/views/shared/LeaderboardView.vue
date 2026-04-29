@@ -61,30 +61,14 @@ onMounted(loadLeaderboard)
 </script>
 
 <template>
-  <TopBar title="Ledertavle" />
-  <PinboardLayout heading-id="leaderboard-title">
-    <div class="board-content">
-      <h1 id="leaderboard-title">Ledertavle</h1>
+  <div class="pupil-scene-screen">
+    <TopBar title="Ledertavle" />
 
-      <StateDisplay
-        :loading="loading"
-        :error="error"
-        loading-text="Laster ledertavle..."
-      />
-
-      <template v-if="!loading && !error">
-        <div v-if="leaderboard.length" class="list-wrap pupil-thin-scroll">
-          <ol>
-            <li v-for="(entry, index) in paginatedLeaderboard" :key="entry.classroomCode">
-              <span class="rank"> {{ (currentPage - 1) * itemsPerPage + index + 1 }}. </span>
-
-              <span class="classroom-name">
-                {{ entry.classroomName }}
-              </span>
-
-              <span class="xp-value"> {{ entry.totalXp }} XP </span>
-            </li>
-          </ol>
+    <main class="leaderboard-page pupil-scene-page">
+      <section class="pupil-pinboard-stage" aria-labelledby="leaderboard-title">
+        <img class="pupil-pinboard-image" :src="boardBackground" alt="" aria-hidden="true" />
+        <div class="pupil-board-blobby-wrapper" aria-hidden="true">
+          <img class="pupil-board-blobby-image" :src="blobbyImage" alt="" />
         </div>
 
         <p v-else class="state-message">Ingen klasserom funnet...</p>

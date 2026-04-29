@@ -37,16 +37,14 @@ function medalImageUrl(medal: PupilMedal) {
 </script>
 
 <template>
-  <TopBar title="Medaljer" previous-page-url="/pupil" />
-  <PinboardLayout heading-id="medals-title">
-    <div class="board-content">
-      <header class="medals-header">
-        <img class="medals-icon" :src="medalsIcon" alt="" aria-hidden="true" />
-        <div>
-          <h1 id="medals-title">Medaljer</h1>
-          <p v-if="!loading && !errorMessage && medals.length" class="medal-progress">
-            {{ unlockedCount }} av {{ medals.length }} låst opp
-          </p>
+  <div class="pupil-scene-screen">
+    <TopBar title="Medaljer" previous-page-url="/pupil" />
+
+    <main class="medals-page pupil-scene-page">
+      <section class="pupil-pinboard-stage" aria-labelledby="medals-title">
+        <img class="pupil-pinboard-image" :src="boardBackground" alt="" aria-hidden="true" />
+        <div class="pupil-board-blobby-wrapper" aria-hidden="true">
+          <img class="pupil-board-blobby-image" :src="blobbyImage" alt="" />
         </div>
       </header>
 

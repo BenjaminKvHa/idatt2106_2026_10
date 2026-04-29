@@ -14,9 +14,7 @@
       <div v-else-if="currentTask" class="task-container">
         <h1 class="level">Nivå {{ stepIndex + 1 }} — {{ difficultyLabel }}</h1>
 
-        <HintCreature
-          hint="Manipulert betyr at et ekte bilde er endret på. KI-bilder har ofte rare detaljer."
-        >
+        <HintCreature :chapter-id="FOTOGRAFEN_CHAPTER_ID">
           <div class="task-box">
             <PupilImageTask
               :task-description="currentTask.taskDescription"
@@ -76,6 +74,8 @@
         :success-image="thumbsUpPhoto"
         :fail-image="thumbsDownPhoto"
         @close="closeCompletePopup"
+        @retry="retryLevel"
+        @map="goToMap"
       />
     </div>
   </div>
@@ -244,11 +244,32 @@ async function next() {
 
 function closeCompletePopup() {
   showCompletePopup.value = false
+
+  if (popupSuccess.value) {
+    goToMap()
+  }
+}
+
+async function retryLevel(): Promise<void> {
+  stepIndex.value = 0
+  selectedCategory.value = null
+  selectedJustification.value = null
+  lastResult.value = null
+  runCorrect.value = 0
+  runAttempts.value = 0
+  runDone.value = false
+  showCompletePopup.value = false
+
+  await loadTask()
+}
+
+function goToMap() {
+  revokeImageUrl()
+  router.push('/pupil/classroom/map')
 }
 
 function finish() {
-  revokeImageUrl()
-  router.push('/pupil/classroom/map')
+  goToMap()
 }
 
 onMounted(loadTask)

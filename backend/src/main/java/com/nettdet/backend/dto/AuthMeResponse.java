@@ -9,16 +9,18 @@ public record AuthMeResponse(
     AccountRole role,
     String username,
     String classroomCode,
-    Long avatarFileObjectId
+    Long avatarFileObjectId,
+    boolean membershipConfirmed
 ) {
-    public static AuthMeResponse from(Account account, String username, String classroomCode, Long avatarFileObjectId) {
+    public static AuthMeResponse from(Account account, String username, String classroomCode, Long avatarFileObjectId, boolean membershipConfirmed) {
         return new AuthMeResponse(
             account.getEmail(),
             account.getLegalName(),
             account.getAccountRole(),
             username,
             classroomCode,
-            avatarFileObjectId
+            avatarFileObjectId,
+            membershipConfirmed
         );
     }
 }

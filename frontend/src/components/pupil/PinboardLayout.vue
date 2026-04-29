@@ -8,18 +8,16 @@ defineProps<{
 </script>
 
 <template>
-  <div class="pupil-scene-screen">
-    <main class="pinboard-layout-page pupil-scene-page pupil-scene-page--dimmed">
-      <section class="pupil-pinboard-stage" :aria-labelledby="headingId">
-        <img class="pupil-pinboard-image" :src="boardBackground" alt="" aria-hidden="true" />
-        <div class="pupil-board-blobby-wrapper" aria-hidden="true">
-          <img class="pupil-board-blobby-image" :src="blobbyImage" alt="" />
-        </div>
+  <main class="pinboard-layout-page pupil-scene-page">
+    <section class="pupil-pinboard-stage" :aria-labelledby="headingId">
+      <img class="pupil-pinboard-image" :src="boardBackground" alt="" aria-hidden="true" />
+      <div class="pupil-board-blobby-wrapper" aria-hidden="true">
+        <img class="pupil-board-blobby-image" :src="blobbyImage" alt="" />
+      </div>
 
-        <slot />
-      </section>
-    </main>
-  </div>
+      <slot />
+    </section>
+  </main>
 </template>
 
 <style scoped>

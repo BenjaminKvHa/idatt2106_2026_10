@@ -4,33 +4,36 @@ import TopBar from '@/components/pupil/TopBar.vue'
 </script>
 
 <template>
-  <TopBar title="Hjelp" />
-  <PinboardLayout heading-id="help-title">
-    <div class="text-box">
-      <h1 id="help-title">Hva går spillet ut på?</h1>
+  <div class="pupil-scene-screen">
+    <TopBar title="Hjelp" />
 
-      <div class="scroll-content pupil-thin-scroll">
-        <p>
-          I dette spillet skal du hjelpe til med å avsløre falsk informasjon og lære hvordan du
-          vurderer kilder kritisk.
-        </p>
+    <PinboardLayout heading-id="help-title">
+      <div class="text-box">
+        <h1 id="help-title">Hva går spillet ut på?</h1>
 
-        <p>Du beveger deg gjennom ulike stoppesteder:</p>
+        <div class="scroll-content pupil-thin-scroll">
+          <p>
+            I dette spillet skal du hjelpe til med å avsløre falsk informasjon og lære hvordan du
+            vurderer kilder kritisk.
+          </p>
 
-        <ul>
-          <li><strong>Nyhetskvartalet:</strong> Vurder om nyheter er ekte eller falske.</li>
-          <li><strong>Fotografen:</strong> Se om bilder er manipulerte eller ekte.</li>
-          <li><strong>Datasenteret:</strong> Løs oppgaver knyttet til digital sikkerhet.</li>
-        </ul>
+          <p>Du beveger deg gjennom ulike stoppesteder:</p>
 
-        <p>Underveis samler du poeng (XP) og konkurrerer mot andre klasser på leaderboardet.</p>
+          <ul>
+            <li><strong>Nyhetskvartalet:</strong> Vurder om nyheter er ekte eller falske.</li>
+            <li><strong>Fotografen:</strong> Se om bilder er manipulerte eller ekte.</li>
+            <li><strong>Datasenteret:</strong> Løs oppgaver knyttet til digital sikkerhet.</li>
+          </ul>
 
-        <p>Målet er å lære hvordan du kan navigere trygt i en digital verden.</p>
+          <p>Underveis samler du poeng (XP) og konkurrerer mot andre klasser på leaderboardet.</p>
 
-        <p>Lykke til!</p>
+          <p>Målet er å lære hvordan du kan navigere trygt i en digital verden.</p>
+
+          <p>Lykke til!</p>
+        </div>
       </div>
-    </div>
-  </PinboardLayout>
+    </PinboardLayout>
+  </div>
 </template>
 
 <style scoped>

@@ -61,19 +61,22 @@ onMounted(loadLeaderboard)
 </script>
 
 <template>
-  <TopBar title="Ledertavle" />
-  <PinboardLayout heading-id="leaderboard-title">
-    <div class="board-content">
-      <h1 id="leaderboard-title">Ledertavle</h1>
+  <div class="pupil-scene-screen">
+    <TopBar title="Ledertavle" />
 
-      <StateDisplay
-        :loading="loading"
-        :error="error"
-        loading-text="Laster ledertavle..."
-      />
+    <PinboardLayout heading-id="leaderboard-title">
+      <div class="board-content">
+        <h1 id="leaderboard-title">Ledertavle</h1>
 
-      <template v-if="!loading && !error">
-        <div v-if="leaderboard.length" class="list-wrap pupil-thin-scroll">
+        <StateDisplay
+          :loading="loading"
+          :error="error"
+          :empty="leaderboard.length === 0"
+          loading-text="Laster ledertavle..."
+          empty-text="Ingen klasserom funnet..."
+        />
+
+        <div v-if="!loading && !error && leaderboard.length" class="list-wrap pupil-thin-scroll">
           <ol>
             <li v-for="(entry, index) in paginatedLeaderboard" :key="entry.classroomCode">
               <span class="rank"> {{ (currentPage - 1) * itemsPerPage + index + 1 }}. </span>
@@ -86,19 +89,17 @@ onMounted(loadLeaderboard)
             </li>
           </ol>
         </div>
+      </div>
 
-        <p v-else class="state-message">Ingen klasserom funnet...</p>
-      </template>
-    </div>
+      <div v-if="!loading && !error && leaderboard.length > itemsPerPage" class="pagination">
+        <button :disabled="currentPage === 1" @click="previousPage">Forrige</button>
 
-    <div v-if="!loading && !error && leaderboard.length > itemsPerPage" class="pagination">
-      <button :disabled="currentPage === 1" @click="previousPage">Forrige</button>
+        <span>Side {{ currentPage }} av {{ totalPages }}</span>
 
-      <span>Side {{ currentPage }} av {{ totalPages }}</span>
-
-      <button :disabled="currentPage === totalPages" @click="nextPage">Neste</button>
-    </div>
-  </PinboardLayout>
+        <button :disabled="currentPage === totalPages" @click="nextPage">Neste</button>
+      </div>
+    </PinboardLayout>
+  </div>
 </template>
 
 <style scoped>

@@ -1,26 +1,76 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import hintCreature from '@/assets/creatureSittingQuestion.png'
+import { get } from '@/utils/apiUtils'
 
-defineProps<{
-  hint: string
+type ChapterTipResponse = {
+  chapterId: number
+  tip: string
+  newlyAdded: boolean
+  allTipsReceived: boolean
+}
+
+const props = defineProps<{
+  chapterId: number
 }>()
 
 const showHintPopup = ref(false)
+const loading = ref(false)
+const tip = ref('')
+const errorMessage = ref('')
+const newlyAdded = ref(false)
+const allTipsReceived = ref(false)
+
+async function openHintPopup() {
+  if (loading.value) return
+
+  showHintPopup.value = true
+  loading.value = true
+  tip.value = ''
+  errorMessage.value = ''
+  newlyAdded.value = false
+  allTipsReceived.value = false
+
+  try {
+    const response = await get<ChapterTipResponse>(`/api/pupil/chapters/${props.chapterId}/tip`)
+    tip.value = response.tip?.trim() || 'Ingen tips er tilgjengelige for dette kapittelet ennå.'
+    newlyAdded.value = response.newlyAdded
+    allTipsReceived.value = response.allTipsReceived
+  } catch {
+    errorMessage.value = 'Kunne ikke hente tips. Prøv igjen.'
+  } finally {
+    loading.value = false
+  }
+}
 </script>
 
 <template>
   <div class="hint-creature-wrapper">
-    <button type="button" class="hint-creature-button" @click="showHintPopup = true">
+    <button
+      type="button"
+      class="hint-creature-button"
+      :disabled="loading"
+      @click="openHintPopup"
+    >
       <img :src="hintCreature" alt="Få hint" />
     </button>
   </div>
+
+  <slot />
 
   <Teleport to="body">
     <div v-if="showHintPopup" class="hint-overlay" @click="showHintPopup = false">
       <div class="hint-popup" @click.stop>
         <h2>Tips 💡</h2>
-        <p>{{ hint }}</p>
+        <p v-if="loading">Henter tips...</p>
+        <p v-else-if="errorMessage" class="hint-error">{{ errorMessage }}</p>
+        <template v-else>
+          <p>{{ tip }}</p>
+          <p v-if="newlyAdded" class="hint-status">Tipset er lagret i notatboken din.</p>
+          <p v-else-if="allTipsReceived" class="hint-status">
+            Du har allerede samlet alle tipsene for dette kapittelet.
+          </p>
+        </template>
         <button class="hint-close-button" @click="showHintPopup = false">Ok</button>
       </div>
     </div>
@@ -62,6 +112,10 @@ const showHintPopup = ref(false)
   transform: scale(1.08);
 }
 
+.hint-creature-button:disabled {
+  cursor: wait;
+}
+
 .hint-overlay {
   position: fixed;
   inset: 0;
@@ -90,6 +144,18 @@ const showHintPopup = ref(false)
   margin: 0;
   font-size: 1.15rem;
   line-height: 1.5;
+}
+
+.hint-popup .hint-status {
+  margin-top: 1rem;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--brown-dark);
+}
+
+.hint-error {
+  color: var(--red-error, #9f1f1f);
+  font-weight: 800;
 }
 
 .hint-close-button {

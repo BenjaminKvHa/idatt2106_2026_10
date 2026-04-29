@@ -7,6 +7,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
 
@@ -26,6 +27,7 @@ public class AvatarService {
     private static final String CONTENT_TYPE_PNG = "image/png";
     private static final String AVATAR_IMAGE_FOLDER = "avatar-images";
     private static final String AVATAR_ASSET_FOLDER = "avatar-assets";
+    private static final Pattern ASSET_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9-]{1,64}$");
 
     private final FileObjectService fileObjectService;
     private final FileObjectRepository fileObjectRepository;
@@ -125,6 +127,12 @@ public class AvatarService {
         String[] parts = avatar.split("_", 3);
         if (parts.length != 3 || parts[0].isBlank() || parts[1].isBlank() || parts[2].isBlank()) {
             throw new IllegalArgumentException("Avatar must have format '<person>_<hair>_<costume>'");
+        }
+
+        for (String part : parts) {
+            if (!ASSET_NAME_PATTERN.matcher(part).matches()) {
+                throw new IllegalArgumentException("Avatar asset name contains invalid characters");
+            }
         }
 
         return new AvatarParts(parts[0], parts[1], parts[2]);

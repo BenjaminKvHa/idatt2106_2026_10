@@ -10,6 +10,7 @@ import {
   put,
   type BackendAccountRole,
 } from '@/utils/apiUtils'
+import { clearMeCache } from '@/router'
 import VolumeControl from '@/components/ui/VolumeControl.vue'
 
 type ProfileResponse = {
@@ -75,6 +76,7 @@ async function leaveClassroom() {
 
   try {
     await del(`/api/classrooms/${profile.value.classroomCode}/pupils/me`)
+    clearMeCache()
     await router.push('/pupil')
   } catch (requestError) {
     actionError.value =
@@ -96,6 +98,7 @@ async function signOut() {
     // Clearing local auth state still signs the user out from the frontend.
   } finally {
     clearAuthSessionStorage()
+    clearMeCache()
     signingOut.value = false
     await router.push('/sign-in')
   }
@@ -151,7 +154,7 @@ async function saveNickname() {
           <p class="pupil-meta-text">{{ profile.legalName || 'No name' }} - {{ profile.email }}</p>
           <p class="pupil-meta-text">{{ profile.role }}</p>
 
-          <RouterLink :to="`/join-classroom/set-avatar?classroomCode=${profile.classroomCode}`">
+          <RouterLink to="/pupil/profile/avatar">
             <button
               v-if="isInClassroom"
               class="pupil-button pupil-button-secondary"

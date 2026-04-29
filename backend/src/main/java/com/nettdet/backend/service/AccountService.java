@@ -100,8 +100,9 @@ public class AccountService {
         Long avatarFileObjectId = membership != null && membership.getAvatarFileObject() != null
                 ? membership.getAvatarFileObject().getId()
                 : null;
+        boolean membershipConfirmed = membership != null && membership.isMembershipConfirmedByTeacher();
 
-        return AuthMeResponse.from(account, username, classroomCode, avatarFileObjectId);
+        return AuthMeResponse.from(account, username, classroomCode, avatarFileObjectId, membershipConfirmed);
     }
 
     @Transactional

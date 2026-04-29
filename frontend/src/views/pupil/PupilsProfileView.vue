@@ -11,6 +11,7 @@ import {
   type BackendAccountRole,
 } from '@/utils/apiUtils'
 import { useAudio } from '@/composables/useAudio'
+import { clearMeCache } from '@/router'
 import volume2Icon from '@/assets/icons/volume-2.svg'
 import volumeXIcon from '@/assets/icons/volume-x.svg'
 
@@ -78,6 +79,7 @@ async function leaveClassroom() {
 
   try {
     await del(`/api/classrooms/${profile.value.classroomCode}/pupils/me`)
+    clearMeCache()
     await router.push('/pupil')
   } catch (requestError) {
     actionError.value =
@@ -99,6 +101,7 @@ async function signOut() {
     // Clearing local auth state still signs the user out from the frontend.
   } finally {
     clearAuthSessionStorage()
+    clearMeCache()
     signingOut.value = false
     await router.push('/sign-in')
   }

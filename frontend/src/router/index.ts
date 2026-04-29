@@ -35,6 +35,28 @@ import PupilsProfileView from '@/views/pupil/PupilsProfileView.vue'
 import PupilsEditAvatarView from '@/views/pupil/PupilsEditAvatarView.vue'
 import TeachersEditClassroom from '@/views/teacher/TeachersEditClassroom.vue'
 import { getJwtDataWithRefresh } from '@/utils/jwtUtils'
+import { get } from '@/utils/apiUtils'
+
+type MeProfile = { role: string; classroomCode: string | null; membershipConfirmed: boolean }
+const ME_CACHE_KEY = 'me-profile-cache'
+
+async function fetchMeCached(): Promise<MeProfile | null> {
+  const cached = sessionStorage.getItem(ME_CACHE_KEY)
+  if (cached) {
+    try { return JSON.parse(cached) as MeProfile } catch { /* fall through */ }
+  }
+  try {
+    const me = await get<MeProfile>('/api/me')
+    sessionStorage.setItem(ME_CACHE_KEY, JSON.stringify(me))
+    return me
+  } catch {
+    return null
+  }
+}
+
+export function clearMeCache() {
+  sessionStorage.removeItem(ME_CACHE_KEY)
+}
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -264,6 +286,12 @@ router.beforeEach(async (to) => {
 
   if (requiresTeacher && jwt.role !== 'TEACHER') return '/pupil'
   if (requiresPupil && jwt.role !== 'PUPIL') return '/teacher/classrooms'
+
+  if (jwt.role === 'PUPIL' && to.path.startsWith('/pupil')) {
+    const me = await fetchMeCached()
+    if (!me?.classroomCode) return '/join-classroom/enter-classroom-code'
+    if (!me.membershipConfirmed) return '/join-classroom/waiting-classroom'
+  }
 
   return true
 })

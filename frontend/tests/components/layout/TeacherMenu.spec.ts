@@ -126,13 +126,13 @@ describe('TeacherMenu', () => {
     expect(routerPush).toHaveBeenCalledWith('/teacher/classrooms/new')
   })
 
-  it('navigates to the selected classroom overview using the classroom slug', async () => {
+  it('navigates to the selected classroom leaderboard using the classroom slug', async () => {
     const wrapper = mountTeacherMenu()
-    const classroomButton = wrapper.findAll('.teacher-card-item').find((button) => button.text() === 'Norsk Gruppe')
-
+    const classroomButton = wrapper.findAll('.teacher-card-item-var-1').find((button) => button.text() === 'Norsk Gruppe')
+    console.log(wrapper.html())
     await classroomButton?.trigger('click')
 
-    expect(routerPush).toHaveBeenCalledWith('/teacher/classrooms/norsk-gruppe/oversikt')
+    expect(routerPush).toHaveBeenCalledWith('/teacher/classrooms/norsk-gruppe/leaderboard')
   })
 
   it('marks the classrooms overview as active outside the new classroom route', () => {
@@ -141,7 +141,7 @@ describe('TeacherMenu', () => {
 
     const wrapper = mountTeacherMenu()
 
-    const classroomItems = wrapper.findAll('.teacher-card-item')
+    const classroomItems = wrapper.findAll('.teacher-card-item-var-1')
 
     expect(wrapper.find('.teacher-card-title').classes()).toContain('button-variant-2')
     expect(classroomItems).toHaveLength(2)

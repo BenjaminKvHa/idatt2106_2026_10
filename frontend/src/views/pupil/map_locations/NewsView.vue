@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/components/pupil/TopBar.vue'
 import HintCreature from '@/components/pupil/task/BlobbyQuestion.vue'
@@ -9,55 +9,48 @@ import { get, getBlob, post } from '@/utils/apiUtils'
 import type {
   NewsVerificationRequest,
   NewsVerificationResponse,
-  TaskDifficulty,
   ValidationResult,
 } from '@/types/chapter'
 import thumbsUpNews from '@/assets/icons/detectives_and_thief/ThumbsUpNews.png'
 import thumbsDownNews from '@/assets/icons/detectives_and_thief/ThumbsDownNews.png'
 import PupilNewsTask from '@/components/pupil/task/PupilNewsTask.vue'
+import { useDifficultyProgression } from '@/composables/useDifficultyProgression'
 
 const router = useRouter()
 
 const NYHETSKVARTALET_CHAPTER_ID = 1
-const DIFFICULTIES: TaskDifficulty[] = ['EASY', 'MEDIUM', 'HARD']
+
+const {
+  DIFFICULTIES,
+  stepIndex,
+  lastResult,
+  runCorrect,
+  runAttempts,
+  runDone,
+  loading,
+  submitting,
+  error,
+  showGuidePopup,
+  showCompletePopup,
+  popupTitle,
+  popupMessage,
+  popupSubMessage,
+  popupSuccess,
+  currentDifficulty,
+  difficultyLabel,
+  progressPercent,
+  isLastStep,
+  recordResult,
+  advanceStep,
+  reset,
+} = useDifficultyProgression()
 
 const showHelpPopup = ref(false)
 const showHintPopup = ref(false)
-const showGuidePopup = ref(true)
-const showCompletePopup = ref(false)
 
-const stepIndex = ref(0)
 const currentTask = ref<NewsVerificationResponse | null>(null)
 const imageUrls = ref<string[]>([])
 const selectedFileId = ref<number | null>(null)
-const lastResult = ref<ValidationResult | null>(null)
-
-const runCorrect = ref(0)
-const runAttempts = ref(0)
-const runDone = ref(false)
-
-const loading = ref(false)
-const submitting = ref(false)
-const error = ref<string | null>(null)
-
-const popupTitle = ref('')
-const popupMessage = ref('')
-const popupSubMessage = ref('')
-const popupSuccess = ref(false)
-
-const difficultyLabel = computed(() => {
-  const labels: Record<TaskDifficulty, string> = {
-    EASY: 'Lett',
-    MEDIUM: 'Middels',
-    HARD: 'Vanskelig',
-  }
-
-  return labels[DIFFICULTIES[stepIndex.value]!]
-})
-
-const progressPercent = computed(() => {
-  return ((stepIndex.value + 1) / DIFFICULTIES.length) * 100
-})
 
 function closeHelpPopup(): void {
   showHelpPopup.value = false
@@ -79,10 +72,8 @@ async function loadTask(): Promise<void> {
   currentTask.value = null
 
   try {
-    const difficulty = DIFFICULTIES[stepIndex.value]!
-
     const task = await get<NewsVerificationResponse>(
-      `/api/chapters/${NYHETSKVARTALET_CHAPTER_ID}/nyhetskvartalet?difficulty=${difficulty}`,
+      `/api/chapters/${NYHETSKVARTALET_CHAPTER_ID}/nyhetskvartalet?difficulty=${currentDifficulty.value}`,
     )
 
     currentTask.value = task
@@ -113,11 +104,7 @@ async function choose(fileId: number): Promise<void> {
     )
 
     lastResult.value = result
-    runAttempts.value += 1
-
-    if (result.correct) {
-      runCorrect.value += 1
-    }
+    recordResult(result.correct)
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Kunne ikke sende svar'
     selectedFileId.value = null
@@ -129,14 +116,13 @@ async function choose(fileId: number): Promise<void> {
 async function next(): Promise<void> {
   if (!lastResult.value) return
 
-  if (stepIndex.value === DIFFICULTIES.length - 1) {
+  if (isLastStep.value) {
     showFinalResult()
     return
   }
 
-  stepIndex.value += 1
+  advanceStep()
   selectedFileId.value = null
-  lastResult.value = null
 
   await loadTask()
 }
@@ -145,7 +131,6 @@ function showFinalResult(): void {
   const success = runCorrect.value === DIFFICULTIES.length
 
   runDone.value = success
-
   popupSuccess.value = success
   popupTitle.value = success ? 'Du klarte det!' : 'Du klarte det ikke'
   popupMessage.value = success
@@ -159,13 +144,8 @@ function showFinalResult(): void {
 }
 
 async function retryLevel(): Promise<void> {
-  stepIndex.value = 0
+  reset()
   selectedFileId.value = null
-  lastResult.value = null
-  runCorrect.value = 0
-  runAttempts.value = 0
-  runDone.value = false
-  showCompletePopup.value = false
 
   await loadTask()
 }

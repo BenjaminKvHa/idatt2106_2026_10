@@ -91,7 +91,7 @@ const buttons = [
 .overlay-button {
   position: absolute;
   cursor: pointer;
-  width: clamp(180px, 21vw, 340px);
+  width: clamp(195px, 22vw, 360px);
   transform: translateX(-50%);
 }
 
@@ -122,24 +122,24 @@ const buttons = [
 }
 
 .mystery {
-  top: 55%;
+  top: 49%;
   left: 28%;
 }
 
 .notes {
-  top: 55%;
+  top: 49%;
   left: 72%;
 }
 
 .help {
-  top: 55%;
+  top: 49%;
   left: 50%;
 }
 
 /* tablet screen */
 @media (max-width: 768px) {
   .overlay-button {
-    width: clamp(96px, 19vw, 165px);
+    width: clamp(104px, 20vw, 178px);
   }
 }
 
@@ -154,7 +154,7 @@ const buttons = [
   }
 
   .overlay-button {
-    width: clamp(54px, 18vw, 88px);
+    width: clamp(58px, 19vw, 96px);
   }
 
   .medals {
@@ -173,17 +173,17 @@ const buttons = [
   }
 
   .mystery {
-    top: 57%;
+    top: 52%;
     left: 28%;
   }
 
   .notes {
-    top: 57%;
+    top: 52%;
     left: 72%;
   }
 
   .help {
-    top: 57%;
+    top: 52%;
     left: 50%;
   }
 }

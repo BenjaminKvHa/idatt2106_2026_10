@@ -59,6 +59,8 @@ services:
       S3_SECRET_KEY: ${S3_SECRET_KEY}
       S3_REGION: us-east-1
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: ${SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE:-10MB}
+      SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE: ${SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE:-25MB}
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health/readiness | grep -q '\"status\":\"UP\"' || exit 1"]
       interval: 15s

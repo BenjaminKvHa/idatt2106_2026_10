@@ -61,7 +61,7 @@ const activeClassroomCode = computed(() => {
                     :key="classroom.classroomCode"
                     type="button"
                     :to="`/teacher/classrooms/${classroom.classroomCode}/leaderboard`"
-                    :class="['button-variant-1 teacher-card-item-var-1', isClassroomActive(classroom.classroomCode) && 'button-variant-2 teacher-card-item-var-2']"
+                    :class="['button-variant-1 inika teacher-card-item-var-1', isClassroomActive(classroom.classroomCode) && 'button-variant-2 teacher-card-item-var-2']"
                 >
                     {{ classroom.classroomName }}
                 </RouterLink>
@@ -73,7 +73,7 @@ const activeClassroomCode = computed(() => {
 
         <RouterLink
             type="button"
-            :class="['button-variant-1', 'teacher-menu-button', isNewClassroomActive && 'button-variant-2']"
+            :class="['button-variant-1', 'teacher-menu-button', 'inika', isNewClassroomActive && 'button-variant-2']"
             :to="`/teacher/classrooms/new`"
         >
             Nytt klasserom
@@ -96,7 +96,6 @@ const activeClassroomCode = computed(() => {
             >
                 <img :src="isMuted ? volumeXIcon : volume2Icon" alt="" class="teacher-menu-icon" aria-hidden="true" />
             </button>
-            <button type="button" class="icon-btn-circle" aria-label="Varsler"></button>
             <button
                 type="button"
                 class="icon-btn-circle"
@@ -153,6 +152,7 @@ const activeClassroomCode = computed(() => {
     width: 100%;
     padding: 0.85rem 1rem;
     text-align: center;
+    font-weight: 600;
 }
 
 .teacher-menu-bottom {
@@ -161,6 +161,10 @@ const activeClassroomCode = computed(() => {
     gap: var(--thin-gap);
     justify-content: center;
     padding-top: var(--medium-padding);
+
+    > .icon-btn-circle:hover {
+        box-shadow: 0 .5rem 1rem rgba(0, 0, 0, 0.25);
+    }
 }
 
 .teacher-menu-icon {

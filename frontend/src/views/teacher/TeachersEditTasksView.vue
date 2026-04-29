@@ -1,81 +1,131 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { get } from '@/utils/apiUtils'
+import TeacherFotografenTaskForm from '@/components/teacher/mystery/TeacherFotografenTaskForm.vue'
+import TeacherMysteryTaskCard from '@/components/teacher/mystery/TeacherMysteryTaskCard.vue'
+import TeacherNyhetskvartaletTaskForm from '@/components/teacher/mystery/TeacherNyhetskvartaletTaskForm.vue'
+import {
+  CHAPTER_ID_BY_TASK_KEY,
+  CHAPTER_LABELS,
+  parseImageVerificationTask,
+  parseNewsVerificationTask,
+  type ChapterTaskKey,
+  type FotografenTaskFormValues,
+  type ImageVerificationTask,
+  type NewsVerificationTask,
+  type NyhetskvartaletTaskFormValues,
+  type TaskAdminResponse,
+} from '@/components/teacher/mystery/types'
+import { get, patchForm, postForm } from '@/utils/apiUtils'
 
-type ChapterKey = 'Nyhetskvartalet' | 'Fotografen' | 'Datasenteret'
-
-type TaskAdminResponse = {
-  id: number
-  difficulty: string
-  chapterId: number | null
-  classroomCode: string | null
-  taskJson: string
-  createdAt: string
-}
-
-type ImageVerificationTask = {
-  taskDescription?: string
-  fileId?: number
-  correctCategory?: string
-  correctJustification?: string
-  justifications?: string[]
-  correctDescription?: string
-  falseDescription?: string
-}
-
-type NewsVerificationTask = {
-  taskDescription?: string
-  fileId_1?: number
-  fileId_2?: number
-  correctFileId?: number
-  correctDescription?: string
-  incorrectDescription?: string
+type VisibleTaskCard = {
+  task: TaskAdminResponse
+  imageTask: ImageVerificationTask | null
+  newsTask: NewsVerificationTask | null
 }
 
 const route = useRoute()
 
-const CHAPTER_ENDPOINTS: Record<ChapterKey, string> = {
-  Nyhetskvartalet: 'nyhetskvartalet',
-  Fotografen: 'fotografen',
-  Datasenteret: 'datasenteret',
-}
-
-const chapterNames: ChapterKey[] = ['Nyhetskvartalet', 'Fotografen', 'Datasenteret']
-
-const activeChapter = ref<ChapterKey>('Nyhetskvartalet')
+const activeChapter = ref<ChapterTaskKey>('nyhetskvartalet')
 const loading = ref(true)
 const error = ref('')
-const tasksByChapter = ref<Record<ChapterKey, TaskAdminResponse[]>>({
-  Nyhetskvartalet: [],
-  Fotografen: [],
-  Datasenteret: [],
+const actionError = ref('')
+const actionSuccess = ref('')
+const submitting = ref(false)
+const tasksByChapter = ref<Record<ChapterTaskKey, TaskAdminResponse[]>>({
+  nyhetskvartalet: [],
+  fotografen: [],
+})
+const formResetTokenByChapter = ref<Record<ChapterTaskKey, number>>({
+  nyhetskvartalet: 0,
+  fotografen: 0,
+})
+const selectedTaskIdByChapter = ref<Record<ChapterTaskKey, number | null>>({
+  nyhetskvartalet: null,
+  fotografen: null,
 })
 
 const classroomCode = computed(() =>
   typeof route.params.classroomCode === 'string' ? route.params.classroomCode : '',
 )
 
-const visibleTasks = computed(() => tasksByChapter.value[activeChapter.value])
+const chapterOrder: ChapterTaskKey[] = ['nyhetskvartalet', 'fotografen']
 
-function selectChapter(chapter: ChapterKey) {
+const visibleTaskCards = computed<VisibleTaskCard[]>(() => {
+  if (activeChapter.value === 'fotografen') {
+    return tasksByChapter.value.fotografen.map((task) => ({
+      task,
+      imageTask: parseImageVerificationTask(task.taskJson),
+      newsTask: null,
+    }))
+  }
+
+  return tasksByChapter.value.nyhetskvartalet.map((task) => ({
+    task,
+    imageTask: null,
+    newsTask: parseNewsVerificationTask(task.taskJson),
+  }))
+})
+
+const selectedFotografenTask = computed(() => {
+  const taskId = selectedTaskIdByChapter.value.fotografen
+  if (taskId === null) {
+    return null
+  }
+
+  const task = tasksByChapter.value.fotografen.find((entry) => entry.id === taskId)
+  if (!task) {
+    return null
+  }
+
+  return {
+    task,
+    parsedTask: parseImageVerificationTask(task.taskJson),
+  }
+})
+
+const selectedNyhetsTask = computed(() => {
+  const taskId = selectedTaskIdByChapter.value.nyhetskvartalet
+  if (taskId === null) {
+    return null
+  }
+
+  const task = tasksByChapter.value.nyhetskvartalet.find((entry) => entry.id === taskId)
+  if (!task) {
+    return null
+  }
+
+  return {
+    task,
+    parsedTask: parseNewsVerificationTask(task.taskJson),
+  }
+})
+
+function clearMessages() {
+  actionError.value = ''
+  actionSuccess.value = ''
+}
+
+function buildMetadataPart(metadata: Record<string, unknown>): Blob {
+  return new Blob([JSON.stringify(metadata)], {
+    type: 'application/json',
+  })
+}
+
+function setActiveChapter(chapter: ChapterTaskKey) {
   activeChapter.value = chapter
 }
 
-function parseTaskJson(taskJson: string): Record<string, unknown> | null {
-  try {
-    return JSON.parse(taskJson) as Record<string, unknown>
-  } catch {
-    return null
-  }
+function toggleTaskEditor(taskId: number) {
+  clearMessages()
+
+  const currentTaskId = selectedTaskIdByChapter.value[activeChapter.value]
+  selectedTaskIdByChapter.value[activeChapter.value] = currentTaskId === taskId ? null : taskId
 }
 
-function getImageVerificationTask(taskJson: string): ImageVerificationTask | null {
-  return parseTaskJson(taskJson) as ImageVerificationTask | null
-}
-
-function getNewsVerificationTask(taskJson: string): NewsVerificationTask | null {
-  return parseTaskJson(taskJson) as NewsVerificationTask | null
+function clearTaskEditor(chapter: ChapterTaskKey) {
+  selectedTaskIdByChapter.value[chapter] = null
+  clearMessages()
 }
 
 async function loadTasks() {
@@ -87,26 +137,140 @@ async function loadTasks() {
       throw new Error('Could not find classroom for this route')
     }
 
-    const [nyhetskvartaletTasks, fotografenTasks, datasenteretTasks] = await Promise.all([
-      get<TaskAdminResponse[]>(`/api/admin/tasks/nyhetskvartalet?classroomCode=${classroomCode.value}`),
-      get<TaskAdminResponse[]>(`/api/admin/tasks/fotografen?classroomCode=${classroomCode.value}`),
-      get<TaskAdminResponse[]>(`/api/admin/tasks/datasenteret?classroomCode=${classroomCode.value}`),
+    const encodedClassroomCode = encodeURIComponent(classroomCode.value)
+    const [nyhetskvartaletTasks, fotografenTasks] = await Promise.all([
+      get<TaskAdminResponse[]>(`/api/admin/tasks/nyhetskvartalet?classroomCode=${encodedClassroomCode}`),
+      get<TaskAdminResponse[]>(`/api/admin/tasks/fotografen?classroomCode=${encodedClassroomCode}`),
     ])
 
     tasksByChapter.value = {
-      Nyhetskvartalet: nyhetskvartaletTasks,
-      Fotografen: fotografenTasks,
-      Datasenteret: datasenteretTasks,
+      nyhetskvartalet: nyhetskvartaletTasks,
+      fotografen: fotografenTasks,
     }
   } catch (fetchError) {
     tasksByChapter.value = {
-      Nyhetskvartalet: [],
-      Fotografen: [],
-      Datasenteret: [],
+      nyhetskvartalet: [],
+      fotografen: [],
     }
     error.value = fetchError instanceof Error ? fetchError.message : 'Failed to load tasks'
   } finally {
     loading.value = false
+  }
+}
+
+async function submitFotografenTask(values: FotografenTaskFormValues) {
+  submitting.value = true
+  clearMessages()
+
+  try {
+    const formData = new FormData()
+    const editingTask = selectedFotografenTask.value?.task ?? null
+
+    formData.append(
+      'metadata',
+      buildMetadataPart(
+        editingTask
+          ? {
+              difficulty: values.difficulty,
+              taskDescription: values.taskDescription,
+              correctCategory: values.correctCategory,
+              correctJustification: values.correctJustification,
+              justifications: values.justifications,
+              correctDescription: values.correctDescription,
+              falseDescription: values.falseDescription,
+            }
+          : {
+              chapterId: CHAPTER_ID_BY_TASK_KEY.fotografen,
+              difficulty: values.difficulty,
+              taskDescription: values.taskDescription,
+              correctCategory: values.correctCategory,
+              correctJustification: values.correctJustification,
+              justifications: values.justifications,
+              correctDescription: values.correctDescription,
+              falseDescription: values.falseDescription,
+            },
+      ),
+    )
+
+    if (values.file) {
+      formData.append('file', values.file)
+    }
+
+    const response = editingTask
+      ? await patchForm<TaskAdminResponse>(`/api/admin/tasks/fotografen/${editingTask.id}`, formData)
+      : await postForm<TaskAdminResponse>('/api/admin/tasks/fotografen', formData)
+
+    selectedTaskIdByChapter.value.fotografen = null
+    if (!editingTask) {
+      formResetTokenByChapter.value.fotografen += 1
+    }
+    actionSuccess.value = editingTask
+      ? `Fotografen-oppgave #${response.id} ble oppdatert.`
+      : `Fotografen-oppgave #${response.id} ble opprettet.`
+
+    await loadTasks()
+  } catch (requestError) {
+    actionError.value = requestError instanceof Error ? requestError.message : 'Failed to save task'
+  } finally {
+    submitting.value = false
+  }
+}
+
+async function submitNyhetsTask(values: NyhetskvartaletTaskFormValues) {
+  submitting.value = true
+  clearMessages()
+
+  try {
+    const formData = new FormData()
+    const editingTask = selectedNyhetsTask.value?.task ?? null
+
+    formData.append(
+      'metadata',
+      buildMetadataPart(
+        editingTask
+          ? {
+              difficulty: values.difficulty,
+              taskDescription: values.taskDescription,
+              correctFileSlot: values.correctFileSlot,
+              correctDescription: values.correctDescription,
+              incorrectDescription: values.incorrectDescription,
+            }
+          : {
+              chapterId: CHAPTER_ID_BY_TASK_KEY.nyhetskvartalet,
+              difficulty: values.difficulty,
+              taskDescription: values.taskDescription,
+              correctFileSlot: values.correctFileSlot,
+              correctDescription: values.correctDescription,
+              incorrectDescription: values.incorrectDescription,
+            },
+      ),
+    )
+
+    if (values.file1) {
+      formData.append('file1', values.file1)
+    }
+
+    if (values.file2) {
+      formData.append('file2', values.file2)
+    }
+
+    const response = editingTask
+      ? await patchForm<TaskAdminResponse>(`/api/admin/tasks/nyhetskvartalet/${editingTask.id}`, formData)
+      : await postForm<TaskAdminResponse>('/api/admin/tasks/nyhetskvartalet', formData)
+
+    selectedTaskIdByChapter.value.nyhetskvartalet = null
+    if (!editingTask) {
+      formResetTokenByChapter.value.nyhetskvartalet += 1
+    }
+    actionSuccess.value = editingTask
+      ? `Nyhetskvartalet-oppgave #${response.id} ble oppdatert.`
+      : `Nyhetskvartalet-oppgave #${response.id} ble opprettet.`
+
+    await loadTasks()
+  } catch (requestError) {
+    actionError.value = requestError instanceof Error ? requestError.message : 'Failed to save task'
+  } finally {
+    submitting.value = false
   }
 }
 
@@ -117,213 +281,213 @@ onMounted(async () => {
 watch(
   () => route.params.classroomCode,
   async () => {
+    selectedTaskIdByChapter.value = {
+      nyhetskvartalet: null,
+      fotografen: null,
+    }
+    formResetTokenByChapter.value = {
+      nyhetskvartalet: 0,
+      fotografen: 0,
+    }
+    clearMessages()
     await loadTasks()
   },
 )
 </script>
 
 <template>
-  <div class="teacher-edit-tasks-page-container">
-    <div class="stop-navigation-container">
-      <button
-        v-for="chapter in chapterNames"
-        :key="chapter"
-        class="go-to-stop-btn"
-        :class="{ 'active-go-to-stop-btn': activeChapter === chapter }"
-        type="button"
-        @click="selectChapter(chapter)"
-      >
-        {{ chapter }}
-      </button>
-    </div>
+  <div class="teacher-container-box edit-tasks-view">
+    <section class="page-header">
+      <div>
+        <h1>Rediger oppgaver</h1>
+        <p class="header-copy">Opprett, rediger og kvalitetssikre oppgaver for Nyhetskvartalet og Fotografen.</p>
+      </div>
+    </section>
 
-    <div class="tasks-panel">
-      <p v-if="loading" class="state-message">Laster oppgaver...</p>
-      <p v-else-if="error" class="state-message error">{{ error }}</p>
-
-      <template v-else>
-        <h1>{{ activeChapter }}</h1>
-
-        <div v-if="visibleTasks.length === 0" class="empty-state">
-          Ingen oppgaver funnet for dette kapittelet.
+    <section class="task-admin-section">
+      <div class="task-admin-header">
+        <div>
+          <h2>Kapitteloppgaver</h2>
+          <p>Velg kapittel, opprett nye oppgaver, eller rediger eksisterende oppgaver direkte her.</p>
         </div>
 
-        <div v-else class="tasks-container">
-          <div v-for="task in visibleTasks" :key="task.id" class="task-container">
-            <div class="task-meta-row">
-              <strong>{{ task.difficulty }}</strong>
-              <span>Oppgave #{{ task.id }}</span>
-            </div>
+        <div class="chapter-tabs">
+          <button
+            v-for="chapter in chapterOrder"
+            :key="chapter"
+            type="button"
+            :class="['chapter-tab', activeChapter === chapter ? 'button-variant-2' : 'button-variant-1']"
+            @click="setActiveChapter(chapter)"
+          >
+            {{ CHAPTER_LABELS[chapter] }}
+          </button>
+        </div>
+      </div>
 
-            <div class="task-meta-secondary">
-              <span>Kapittel-ID: {{ task.chapterId ?? 'Ukjent' }}</span>
-              <span>Klasserom: {{ task.classroomCode ?? classroomCode }}</span>
-            </div>
+      <p v-if="actionSuccess" class="status-banner success">{{ actionSuccess }}</p>
+      <p v-if="actionError" class="status-banner error">{{ actionError }}</p>
 
-            <div v-if="activeChapter === 'Fotografen'" class="task-json-structured">
-              <template v-if="getImageVerificationTask(task.taskJson)">
-                <p><strong>Oppgavebeskrivelse:</strong> {{ getImageVerificationTask(task.taskJson)?.taskDescription || 'Ingen beskrivelse' }}</p>
-                <p><strong>Fil-ID:</strong> {{ getImageVerificationTask(task.taskJson)?.fileId ?? 'Ukjent' }}</p>
-                <p><strong>Riktig kategori:</strong> {{ getImageVerificationTask(task.taskJson)?.correctCategory || 'Ukjent' }}</p>
-                <p><strong>Riktig begrunnelse:</strong> {{ getImageVerificationTask(task.taskJson)?.correctJustification || 'Ukjent' }}</p>
-                <div v-if="getImageVerificationTask(task.taskJson)?.justifications?.length" class="task-list-block">
-                  <strong>Begrunnelser:</strong>
-                  <ul>
-                    <li v-for="justification in getImageVerificationTask(task.taskJson)?.justifications" :key="justification">
-                      {{ justification }}
-                    </li>
-                  </ul>
-                </div>
-                <p><strong>Ved riktig svar:</strong> {{ getImageVerificationTask(task.taskJson)?.correctDescription || 'Ingen tekst' }}</p>
-                <p><strong>Ved feil svar:</strong> {{ getImageVerificationTask(task.taskJson)?.falseDescription || 'Ingen tekst' }}</p>
-              </template>
-              <pre v-else class="task-json">{{ task.taskJson }}</pre>
-            </div>
+      <div class="task-admin-layout">
+        <div class="task-form-panel">
+          <TeacherNyhetskvartaletTaskForm
+            v-if="activeChapter === 'nyhetskvartalet'"
+            :task="selectedNyhetsTask?.task ?? null"
+            :parsed-task="selectedNyhetsTask?.parsedTask ?? null"
+            :submitting="submitting"
+            :reset-token="formResetTokenByChapter.nyhetskvartalet"
+            @submit="submitNyhetsTask"
+            @cancel-edit="clearTaskEditor('nyhetskvartalet')"
+          />
 
-            <div v-else-if="activeChapter === 'Nyhetskvartalet'" class="task-json-structured">
-              <template v-if="getNewsVerificationTask(task.taskJson)">
-                <p><strong>Oppgavebeskrivelse:</strong> {{ getNewsVerificationTask(task.taskJson)?.taskDescription || 'Ingen beskrivelse' }}</p>
-                <p><strong>Fil-ID 1:</strong> {{ getNewsVerificationTask(task.taskJson)?.fileId_1 ?? 'Ukjent' }}</p>
-                <p><strong>Fil-ID 2:</strong> {{ getNewsVerificationTask(task.taskJson)?.fileId_2 ?? 'Ukjent' }}</p>
-                <p><strong>Riktig fil-ID:</strong> {{ getNewsVerificationTask(task.taskJson)?.correctFileId ?? 'Ukjent' }}</p>
-                <p><strong>Ved riktig svar:</strong> {{ getNewsVerificationTask(task.taskJson)?.correctDescription || 'Ingen tekst' }}</p>
-                <p><strong>Ved feil svar:</strong> {{ getNewsVerificationTask(task.taskJson)?.incorrectDescription || 'Ingen tekst' }}</p>
-              </template>
-              <pre v-else class="task-json">{{ task.taskJson }}</pre>
-            </div>
+          <TeacherFotografenTaskForm
+            v-else
+            :task="selectedFotografenTask?.task ?? null"
+            :parsed-task="selectedFotografenTask?.parsedTask ?? null"
+            :submitting="submitting"
+            :reset-token="formResetTokenByChapter.fotografen"
+            @submit="submitFotografenTask"
+            @cancel-edit="clearTaskEditor('fotografen')"
+          />
+        </div>
 
-            <pre v-else class="task-json">{{ task.taskJson }}</pre>
+        <div class="task-list-panel">
+          <div class="list-header-row">
+            <div>
+              <h3>Eksisterende oppgaver</h3>
+            </div>
+          </div>
+
+          <p v-if="loading" class="state-message">Laster oppgaver...</p>
+          <p v-else-if="error" class="state-message error">{{ error }}</p>
+          <div v-else-if="visibleTaskCards.length === 0" class="empty-state">
+            Ingen oppgaver funnet for {{ CHAPTER_LABELS[activeChapter] }}.
+          </div>
+          <div v-else class="task-list">
+            <TeacherMysteryTaskCard
+              v-for="card in visibleTaskCards"
+              :key="card.task.id"
+              :chapter="activeChapter"
+              :task="card.task"
+              :image-task="card.imageTask"
+              :news-task="card.newsTask"
+              :selected="selectedTaskIdByChapter[activeChapter] === card.task.id"
+              @edit="toggleTaskEditor"
+            />
           </div>
         </div>
-      </template>
-    </div>
+      </div>
+    </section>
   </div>
 </template>
 
 <style scoped>
-.teacher-edit-tasks-page-container {
-  display: flex;
-  gap: 1rem;
-}
-
-.stop-navigation-container {
+.edit-tasks-view {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
+  width: min(78rem, 100%);
 }
 
-.go-to-stop-btn {
-  background-color: var(--beige-light);
-  border: var(--border-thin) solid var(--brown-dark);
-  color: var(--brown-dark);
-  padding: 1rem 0.75rem;
-  border-radius: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  text-align: left;
-}
-
-.go-to-stop-btn.active-go-to-stop-btn,
-.go-to-stop-btn:hover {
-  background-color: var(--background-sec);
-}
-
-.tasks-panel {
-  flex: 1;
+.page-header,
+.task-admin-header,
+.list-header-row {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   gap: 1rem;
-  border: var(--border-thin) solid var(--brown-dark);
-  background-color: var(--beige-light);
-  padding: 1rem;
-  border-radius: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
 }
 
-.tasks-panel h1,
+.page-header h1,
+.page-header p,
+.task-admin-header h2,
+.task-admin-header p,
+.list-header-row h3,
+.list-header-row p,
+.status-banner,
 .state-message,
 .empty-state {
   margin: 0;
 }
 
-.tasks-container {
+.eyebrow {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.74;
+}
+
+.header-copy {
+  max-width: 42rem;
+}
+
+.chapter-tab {
+  padding: 0.8rem 1rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.task-admin-section {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.task-container {
-  background-color: var(--background-sec);
-  padding: 1rem;
-  border-radius: 0.75rem;
+.chapter-tabs {
   display: flex;
-  flex-direction: column;
   gap: 0.75rem;
-}
-
-.task-meta-row,
-.task-meta-secondary {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
   flex-wrap: wrap;
 }
 
-.task-meta-secondary {
-  font-size: 0.9rem;
-  opacity: 0.8;
+.task-admin-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 29rem) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
 }
 
-.task-json {
-  margin: 0;
-  padding: 0.75rem;
-  border-radius: 0.5rem;
-  background: var(--background);
-  border: 1px solid rgba(85, 50, 27, 0.2);
-  white-space: pre-wrap;
-  word-break: break-word;
+.task-form-panel,
+.task-list-panel {
+  min-width: 0;
 }
 
-.task-json-structured {
+.task-list-panel {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  border-radius: 0.5rem;
-  background: var(--background);
-  border: 1px solid rgba(85, 50, 27, 0.2);
+  gap: 1rem;
 }
 
-.task-json-structured p {
-  margin: 0;
+.task-list {
+  display: grid;
+  gap: 1rem;
 }
 
-.task-list-block {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.task-list-block ul {
-  margin: 0;
-  padding-left: 1.25rem;
-}
-
-.state-message {
+.status-banner {
+  padding: 0.9rem 1rem;
+  border-radius: 1rem;
+  background: rgba(255, 248, 235, 0.85);
   color: var(--brown-dark);
 }
 
+.status-banner.success {
+  border: 2px solid rgba(40, 135, 71, 0.2);
+  color: #155724;
+}
+
+.status-banner.error,
 .state-message.error {
   color: #9f1d1d;
 }
 
-@media (max-width: 900px) {
-  .teacher-edit-tasks-page-container {
-    flex-direction: column;
-  }
+.state-message,
+.empty-state {
+  color: var(--brown-dark);
+}
 
-  .stop-navigation-container {
-    flex-direction: row;
-    flex-wrap: wrap;
+@media (max-width: 1100px) {
+  .task-admin-layout {
+    grid-template-columns: 1fr;
   }
 }
 </style>

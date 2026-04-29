@@ -132,6 +132,7 @@
     padding: var(--card-item-padding);
     border-radius: var(--card-item-radius);
     transition: background-color var(--animation-time-1), color var(--animation-time-1);
+    font-weight: 600;
 }
 
 .teacher-card-item-var-2 {

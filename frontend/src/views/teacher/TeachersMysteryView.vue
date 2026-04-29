@@ -106,18 +106,21 @@ watch(
 
 <template>
   <div class="teacher-container-box mystery-view">
+    <section class="mystery-section">
+      <div class="section-header">
+        <div>
+          <p class="eyebrow">Klasserom {{ classroomCode }}</p>
+          <h1>Ukens mysterium</h1>
+          <p>Godkjenn eller fjern elevforslag for dette klasserommet.</p>
+        </div>
+      </div>
+    </section>
+
     <p v-if="loading" class="state-message">Laster mysterier...</p>
     <p v-else-if="error" class="state-message error">{{ error }}</p>
     <p v-if="!loading && !error && actionError" class="state-message error">{{ actionError }}</p>
 
     <template v-else>
-      <section class="mystery-section">
-        <div class="section-header">
-          <h1>Ukens mysterium</h1>
-          <p>Klasseromskode: {{ classroomCode }}</p>
-        </div>
-      </section>
-
       <section class="mystery-section">
         <h2>Venter på godkjenning</h2>
         <div v-if="pendingMysteries.length === 0" class="empty-state">
@@ -169,11 +172,20 @@ watch(
 }
 
 .section-header h1,
-.mystery-section h2,
+.section-header h2,
 .section-header p,
+.mystery-section h2,
 .state-message,
 .empty-state {
   margin: 0;
+}
+
+.eyebrow {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.74;
+  margin: 0 0 0.25rem;
 }
 
 .mystery-grid {

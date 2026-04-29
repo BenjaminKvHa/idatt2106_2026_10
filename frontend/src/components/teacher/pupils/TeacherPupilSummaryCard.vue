@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import { SaveIcon } from '@lucide/vue'
 import type { Pupil } from './types'
+import { computed } from 'vue';
 
 const props = defineProps<{
   pupil: Pupil
@@ -14,23 +14,6 @@ const emit = defineEmits<{
   saveChanges: []
 }>()
 
-const initials = computed(() =>
-  props.pupil.legalName
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
-    .join(''),
-)
-
-const secondaryText = computed(() => {
-  if (props.pupil.username.trim().length > 0) {
-    return `@${props.pupil.username}`
-  }
-
-  return props.pupil.email
-})
-
 function updateUsername(event: Event) {
   const target = event.target as HTMLInputElement
   emit('update:editUsername', target.value)
@@ -40,23 +23,22 @@ function updateUsername(event: Event) {
 <template>
   <div class="profile-summary-card">
     <div class="avatar-area">
-      <div v-if="pupil.avatarUrl" class="avatar-image-wrapper">
-        <img :src="pupil.avatarUrl" :alt="pupil.legalName" class="avatar-image" />
-      </div>
-
-      <div v-else class="avatar-fallback">
-        {{ initials }}
+      <div class="avatar-image-wrapper">
+        <img :src="pupil.avatarUrl || '/api/objects/1'" :alt="pupil.legalName" class="avatar-image" />
       </div>
 
       <div class="profile-text">
         <div class="profile-header-row">
-          <p class="profile-name inika">{{ pupil.legalName }}</p>
-          <p class="xp-inline inika">{{ pupil.totalXp }} XP</p>
+          <p class="profile-name inika">{{ props.pupil.username }}</p>
+          <p v-if="showSaveButton" class="xp-inline inika">{{ pupil.totalXp }} XP</p>
         </div>
-        <p class="username-display inika">{{ secondaryText }}</p>
+        <p class="username-display inika">Juridisk navn: {{ pupil.legalName }}</p>
       </div>
 
-      <div class="username-edit">
+      <div 
+      class="username-edit"
+      v-if="showSaveButton"
+      >
         <label class="field-label inika" for="username-input">Brukernavn</label>
 
         <div class="username-edit-row">
@@ -70,7 +52,6 @@ function updateUsername(event: Event) {
           />
 
           <button
-            v-if="showSaveButton"
             class="save-btn inika"
             type="button"
             aria-label="Lagre endringer"
@@ -124,6 +105,13 @@ function updateUsername(event: Event) {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.avatar-fallback-text {
+  font-size: 0.8rem;
+  line-height: 1.1;
+  text-align: center;
+  padding: 0.35rem;
 }
 
 .profile-text {

@@ -17,6 +17,8 @@ type AcceptedPupilResponse = {
 type PendingPupilResponse = {
   accountEmail: string
   legalName: string
+  username: string
+  avatarObjectKey: string | null
 }
 
 type ChapterNotebookResponse = {
@@ -131,13 +133,13 @@ function mapPendingPupil(response: PendingPupilResponse): Pupil {
   return {
     email: response.accountEmail,
     legalName: response.legalName,
-    username: '',
+    username: response.username,
     classroomCode: classroomCode.value,
     status: 'PENDING',
     totalXp: 0,
     notes: [],
     mysterySuggestion: '',
-    avatarUrl: null,
+    avatarUrl: response.avatarObjectKey ? `/api/${response.avatarObjectKey}` : null,
   }
 }
 
@@ -197,7 +199,12 @@ async function loadSelectedNotebook() {
     selectedNotebookChapterName.value = response.chapterName
     selectedNotebookNote.value = response.ownNotes
   } catch (fetchError) {
-    notebookError.value = fetchError instanceof Error ? fetchError.message : 'Failed to load notebook'
+    if (fetchError instanceof Error && fetchError.message.includes('409')) {
+      selectedNotebookNote.value = ''
+      notebookError.value = ''
+    } else {
+      notebookError.value = fetchError instanceof Error ? fetchError.message : 'Failed to load notebook'
+    }
   } finally {
     notebookLoading.value = false
   }

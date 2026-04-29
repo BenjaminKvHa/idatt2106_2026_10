@@ -136,7 +136,8 @@ VALUES
     ('teacher.multi@example.com', 'MAPAAA'),
     ('teacher.multi@example.com', 'MAPAAB'),
     ('teacher.shared@example.com', 'MAPAAB'),
-    ('teacher.shared@example.com', 'MAPAAC')
+    ('teacher.shared@example.com', 'MAPAAC'),
+    ('teacher.shared@example.com', 'TESTAA')
 ON CONFLICT (account_email, classroom_code) DO NOTHING;
 
 INSERT INTO pupil_classroom_membership (

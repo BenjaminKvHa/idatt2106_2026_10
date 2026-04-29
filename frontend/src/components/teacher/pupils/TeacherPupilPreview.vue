@@ -11,15 +11,6 @@ const emit = defineEmits<{
   select: [email: string]
 }>()
 
-const initials = computed(() =>
-  props.pupil.legalName
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
-    .join(''),
-)
-
 const secondaryText = computed(() => {
   if (props.pupil.username.trim().length > 0) {
     return `@${props.pupil.username}`
@@ -45,7 +36,7 @@ function selectPupil() {
   >
     <span class="pupil-icon">
       <img v-if="pupil.avatarUrl" :src="pupil.avatarUrl" :alt="pupil.legalName" class="pupil-icon-image" />
-      <span v-else>{{ initials }}</span>
+      <span v-else class="pupil-icon-fallback">{{ pupil.legalName }}</span>
     </span>
 
     <span class="pupil-text">
@@ -102,6 +93,13 @@ function selectPupil() {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.pupil-icon-fallback {
+  font-size: 0.55rem;
+  line-height: 1.05;
+  text-align: center;
+  padding: 0.15rem;
 }
 
 .pupil-text {

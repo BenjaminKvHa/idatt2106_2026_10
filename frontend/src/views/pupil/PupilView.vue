@@ -165,7 +165,7 @@ const buttons = [
 }
 
 /* phone screen */
-@media (max-width: 768px) {
+@media (max-width: 540px) {
   .image-wrapper {
     width: min(96vw, 900px);
   }

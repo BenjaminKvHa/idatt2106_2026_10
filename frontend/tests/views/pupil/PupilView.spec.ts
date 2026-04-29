@@ -28,8 +28,20 @@ describe('PupilView', () => {
     vi.useFakeTimers()
 
     audioPlay = vi.fn().mockResolvedValue(undefined)
-    audioConstructor = vi.fn(function (this: { play: typeof audioPlay }) {
+    audioConstructor = vi.fn(function (this: {
+      play: typeof audioPlay
+      pause: ReturnType<typeof vi.fn>
+      addEventListener: ReturnType<typeof vi.fn>
+      removeEventListener: ReturnType<typeof vi.fn>
+      currentTime: number
+      volume: number
+    }) {
       this.play = audioPlay
+      this.pause = vi.fn()
+      this.addEventListener = vi.fn()
+      this.removeEventListener = vi.fn()
+      this.currentTime = 0
+      this.volume = 1
     })
 
     vi.stubGlobal('Audio', audioConstructor as unknown as typeof Audio)

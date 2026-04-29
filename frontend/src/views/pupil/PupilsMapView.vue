@@ -70,7 +70,6 @@
     <p v-else-if="progressError" class="map-status error" role="alert">{{ progressError }}</p>
 
     <div v-if="activeLockedStop" class="pupil-popup-overlay" @click="closeLockedPopup">
-
       <div class="locked-popup" @click.stop>
         <h2 class="popup-title">{{ activeLockedStop.name }} er låst.</h2>
         <p class="popup-text">
@@ -415,7 +414,7 @@ onMounted(() => {
 }
 
 .homeNode .stop-content {
-  top: 260px;
+  top: 290px;
 }
 
 .endNode {
@@ -424,7 +423,7 @@ onMounted(() => {
 }
 
 .endNode .stop-content {
-  top: 200px;
+  top: 225px;
 }
 
 .endNode .path-point {
@@ -501,6 +500,10 @@ onMounted(() => {
 
 .stop-node.pos-1 {
   left: var(--road-one-third-x);
+}
+
+.stop-node.pos-1 .stop-content {
+  top: 55px;
 }
 
 .stop-node.pos-2 {

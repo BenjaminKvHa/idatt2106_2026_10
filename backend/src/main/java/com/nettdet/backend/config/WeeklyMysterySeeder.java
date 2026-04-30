@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -34,16 +35,24 @@ public class WeeklyMysterySeeder implements ApplicationRunner {
 
     private final PupilClassroomMembershipRepository pupilClassroomMembershipRepository;
     private final JdbcTemplate jdbcTemplate;
+    private final boolean enabled;
 
     public WeeklyMysterySeeder(PupilClassroomMembershipRepository pupilClassroomMembershipRepository,
-                               JdbcTemplate jdbcTemplate) {
+                               JdbcTemplate jdbcTemplate,
+                               @Value("${demo.legacy-weekly-mystery-seeder.enabled:false}") boolean enabled) {
         this.pupilClassroomMembershipRepository = pupilClassroomMembershipRepository;
         this.jdbcTemplate = jdbcTemplate;
+        this.enabled = enabled;
     }
 
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
+        if (!enabled) {
+            logger.info("Legacy weekly mystery Java seeding skipped (disabled)");
+            return;
+        }
+
         List<PupilClassroomMembership> confirmedMemberships =
                 pupilClassroomMembershipRepository.findAllByMembershipConfirmedByTeacherTrue();
         if (confirmedMemberships.isEmpty()) {

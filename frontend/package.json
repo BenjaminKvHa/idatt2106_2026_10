@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@lucide/vue": "^1.8.0",
+    "@pdanpdan/vue-keyboard-trap": "^1.2.0",
     "canvas-confetti": "^1.9.4",
     "vue": "^3.5.31",
     "vue-router": "^5.0.4"

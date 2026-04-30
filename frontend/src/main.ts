@@ -3,6 +3,7 @@ import './assets/styles/main.css'
 import { createApp, watch, nextTick } from 'vue'
 import App from './App.vue'
 import router from './router'
+import { VueKeyboardTrapDirectivePlugin } from '@pdanpdan/vue-keyboard-trap'
 import clickSoundFile from '@/assets/sounds/shared/click-sound.mp3'
 import backgroundMusicFile from '@/assets/sounds/shared/backgroundMusic.mp3'
 import { useAudio } from '@/composables/useAudio'
@@ -71,4 +72,5 @@ router.afterEach(() => {
 })
 
 app.use(router)
+app.use(VueKeyboardTrapDirectivePlugin, {})
 app.mount('#app')

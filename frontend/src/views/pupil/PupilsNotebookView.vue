@@ -141,7 +141,7 @@ async function goToPreviousChapter() {
   if (!hasPreviousChapter.value) return
   if (shouldStayOnCurrentChapter()) return
 
-  soundRef = playSound(pageFlipSound, 0.4)
+  soundRef = playSound(pageFlipSound, 1, 0.15)
 
   currentChapterIndex.value -= 1
   await loadNotebookForCurrentChapter()
@@ -151,7 +151,7 @@ async function goToNextChapter() {
   if (!hasNextChapter.value) return
   if (shouldStayOnCurrentChapter()) return
 
-  soundRef = playSound(pageFlipSound, 0.4)
+  soundRef = playSound(pageFlipSound, 1, 0.15)
 
   currentChapterIndex.value += 1
   await loadNotebookForCurrentChapter()
@@ -201,6 +201,7 @@ onBeforeUnmount(() => {
                 class="nav-button nav-button-back pupil-round-icon-button"
                 aria-label="Forrige kapittel"
                 @click="goToPreviousChapter"
+                data-no-click-sound
               >
                 <ChevronLeftIcon aria-hidden="true" />
                 <span class="sr-only">Backward</span>
@@ -231,6 +232,7 @@ onBeforeUnmount(() => {
                 class="nav-button nav-button-forward pupil-round-icon-button"
                 aria-label="Neste kapittel"
                 @click="goToNextChapter"
+                data-no-click-sound
               >
                 <span class="sr-only">Forward</span>
                 <ChevronRightIcon aria-hidden="true" />

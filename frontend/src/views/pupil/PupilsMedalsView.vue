@@ -41,7 +41,7 @@ function medalImageUrl(medal: PupilMedal) {
     <TopBar title="Medaljer" previous-page-url="/pupil" />
 
     <PinboardLayout heading-id="medals-title">
-      <div class="board-content">
+      <div class="board-content pupil-thin-scroll">
         <header class="medals-header">
           <img class="medals-icon" :src="medalsIcon" alt="" aria-hidden="true" />
           <h1 id="medals-title" class="sr-only">Medaljer</h1>
@@ -58,7 +58,7 @@ function medalImageUrl(medal: PupilMedal) {
           empty-text="Ingen medaljer funnet enda."
         />
 
-        <ul v-if="!loading && !errorMessage && medals.length" class="medal-grid pupil-thin-scroll">
+        <ul v-if="!loading && !errorMessage && medals.length" class="medal-grid">
           <li
             v-for="medal in medals"
             :key="medal.medalKey"
@@ -107,12 +107,16 @@ function medalImageUrl(medal: PupilMedal) {
 
 .board-content {
   position: absolute;
-  inset: 16% 10% 14% 10%;
+  inset: 16.3% 11.3% 13.2% 12%;
   display: flex;
   flex-direction: column;
   gap: clamp(0.1rem, 0.45vw, 0.35rem);
   min-height: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 0.45rem 1rem 0;
+  box-sizing: border-box;
 }
 
 .medals-header {
@@ -180,18 +184,16 @@ function medalImageUrl(medal: PupilMedal) {
 }
 
 .medal-grid {
-  flex: 1 1 auto;
-  min-height: 0;
+  flex: 0 0 auto;
   margin: 0 auto;
-  width: min(100%, 62rem);
+  width: min(100%, 68rem);
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(clamp(12.5rem, 18.5vw, 16rem), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, clamp(12.5rem, 18.5vw, 16rem)), 1fr));
   align-content: start;
   gap: clamp(0.65rem, 1.35vw, 1rem);
   list-style: none;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: 0 0.35rem 0.45rem 0;
+  overflow: visible;
+  padding: 0 0.35rem 0.45rem;
   margin-top: clamp(-0.45rem, -0.8vw, -0.2rem);
 }
 
@@ -298,7 +300,7 @@ function medalImageUrl(medal: PupilMedal) {
 
 @media (max-width: 900px) {
   .board-content {
-    inset: 16% 10% 14% 10%;
+    inset: 20% 10% 13% 12%;
   }
 
   .medal-grid {
@@ -308,18 +310,20 @@ function medalImageUrl(medal: PupilMedal) {
 
 @media (max-width: 560px) {
   .board-content {
-    inset: 8.75rem 3.25rem 6.5rem 3.25rem;
+    inset: 16% 7% 10% 9%;
+    padding: 0 0.25rem 0.75rem 0;
   }
 
   .medals-header {
-    justify-content: flex-start;
-    flex-wrap: wrap;
-    gap: 0.25rem;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0;
+    min-height: auto;
   }
 
   .medals-icon {
-    width: 7.25rem;
-    height: 7.25rem;
+    width: clamp(4.5rem, 22vw, 7rem);
+    height: clamp(4.5rem, 22vw, 7rem);
   }
 
   .medal-progress {
@@ -330,8 +334,9 @@ function medalImageUrl(medal: PupilMedal) {
   }
 
   .medal-grid {
-    grid-template-columns: 1fr;
-    width: 100%;
+    grid-template-columns: minmax(0, 1fr);
+    width: min(100%, 16rem);
+    padding-inline: 0.15rem;
   }
 }
 </style>

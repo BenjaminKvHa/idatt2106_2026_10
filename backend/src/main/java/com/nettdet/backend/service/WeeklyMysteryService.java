@@ -27,6 +27,21 @@ import com.nettdet.backend.security.JwtUserPrincipal;
 
 import jakarta.persistence.EntityNotFoundException;
 
+/**
+ * Application service for the "Weekly Mystery" classroom feature.
+ * <p>
+ * The flow is moderation-style: pupils submit an image with a comment, the submission is
+ * stored as <em>pending</em>, and a teacher must explicitly accept or decline it. While
+ * pending, the underlying {@link FileObject} is uploaded with a restricted access level by
+ * {@link FileObjectAccessControlService}; on acceptance, the file's access is widened to
+ * {@link ClassroomAccess#ONLY_CLASS} so other pupils in the classroom can see it. On
+ * rejection, both the {@link WeeklyMystery} row and its file object are deleted.
+ * <p>
+ * Pupil-side methods require a teacher-confirmed classroom membership; teacher-side methods
+ * require the {@code TEACHER} role and a teacher↔classroom link. Submissions trigger a
+ * notification to the teachers via {@link NotificationService} so the moderation queue
+ * surfaces the new pending entry.
+ */
 @Service
 public class WeeklyMysteryService {
 
@@ -39,6 +54,19 @@ public class WeeklyMysteryService {
     private final FileObjectAccessControlService fileObjectAccessControlService;
     private final NotificationService notificationService;
 
+    /**
+     * Constructs a {@code WeeklyMysteryService} with all collaborators required to persist
+     * submissions, manage their files, authorise teacher actions, and emit notifications.
+     *
+     * @param weeklyMysteryRepository          repository for the {@code weekly_mystery} table
+     * @param classroomRepository              repository used to validate classroom existence
+     * @param membershipRepository             repository used to resolve confirmed pupil memberships
+     * @param teacherBridgeRepository          repository used to verify teacher↔classroom ownership
+     * @param fileObjectRepository             repository used to widen file access on acceptance
+     * @param fileObjectService                low-level service used to delete files on rejection
+     * @param fileObjectAccessControlService   service used to upload pending submission files
+     * @param notificationService              service used to notify teachers of new submissions
+     */
     public WeeklyMysteryService(WeeklyMysteryRepository weeklyMysteryRepository,
                                 ClassroomRepository classroomRepository,
                                 PupilClassroomMembershipRepository membershipRepository,
@@ -57,6 +85,21 @@ public class WeeklyMysteryService {
         this.notificationService = notificationService;
     }
 
+    /**
+     * Submits a new pending Weekly Mystery on behalf of the authenticated pupil.
+     * <p>
+     * Uploads the file via {@link FileObjectAccessControlService#uploadWeeklyMysteryFile}, persists
+     * an unapproved {@link WeeklyMystery} row, and emits a teacher notification.
+     *
+     * @param classroomCode the classroom the submission belongs to
+     * @param file          the image file being submitted
+     * @param comment       the pupil's accompanying comment; must not be blank
+     * @param principal     the authenticated pupil; must hold the {@code PUPIL} role and a confirmed
+     *                      membership in {@code classroomCode}
+     * @return the created submission projected as a {@link CreateWeeklyMysteryResponse}
+     * @throws IllegalArgumentException if {@code classroomCode} or {@code comment} is blank
+     * @throws AccessDeniedException    if the principal lacks a confirmed membership
+     */
     @Transactional
     public CreateWeeklyMysteryResponse submitMystery(String classroomCode,
                                                      MultipartFile file,
@@ -88,6 +131,16 @@ public class WeeklyMysteryService {
         return toCreateResponse(savedMystery);
     }
 
+    /**
+     * Returns the classroom's accepted Weekly Mysteries for pupils, ordered by approval time
+     * (newest first), with creation time as a tiebreaker.
+     *
+     * @param classroomCode the classroom to read from
+     * @param principal     the authenticated pupil; must have a confirmed membership in the classroom
+     * @return the list of approved submissions
+     * @throws AccessDeniedException    if the principal lacks a confirmed membership
+     * @throws IllegalArgumentException if {@code classroomCode} is blank
+     */
     @Transactional(readOnly = true)
     public List<PupilWeeklyMysteryResponse> getApprovedMysteries(String classroomCode,
                                                                  JwtUserPrincipal principal) {
@@ -102,6 +155,17 @@ public class WeeklyMysteryService {
                 .toList();
     }
 
+    /**
+     * Returns the classroom's pending (unapproved) Weekly Mysteries for the moderating teacher,
+     * newest first.
+     *
+     * @param classroomCode the classroom to read from
+     * @param principal     the authenticated teacher; must be linked to the classroom
+     * @return the moderation queue of pending submissions
+     * @throws AccessDeniedException    if the principal is not a teacher of the classroom
+     * @throws IllegalArgumentException if {@code classroomCode} is blank
+     * @throws EntityNotFoundException  if the classroom does not exist
+     */
     @Transactional(readOnly = true)
     public List<TeacherPendingWeeklyMysteryResponse> getPendingMysteries(String classroomCode,
                                                                          JwtUserPrincipal principal) {
@@ -115,6 +179,20 @@ public class WeeklyMysteryService {
                 .toList();
     }
 
+    /**
+     * Returns the classroom's accepted Weekly Mysteries for the teacher view, ordered by
+     * approval time (newest first), with creation time as a tiebreaker.
+     * <p>
+     * Differs from {@link #getApprovedMysteries(String, JwtUserPrincipal)} in that the teacher
+     * projection includes the submitting pupil's name.
+     *
+     * @param classroomCode the classroom to read from
+     * @param principal     the authenticated teacher; must be linked to the classroom
+     * @return the list of approved submissions in teacher form
+     * @throws AccessDeniedException    if the principal is not a teacher of the classroom
+     * @throws IllegalArgumentException if {@code classroomCode} is blank
+     * @throws EntityNotFoundException  if the classroom does not exist
+     */
     @Transactional(readOnly = true)
     public List<TeacherApprovedWeeklyMysteryResponse> getApprovedMysteriesForTeacher(String classroomCode,
                                                                                      JwtUserPrincipal principal) {
@@ -128,6 +206,20 @@ public class WeeklyMysteryService {
                 .toList();
     }
 
+    /**
+     * Accepts a pending Weekly Mystery, making it visible to the rest of the classroom.
+     * <p>
+     * Sets {@code approved = true}, fills in {@code approvedAt} if not already set, and widens
+     * the underlying file's access level to {@link ClassroomAccess#ONLY_CLASS}.
+     *
+     * @param classroomCode the classroom that owns the submission
+     * @param mysteryId     id of the submission to accept
+     * @param principal     the authenticated teacher; must be linked to the classroom
+     * @return the accepted submission projected as a {@link PupilWeeklyMysteryResponse}
+     * @throws AccessDeniedException    if the principal is not a teacher of the classroom
+     * @throws IllegalArgumentException if {@code classroomCode} or {@code mysteryId} is invalid
+     * @throws EntityNotFoundException  if the submission does not exist in the classroom
+     */
     @Transactional
     public PupilWeeklyMysteryResponse acceptMystery(String classroomCode,
                                                     Long mysteryId,
@@ -146,6 +238,19 @@ public class WeeklyMysteryService {
         return toPupilResponse(weeklyMysteryRepository.save(mystery));
     }
 
+    /**
+     * Rejects a pending Weekly Mystery and deletes both the submission and its underlying file.
+     * <p>
+     * The {@link WeeklyMystery} row is removed first (and the transaction flushed) so the
+     * subsequent {@link FileObjectService#delete} call has no foreign-key dependency.
+     *
+     * @param classroomCode the classroom that owns the submission
+     * @param mysteryId     id of the submission to reject
+     * @param principal     the authenticated teacher; must be linked to the classroom
+     * @throws AccessDeniedException    if the principal is not a teacher of the classroom
+     * @throws IllegalArgumentException if {@code classroomCode} or {@code mysteryId} is invalid
+     * @throws EntityNotFoundException  if the submission does not exist in the classroom
+     */
     @Transactional
     public void declineMystery(String classroomCode,
                                Long mysteryId,

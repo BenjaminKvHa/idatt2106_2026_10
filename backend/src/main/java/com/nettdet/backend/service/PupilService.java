@@ -21,6 +21,21 @@ import com.nettdet.backend.repository.PupilClassroomMembershipRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 
+/**
+ * Application service for pupil-side classroom membership operations.
+ * <p>
+ * A pupil's relationship to a classroom is modelled as a one-to-one
+ * {@link PupilClassroomMembership} row with a {@code membership_confirmed_by_teacher}
+ * flag — unconfirmed rows represent pending join requests. This service provides:
+ * <ul>
+ *     <li>read-only lookups of a pupil's membership and per-chapter progression;</li>
+ *     <li>creation of pending join requests (idempotent: an existing row is returned
+ *         instead of creating a duplicate);</li>
+ *     <li>updating the pupil's classroom-scoped username and avatar.</li>
+ * </ul>
+ * Authorisation is the caller's responsibility; this service does not inspect the security
+ * context. Avatar resolution is delegated to {@link AvatarService}.
+ */
 @Service
 public class PupilService {
 
@@ -31,6 +46,15 @@ public class PupilService {
     private final ClassroomRepository classroomRepository;
     private final AvatarService avatarService;
 
+    /**
+     * Constructs a {@code PupilService} with the dependencies required to read, create, and
+     * update pupil classroom memberships.
+     *
+     * @param pupilMembershipRepository repository for pupil↔classroom membership rows
+     * @param accountRepository         repository used to load the requesting pupil's account
+     * @param classroomRepository       repository used to resolve target classrooms
+     * @param avatarService             service used to look up or create the pupil's avatar
+     */
     public PupilService(PupilClassroomMembershipRepository pupilMembershipRepository,
                         AccountRepository accountRepository,
                         ClassroomRepository classroomRepository,
@@ -41,7 +65,15 @@ public class PupilService {
         this.avatarService = avatarService;
     }
 
-    // 1. method for retrieving a pupils information (email, username)
+    /**
+     * Returns the pupil's identity within a specific classroom (email, classroom-scoped
+     * username, etc.).
+     *
+     * @param email         the pupil's account email
+     * @param classroomCode the classroom in which the membership is scoped
+     * @return the membership projected as a {@link PupilResponse}
+     * @throws EntityNotFoundException if no membership row exists for the pair
+     */
     public PupilResponse getPupilInformation(String email, String classroomCode) {
         return pupilMembershipRepository
                .findByAccountEmailAndClassroomClassroomCode(email, classroomCode)
@@ -52,9 +84,15 @@ public class PupilService {
                });
     }
 
-    // 2. method for retrieving a pupils avatar
-
-    // 3. method for retrieving a pupils progression (per chapter)
+    /**
+     * Returns the pupil's per-chapter progression projected from the membership's chapter
+     * progression rows.
+     *
+     * @param email         the pupil's account email
+     * @param classroomCode the classroom in which the membership is scoped
+     * @return the membership projected as a {@link PupilProgressionResponse}
+     * @throws EntityNotFoundException if no membership row exists for the pair
+     */
     public PupilProgressionResponse getPupilProgressionPerChapter(String email, String classroomCode) {
         return pupilMembershipRepository
                .findByAccountEmailAndClassroomClassroomCode(email, classroomCode)
@@ -66,7 +104,15 @@ public class PupilService {
     }
 
 
-    // 4. method for checking up against database to confirm a pupils membership to the requested class
+    /**
+     * Reports whether the pupil has a teacher-confirmed membership in the requested classroom.
+     * <p>
+     * Returns {@code false} both when no membership row exists and when one exists but is still
+     * pending teacher confirmation.
+     *
+     * @param pupilRequest carries the email + classroom code to check
+     * @return {@code true} iff a confirmed membership row exists
+     */
     public boolean checkPupilMembershipForClass(PupilRequest pupilRequest) {
         return pupilMembershipRepository
                .findByAccountEmailAndClassroomClassroomCode(pupilRequest.email(), pupilRequest.classroomCode())
@@ -74,7 +120,17 @@ public class PupilService {
                .orElse(false);
     }
 
-    // 5. method for requesting to join a classroom
+    /**
+     * Submits a join request for the pupil to a classroom, creating an unconfirmed
+     * {@link PupilClassroomMembership} row.
+     * <p>
+     * The operation is idempotent: if a membership row already exists for the pair (confirmed
+     * or pending), the existing row is returned instead of creating a duplicate.
+     *
+     * @param pupilRequest carries the pupil's email and the target classroom code
+     * @return the (existing or newly created) membership as a {@link PupilResponse}
+     * @throws EntityNotFoundException if the account or the classroom does not exist
+     */
     @Transactional
     public PupilResponse requestToJoinClassroom(PupilRequest pupilRequest) {
         Account account = accountRepository.findById(pupilRequest.email())
@@ -106,6 +162,20 @@ public class PupilService {
         return PupilResponse.from(saved);
     }
 
+    /**
+     * Updates the classroom-scoped username and avatar on the pupil's membership.
+     * <p>
+     * The supplied avatar identifier is resolved (or created) by {@link AvatarService} and
+     * the resulting {@link FileObject} is attached to the membership.
+     *
+     * @param email         the pupil's account email
+     * @param classroomCode the classroom in which the membership is scoped
+     * @param username      the new classroom-scoped display name; must not be blank
+     * @param avatar        the avatar identifier passed through to {@link AvatarService}
+     * @return the persisted membership projected as a {@link PupilClassroomMembershipResponse}
+     * @throws IllegalArgumentException if {@code username} is null or blank
+     * @throws EntityNotFoundException  if no membership row exists for the pair
+     */
     @Transactional
     public PupilClassroomMembershipResponse updateClassroomMembership(
             String email,

@@ -12,6 +12,19 @@ import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.License;
 
+/**
+ * {@code OpenApiConfig} provides the configuration for OpenAPI 3.0 / Swagger documentation.
+ * <p>
+ * This class defines the global API metadata, contact information, and security schemes
+ * required to interact with the backend services. Specifically, it configures a JWT-based
+ * Bearer authentication scheme, allowing developers to test protected endpoints directly
+ * through the Swagger UI.
+ * </p>
+ * <p>
+ * The documentation covers a wide range of domains including authentication, classroom
+ * management, pupil progress, gamification (leaderboards, medals), and asset management.
+ * </p>
+ */
 @Configuration
 @OpenAPIDefinition(
         info = @Info(
@@ -27,6 +40,15 @@ import io.swagger.v3.oas.models.info.License;
         in = SecuritySchemeIn.HEADER)
 public class OpenApiConfig {
 
+    /**
+     * Creates and configures the {@link OpenAPI} bean for the application.
+     * <p>
+     * This bean supplements the {@code @OpenAPIDefinition} with programmatic configuration,
+     * including license details and a centralized title and version.
+     * </p>
+     *
+     * @return a fully configured {@code OpenAPI} instance
+     */
     @Bean
     public OpenAPI nettdetOpenApi() {
         return new OpenAPI()

@@ -13,6 +13,15 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
+/**
+ * Represents a pupil's submission for the "Weekly Mystery" challenge.
+ * 
+ * <p>A WeeklyMystery entry links a pupil's uploaded {@link FileObject} to a {@link Classroom}
+ * and includes their reasoning or {@code comment}. Submissions are reviewed by teachers,
+ * with approval status and timestamps tracked via {@code approved} and {@code approvedAt}.
+ * 
+ * <p>Inherits audit information from {@link CreatedAtEntity}.
+ */
 @Entity
 @Table(name = "weekly_mystery")
 public class WeeklyMystery extends CreatedAtEntity {

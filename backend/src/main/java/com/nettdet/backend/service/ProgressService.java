@@ -16,18 +16,50 @@ import com.nettdet.backend.repository.ChapterRepository;
 import com.nettdet.backend.repository.PupilChapterBridgeProgressionRepository;
 import com.nettdet.backend.security.JwtUserPrincipal;
 
+/**
+ * Read model for the authenticated pupil's chapter map.
+ * <p>
+ * Combines the global chapter catalogue (ordered by id) with the pupil's progression rows to
+ * produce one entry per chapter, each carrying the pupil's current highscore and an
+ * {@code unlocked} flag. The unlock rule is intentionally simple: the first chapter is always
+ * unlocked, and every subsequent chapter is unlocked iff the previous chapter has at least one
+ * successful run on the pupil's progression row. Chapters the pupil has never started count as
+ * zero successful runs and zero highscore.
+ * <p>
+ * This service is read-only and never creates progression rows; rows are materialised by
+ * gameplay services such as {@link TipService} and {@link NotebookService}.
+ */
 @Service
 public class ProgressService {
 
     private final ChapterRepository chapterRepository;
     private final PupilChapterBridgeProgressionRepository progressionRepository;
 
+    /**
+     * Constructs a {@code ProgressService} with the repositories needed to assemble the
+     * per-chapter progression view.
+     *
+     * @param chapterRepository      repository for the global chapter catalogue
+     * @param progressionRepository  repository for the pupil's per-chapter progression rows
+     */
     public ProgressService(ChapterRepository chapterRepository,
                            PupilChapterBridgeProgressionRepository progressionRepository) {
         this.chapterRepository = chapterRepository;
         this.progressionRepository = progressionRepository;
     }
 
+    /**
+     * Returns the authenticated pupil's progression for every chapter, in chapter-id order.
+     * <p>
+     * Each entry carries the pupil's highscore (0 if no progression row exists) and an
+     * {@code unlocked} flag derived sequentially: chapter <em>n</em> is unlocked iff
+     * <em>n</em> is the first chapter or the pupil has at least one successful run on
+     * chapter <em>n-1</em>.
+     *
+     * @param principal the authenticated pupil; must hold the {@code PUPIL} role
+     * @return one progression entry per chapter, ordered by chapter id ascending
+     * @throws AccessDeniedException if the principal is not a pupil
+     */
     @Transactional(readOnly = true)
     public List<PupilChapterProgressResponse> getPupilProgress(JwtUserPrincipal principal) {
         verifyPupilPrincipal(principal);

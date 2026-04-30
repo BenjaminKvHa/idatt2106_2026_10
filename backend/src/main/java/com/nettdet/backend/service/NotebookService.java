@@ -19,6 +19,28 @@ import com.nettdet.backend.repository.PupilChapterBridgeProgressionRepository;
 import com.nettdet.backend.repository.PupilClassroomMembershipRepository;
 import com.nettdet.backend.security.JwtUserPrincipal;
 
+/**
+ * Application service for the per-pupil, per-chapter notebook.
+ * <p>
+ * Each pupil has one notebook per chapter, stored as a JSON document on the
+ * {@code pupil_chapter_bridge_progression} row. The notebook holds two things: the tips the
+ * pupil has unlocked while playing the chapter, and the pupil's own free-form notes.
+ * <p>
+ * This service exposes three operations:
+ * <ul>
+ *     <li><b>Pupil read</b> – the owning pupil retrieves their notebook for a chapter.</li>
+ *     <li><b>Pupil update</b> – the owning pupil overwrites their {@code ownNotes} (tips are
+ *         not editable from this endpoint; they are added by {@link TipService}).</li>
+ *     <li><b>Teacher read</b> – a teacher inspects the notebook of one of their confirmed
+ *         pupils, scoped to a classroom they teach.</li>
+ * </ul>
+ * Progression rows and notebook JSON are lazily initialised on first access, so reading a
+ * chapter the pupil has never played still returns a well-formed empty notebook.
+ * <p>
+ * Authorisation is enforced in this layer, not just by Spring Security: pupils must hold the
+ * {@code PUPIL} role and a teacher-confirmed classroom membership; teachers must hold the
+ * {@code TEACHER} role and be linked to the requested classroom.
+ */
 @Service
 public class NotebookService {
 
@@ -28,6 +50,18 @@ public class NotebookService {
     private final AccountClassroomBridgeTeacherRepository teacherBridgeRepository;
     private final NotebookJsonService notebookJsonService;
 
+    /**
+     * Constructs a {@code NotebookService} with all collaborators required to resolve, persist
+     * and authorise notebook access.
+     *
+     * @param progressionRepository repository for the per-pupil per-chapter progression rows
+     *                              that hold the notebook JSON column
+     * @param membershipRepository  repository used to resolve the requesting pupil's confirmed
+     *                              classroom membership
+     * @param chapterRepository     repository used to load the requested chapter
+     * @param teacherBridgeRepository repository used to verify teacher↔classroom ownership
+     * @param notebookJsonService   marshalling layer for notebook JSON parsing/serialising
+     */
     public NotebookService(PupilChapterBridgeProgressionRepository progressionRepository,
                            PupilClassroomMembershipRepository membershipRepository,
                            ChapterRepository chapterRepository,
@@ -40,6 +74,18 @@ public class NotebookService {
         this.notebookJsonService = notebookJsonService;
     }
 
+    /**
+     * Returns the authenticated pupil's notebook for the given chapter.
+     * <p>
+     * If the pupil has no progression row for this chapter yet, one is created on the fly
+     * with default values and an empty notebook so the response is always well-formed.
+     *
+     * @param chapterId the chapter whose notebook is being read
+     * @param principal the authenticated pupil; must hold the {@code PUPIL} role
+     * @return the chapter's tips and own-notes for this pupil
+     * @throws AccessDeniedException if the principal is not a pupil with a confirmed membership
+     * @throws EntityNotFoundException if the chapter does not exist
+     */
     @Transactional
     public ChapterNotebookResponse getPupilNotebook(Long chapterId, JwtUserPrincipal principal) {
         verifyPupilPrincipal(principal);
@@ -49,6 +95,20 @@ public class NotebookService {
         return toResponse(chapter, progression);
     }
 
+    /**
+     * Overwrites the {@code ownNotes} portion of the authenticated pupil's notebook for the
+     * given chapter. The unlocked tip list is preserved verbatim.
+     * <p>
+     * A {@code null} {@code ownNotes} field on the request is normalised to an empty string,
+     * so this endpoint cannot be used to "clear" tips — only to edit free-form notes.
+     *
+     * @param chapterId the chapter whose notebook is being mutated
+     * @param request   carries the new {@code ownNotes} value
+     * @param principal the authenticated pupil; must hold the {@code PUPIL} role
+     * @return the persisted notebook after the update
+     * @throws AccessDeniedException if the principal is not a pupil with a confirmed membership
+     * @throws EntityNotFoundException if the chapter does not exist
+     */
     @Transactional
     public ChapterNotebookResponse updatePupilNotebook(Long chapterId,
                                                        UpdateChapterNotebookRequest request,
@@ -65,6 +125,21 @@ public class NotebookService {
         return toResponse(chapter, progressionRepository.save(progression));
     }
 
+    /**
+     * Returns the notebook of a specific pupil in a classroom, viewed by an authenticated teacher.
+     * <p>
+     * The teacher must be linked to {@code classroomCode}, and the pupil's membership in that
+     * classroom must be teacher-confirmed. If no progression row exists yet for that pupil and
+     * chapter, one is created on the fly with default values.
+     *
+     * @param classroomCode the classroom code that scopes the lookup
+     * @param pupilEmail    the email of the pupil whose notebook is requested
+     * @param chapterId     the chapter whose notebook is being read
+     * @param principal     the authenticated teacher; must hold the {@code TEACHER} role
+     * @return the pupil's notebook for the chapter
+     * @throws AccessDeniedException if the principal is not a teacher of the classroom
+     * @throws EntityNotFoundException if the chapter or the confirmed pupil membership is missing
+     */
     @Transactional
     public ChapterNotebookResponse getTeacherNotebook(String classroomCode,
                                                       String pupilEmail,

@@ -20,6 +20,27 @@ import com.nettdet.backend.security.JwtUserPrincipal;
 
 import jakarta.persistence.EntityNotFoundException;
 
+/**
+ * Application service that hands out chapter tips to pupils and pins them to the pupil's
+ * notebook.
+ * <p>
+ * Each chapter has a static catalogue of tips defined in {@link ChapterTipsCatalog}. The
+ * dispensing rules implemented here are:
+ * <ul>
+ *     <li>If the chapter has no configured tips, the pupil receives a "no tip" response with
+ *         the {@code allTipsReceived} flag set to true.</li>
+ *     <li>If the pupil has already completed the chapter at least once
+ *         ({@code successfulRuns >= 1}), they have unlocked the entire catalogue: every tip is
+ *         force-merged into their notebook (idempotently) and a random tip from the catalogue
+ *         is returned.</li>
+ *     <li>Otherwise, the first catalogue tip not yet present in the notebook is added and
+ *         returned. If the notebook already contains every catalogue tip, a random tip is
+ *         returned without further mutation.</li>
+ * </ul>
+ * Progression rows and notebook JSON are lazily initialised on first access. The
+ * {@code changed} flag in the response distinguishes "we just gave you a new tip" from
+ * "you already had this one" so the UI can surface a notification only on novel additions.
+ */
 @Service
 public class TipService {
 
@@ -29,6 +50,16 @@ public class TipService {
     private final ChapterTipsCatalog tipsCatalog;
     private final NotebookJsonService notebookJsonService;
 
+    /**
+     * Constructs a {@code TipService} with the dependencies required to resolve the pupil's
+     * progression, mutate their notebook, and read the configured tip catalogue.
+     *
+     * @param progressionRepository repository for the per-pupil per-chapter progression rows
+     * @param membershipRepository  repository used to resolve the pupil's confirmed membership
+     * @param chapterRepository     repository used to load the requested chapter
+     * @param tipsCatalog           static catalogue of tips per chapter
+     * @param notebookJsonService   marshalling layer for notebook JSON parsing/serialising
+     */
     public TipService(PupilChapterBridgeProgressionRepository progressionRepository,
                       PupilClassroomMembershipRepository membershipRepository,
                       ChapterRepository chapterRepository,
@@ -41,6 +72,20 @@ public class TipService {
         this.notebookJsonService = notebookJsonService;
     }
 
+    /**
+     * Returns a tip for the authenticated pupil on the given chapter, applying the dispensing
+     * rules described on the class-level javadoc.
+     * <p>
+     * Has the side effect of inserting a freshly delivered tip into the pupil's notebook (and,
+     * for completed chapters, force-merging the entire catalogue).
+     *
+     * @param chapterId the chapter for which a tip is requested
+     * @param principal the authenticated pupil; must hold the {@code PUPIL} role
+     * @return the tip itself plus flags for {@code changed} (was this tip newly added?) and
+     *         {@code allTipsReceived} (does the pupil now have every configured tip?)
+     * @throws AccessDeniedException   if the principal is not a pupil with a confirmed membership
+     * @throws EntityNotFoundException if the chapter does not exist
+     */
     @Transactional
     public ChapterTipResponse getPupilTip(Long chapterId, JwtUserPrincipal principal) {
         verifyPupilPrincipal(principal);
@@ -77,6 +122,17 @@ public class TipService {
         return new ChapterTipResponse(chapter.getId(), tip, result.changed(), allTipsReceived);
     }
 
+    /**
+     * Force-merges the entire configured tip catalogue for the progression's chapter into the
+     * progression's notebook JSON, in memory.
+     * <p>
+     * Called when a pupil has just completed a chapter so the notebook reflects every tip even
+     * if they were never explicitly requested. Existing tips are preserved (no duplicates), and
+     * the progression entity is updated in place — the caller is responsible for persisting it.
+     * Silently no-ops on null/empty progressions or chapters with no configured tips.
+     *
+     * @param progression the progression whose notebook should be filled in; may be {@code null}
+     */
     public void addAllConfiguredTipsToNotebook(PupilChapterBridgeProgression progression) {
         if (progression == null || progression.getChapter() == null || progression.getChapter().getId() == null) {
             return;

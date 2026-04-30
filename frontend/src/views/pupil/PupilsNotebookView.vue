@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
 import { ChevronLeftIcon, ChevronRightIcon } from '@lucide/vue'
 import bookImage from '@/assets/book.png'
 import woodBackground from '@/assets/backgrounds/woodBackground.png'
 import TopBar from '@/components/pupil/TopBar.vue'
 import { get, put } from '@/utils/apiUtils'
+import pageFlipSound from '@/assets/sounds/shared/page-flip-sound.mp3'
+import { useAudio } from '@/composables/useAudio'
+
 
 type Chapter = {
   chapterId: number
@@ -21,6 +24,7 @@ function getNotebookEndpoint(chapterId: number): string {
   return `/api/pupil/chapters/${chapterId}/notebook`
 }
 
+const { playSound, stopSound } = useAudio()
 const chapters = ref<Chapter[]>([])
 const currentChapterIndex = ref(0)
 const notebook = ref<NotebookResponse | null>(null)
@@ -49,6 +53,8 @@ const mockChapters: Chapter[] = [
   { chapterId: 2, name: 'Fotografen' },
   { chapterId: 3, name: 'Datasenteret' },
 ]
+
+let soundRef: HTMLAudioElement | null = null
 
 async function mockFetchChapters(): Promise<Chapter[]> {
   await new Promise((resolve) => setTimeout(resolve, 250))
@@ -135,6 +141,8 @@ async function goToPreviousChapter() {
   if (!hasPreviousChapter.value) return
   if (shouldStayOnCurrentChapter()) return
 
+  soundRef = playSound(pageFlipSound, 0.4)
+
   currentChapterIndex.value -= 1
   await loadNotebookForCurrentChapter()
 }
@@ -143,6 +151,8 @@ async function goToNextChapter() {
   if (!hasNextChapter.value) return
   if (shouldStayOnCurrentChapter()) return
 
+  soundRef = playSound(pageFlipSound, 0.4)
+
   currentChapterIndex.value += 1
   await loadNotebookForCurrentChapter()
 }
@@ -150,6 +160,15 @@ async function goToNextChapter() {
 onMounted(async () => {
   await loadChapters()
 })
+
+onBeforeUnmount(() => {
+  if (soundRef) {
+    stopSound(soundRef)
+    soundRef = null
+  }
+})
+
+
 </script>
 
 <template>

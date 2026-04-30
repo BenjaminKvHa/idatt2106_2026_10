@@ -4,7 +4,8 @@ import { useRouter } from 'vue-router'
 
 import type { BackendAccountRole } from '@/utils/apiUtils'
 import { signupWithCredentials } from '@/utils/apiUtils'
-import { decodeJwtPayload, getDefaultRouteForRole } from '@/utils/jwtUtils'
+import { decodeJwtPayload } from '@/utils/jwtUtils'
+import { resolvePostAuthRoute } from '@/utils/authRedirect'
 
 type RoleOption = 'Lærer' | 'Elev'
 
@@ -75,7 +76,7 @@ const handleRegister = async (): Promise<void> => {
     confirmPassword.value = ''
     role.value = 'Lærer'
 
-    await router.push(getDefaultRouteForRole(payload?.role, payload?.email))
+    await router.push(await resolvePostAuthRoute(payload?.role))
   } catch (caughtError) {
     error.value = caughtError instanceof Error ? caughtError.message : 'Kunne ikke opprette bruker.'
   } finally {
@@ -200,7 +201,7 @@ const handleRegister = async (): Promise<void> => {
           <span aria-hidden="true">⚠ </span>{{ error }}
         </p>
       </div>
-
+      
       <div class="feide-card-footer">
         <span>Har du allerede en bruker?</span>
         <router-link to="/sign-in">Logg inn her</router-link>
@@ -210,74 +211,10 @@ const handleRegister = async (): Promise<void> => {
 </template>
 
 <style scoped>
+@import '@/assets/styles/feideStyle.css';
 * {
   box-sizing: border-box;
 }
-
-.signup-page,
-.page {
-  position: relative;
-  overflow: hidden;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 32px 16px;
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-.signup-page::before,
-.page::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: url('@/assets/backgrounds/welcomeBackground.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  filter: blur(8px);
-  transform: scale(1.04);
-  z-index: 0;
-}
-
-.signup-page::after,
-.page::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgb(239 211 175 / 35%);
-  z-index: 1;
-}
-
-.signup-card,
-.frame {
-  position: relative;
-  z-index: 2;
-}
-
-.signup-card {
-  width: 340px;
-  background: #ffffff;
-  border: 1px solid #666;
-  display: flex;
-  flex-direction: column;
-}
-
-.signup-body {
-  padding: 28px 34px 30px;
-  background: #ffffff;
-}
-
-.brand-logo {
-  height: 36px;
-  margin-bottom: 18px;
-}
-
-.header-text {
-  margin-bottom: 18px;
-}
-
-@import '@/assets/styles/feideStyle.css';
 
 h1 {
   margin: 0 0 8px;
@@ -285,10 +222,6 @@ h1 {
   font-weight: 600;
   color: #1f1f1f;
   font-family: Arial, Helvetica, sans-serif;
-}
-
-.header-text {
-  margin-bottom: 18px;
 }
 
 .subtitle {

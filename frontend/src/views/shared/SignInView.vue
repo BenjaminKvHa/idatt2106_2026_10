@@ -3,8 +3,8 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { loginWithCredentials } from '@/utils/apiUtils'
-import { clearMeCache } from '@/router'
 import { decodeJwtPayload } from '@/utils/jwtUtils'
+import { resolvePostAuthRoute } from '@/utils/authRedirect'
 
 const router = useRouter()
 const step = ref<number>(1)
@@ -40,8 +40,7 @@ const login = async (): Promise<void> => {
 
     const payload = decodeJwtPayload(accessToken)
     submitted.value = true
-    clearMeCache()
-    await router.push(payload?.role === "PUPIL" ? "/pupil" : "/join-classroom/enter-classroom-code")
+    await router.push(await resolvePostAuthRoute(payload?.role))
   } catch (caughtError) {
     error.value = caughtError instanceof Error ? caughtError.message : 'Kunne ikke logge inn.'
   } finally {
@@ -173,67 +172,11 @@ const goToSignup = (): void => {
 </template>
 
 <style scoped>
+@import '@/assets/styles/feideStyle.css';
 * {
   box-sizing: border-box;
 }
 
-.signup-page,
-.page {
-  position: relative;
-  overflow: hidden;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 32px 16px;
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-.signup-page::before,
-.page::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: url('@/assets/backgrounds/welcomeBackground.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  filter: blur(8px);
-  transform: scale(1.04);
-  z-index: 0;
-}
-
-.signup-page::after,
-.page::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgb(239 211 175 / 35%);
-  z-index: 1;
-}
-
-.signup-card,
-.frame {
-  position: relative;
-  z-index: 2;
-}
-
-.frame,
-.card-wrapper {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-}
-
-.card {
-  background: #ffffff;
-  border: none;
-  box-shadow: 0 0 0 3px #dfe6ef inset;
-}
-
-@import '@/assets/styles/feideStyle.css';
-
-.feide-card,
 .landing-card {
   width: 390px;
   overflow: hidden;

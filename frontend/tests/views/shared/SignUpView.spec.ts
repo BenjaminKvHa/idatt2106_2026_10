@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import SignUpView from '@/views/shared/SignUpView.vue'
 import { signupWithCredentials } from '@/utils/apiUtils'
+import { resolvePostAuthRoute } from '@/utils/authRedirect'
 
 const routerPush = vi.fn()
 
@@ -12,7 +13,10 @@ vi.mock('@/utils/apiUtils', () => ({
 
 vi.mock('@/utils/jwtUtils', () => ({
   decodeJwtPayload: vi.fn(() => ({ role: 'TEACHER', email: 'teacher@example.com' })),
-  getDefaultRouteForRole: vi.fn(() => '/ignored-after-signup-route'),
+}))
+
+vi.mock('@/utils/authRedirect', () => ({
+  resolvePostAuthRoute: vi.fn(() => Promise.resolve('/resolved-after-signup-route')),
 }))
 
 vi.mock('vue-router', () => ({
@@ -26,6 +30,7 @@ vi.mock('vue-router', () => ({
 }))
 
 const mockedSignupWithCredentials = vi.mocked(signupWithCredentials)
+const mockedResolvePostAuthRoute = vi.mocked(resolvePostAuthRoute)
 
 function mountSignUpView() {
   return mount(SignUpView, {
@@ -66,6 +71,8 @@ function deferred<T>() {
 describe('SignUpView', () => {
   beforeEach(() => {
     mockedSignupWithCredentials.mockReset()
+    mockedResolvePostAuthRoute.mockReset()
+    mockedResolvePostAuthRoute.mockResolvedValue('/resolved-after-signup-route')
     routerPush.mockReset()
   })
 
@@ -203,14 +210,15 @@ describe('SignUpView', () => {
     expect((wrapper.find('#reg-email').element as HTMLInputElement).value).toBe('ola@example.com')
   })
 
-  it('navigates to default route after successful signup', async () => {
+  it('navigates to resolved post-auth route after successful signup', async () => {
     mockedSignupWithCredentials.mockResolvedValue('token')
     const wrapper = await fillValidSignupForm()
 
     await wrapper.find('form').trigger('submit')
     await flushPromises()
 
-    expect(routerPush).toHaveBeenCalledWith('/ignored-after-signup-route')
+    expect(mockedResolvePostAuthRoute).toHaveBeenCalledWith('TEACHER')
+    expect(routerPush).toHaveBeenCalledWith('/resolved-after-signup-route')
   })
 
   it('marks password requirements as met while typing', async () => {

@@ -1,35 +1,25 @@
 <script setup lang="ts">
-import {useRoute, useRouter} from 'vue-router'
+import { useRouter } from 'vue-router'
 import { onMounted, onUnmounted } from 'vue'
-import { get } from '@/utils/apiUtils'
+import { clearMeCache, fetchMeCached } from '@/utils/authRedirect'
 import bgImg from '@/assets/backgrounds/welcomeBackground.png'
 
 const router = useRouter()
-const route = useRoute()
-
-const classroomCode =
-  typeof route.query.classroomCode === 'string'
-    ? route.query.classroomCode
-    : ''
 
 let interval: number | null = null
 
 async function checkStatus() {
-  if (!classroomCode) return
+  const profile = await fetchMeCached({ force: true })
 
-  try {
-    const data = await get<{
-      membershipConfirmedByTeacher: boolean
-    }>(`/api/pupil/classrooms/${classroomCode}`)
+  if (!profile?.classroomCode) {
+    clearMeCache()
+    await router.push('/join-classroom/enter-classroom-code')
+    return
+  }
 
-    if (data.membershipConfirmedByTeacher) {
-      router.push({
-        path: '/join-classroom/welcome-guide',
-        query: { classroomCode },
-      })
-    }
-  } catch (e) {
-    console.error('Kunne ikke sjekke status', e)
+  if (profile.membershipConfirmed) {
+    clearMeCache()
+    await router.push('/pupil')
   }
 }
 
@@ -43,7 +33,8 @@ onUnmounted(() => {
 })
 
 function goBack(): void {
-  router.push('/join-classroom/enter-classroom-code');
+  clearMeCache()
+  router.push('/join-classroom/enter-classroom-code')
 }
 </script>
 

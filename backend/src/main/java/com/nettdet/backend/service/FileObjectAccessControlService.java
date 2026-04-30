@@ -21,6 +21,13 @@ import com.nettdet.backend.security.JwtUserPrincipal;
 
 import jakarta.persistence.EntityNotFoundException;
 
+/**
+ * Service class responsible for controlling access to {@link FileObject} entities.
+ * 
+ * <p>Enforces classroom-level access policies for uploading, reading, and deleting files.
+ * Access levels (e.g., PUBLIC, ONLY_TEACHERS_IN_CLASS) are evaluated against the 
+ * principal's role and classroom membership.
+ */
 @Service
 public class FileObjectAccessControlService {
 
@@ -46,6 +53,20 @@ public class FileObjectAccessControlService {
         this.pupilMembershipRepository = pupilMembershipRepository;
     }
 
+    /**
+     * Uploads a file with a specific access level and optional classroom context.
+     * 
+     * <p>Verifies that the principal has the necessary permissions to upload 
+     * to the target classroom at the specified access level.
+     *
+     * @param file          the multipart file to upload
+     * @param classroomCode the optional classroom code (required if access is not PUBLIC)
+     * @param accessLevel   the desired {@link ClassroomAccess} level
+     * @param principal     the authenticated user principal
+     * @return the created {@link FileObject}
+     * @throws AccessDeniedException    if the principal lacks permission
+     * @throws IllegalArgumentException if the file is empty or parameters are invalid
+     */
     @Transactional
     public FileObject upload(
             MultipartFile file,
@@ -94,6 +115,19 @@ public class FileObjectAccessControlService {
         }
     }
 
+    /**
+     * Specialized upload for weekly mystery task files.
+     * 
+     * <p>Only pupils with a confirmed membership in the target classroom can upload 
+     * these files. The access level is forced to {@code ONLY_TEACHERS_IN_CLASS}.
+     *
+     * @param file          the multipart file to upload
+     * @param classroomCode the code of the target classroom
+     * @param principal     the authenticated pupil principal
+     * @return the created {@link FileObject}
+     * @throws AccessDeniedException    if the principal is not a confirmed pupil in the classroom
+     * @throws IllegalArgumentException if parameters are invalid
+     */
     @Transactional
     public FileObject uploadWeeklyMysteryFile(
             MultipartFile file,
@@ -138,6 +172,15 @@ public class FileObjectAccessControlService {
         }
     }
 
+    /**
+     * Reads a file object's metadata and content if the principal has access.
+     * 
+     * @param fileObjectId the ID of the file object
+     * @param principal    the authenticated user principal
+     * @return the {@link FileObjectService.StoredFile} including bytes and metadata
+     * @throws AccessDeniedException   if access is denied
+     * @throws EntityNotFoundException if the file object is not found
+     */
     @Transactional(readOnly = true)
     public FileObjectService.StoredFile read(Long fileObjectId, JwtUserPrincipal principal) {
         FileObject fileObject = fileObjectRepository.findById(fileObjectId)
@@ -150,6 +193,14 @@ public class FileObjectAccessControlService {
         return fileObjectService.read(fileObjectId);
     }
 
+    /**
+     * Deletes a file object if the principal is the uploader or an owner of the associated classroom.
+     * 
+     * @param fileObjectId the ID of the file object to delete
+     * @param principal    the authenticated user principal
+     * @throws AccessDeniedException   if the principal lacks deletion rights
+     * @throws EntityNotFoundException if the file object is not found
+     */
     @Transactional
     public void delete(Long fileObjectId, JwtUserPrincipal principal) {
         FileObject fileObject = fileObjectRepository.findById(fileObjectId)

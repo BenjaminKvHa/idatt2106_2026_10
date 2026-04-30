@@ -36,6 +36,21 @@ import com.nettdet.backend.repository.PupilClassroomMembershipRepository;
 import com.nettdet.backend.security.JwtUserPrincipal;
 import com.nettdet.backend.util.ClassroomCodeGenerator;
 
+/**
+ * Service class for managing classrooms and their memberships.
+ * 
+ * <p>Handles the entire lifecycle of a classroom, including:
+ * <ul>
+ *   <li>Creation and deletion of classrooms with unique code generation.</li>
+ *   <li>Management of teacher ownership and collaboration (inviting/leaving).</li>
+ *   <li>Pupil join requests and teacher approval workflows.</li>
+ *   <li>Management of pupil memberships, including kicking and updating usernames.</li>
+ *   <li>Retrieval of classroom details and member lists (teachers and pupils).</li>
+ * </ul>
+ * 
+ * <p>Security is enforced throughout by verifying the role and classroom 
+ * ownership of the acting principal.
+ */
 @Service
 public class ClassroomService {
 
@@ -62,6 +77,18 @@ public class ClassroomService {
         this.pupilXpService = pupilXpService;
     }
 
+    /**
+     * Creates a new classroom and assigns the acting teacher as its owner.
+     * 
+     * <p>Generates a unique classroom code and establishes a bridge between the teacher 
+     * and the new classroom. Retries code generation if a collision occurs.
+     *
+     * @param request   the classroom details (name, description)
+     * @param principal the authenticated teacher principal
+     * @return the created {@link ClassroomResponse}
+     * @throws AccessDeniedException if the principal is not a teacher
+     * @throws IllegalStateException if a unique code cannot be generated after multiple attempts
+     */
     @Transactional
     public ClassroomResponse createClassroom(CreateClassroomRequest request, JwtUserPrincipal principal) {
         verifyTeacherPrincipal(principal);
@@ -100,6 +127,14 @@ public class ClassroomService {
         throw new IllegalStateException("Unable to generate a unique classroom code");
     }
 
+    /**
+     * Validates if a classroom code exists in the system.
+     * 
+     * @param request   the request containing the classroom code
+     * @param principal the authenticated pupil principal
+     * @return a {@link ValidateClassroomCodeResponse} indicating if the code is valid
+     * @throws AccessDeniedException if the principal is not a pupil
+     */
     @Transactional(readOnly = true)
     public ValidateClassroomCodeResponse validateClassroomCode(
             ValidateClassroomCodeRequest request,
@@ -114,6 +149,19 @@ public class ClassroomService {
                 && classroomRepository.existsById(classroomCode));
     }
 
+    /**
+     * Invites another teacher to collaborate in a classroom.
+     * 
+     * <p>Verifies that the acting principal is an owner of the classroom and that the 
+     * invited account has the teacher role.
+     *
+     * @param classroomCode the code of the classroom
+     * @param request       the details of the teacher to invite
+     * @param principal     the authenticated teacher principal
+     * @throws AccessDeniedException    if the principal is not a teacher or not an owner
+     * @throws IllegalArgumentException if the invited account is not a teacher
+     * @throws EntityNotFoundException  if the classroom or invited account is not found
+     */
     @Transactional
     public void inviteTeacher(String classroomCode,
                               InviteTeacherRequest request,
@@ -140,6 +188,16 @@ public class ClassroomService {
         bridgeRepository.save(bridge);
     }
 
+    /**
+     * Updates the basic information of a classroom.
+     * 
+     * @param classroomCode the code of the classroom
+     * @param request       the new name and description
+     * @param principal     the authenticated teacher principal
+     * @return the updated {@link ClassroomResponse}
+     * @throws AccessDeniedException   if the principal is not a teacher or not an owner
+     * @throws EntityNotFoundException if the classroom is not found
+     */
     @Transactional
     public ClassroomResponse updateClassroom(String classroomCode,
                                              UpdateClassroomRequest request,
@@ -155,6 +213,17 @@ public class ClassroomService {
         return toResponse(classroomRepository.save(classroom));
     }
 
+    /**
+     * Deletes a classroom and all associated data.
+     * 
+     * <p>This is a destructive operation that removes the classroom, its pupil 
+     * memberships, and teacher bridges.
+     *
+     * @param classroomCode the code of the classroom to delete
+     * @param principal     the authenticated teacher principal
+     * @throws AccessDeniedException   if the principal is not a teacher or not an owner
+     * @throws EntityNotFoundException if the classroom is not found
+     */
     @Transactional
     public void deleteClassroom(String classroomCode, JwtUserPrincipal principal) {
         verifyTeacherPrincipal(principal);
@@ -164,6 +233,18 @@ public class ClassroomService {
         classroomRepository.delete(classroom);
     }
 
+    /**
+     * Checks if a teacher is allowed to leave a classroom.
+     * 
+     * <p>A teacher can only leave if there is at least one other teacher remaining 
+     * in the classroom.
+     *
+     * @param classroomCode the code of the classroom
+     * @param principal     the authenticated teacher principal
+     * @return a {@link TeacherLeaveStatusResponse} indicating if leaving is allowed
+     * @throws AccessDeniedException   if the principal is not a teacher or not an owner
+     * @throws EntityNotFoundException if the classroom is not found
+     */
     @Transactional(readOnly = true)
     public TeacherLeaveStatusResponse getTeacherLeaveStatus(String classroomCode, JwtUserPrincipal principal) {
         verifyTeacherPrincipal(principal);
@@ -173,6 +254,15 @@ public class ClassroomService {
         return new TeacherLeaveStatusResponse(canTeacherLeave(classroomCode));
     }
 
+    /**
+     * Removes the acting teacher's ownership from a classroom.
+     * 
+     * @param classroomCode the code of the classroom
+     * @param principal     the authenticated teacher principal
+     * @throws AccessDeniedException    if the principal is not a teacher or not an owner
+     * @throws IllegalArgumentException if the teacher is the last one in the classroom
+     * @throws EntityNotFoundException  if the classroom is not found
+     */
     @Transactional
     public void leaveClassroom(String classroomCode, JwtUserPrincipal principal) {
         verifyTeacherPrincipal(principal);
@@ -186,6 +276,14 @@ public class ClassroomService {
         bridgeRepository.deleteByIdAccountEmailAndIdClassroomCode(principal.email(), classroomCode);
     }
 
+    /**
+     * Removes the acting pupil's membership from a classroom.
+     * 
+     * @param classroomCode the code of the classroom
+     * @param principal     the authenticated pupil principal
+     * @throws AccessDeniedException   if the principal is not a pupil
+     * @throws EntityNotFoundException if the membership or classroom is not found
+     */
     @Transactional
     public void leaveClassroomAsPupil(String classroomCode, JwtUserPrincipal principal) {
         verifyPupilPrincipal(principal);
@@ -198,6 +296,17 @@ public class ClassroomService {
         pupilClassroomMembershipRepository.delete(membership);
     }
 
+    /**
+     * Retrieves all pending pupil join requests for a classroom.
+     * 
+     * <p>Results are sorted by pupil legal name and email.
+     *
+     * @param classroomCode the code of the classroom
+     * @param principal     the authenticated teacher principal
+     * @return a list of {@link PendingPupilRequestResponse} objects
+     * @throws AccessDeniedException   if the principal is not a teacher or not an owner
+     * @throws EntityNotFoundException if the classroom is not found
+     */
     @Transactional(readOnly = true)
     public List<PendingPupilRequestResponse> getPendingPupilRequests(String classroomCode, JwtUserPrincipal principal) {
         verifyTeacherPrincipal(principal);
@@ -215,6 +324,18 @@ public class ClassroomService {
                 .toList();
     }
 
+    /**
+     * Retrieves the details of a specific classroom.
+     * 
+     * <p>Verifies that the acting principal belongs to the classroom as either a 
+     * teacher or a pupil.
+     *
+     * @param classroomCode the code of the classroom
+     * @param principal     the authenticated user principal
+     * @return a {@link ClassroomResponse} containing the classroom details
+     * @throws AccessDeniedException   if the principal does not belong to the classroom
+     * @throws EntityNotFoundException if the classroom is not found
+     */
     @Transactional(readOnly = true)
     public ClassroomResponse getClassroom(String classroomCode, JwtUserPrincipal principal) {
         if (principal == null || principal.email() == null) {
@@ -238,6 +359,17 @@ public class ClassroomService {
                 classroom.getClassroomDescription());
     }
 
+    /**
+     * Retrieves all teachers who have ownership of a classroom.
+     * 
+     * <p>Results are sorted by legal name and email.
+     *
+     * @param classroomCode the code of the classroom
+     * @param principal     the authenticated teacher principal
+     * @return a list of {@link ClassroomTeacherResponse} objects
+     * @throws AccessDeniedException   if the principal is not a teacher or not an owner
+     * @throws EntityNotFoundException if the classroom is not found
+     */
     @Transactional(readOnly = true)
     public List<ClassroomTeacherResponse> getClassroomTeachers(String classroomCode, JwtUserPrincipal principal) {
         verifyTeacherPrincipal(principal);
@@ -254,6 +386,17 @@ public class ClassroomService {
                 .toList();
     }
 
+    /**
+     * Retrieves all pupils who are members of a classroom and have been confirmed by a teacher.
+     * 
+     * <p>Results are sorted by display username and email.
+     *
+     * @param classroomCode the code of the classroom
+     * @param principal     the authenticated teacher principal
+     * @return a list of {@link AcceptedClassroomPupilResponse} objects including pupil XP
+     * @throws AccessDeniedException   if the principal is not a teacher or not an owner
+     * @throws EntityNotFoundException if the classroom is not found
+     */
     @Transactional(readOnly = true)
     public List<AcceptedClassroomPupilResponse> getAcceptedPupils(String classroomCode, JwtUserPrincipal principal) {
         verifyTeacherPrincipal(principal);
@@ -271,6 +414,16 @@ public class ClassroomService {
                 .toList();
     }
 
+    /**
+     * Confirms a pupil's join request for a classroom.
+     * 
+     * @param classroomCode the code of the classroom
+     * @param pupilEmail    the email of the pupil to accept
+     * @param principal     the authenticated teacher principal
+     * @return the updated {@link AcceptedPupilMembershipResponse}
+     * @throws AccessDeniedException   if the principal is not a teacher or not an owner
+     * @throws EntityNotFoundException if the pending membership is not found
+     */
     @Transactional
     public AcceptedPupilMembershipResponse acceptPupilRequest(String classroomCode,
                                                               String pupilEmail,
@@ -289,6 +442,17 @@ public class ClassroomService {
         return toAcceptedPupilMembershipResponse(pupilClassroomMembershipRepository.save(membership));
     }
 
+    /**
+     * Removes a pupil's membership from a classroom.
+     * 
+     * <p>This can be used to reject a pending request or remove an already confirmed member.
+     *
+     * @param classroomCode the code of the classroom
+     * @param pupilEmail    the email of the pupil to kick
+     * @param principal     the authenticated teacher principal
+     * @throws AccessDeniedException   if the principal is not a teacher or not an owner
+     * @throws EntityNotFoundException if the membership is not found
+     */
     @Transactional
     public void kickPupil(String classroomCode, String pupilEmail, JwtUserPrincipal principal) {
         verifyTeacherPrincipal(principal);
@@ -302,6 +466,17 @@ public class ClassroomService {
         pupilClassroomMembershipRepository.delete(membership);
     }
 
+    /**
+     * Updates the display username of a confirmed pupil in a classroom.
+     * 
+     * @param classroomCode the code of the classroom
+     * @param pupilEmail    the email of the pupil
+     * @param request       the new username
+     * @param principal     the authenticated teacher principal
+     * @return the updated {@link AcceptedClassroomPupilResponse}
+     * @throws AccessDeniedException   if the principal is not a teacher or not an owner
+     * @throws EntityNotFoundException if the confirmed membership is not found
+     */
     @Transactional
     public AcceptedClassroomPupilResponse updatePupilUsername(String classroomCode,
                                                              String pupilEmail,

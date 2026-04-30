@@ -14,6 +14,16 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
+/**
+ * Represents the participation of an {@link Account} in a {@link Classroom} as a pupil.
+ * 
+ * <p>This entity manages the pupil's specific identity within the classroom context,
+ * including their display username, teacher-confirmation status, and their selected
+ * avatar {@link FileObject}. It serves as the primary link for the pupil's 
+ * {@link PupilChapterBridgeProgression}.
+ * 
+ * <p>Inherits audit information from {@link CreatedAtEntity}.
+ */
 @Entity
 @Table(name = "pupil_classroom_membership")
 public class PupilClassroomMembership extends CreatedAtEntity {

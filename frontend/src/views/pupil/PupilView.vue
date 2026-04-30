@@ -8,15 +8,24 @@ import medalsIcon from '@/assets/icons/homescreen/icon_medals.png'
 import mapIcon from '@/assets/icons/homescreen/icon_map.png'
 import leaderboardIcon from '@/assets/icons/homescreen/icon_leaderboard.png'
 import helpIcon from '@/assets/icons/homescreen/icon_help.png'
+import { useAudio } from '@/composables/useAudio'
+import openFileSound from '@/assets/sounds/shared/open-file-sound.mp3'
 
 const buttons = [
   { to: '/pupil/classroom/notebook', class: 'notes', icon: notesIcon },
   { to: '/pupil/classroom/mystery', class: 'mystery', icon: mysteryIcon },
   { to: '/pupil/classroom/medals', class: 'medals', icon: medalsIcon },
-  { to: '/pupil/classroom/map', class: 'map', icon: mapIcon },
+  { to: '/pupil/classroom/map', class: 'map', icon: mapIcon, sound: openFileSound },
   { to: '/pupil/classroom/leaderboard', class: 'leaderboard', icon: leaderboardIcon },
   { to: '/pupil/classroom/help', class: 'help', icon: helpIcon },
 ]
+
+const { playSound } = useAudio()
+
+function handleButtonClick(sound?: string) {
+  if (!sound) return
+  playSound(openFileSound, 1, 0.75)
+}
 </script>
 
 <template>
@@ -33,6 +42,8 @@ const buttons = [
             :to="btn.to"
             class="overlay-button"
             :class="btn.class"
+            :data-no-click-sound="btn.sound ? true : null"
+            @click="handleButtonClick(btn.sound)"
           >
             <img :src="btn.icon" />
           </router-link>

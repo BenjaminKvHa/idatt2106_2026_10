@@ -4,7 +4,8 @@ import { useRouter } from 'vue-router'
 
 import type { BackendAccountRole } from '@/utils/apiUtils'
 import { signupWithCredentials } from '@/utils/apiUtils'
-import { decodeJwtPayload, getDefaultRouteForRole } from '@/utils/jwtUtils'
+import { decodeJwtPayload } from '@/utils/jwtUtils'
+import { resolvePostAuthRoute } from '@/utils/authRedirect'
 
 type RoleOption = 'Lærer' | 'Elev'
 
@@ -75,7 +76,7 @@ const handleRegister = async (): Promise<void> => {
     confirmPassword.value = ''
     role.value = 'Lærer'
 
-    await router.push(getDefaultRouteForRole(payload?.role, payload?.email))
+    await router.push(await resolvePostAuthRoute(payload?.role))
   } catch (caughtError) {
     error.value = caughtError instanceof Error ? caughtError.message : 'Kunne ikke opprette bruker.'
   } finally {

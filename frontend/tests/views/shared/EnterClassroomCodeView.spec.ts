@@ -3,11 +3,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import EnterClassroomCodeView from '@/views/shared/EnterClassroomCodeView.vue'
 import { post } from '@/utils/apiUtils'
+import { clearMeCache } from '@/utils/authRedirect'
 
 const routerPush = vi.fn()
 
 vi.mock('@/utils/apiUtils', () => ({
   post: vi.fn(),
+}))
+
+vi.mock('@/utils/authRedirect', () => ({
+  clearMeCache: vi.fn(),
 }))
 
 vi.mock('vue-router', () => ({
@@ -17,6 +22,7 @@ vi.mock('vue-router', () => ({
 }))
 
 const mockedPost = vi.mocked(post)
+const mockedClearMeCache = vi.mocked(clearMeCache)
 
 function mountView() {
   return mount(EnterClassroomCodeView)
@@ -79,6 +85,7 @@ describe('EnterClassroomCodeView', () => {
     await flushPromises()
 
     expect(mockedPost).toHaveBeenCalledWith('/api/pupil/classrooms/ABCDEF/join', {})
+    expect(mockedClearMeCache).toHaveBeenCalled()
     expect(routerPush).toHaveBeenCalledWith({
       path: '/join-classroom/set-avatar',
       query: {

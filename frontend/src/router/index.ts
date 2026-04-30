@@ -35,28 +35,13 @@ import PupilsProfileView from '@/views/pupil/PupilsProfileView.vue'
 import PupilsEditAvatarView from '@/views/pupil/PupilsEditAvatarView.vue'
 import TeachersEditClassroom from '@/views/teacher/TeachersEditClassroom.vue'
 import { getJwtDataWithRefresh } from '@/utils/jwtUtils'
-import { get } from '@/utils/apiUtils'
+import {
+  clearMeCache,
+  fetchMeCached,
+  getPupilMembershipRoute,
+} from '@/utils/authRedirect'
 
-type MeProfile = { role: string; classroomCode: string | null; membershipConfirmed: boolean }
-const ME_CACHE_KEY = 'me-profile-cache'
-
-async function fetchMeCached(): Promise<MeProfile | null> {
-  const cached = sessionStorage.getItem(ME_CACHE_KEY)
-  if (cached) {
-    try { return JSON.parse(cached) as MeProfile } catch { /* fall through */ }
-  }
-  try {
-    const me = await get<MeProfile>('/api/me')
-    sessionStorage.setItem(ME_CACHE_KEY, JSON.stringify(me))
-    return me
-  } catch {
-    return null
-  }
-}
-
-export function clearMeCache() {
-  sessionStorage.removeItem(ME_CACHE_KEY)
-}
+export { clearMeCache } from '@/utils/authRedirect'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -287,10 +272,40 @@ router.beforeEach(async (to) => {
   if (requiresTeacher && jwt.role !== 'TEACHER') return '/pupil'
   if (requiresPupil && jwt.role !== 'PUPIL') return '/teacher/classrooms'
 
-  if (jwt.role === 'PUPIL' && to.path.startsWith('/pupil')) {
-    const me = await fetchMeCached()
-    if (!me?.classroomCode) return '/join-classroom/enter-classroom-code'
-    if (!me.membershipConfirmed) return '/join-classroom/waiting-classroom'
+  if (jwt.role === 'PUPIL') {
+    const me = await fetchMeCached({ force: to.path.startsWith('/join-classroom/waiting-classroom') })
+    const pupilRoute = getPupilMembershipRoute(me)
+
+    if (to.path.startsWith('/pupil') && pupilRoute !== '/pupil') {
+      return pupilRoute
+    }
+
+    if (to.path.startsWith('/join-classroom')) {
+      const isSetAvatarRoute = to.path.startsWith('/join-classroom/set-avatar')
+
+      if (pupilRoute === '/pupil') {
+        return '/pupil'
+      }
+
+      if (pupilRoute === '/join-classroom/enter-classroom-code' && isSetAvatarRoute) {
+        return '/join-classroom/enter-classroom-code'
+      }
+
+      if (
+        pupilRoute === '/join-classroom/waiting-classroom' &&
+        !to.path.startsWith('/join-classroom/waiting-classroom') &&
+        !isSetAvatarRoute
+      ) {
+        return '/join-classroom/waiting-classroom'
+      }
+
+      if (
+        pupilRoute === '/join-classroom/enter-classroom-code' &&
+        to.path.startsWith('/join-classroom/waiting-classroom')
+      ) {
+        return '/join-classroom/enter-classroom-code'
+      }
+    }
   }
 
   return true

@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import SignInView from '@/views/shared/SignInView.vue'
 import { loginWithCredentials } from '@/utils/apiUtils'
+import { resolvePostAuthRoute } from '@/utils/authRedirect'
 
 const routerPush = vi.fn()
 
@@ -12,7 +13,10 @@ vi.mock('@/utils/apiUtils', () => ({
 
 vi.mock('@/utils/jwtUtils', () => ({
   decodeJwtPayload: vi.fn(() => ({ role: 'PUPIL', email: 'pupil@example.com' })),
-  getDefaultRouteForRole: vi.fn(() => '/ignored-after-login-route'),
+}))
+
+vi.mock('@/utils/authRedirect', () => ({
+  resolvePostAuthRoute: vi.fn(() => Promise.resolve('/resolved-after-login-route')),
 }))
 
 vi.mock('vue-router', () => ({
@@ -22,6 +26,7 @@ vi.mock('vue-router', () => ({
 }))
 
 const mockedLoginWithCredentials = vi.mocked(loginWithCredentials)
+const mockedResolvePostAuthRoute = vi.mocked(resolvePostAuthRoute)
 
 function mountSignInView() {
   return mount(SignInView)
@@ -51,6 +56,8 @@ function deferred<T>() {
 describe('SignInView', () => {
   beforeEach(() => {
     mockedLoginWithCredentials.mockReset()
+    mockedResolvePostAuthRoute.mockReset()
+    mockedResolvePostAuthRoute.mockResolvedValue('/resolved-after-login-route')
     routerPush.mockReset()
   })
 
@@ -200,7 +207,7 @@ describe('SignInView', () => {
     expect(wrapper.find('[role="alert"]').exists()).toBe(false)
   })
 
-  it('navigates to default route after successful login', async () => {
+  it('navigates to resolved post-auth route after successful login', async () => {
     mockedLoginWithCredentials.mockResolvedValue('token')
     const wrapper = mountSignInView()
 
@@ -209,7 +216,8 @@ describe('SignInView', () => {
     await wrapper.find('form').trigger('submit')
     await flushPromises()
 
-    expect(routerPush).toHaveBeenCalledWith('/ignored-after-login-route')
+    expect(mockedResolvePostAuthRoute).toHaveBeenCalledWith('PUPIL')
+    expect(routerPush).toHaveBeenCalledWith('/resolved-after-login-route')
   })
 
   it('shows disabled ID-porten button', () => {

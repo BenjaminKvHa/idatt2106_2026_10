@@ -186,24 +186,24 @@ onBeforeUnmount(revokeImageUrls)
 
           <HintCreature :chapter-id="NYHETSKVARTALET_CHAPTER_ID" />
 
-        <PupilNewsTask
-          :task-description="currentTask.taskDescription"
-          :file-ids="currentTask.fileIds"
-          :image-urls="imageUrls"
-          :selected-file-id="selectedFileId"
-          :result="lastResult"
-          :submitting="submitting"
-          select-button-text="Velg dette bildet"
-          @select-file="choose"
-        />
+          <PupilNewsTask
+            :task-description="currentTask.taskDescription"
+            :file-ids="currentTask.fileIds"
+            :image-urls="imageUrls"
+            :selected-file-id="selectedFileId"
+            :result="lastResult"
+            :submitting="submitting"
+            select-button-text="Velg dette bildet"
+            @select-file="choose"
+          />
 
-        <div
-          v-if="lastResult"
-          class="mini-feedback"
-          :class="{ success: lastResult.correct, fail: !lastResult.correct }"
-        >
-          <span>{{ lastResult.feedback }}</span>
-        </div>
+          <div
+            v-if="lastResult"
+            class="mini-feedback"
+            :class="{ success: lastResult.correct, fail: !lastResult.correct }"
+          >
+            <span>{{ lastResult.feedback }}</span>
+          </div>
 
           <button v-if="lastResult" class="next-level-button" @click="next">
             {{ stepIndex === DIFFICULTIES.length - 1 ? 'Se resultat' : 'Gå til neste nivå' }}
@@ -260,7 +260,7 @@ onBeforeUnmount(revokeImageUrls)
   </div>
 </template>
 
-<style scoped>
+<style scope>
 .nyhetskvartalet-page-bg {
   min-height: 100vh;
   background:
@@ -290,29 +290,36 @@ onBeforeUnmount(revokeImageUrls)
 }
 
 .progress-container {
-  width: min(100%, 500px);
+  width: min(100%, 540px);
   text-align: center;
 }
 
 .progress-bar {
   width: 100%;
-  height: 18px;
-  background: rgb(0 0 0 / 15%);
-  border: 3px solid var(--brown-dark);
+  height: 14px;
+  background: rgb(255 246 220 / 55%);
+  border: 2px solid rgb(91 62 43 / 70%);
   border-radius: 999px;
   overflow: hidden;
+  box-shadow:
+    inset 0 2px 5px rgb(0 0 0 / 12%),
+    0 3px 10px rgb(0 0 0 / 10%);
 }
 
 .progress-fill {
   height: 100%;
-  background: var(--green-confirm);
+  background: linear-gradient(90deg, #9df13c 0%, #78d927 55%, #5cc322 100%);
+  border-radius: 999px;
   transition: width 0.4s ease;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 45%);
 }
 
 .progress-text {
-  margin-top: 0.4rem;
+  margin-top: 0.5rem;
   margin-bottom: 0;
-  font-weight: 700;
+  font-weight: 800;
+  color: #1f160f;
+  text-shadow: 0 1px 0 rgb(255 255 255 / 45%);
 }
 
 .mini-feedback {
@@ -320,7 +327,7 @@ onBeforeUnmount(revokeImageUrls)
   border: 4px solid var(--brown-dark);
   border-radius: 24px;
   font-weight: 700;
-  box-shadow: 0 5px 0 var(--brown-dark);
+  box-shadow: 0 5px 0 #5b371f;
 }
 
 .mini-feedback.success {
@@ -335,36 +342,29 @@ onBeforeUnmount(revokeImageUrls)
 .next-level-button {
   width: 100%;
   max-width: 360px;
-  padding: 1rem 2rem;
-  border-radius: 38px;
-  border: 5px solid var(--brown-dark);
-
-  background-color: var(--beige-light); /* hvit/beige */
-  color: var(--brown-dark); /* brun tekst */
-
+  padding: 0.9rem 1.8rem;
+  border-radius: 24px;
+  border: 2px solid var(--brown-dark);
+  background: linear-gradient(180deg, #fff6dc 0%, #f1d7a5 100%);
+  color: var(--brown-dark);
   cursor: pointer;
-  font-weight: 700;
-
-  box-shadow: 0 6px 0 var(--brown-dark);
-
+  font-weight: 850;
+  box-shadow: 0 5px 14px rgb(0 0 0 / 14%);
   transition:
     transform 0.15s ease,
     filter 0.15s ease,
-    box-shadow 0.15s ease,
-    background-color 0.15s ease,
-    color 0.15s ease;
+    box-shadow 0.15s ease;
 }
 
 .next-level-button:hover {
-  filter: brightness(0.95);
+  filter: brightness(1.03);
+  transform: translateY(-1px);
+  box-shadow: 0 7px 18px rgb(0 0 0 / 16%);
 }
 
 .next-level-button:active {
-  background-color: var(--brown-dark);
-  color: var(--beige-light);
-
-  transform: translateY(3px);
-  box-shadow: 0 3px 0 var(--brown-dark);
+  transform: translateY(1px);
+  box-shadow: 0 3px 9px rgb(0 0 0 / 12%);
 }
 
 .error {
@@ -390,12 +390,120 @@ onBeforeUnmount(revokeImageUrls)
   margin-bottom: 6px;
 }
 
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 28%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(3px);
+}
+
+.hint-popup {
+  width: min(680px, calc(100vw - 32px));
+  background: linear-gradient(180deg, #fff0c9 0%, #f5d59a 58%, #e8b86f 100%);
+  border: 7px solid var(--brown-dark);
+  border-radius: 42px;
+  box-shadow:
+    0 12px 0 #5b371f,
+    0 26px 45px rgb(0 0 0 / 28%),
+    inset 0 4px 0 rgb(255 255 255 / 45%);
+  padding: 32px 28px;
+  text-align: center;
+}
+
+.popup-title {
+  margin: 0 0 1rem;
+  color: var(--brown-dark);
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  text-shadow: 0 3px 0 rgb(255 255 255 / 45%);
+}
+
+.popup-actions {
+  margin-top: 26px;
+  display: flex;
+  justify-content: center;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+
+.popup-btn {
+  min-width: 180px;
+  padding: 16px 28px;
+  border-radius: 28px;
+  border: 5px solid var(--brown-dark);
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: var(--brown-dark);
+  cursor: pointer;
+  box-shadow: 0 8px 0 #5b371f;
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.popup-btn:hover {
+  filter: brightness(1.04);
+  transform: translateY(-2px);
+}
+
+.popup-btn:active {
+  transform: translateY(5px);
+  box-shadow: 0 3px 0 #5b371f;
+}
+
 .popup-btn-play {
-  background: var(--green-confirm);
+  background: linear-gradient(180deg, #9df13c 0%, #78d927 100%);
 }
 
 .popup-btn-map {
-  background: var(--orange-medium);
+  background: linear-gradient(180deg, #fff6dc 0%, #f1d7a5 100%);
+}
+
+:deep(.task-guide),
+:deep(.guide-popup),
+:deep(.popup-card) {
+  background: linear-gradient(180deg, #fff0c9 0%, #f5d59a 58%, #e8b86f 100%) !important;
+  border: 7px solid var(--brown-dark) !important;
+  border-radius: 42px !important;
+  box-shadow:
+    0 12px 0 #5b371f,
+    0 26px 45px rgb(0 0 0 / 28%),
+    inset 0 4px 0 rgb(255 255 255 / 45%) !important;
+}
+
+:deep(.task-guide button),
+:deep(.guide-popup button),
+:deep(.popup-card button),
+:deep(.select-button),
+:deep(.news-task button) {
+  background: linear-gradient(180deg, #fff6dc 0%, #f1d7a5 100%) !important;
+  color: var(--brown-dark) !important;
+  border: 5px solid var(--brown-dark) !important;
+  border-radius: 28px !important;
+  font-weight: 900 !important;
+  box-shadow: 0 8px 0 #5b371f !important;
+}
+
+:deep(.task-guide button:hover),
+:deep(.guide-popup button:hover),
+:deep(.popup-card button:hover),
+:deep(.select-button:hover),
+:deep(.news-task button:hover) {
+  filter: brightness(1.04);
+  transform: translateY(-2px);
+}
+
+:deep(.task-guide button:active),
+:deep(.guide-popup button:active),
+:deep(.popup-card button:active),
+:deep(.select-button:active),
+:deep(.news-task button:active) {
+  transform: translateY(5px);
+  box-shadow: 0 3px 0 #5b371f !important;
 }
 
 @media (max-width: 768px) {
@@ -405,8 +513,19 @@ onBeforeUnmount(revokeImageUrls)
   }
 
   .next-level-button {
-    border-width: 3px;
+    border-width: 4px;
     border-radius: 24px;
+  }
+
+  .hint-popup {
+    padding: 24px 18px;
+    border-width: 5px;
+    border-radius: 30px;
+  }
+
+  .popup-btn {
+    width: 100%;
+    min-width: unset;
   }
 }
 </style>

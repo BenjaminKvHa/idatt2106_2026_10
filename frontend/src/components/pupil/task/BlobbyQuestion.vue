@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import hintCreature from '@/assets/creatureSittingQuestion.png'
+import hintCreature from '@/assets/icons/blobby/creatureSittingQuestion.png'
 import { get } from '@/utils/apiUtils'
 
 type ChapterTipResponse = {
@@ -46,12 +46,7 @@ async function openHintPopup() {
 
 <template>
   <div class="hint-creature-wrapper">
-    <button
-      type="button"
-      class="hint-creature-button"
-      :disabled="loading"
-      @click="openHintPopup"
-    >
+    <button type="button" class="hint-creature-button" :disabled="loading" @click="openHintPopup">
       <img :src="hintCreature" alt="Få hint" />
     </button>
   </div>

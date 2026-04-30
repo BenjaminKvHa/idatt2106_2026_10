@@ -51,7 +51,6 @@ let defeatSoundRef: HTMLAudioElement | null = null
 
 const showGuidePopup = ref(true)
 const showHelpPopup = ref(false)
-const showHintPopup = ref(false)
 const showResultPopup = ref(false)
 const resultType = ref<ResultType>(null)
 
@@ -65,6 +64,10 @@ const currentLevel = computed(() => levels.value[currentLevelIndex.value] ?? nul
 const isLastLevel = computed(() => currentLevelIndex.value === levels.value.length - 1)
 const isCurrentLevelAnswered = computed(() => currentLevel.value?.result != null)
 const correctCount = computed(() => levels.value.filter((level) => level.result?.correct).length)
+
+const progressPercent = computed(() =>
+  levels.value.length > 0 ? ((currentLevelIndex.value + 1) / levels.value.length) * 100 : 0,
+)
 
 const allAnswersCorrect = computed(
   () => levels.value.length > 0 && levels.value.every((level) => level.result?.correct === true),
@@ -314,14 +317,19 @@ onBeforeUnmount(revokeAllImageUrls)
 <template>
   <div class="datacenter-page-bg" :style="pageStyle">
     <TopBar title="Datasenteret" />
+
     <div class="pupil-task-page">
       <div class="pupil-center-container datacenter-container">
         <p v-if="loading">Laster oppgaver…</p>
         <p v-else-if="error" class="pupil-error">{{ error }}</p>
 
         <template v-else-if="currentLevel">
-          <div class="progress-box pupil-panel">
-            <p>Nivå {{ currentLevelIndex + 1 }}/{{ levels.length }}</p>
+          <div class="progress-container">
+            <div class="progress-bar">
+              <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
+            </div>
+
+            <p class="progress-text">Nivå {{ currentLevelIndex + 1 }} / {{ levels.length }}</p>
           </div>
 
           <HintCreature :chapter-id="DATASENTERET_CHAPTER_ID" />
@@ -478,14 +486,72 @@ p {
   gap: 1.25rem;
 }
 
-.progress-box {
-  width: min(100%, 700px);
-  padding: 1rem 1.4rem;
-  font-weight: 700;
+.progress-container {
+  width: min(100%, 540px);
+  text-align: center;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 14px;
+  background: rgb(255 246 220 / 55%);
+  border: 2px solid rgb(91 62 43 / 70%);
+  border-radius: 999px;
+  overflow: hidden;
+  box-shadow:
+    inset 0 2px 5px rgb(0 0 0 / 12%),
+    0 3px 10px rgb(0 0 0 / 10%);
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #9df13c 0%, #78d927 55%, #5cc322 100%);
+  border-radius: 999px;
+  transition: width 0.4s ease;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 45%);
+}
+
+.progress-text {
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+  font-weight: 800;
+  color: #1f160f;
+  text-shadow: 0 1px 0 rgb(255 255 255 / 45%);
 }
 
 .submit-button {
   width: 100%;
+  padding: 0.9rem 1.8rem;
+  border-radius: 24px;
+  border: 2px solid var(--brown-dark);
+  background: linear-gradient(180deg, #fff6dc 0%, #f1d7a5 100%);
+  color: var(--brown-dark);
+  font-weight: 850;
+  cursor: pointer;
+  box-shadow: 0 5px 14px rgb(0 0 0 / 14%);
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.submit-button:hover:not(:disabled) {
+  filter: brightness(1.03);
+  transform: translateY(-1px);
+  box-shadow: 0 7px 18px rgb(0 0 0 / 16%);
+}
+
+.submit-button:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 3px 9px rgb(0 0 0 / 12%);
+}
+
+.submit-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  transform: none;
+  filter: none;
+  box-shadow: 0 5px 14px rgb(0 0 0 / 10%);
 }
 
 .navigation-bar {
@@ -498,29 +564,42 @@ p {
 .nav-button {
   min-width: 200px;
   min-height: 58px;
-  padding: 10px 18px;
-  border-radius: 20px;
-  border: 2px solid var(--color-text);
-  font-weight: 600;
+  padding: 0.85rem 1.8rem;
+  border-radius: 24px;
+  border: 2px solid var(--brown-dark);
+  font-weight: 850;
+  color: var(--brown-dark);
   cursor: pointer;
-  transition: all 0.2s ease;
+  box-shadow: 0 5px 14px rgb(0 0 0 / 14%);
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease,
+    box-shadow 0.15s ease,
+    opacity 0.15s ease;
 }
 
-.nav-button-primary {
-  background: var(--orange-medium);
-}
-
+.nav-button-primary,
 .nav-button-secondary {
-  background: var(--yellow-award-60);
+  background: linear-gradient(180deg, #fff6dc 0%, #f1d7a5 100%);
 }
 
 .nav-button:hover:not(:disabled) {
-  filter: brightness(1.08);
+  filter: brightness(1.03);
+  transform: translateY(-1px);
+  box-shadow: 0 7px 18px rgb(0 0 0 / 16%);
+}
+
+.nav-button:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 3px 9px rgb(0 0 0 / 12%);
 }
 
 .nav-button:disabled {
   cursor: not-allowed;
-  opacity: 0.55;
+  opacity: 0.45;
+  transform: none;
+  filter: none;
+  box-shadow: 0 5px 14px rgb(0 0 0 / 10%);
 }
 
 .guide-image {
@@ -551,6 +630,10 @@ p {
   .nav-button {
     width: 100%;
     min-width: 0;
+  }
+
+  .progress-container {
+    width: 100%;
   }
 }
 </style>

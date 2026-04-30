@@ -197,11 +197,17 @@ const handleRegister = async (): Promise<void> => {
           </button>
         </form>
 
-        <p v-if="error" id="register-error" class="feide-error-banner" role="alert" aria-live="assertive">
+        <p
+          v-if="error"
+          id="register-error"
+          class="feide-error-banner"
+          role="alert"
+          aria-live="assertive"
+        >
           <span aria-hidden="true">⚠ </span>{{ error }}
         </p>
       </div>
-      
+
       <div class="feide-card-footer">
         <span>Har du allerede en bruker?</span>
         <router-link to="/sign-in">Logg inn her</router-link>
@@ -258,5 +264,67 @@ h1 {
 .submit-btn {
   width: 100%;
   margin-top: 12px;
+}
+
+.feide-page {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.feide-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url('@/assets/backgrounds/welcomeBackground.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(12px);
+  transform: scale(1.1);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.feide-page::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.feide-page > * {
+  position: relative;
+  z-index: 2;
+}
+
+.feide-card {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.feide-card-body {
+  padding-top: 12px;
+}
+
+.brand-logo {
+  margin-bottom: 8px;
+}
+
+.feide-card,
+.landing-card {
+  background: #ffffff;
+
+  border: 3px solid #000;
+
+  box-shadow:
+    0 4px 0 #000,
+    0 10px 20px rgba(0, 0, 0, 0.25);
 }
 </style>

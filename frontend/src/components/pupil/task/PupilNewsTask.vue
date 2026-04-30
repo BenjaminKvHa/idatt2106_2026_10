@@ -92,24 +92,30 @@ function cardClass(fileId: number): string {
 .task-wrapper {
   position: relative;
   width: min(100%, 800px);
-  padding: 1.4rem 2rem;
-  background: var(--orange-medium);
-  border: 5px solid var(--brown-dark);
-  border-radius: 38px;
+  padding: 1.35rem 2rem;
+  background: linear-gradient(180deg, #fff3d6 0%, #f4d7a2 100%);
+  border: 3px solid var(--brown-dark);
+  border-radius: 30px;
   box-sizing: border-box;
-  box-shadow: 0 8px 0 var(--brown-dark);
+  box-shadow:
+    0 6px 18px rgb(0 0 0 / 13%),
+    inset 0 2px 0 rgb(255 255 255 / 45%);
 }
 
 .task-wrapper p {
   margin: 0;
+  color: #1f160f;
+  font-weight: 750;
 }
 
 .picture-wrapper {
   display: flex;
   gap: 2rem;
   margin-top: 1rem;
+  margin-bottom: 0;
   flex-wrap: wrap;
   justify-content: center;
+  align-items: flex-start;
   width: 100%;
 }
 
@@ -117,46 +123,53 @@ function cardClass(fileId: number): string {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: 0.6rem;
   flex: 1 1 300px;
   max-width: 520px;
   width: 100%;
   padding: 0;
-  border-radius: 30px;
-  background: rgb(255 255 255 / 35%);
-  border: 3px solid rgb(91 62 43 / 25%);
-  box-shadow: 0 10px 20px rgb(0 0 0 / 10%);
-  overflow: hidden;
+  border-radius: 26px;
+  background: rgb(255 255 255 / 58%);
+  border: 2px solid rgb(91 62 43 / 32%);
+  box-shadow: 0 6px 16px rgb(0 0 0 / 10%);
+  overflow: visible;
   transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
 }
 
 .picture-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 22px rgb(0 0 0 / 14%);
 }
 
 .picture-card.selected {
-  box-shadow: 0 0 0 5px var(--orange-medium);
+  border-color: rgb(91 62 43 / 65%);
+  box-shadow:
+    0 0 0 4px rgb(255 240 201 / 75%),
+    0 10px 22px rgb(0 0 0 / 14%);
 }
 
 .picture-card.correct {
-  box-shadow: 0 0 0 6px var(--green-confirm);
-  background: rgb(120 190 120 / 22%);
+  box-shadow:
+    0 0 0 4px var(--green-confirm),
+    0 10px 22px rgb(0 0 0 / 14%);
+  background: rgb(120 190 120 / 20%);
 }
 
 .picture-card.wrong {
-  box-shadow: 0 0 0 6px #d95b43;
-  background: rgb(217 91 67 / 18%);
+  box-shadow:
+    0 0 0 4px #d95b43,
+    0 10px 22px rgb(0 0 0 / 14%);
+  background: rgb(217 91 67 / 16%);
 }
 
 .picture-placeholder {
   width: 100%;
-  min-height: 360px;
-  background-color: var(--beige-light);
-  border: 4px solid var(--brown-dark);
-  border-radius: 24px;
+  background-color: #fff6dc;
+  border: 3px solid var(--brown-dark);
+  border-radius: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -167,7 +180,7 @@ function cardClass(fileId: number): string {
 
 .picture {
   width: 100%;
-  height: 100%;
+  height: auto;
   display: block;
   object-fit: contain;
 }
@@ -175,9 +188,9 @@ function cardClass(fileId: number): string {
 .answer-label {
   margin: 0;
   padding: 0.45rem 1.2rem;
-  border: 3px solid var(--brown-dark);
+  border: 2px solid var(--brown-dark);
   border-radius: 999px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .correct-label {
@@ -191,37 +204,40 @@ function cardClass(fileId: number): string {
 
 .fake-button,
 .confirm-button {
-  width: 100%;
-  max-width: 420px;
-  padding: 1rem 2rem;
-  border-radius: 38px;
-  border: 5px solid var(--brown-dark);
-  background-color: var(--orange-medium);
-  cursor: pointer;
-  font-weight: 700;
-  box-shadow: 0 6px 0 var(--brown-dark);
-  transition:
-    transform 0.2s ease,
-    filter 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.fake-button {
   width: calc(100% - 2rem);
-  margin-bottom: 1rem;
+  max-width: 420px;
+  padding: 0.9rem 1.8rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0;
+
+  border-radius: 24px;
+  border: 2px solid var(--brown-dark);
+
+  background: linear-gradient(180deg, #fff6dc 0%, #f1d7a5 100%);
+  color: var(--brown-dark);
+
+  cursor: pointer;
+  font-weight: 850;
+
+  box-shadow: 0 5px 14px rgb(0 0 0 / 14%);
+
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .fake-button:hover:not(:disabled),
 .confirm-button:hover:not(:disabled) {
-  filter: brightness(1.1);
-  transform: translateY(-3px);
-  box-shadow: 0 9px 0 var(--brown-dark);
+  filter: brightness(1.03);
+  transform: translateY(-1px);
+  box-shadow: 0 7px 18px rgb(0 0 0 / 16%);
 }
 
 .fake-button:active:not(:disabled),
 .confirm-button:active:not(:disabled) {
-  transform: translateY(3px);
-  box-shadow: 0 3px 0 var(--brown-dark);
+  transform: translateY(1px);
+  box-shadow: 0 3px 9px rgb(0 0 0 / 12%);
 }
 
 .fake-button:disabled,
@@ -230,7 +246,7 @@ function cardClass(fileId: number): string {
   opacity: 0.75;
   transform: none;
   filter: none;
-  box-shadow: 0 6px 0 var(--brown-dark);
+  box-shadow: 0 5px 14px rgb(0 0 0 / 14%);
 }
 
 @media (max-width: 768px) {
@@ -240,14 +256,18 @@ function cardClass(fileId: number): string {
 
   .task-wrapper {
     padding: 1rem;
-    border-width: 3px;
+    border-width: 2px;
     border-radius: 24px;
+  }
+
+  .picture-placeholder {
+    border-width: 2px;
   }
 
   .fake-button,
   .confirm-button {
-    border-width: 3px;
-    border-radius: 24px;
+    border-width: 2px;
+    border-radius: 20px;
   }
 }
 </style>

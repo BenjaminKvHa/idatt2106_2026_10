@@ -195,7 +195,7 @@ async function saveNickname() {
             </p>
             <p class="pupil-meta-text">{{ profile.role }}</p>
 
-            <RouterLink :to="`/join-classroom/set-avatar?classroomCode=${profile.classroomCode}`">
+            <RouterLink to="/pupil/profile/avatar">
               <button
                 v-if="isInClassroom"
                 class="pupil-button pupil-button-secondary"

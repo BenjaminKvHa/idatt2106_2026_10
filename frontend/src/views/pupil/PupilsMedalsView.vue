@@ -44,12 +44,10 @@ function medalImageUrl(medal: PupilMedal) {
       <div class="board-content">
         <header class="medals-header">
           <img class="medals-icon" :src="medalsIcon" alt="" aria-hidden="true" />
-          <div>
-            <h1 id="medals-title">Medaljer</h1>
-            <p v-if="!loading && !errorMessage && medals.length" class="medal-progress">
-              {{ unlockedCount }} av {{ medals.length }} låst opp
-            </p>
-          </div>
+          <h1 id="medals-title" class="sr-only">Medaljer</h1>
+          <p v-if="!loading && !errorMessage && medals.length" class="medal-progress">
+            {{ unlockedCount }} av {{ medals.length }} låst opp
+          </p>
         </header>
 
         <StateDisplay
@@ -109,11 +107,12 @@ function medalImageUrl(medal: PupilMedal) {
 
 .board-content {
   position: absolute;
-  inset: 20% 16% 20% 16%;
+  inset: 16% 10% 14% 10%;
   display: flex;
   flex-direction: column;
-  gap: clamp(0.65rem, 1.5vw, 1.25rem);
+  gap: clamp(0.1rem, 0.45vw, 0.35rem);
   min-height: 0;
+  overflow: hidden;
 }
 
 .medals-header {
@@ -121,28 +120,50 @@ function medalImageUrl(medal: PupilMedal) {
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  gap: clamp(0.75rem, 2vw, 1.5rem);
-  min-height: clamp(3.5rem, 8vw, 7rem);
+  gap: clamp(0.15rem, 0.55vw, 0.45rem);
+  min-height: clamp(5.5rem, 10.5vw, 8.8rem);
 }
 
 .medals-icon {
-  width: clamp(3.8rem, 8vw, 7rem);
-  height: clamp(3.8rem, 8vw, 7rem);
+  width: clamp(8.5rem, 15vw, 13rem);
+  height: clamp(8.5rem, 15vw, 13rem);
   object-fit: contain;
   object-position: center;
 }
 
-h1 {
-  margin: 0;
-  font-size: clamp(2rem, 4.8vw, 4.2rem);
-  line-height: 1;
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .medal-progress {
-  margin: 0.3rem 0 0;
-  color: var(--brown-dark);
-  font-weight: 700;
-  line-height: 1.2;
+  min-width: clamp(15rem, 24vw, 20rem);
+  min-height: clamp(3.6rem, 5.2vw, 4.8rem);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(0.55rem, 1vw, 0.8rem) clamp(2.6rem, 4vw, 3.6rem);
+  background-image: url('@/assets/woodenLabel.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  color: #fff7df;
+  font-family: 'Inika', serif;
+  font-size: clamp(1.2rem, 2.2vw, 1.75rem);
+  font-weight: 900;
+  line-height: 1;
+  text-align: center;
+  text-shadow:
+    0 0.08rem 0 #4b2511,
+    0 0.16rem 0.1rem rgba(34, 13, 3, 0.8);
+  filter: drop-shadow(0 0.18rem 0.12rem rgba(43, 24, 12, 0.34));
 }
 
 .state-message {
@@ -162,15 +183,16 @@ h1 {
   flex: 1 1 auto;
   min-height: 0;
   margin: 0 auto;
-  width: min(100%, 46rem);
+  width: min(100%, 62rem);
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(clamp(10rem, 16vw, 12rem), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(clamp(12.5rem, 18.5vw, 16rem), 1fr));
   align-content: start;
-  gap: clamp(0.55rem, 1.25vw, 0.9rem);
+  gap: clamp(0.65rem, 1.35vw, 1rem);
   list-style: none;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 0 0.35rem 0.45rem 0;
+  margin-top: clamp(-0.45rem, -0.8vw, -0.2rem);
 }
 
 .medal-slot {
@@ -179,30 +201,33 @@ h1 {
 
 .medal-card {
   position: relative;
-  min-height: clamp(8.75rem, 13.5vw, 10.25rem);
+  aspect-ratio: 1 / 1;
+  min-height: clamp(12.5rem, 18.5vw, 16rem);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  gap: 0.25rem;
+  justify-content: center;
+  gap: clamp(0.1rem, 0.35vw, 0.25rem);
   overflow: hidden;
-  border: var(--border-thin) solid var(--brown-dark);
-  border-radius: 1.1rem;
-  background: var(--beige-light-80);
-  box-shadow: 0 0.35rem 0 var(--brown-dark-20);
-  padding: clamp(0.55rem, 1.2vw, 0.85rem);
+  border: 0;
+  background-image: url('@/assets/medalBoard.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  box-shadow: none;
+  padding: 15% 14% 13%;
 }
 
 .medal-slot--locked .medal-card {
-  background: var(--beige-medium-60);
+  filter: saturate(0.9);
 }
 
 .medal-art {
   align-items: center;
   display: flex;
   justify-content: center;
-  width: clamp(4.6rem, 9.2vw, 7.25rem);
-  height: clamp(4.1rem, 8.2vw, 6.4rem);
+  width: clamp(5.25rem, 9.3vw, 7.55rem);
+  height: clamp(4.65rem, 8.45vw, 6.75rem);
   flex: 0 0 auto;
 }
 
@@ -220,7 +245,7 @@ h1 {
   width: 100%;
   height: 100%;
   border-radius: 1rem;
-  background: var(--beige-light-80);
+  background: rgba(255, 244, 220, 0.65);
   color: var(--brown-dark);
   font-size: 2rem;
   font-weight: 800;
@@ -228,45 +253,56 @@ h1 {
 
 .medal-copy {
   width: 100%;
+  min-height: 0;
   text-align: center;
-  color: var(--brown-dark);
+  color: #fff7df;
+  text-shadow:
+    0 0.07rem 0 #4b2511,
+    0 0.14rem 0.1rem rgba(34, 13, 3, 0.8);
 }
 
 .medal-copy h2 {
   margin: 0;
-  font-size: clamp(0.88rem, 1.3vw, 1.08rem);
+  font-size: clamp(0.92rem, 1.25vw, 1.12rem);
   line-height: 1.1;
 }
 
 .medal-copy p {
   margin: 0.2rem 0 0;
-  color: var(--brown-dark-80);
-  font-size: clamp(0.62rem, 0.78vw, 0.74rem);
+  color: #fff7df;
+  font-size: clamp(0.58rem, 0.72vw, 0.7rem);
   font-weight: 600;
-  line-height: 1.15;
+  line-height: 1.1;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 .medal-status {
   position: absolute;
-  top: 0.45rem;
-  right: 0.45rem;
-  border: 2px solid var(--brown-dark);
-  border-radius: 999px;
-  background: var(--beige-light-80);
-  color: var(--brown-dark);
-  font-size: clamp(0.62rem, 0.85vw, 0.72rem);
-  font-weight: 800;
+  top: 16.5%;
+  right: 13.5%;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #fff7df;
+  font-size: clamp(0.62rem, 0.86vw, 0.76rem);
+  font-weight: 900;
   line-height: 1;
-  padding: 0.25rem 0.45rem;
+  padding: 0;
+  text-shadow:
+    0 0.07rem 0 #4b2511,
+    0 0.14rem 0.1rem rgba(34, 13, 3, 0.85);
 }
 
 @media (max-width: 900px) {
   .board-content {
-    inset: 19% 16% 20% 16%;
+    inset: 16% 10% 14% 10%;
   }
 
   .medal-grid {
-    width: min(100%, 30rem);
+    width: min(100%, 36rem);
   }
 }
 
@@ -277,6 +313,20 @@ h1 {
 
   .medals-header {
     justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  .medals-icon {
+    width: 7.25rem;
+    height: 7.25rem;
+  }
+
+  .medal-progress {
+    min-width: min(100%, 14rem);
+    min-height: 3.4rem;
+    font-size: 1.1rem;
+    padding: 0.55rem 2.4rem;
   }
 
   .medal-grid {

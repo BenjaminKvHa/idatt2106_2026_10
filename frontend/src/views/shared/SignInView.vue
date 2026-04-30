@@ -173,6 +173,8 @@ const goToSignup = (): void => {
 </template>
 
 <style scoped>
+@import '@/assets/styles/feideStyle.css';
+
 * {
   box-sizing: border-box;
 }
@@ -230,8 +232,6 @@ const goToSignup = (): void => {
   border: none;
   box-shadow: 0 0 0 3px #dfe6ef inset;
 }
-
-@import '@/assets/styles/feideStyle.css';
 
 .feide-card,
 .landing-card {

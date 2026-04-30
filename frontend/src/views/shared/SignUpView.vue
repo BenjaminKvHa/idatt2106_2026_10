@@ -210,6 +210,8 @@ const handleRegister = async (): Promise<void> => {
 </template>
 
 <style scoped>
+@import '@/assets/styles/feideStyle.css';
+
 * {
   box-sizing: border-box;
 }
@@ -276,8 +278,6 @@ const handleRegister = async (): Promise<void> => {
 .header-text {
   margin-bottom: 18px;
 }
-
-@import '@/assets/styles/feideStyle.css';
 
 h1 {
   margin: 0 0 8px;

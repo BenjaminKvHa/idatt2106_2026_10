@@ -323,9 +323,7 @@ onBeforeUnmount(revokeAllImageUrls)
             <p>Nivå {{ currentLevelIndex + 1 }}/{{ levels.length }}</p>
           </div>
 
-          <HintCreature
-            hint="Les oppgaven nøye. Se etter små detaljer som kan avsløre riktig svar."
-          />
+          <HintCreature :chapter-id="DATASENTERET_CHAPTER_ID" />
 
           <div class="pupil-panel pupil-task-text-box">
             <p>
@@ -440,16 +438,6 @@ onBeforeUnmount(revokeAllImageUrls)
             <li>Det er én oppgave på hvert nivå.</li>
             <li>Du kan bare svare én gang på hver oppgave.</li>
             <li>Du må svare riktig på alle nivåene for å vinne.</li>
-          </ul>
-        </TaskGuide>
-
-        <TaskGuide v-if="showHintPopup" @close="showHintPopup = false">
-          <h2>Tips 💡</h2>
-          <p>Les oppgaven nøye før du svarer.</p>
-          <ul>
-            <li>Se etter små detaljer som kan avsløre riktig svar.</li>
-            <li>Ta deg god tid – du kan ikke svare på nytt.</li>
-            <li>Bruk det du har lært tidligere i spillet.</li>
           </ul>
         </TaskGuide>
 

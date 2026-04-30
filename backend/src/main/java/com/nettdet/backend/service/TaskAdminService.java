@@ -109,7 +109,7 @@ public class TaskAdminService {
                 .orElseThrow(() -> new EntityNotFoundException("Chapter not found: " + request.chapterId()));
 
         Classroom classroom = resolveClassroomForTeacher(request.classroomCode(), principal);
-        Long fileId = storeAndIndex(file, principal);
+        Long fileId = storeAndIndexInClassroom(file, principal, classroom.getClassroomCode());
 
         ImageVerificationTask taskData = new ImageVerificationTask(
                 request.taskDescription(),
@@ -137,8 +137,8 @@ public class TaskAdminService {
                 .orElseThrow(() -> new EntityNotFoundException("Chapter not found: " + request.chapterId()));
 
         Classroom classroom = resolveClassroomForTeacher(request.classroomCode(), principal);
-        Long fileId1 = storeAndIndex(file1, principal);
-        Long fileId2 = storeAndIndex(file2, principal);
+        Long fileId1 = storeAndIndexInClassroom(file1, principal, classroom.getClassroomCode());
+        Long fileId2 = storeAndIndexInClassroom(file2, principal, classroom.getClassroomCode());
         Long correctFileId = resolveCorrectFileId(request.correctFileSlot(), fileId1, fileId2);
 
         NewsVerificationTask taskData = new NewsVerificationTask(
@@ -163,8 +163,8 @@ public class TaskAdminService {
                                                        JwtUserPrincipal principal) {
         Chapter chapter = chapterRepository.findById(DATACENTER_CHAPTER_ID)
                 .orElseThrow(() -> new EntityNotFoundException("Datasenteret chapter not found"));
-
-        Long fileId = storeAndIndex(file, principal);
+        Classroom classroom = resolveClassroomForTeacher(request.classroomCode(), principal);
+        Long fileId = storeAndIndexInClassroom(file, principal, classroom.getClassroomCode());
 
         ImageVerificationTask inner = new ImageVerificationTask(
                 request.taskDescription(),
@@ -178,7 +178,6 @@ public class TaskAdminService {
         DatacenterTask wrapped = new DatacenterTask(
                 DatacenterTaskFormat.IMAGE_VERIFICATION, inner, null);
 
-        Classroom classroom = resolveClassroomForTeacher(request.classroomCode(), principal);
         return TaskAdminResponse.from(createTask(chapter, TaskDifficulty.HARD, wrapped, classroom));
     }
 
@@ -189,9 +188,10 @@ public class TaskAdminService {
                                                       JwtUserPrincipal principal) {
         Chapter chapter = chapterRepository.findById(DATACENTER_CHAPTER_ID)
                 .orElseThrow(() -> new EntityNotFoundException("Datasenteret chapter not found"));
+        Classroom classroom = resolveClassroomForTeacher(request.classroomCode(), principal);
 
-        Long fileId1 = storeAndIndex(file1, principal);
-        Long fileId2 = storeAndIndex(file2, principal);
+        Long fileId1 = storeAndIndexInClassroom(file1, principal, classroom.getClassroomCode());
+        Long fileId2 = storeAndIndexInClassroom(file2, principal, classroom.getClassroomCode());
         Long correctFileId = resolveCorrectFileId(request.correctFileSlot(), fileId1, fileId2);
 
         NewsVerificationTask inner = new NewsVerificationTask(
@@ -205,7 +205,6 @@ public class TaskAdminService {
         DatacenterTask wrapped = new DatacenterTask(
                 DatacenterTaskFormat.NEWS_VERIFICATION, null, inner);
 
-        Classroom classroom = resolveClassroomForTeacher(request.classroomCode(), principal);
         return TaskAdminResponse.from(createTask(chapter, TaskDifficulty.HARD, wrapped, classroom));
     }
 
@@ -222,7 +221,8 @@ public class TaskAdminService {
         authorizeTaskMutation(task, principal);
 
         ImageVerificationTask current = deserialize(task.getTaskJson(), ImageVerificationTask.class);
-        Long fileId = replaceFileIfPresent(file, current.fileId(), principal);
+        Classroom classroom = resolveClassroomForTeacher(task.getClassroom().getClassroomCode(), principal);
+        Long fileId = replaceFileIfPresent(file, current.fileId(), principal, classroom.getClassroomCode());
 
         ImageVerificationTask updated = new ImageVerificationTask(
                 request.taskDescription(),
@@ -251,8 +251,9 @@ public class TaskAdminService {
         if (currentWrapper.format() != DatacenterTaskFormat.IMAGE_VERIFICATION || currentWrapper.imageTask() == null) {
             throw new IllegalArgumentException("Task " + taskId + " is not an image-format Datasenteret task");
         }
+        Classroom classroom = resolveClassroomForTeacher(task.getClassroom().getClassroomCode(), principal);
 
-        Long fileId = replaceFileIfPresent(file, currentWrapper.imageTask().fileId(), principal);
+        Long fileId = replaceFileIfPresent(file, currentWrapper.imageTask().fileId(), principal, classroom.getClassroomCode());
 
         ImageVerificationTask updated = new ImageVerificationTask(
                 request.taskDescription(),
@@ -283,8 +284,9 @@ public class TaskAdminService {
         authorizeTaskMutation(task, principal);
 
         NewsVerificationTask current = deserialize(task.getTaskJson(), NewsVerificationTask.class);
-        Long fileId1 = replaceFileIfPresent(file1, current.fileId_1(), principal);
-        Long fileId2 = replaceFileIfPresent(file2, current.fileId_2(), principal);
+        Classroom classroom = resolveClassroomForTeacher(task.getClassroom().getClassroomCode(), principal);
+        Long fileId1 = replaceFileIfPresent(file1, current.fileId_1(), principal, classroom.getClassroomCode());
+        Long fileId2 = replaceFileIfPresent(file2, current.fileId_2(), principal, classroom.getClassroomCode());
         Long correctFileId = resolveCorrectFileId(request.correctFileSlot(), fileId1, fileId2);
 
         NewsVerificationTask updated = new NewsVerificationTask(
@@ -316,8 +318,9 @@ public class TaskAdminService {
         }
 
         NewsVerificationTask current = currentWrapper.newsTask();
-        Long fileId1 = replaceFileIfPresent(file1, current.fileId_1(), principal);
-        Long fileId2 = replaceFileIfPresent(file2, current.fileId_2(), principal);
+        Classroom classroom = resolveClassroomForTeacher(task.getClassroom().getClassroomCode(), principal);
+        Long fileId1 = replaceFileIfPresent(file1, current.fileId_1(), principal, classroom.getClassroomCode());
+        Long fileId2 = replaceFileIfPresent(file2, current.fileId_2(), principal, classroom.getClassroomCode());
         Long correctFileId = resolveCorrectFileId(request.correctFileSlot(), fileId1, fileId2);
 
         NewsVerificationTask updated = new NewsVerificationTask(
@@ -395,19 +398,19 @@ public class TaskAdminService {
                 .orElseThrow(() -> new EntityNotFoundException("Classroom not found: " + classroomCode));
     }
 
-    private Long storeAndIndex(MultipartFile file, JwtUserPrincipal principal) {
+    private Long storeAndIndexInClassroom(MultipartFile file, JwtUserPrincipal principal, String classroomCode) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("File must not be empty");
         }
-        FileObject stored = fileObjectAccessControlService.upload(file, null, ClassroomAccess.PUBLIC, principal);
+        FileObject stored = fileObjectAccessControlService.upload(file, classroomCode, ClassroomAccess.ONLY_CLASS, principal);
         return stored.getId();
     }
 
-    private Long replaceFileIfPresent(MultipartFile file, Long currentFileId, JwtUserPrincipal principal) {
+    private Long replaceFileIfPresent(MultipartFile file, Long currentFileId, JwtUserPrincipal principal, String classroomCode) {
         if (file == null || file.isEmpty()) {
             return currentFileId;
         }
-        Long newId = storeAndIndex(file, principal);
+        Long newId = storeAndIndexInClassroom(file, principal, classroomCode);
         if (currentFileId != null) {
             try {
                 fileObjectService.delete(currentFileId);

@@ -5,6 +5,7 @@ import TopBar from '@/components/pupil/TopBar.vue'
 import { get } from '@/utils/apiUtils'
 
 const routerPush = vi.fn()
+const historyBack = vi.fn()
 
 let routePath = '/pupil/classroom/map'
 
@@ -59,6 +60,7 @@ describe('TopBar', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     routePath = '/pupil/classroom/map'
+    vi.spyOn(window.history, 'back').mockImplementation(historyBack)
 
     mockedGet.mockResolvedValue({
       email: 'ola@example.com',
@@ -187,7 +189,6 @@ describe('TopBar', () => {
     '/pupil/classroom/medals',
     '/pupil/classroom/help',
     '/pupil/classroom/leaderboard',
-    '/pupil/profile',
   ])('routes from feature page %s back to pupil dashboard', async (path) => {
     routePath = path
     const wrapper = mountTopBar()
@@ -197,6 +198,18 @@ describe('TopBar', () => {
     await wrapper.find('button.nav-icon-parent').trigger('click')
 
     expect(routerPush).toHaveBeenCalledWith('/pupil')
+  })
+
+  it('uses browser history from the profile page because it can be opened from multiple places', async () => {
+    routePath = '/pupil/profile'
+    const wrapper = mountTopBar()
+
+    await flushPromises()
+
+    await wrapper.find('button.nav-icon-parent').trigger('click')
+
+    expect(historyBack).toHaveBeenCalled()
+    expect(routerPush).not.toHaveBeenCalled()
   })
 
   it('routes from pupil avatar edit back to profile', async () => {

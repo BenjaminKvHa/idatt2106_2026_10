@@ -50,7 +50,6 @@ const pupilBackRoutes: Record<string, string> = {
   '/pupil/classroom/medals': '/pupil',
   '/pupil/classroom/help': '/pupil',
   '/pupil/classroom/leaderboard': '/pupil',
-  '/pupil/profile': '/pupil',
   '/pupil/profile/avatar': '/pupil/profile',
 }
 
@@ -67,6 +66,11 @@ onMounted(loadProfile)
 function goBack() {
   if (props.previousPageUrl) {
     router.push(props.previousPageUrl)
+    return
+  }
+
+  if (route.path === '/pupil/profile') {
+    window.history.back()
     return
   }
 

@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AvatarAssetsContainer from '@/components/pupil/AvatarAssetsContainer.vue'
 import { put } from '@/utils/apiUtils'
+import { clearMeCache } from '@/router'
 
 type AvatarAsset = {
   assetType: string
@@ -101,6 +102,7 @@ async function saveMembership() {
     }
 
     await put(`/api/pupil/classrooms/${classroomCode.value}/membership`, payload)
+    clearMeCache()
     await router.push('/join-classroom/waiting-classroom')
   } catch (error) {
     saveError.value = error instanceof Error ? error.message : 'Kunne ikke lagre avatar og kallenavn'
@@ -347,7 +349,7 @@ onMounted(async () => {
 }
 
 .state-message.error {
-  color: #9f1d1d;
+  color: var(--red-danger);
 }
 
 @media (max-width: 900px) {

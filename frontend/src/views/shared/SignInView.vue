@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { loginWithCredentials } from '@/utils/apiUtils'
+import { clearMeCache } from '@/router'
 import { decodeJwtPayload } from '@/utils/jwtUtils'
 
 const router = useRouter()
@@ -39,7 +40,8 @@ const login = async (): Promise<void> => {
 
     const payload = decodeJwtPayload(accessToken)
     submitted.value = true
-    await router.push(payload?.role === 'PUPIL' ? '/pupil' : '/join-classroom/enter-classroom-code')
+    clearMeCache()
+    await router.push(payload?.role === "PUPIL" ? "/pupil" : "/join-classroom/enter-classroom-code")
   } catch (caughtError) {
     error.value = caughtError instanceof Error ? caughtError.message : 'Kunne ikke logge inn.'
   } finally {
@@ -53,124 +55,120 @@ const goToSignup = (): void => {
 </script>
 
 <template>
-  <div class="page">
-    <div class="frame">
-      <div class="card-wrapper">
-        <section v-if="step === 1" class="card feide-card">
-          <div class="card-header">
-            <div class="language-select">
-              <span class="flag">🇳🇴</span>
-              <span>Bokmål</span>
-            </div>
-          </div>
-
-          <div class="card-body">
-            <h1>Logg inn med Feide</h1>
-            <p class="intro">Du må logge deg på via Feide for å få tilgang til systemet.</p>
-
-            <div class="divider"></div>
-
-            <div class="affiliation">
-              <p class="label">Din tilhørighet</p>
-              <div class="affiliation-box">
-                <img src="@/assets/logo/NTNU.png" alt="NTNU" class="affiliation-logo" />
-              </div>
-            </div>
-
-            <div class="divider"></div>
-
-            <button class="option-button primary-option" @click="step = 2">
-              <span class="icon microsoft">
-                <span></span><span></span><span></span><span></span>
-              </span>
-              <span>Bruk arbeids- eller skolekonto</span>
-            </button>
-
-            <button class="option-button disabled-option" type="button" disabled>
-              <span class="icon id-porten">⬒</span>
-              <span>Logg inn med ID-porten</span>
-            </button>
-
-            <div class="help-row">
-              <span>Trenger du hjelp?</span>
-              <span class="plus">+</span>
-            </div>
-          </div>
-
-          <div class="card-footer">
-            <span>Feide leveres av Sikt</span>
-          </div>
-        </section>
-
-        <section v-else-if="step === 2" class="card auth-card small-card">
-          <div class="auth-body">
-            <img src="@/assets/logo/NTNU.png" alt="NTNU" class="brand-logo" />
-            <h2>Logg på</h2>
-
-            <form @submit.prevent="goToPassword">
-              <input
-                v-model="email"
-                type="email"
-                placeholder="bruker@ntnu.no"
-                class="text-input"
-                required
-              />
-
-              <p class="muted-link">Får du ikke tilgang til kontoen?</p>
-
-              <div class="button-row">
-                <button type="button" class="secondary-btn" @click="step = 1">Tilbake</button>
-                <button type="submit" class="primary-btn">Neste</button>
-              </div>
-
-              <button type="button" class="signup-btn" @click="goToSignup">Sign up</button>
-            </form>
-          </div>
-
-          <div class="auth-footer">
-            <span class="key-icon">⌕</span>
-            <span>Påloggingsalternativer</span>
-          </div>
-        </section>
-
-        <section v-else class="card auth-card password-card">
-          <div class="auth-body password-body">
-            <img src="@/assets/logo/NTNU.png" alt="NTNU" class="brand-logo" />
-            <p class="signed-in-as">{{ email || 'eksempel@epost.no' }}</p>
-            <h2>Skriv inn passord</h2>
-
-            <p class="description">
-              Skriv inn passordet ditt for å logge inn på den valgte kontoen.
-            </p>
-
-            <form @submit.prevent="login">
-              <input
-                v-model="password"
-                type="password"
-                placeholder="Passord"
-                class="text-input"
-                required
-              />
-
-              <div class="link-list">
-                <span>Jeg har glemt passordet</span>
-                <span>Bruk et sertifikat eller et smartkort</span>
-                <span class="clickable" @click="changeAccount">Logg på med en annen konto</span>
-              </div>
-
-              <div class="login-button-row">
-                <button type="submit" class="primary-btn" :disabled="loading">
-                  {{ loading ? 'Logger inn...' : 'Logg på' }}
-                </button>
-              </div>
-            </form>
-
-            <p v-if="error" class="error-message" role="alert">{{ error }}</p>
-            <p v-else-if="submitted" class="demo-message">Innlogging registrert.</p>
-          </div>
-        </section>
+  <div class="feide-page">
+    <section v-if="step === 1" class="landing-card">
+      <div class="card-header">
+        <div class="language-select">
+          <span class="flag">🇳🇴</span>
+          <span>Bokmål</span>
+        </div>
       </div>
-    </div>
+
+      <div class="card-body">
+        <h1>Logg inn med Feide</h1>
+        <p class="intro">Du må logge deg på via Feide for å få tilgang til systemet.</p>
+
+        <div class="feide-divider"></div>
+
+        <div class="affiliation">
+          <p class="label">Din tilhørighet</p>
+          <div class="affiliation-box">
+            <img src="@/assets/logo/NTNU.png" alt="NTNU" class="affiliation-logo" />
+          </div>
+        </div>
+
+        <div class="feide-divider"></div>
+
+        <button class="option-button primary-option" @click="step = 2">
+          <span class="icon microsoft">
+            <span></span><span></span><span></span><span></span>
+          </span>
+          <span>Bruk arbeids- eller skolekonto</span>
+        </button>
+
+        <button class="option-button disabled-option" type="button" disabled>
+          <span class="icon id-porten">⬒</span>
+          <span>Logg inn med ID-porten</span>
+        </button>
+
+        <div class="help-row">
+          <span>Trenger du hjelp?</span>
+          <span class="plus">+</span>
+        </div>
+      </div>
+
+      <div class="landing-footer">
+        <span>Feide leveres av Sikt</span>
+      </div>
+    </section>
+
+    <section v-else-if="step === 2" class="feide-card">
+      <div class="feide-card-body auth-step-body">
+        <img src="@/assets/logo/NTNU.png" alt="NTNU" class="brand-logo" />
+        <h2>Logg på</h2>
+
+        <form @submit.prevent="goToPassword">
+          <input
+            v-model="email"
+            type="email"
+            placeholder="bruker@ntnu.no"
+            class="feide-input"
+            required
+          />
+
+          <p class="feide-muted-link">Får du ikke tilgang til kontoen?</p>
+
+          <div class="feide-button-row">
+            <button type="button" class="feide-btn-secondary" @click="step = 1">Tilbake</button>
+            <button type="submit" class="feide-btn-primary">Neste</button>
+          </div>
+
+          <button type="button" class="signup-btn" @click="goToSignup">Sign up</button>
+        </form>
+      </div>
+
+      <div class="feide-card-footer auth-key-footer">
+        <span class="key-icon">⌕</span>
+        <span>Påloggingsalternativer</span>
+      </div>
+    </section>
+
+    <section v-else class="feide-card password-card">
+      <div class="feide-card-body password-body">
+        <img src="@/assets/logo/NTNU.png" alt="NTNU" class="brand-logo" />
+        <p class="signed-in-as">{{ email || 'eksempel@epost.no' }}</p>
+        <h2>Skriv inn passord</h2>
+
+        <p class="description">
+          Skriv inn passordet ditt for å logge inn på den valgte kontoen.
+        </p>
+
+        <form @submit.prevent="login">
+          <input
+            v-model="password"
+            type="password"
+            placeholder="Passord"
+            class="feide-input"
+            required
+          />
+
+          <div class="feide-link-list">
+            <span>Jeg har glemt passordet</span>
+            <span>Bruk et sertifikat eller et smartkort</span>
+            <span class="clickable" @click="changeAccount">Logg på med en annen konto</span>
+          </div>
+
+          <div class="login-button-row">
+            <button type="submit" class="feide-btn-primary" :disabled="loading">
+              {{ loading ? 'Logger inn...' : 'Logg på' }}
+            </button>
+          </div>
+        </form>
+
+        <p v-if="error" class="feide-status-error" role="alert">{{ error }}</p>
+        <p v-else-if="submitted" class="demo-message">Innlogging registrert.</p>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -233,9 +231,14 @@ const goToSignup = (): void => {
   box-shadow: 0 0 0 3px #dfe6ef inset;
 }
 
-.feide-card {
+@import '@/assets/styles/feideStyle.css';
+
+.feide-card,
+.landing-card {
   width: 390px;
   overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px #dfe6ef inset;
 }
 
 .card-header {
@@ -255,11 +258,6 @@ const goToSignup = (): void => {
 
 .flag {
   font-size: 15px;
-}
-
-.chevron {
-  font-size: 16px;
-  margin-left: 2px;
 }
 
 .card-body {
@@ -291,12 +289,6 @@ h2 {
   color: #333;
 }
 
-.divider {
-  height: 1px;
-  background: #d7d7d7;
-  margin: 14px 0;
-}
-
 .label {
   margin: 0 0 10px;
   font-size: 13px;
@@ -312,11 +304,6 @@ h2 {
 .affiliation-logo {
   height: 34px;
   width: auto;
-}
-
-.affiliation-name {
-  font-size: 16px;
-  color: #262626;
 }
 
 .option-button {
@@ -363,18 +350,10 @@ h2 {
   gap: 2px;
 }
 
-.microsoft span:nth-child(1) {
-  background: #f25022;
-}
-.microsoft span:nth-child(2) {
-  background: #7fba00;
-}
-.microsoft span:nth-child(3) {
-  background: #00a4ef;
-}
-.microsoft span:nth-child(4) {
-  background: #ffb900;
-}
+.microsoft span:nth-child(1) { background: #f25022; }
+.microsoft span:nth-child(2) { background: #7fba00; }
+.microsoft span:nth-child(3) { background: #00a4ef; }
+.microsoft span:nth-child(4) { background: #ffb900; }
 
 .id-porten {
   font-size: 15px;
@@ -397,7 +376,7 @@ h2 {
   color: #28428f;
 }
 
-.card-footer {
+.landing-footer {
   background: #dfe6ef;
   padding: 22px 16px;
   text-align: center;
@@ -405,24 +384,13 @@ h2 {
   color: #54606b;
 }
 
-.auth-card {
-  background: #ffffff;
-  border: 1px solid #666;
-  box-shadow: none;
-}
-
-.small-card {
-  width: 340px;
-}
-
 .password-card {
-  width: 340px;
   box-shadow: 0 0 0 3px #dfe6ef inset;
   border-color: #d6d6d6;
 }
 
-.auth-body {
-  padding: 20px 34px 30px;
+.auth-step-body {
+  padding-top: 20px;
 }
 
 .password-body {
@@ -430,88 +398,28 @@ h2 {
   padding-bottom: 32px;
 }
 
-.brand-logo {
-  height: 36px;
-  margin-bottom: 18px;
-}
-
-.text-input {
-  width: 100%;
-  border: none;
-  border-bottom: 1px solid #7aa7dd;
-  background: transparent;
-  font-size: 14px;
-  padding: 10px 0 8px;
-  outline: none;
+.feide-input {
   margin-bottom: 14px;
-}
-
-.muted-link,
-.link-list span {
-  display: block;
-  font-size: 12px;
-  color: #1967b3;
-}
-
-.muted-link {
-  margin: 0 0 20px;
-}
-
-.link-list {
-  display: grid;
-  gap: 14px;
-  margin-top: 4px;
 }
 
 .clickable {
   cursor: pointer;
 }
 
-.button-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 6px;
-  margin-top: 24px;
-}
-
-.secondary-btn,
-.primary-btn,
-.signup-btn {
-  min-height: 42px;
-  border: none;
-  padding: 0 18px;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.secondary-btn {
-  background: #d9d9d9;
-  color: #2a2a2a;
-  min-width: 82px;
-}
-
-.primary-btn {
-  background: #0067b8;
-  color: white;
-  min-width: 84px;
-}
-
 .signup-btn {
   width: 100%;
+  min-height: 42px;
   margin-top: 14px;
   border: 1px solid #8a8f99;
   background: #ffffff;
   color: #2c2c2c;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 18px;
 }
 
-.auth-footer {
-  border-top: 1px solid #d5d5d5;
-  padding: 14px 34px;
-  display: flex;
+.auth-key-footer {
   gap: 12px;
-  align-items: center;
-  font-size: 14px;
-  color: #333;
 }
 
 .key-icon {
@@ -544,23 +452,10 @@ h2 {
   color: #1f5d1f;
 }
 
-.error-message {
-  margin-top: 16px;
-  font-size: 13px;
-  color: #991b1b;
-}
-
 @media (max-width: 480px) {
-  .feide-card,
-  .small-card,
-  .password-card {
+  .landing-card {
     width: 100%;
     max-width: 390px;
-  }
-
-  .auth-body {
-    padding-left: 22px;
-    padding-right: 22px;
   }
 }
 </style>

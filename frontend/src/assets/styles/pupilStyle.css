@@ -59,7 +59,7 @@
 
 .pupil-board-blobby-wrapper {
   position: absolute;
-  top: 10.5%;
+  top: 8.5%;
   right: 6%;
   width: clamp(90px, 30%, 420px);
   z-index: 10;
@@ -275,6 +275,16 @@
   color: var(--color-text);
   cursor: pointer;
   box-shadow: 0 6px 12px var(--brown-dark-20);
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.pupil-popup-btn:hover {
+  transform: scale(1.04);
+  filter: brightness(1.08);
+}
+
+.pupil-popup-btn:active {
+  transform: scale(0.97);
 }
 
 @media (max-width: 768px) {
@@ -301,4 +311,30 @@
   .pupil-responsive-button-row {
     flex-direction: column;
   }
+}
+
+.pupil-button-3d {
+  border: var(--border-wide) solid var(--brown-dark);
+  border-radius: 40px;
+  font-family: 'Inika', serif;
+  font-size: clamp(1rem, 4vw, 1.35rem);
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: -3px 3px 6px var(--brown-dark);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.pupil-button-3d:hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  box-shadow: -5px 5px 0 var(--brown-dark);
+}
+
+.pupil-button-3d:active:not(:disabled) {
+  transform: translate(3px, 3px);
+  box-shadow: -1px 1px 0 var(--brown-dark);
+}
+
+.pupil-button-3d:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
 }

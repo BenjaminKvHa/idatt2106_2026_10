@@ -93,10 +93,16 @@ const handleSubmit = async () => {
           ></textarea>
         </div>
 
-        <button type="submit" class="button-variant-1 form-button" :disabled="loading">
+        <button type="submit" class="button-variant-1 form-button create-classroom" :disabled="loading">
           {{ loading ? 'Oppretter...' : 'Opprett klasserom' }}
         </button>
       </form>
     </div>
   </div>
 </template>
+<style scoped>
+.create-classroom:focus {
+    color: var(--txt-sec);
+    background-color: var(--accent);
+}
+</style>

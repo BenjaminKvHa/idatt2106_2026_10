@@ -150,7 +150,11 @@ export async function getBlob(endpoint: string): Promise<Blob> {
   return await res.blob()
 }
 
-export async function postForm<T = unknown>(endpoint: string, formData: FormData): Promise<T> {
+async function requestForm<T = unknown>(
+  endpoint: string,
+  method: 'POST' | 'PATCH',
+  formData: FormData,
+): Promise<T> {
   if (!hasAccessToken()) {
     await getNewTokens()
   }
@@ -159,7 +163,7 @@ export async function postForm<T = unknown>(endpoint: string, formData: FormData
     const headers: Record<string, string> = {}
     const token = getAccessToken()
     if (token) headers.Authorization = `Bearer ${token}`
-    return { method: 'POST', credentials: 'include', headers, body: formData }
+    return { method, credentials: 'include', headers, body: formData }
   }
 
   let res = await fetch(endpoint, buildInit())
@@ -180,6 +184,14 @@ export async function postForm<T = unknown>(endpoint: string, formData: FormData
   }
 
   return (await parseResponse(res)) as T
+}
+
+export async function postForm<T = unknown>(endpoint: string, formData: FormData): Promise<T> {
+  return await requestForm(endpoint, 'POST', formData)
+}
+
+export async function patchForm<T = unknown>(endpoint: string, formData: FormData): Promise<T> {
+  return await requestForm(endpoint, 'PATCH', formData)
 }
 
 export async function get<T = unknown>(endpoint: string): Promise<T> {

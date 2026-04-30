@@ -52,6 +52,14 @@
     --animation-time-1: 0.2s;
 }
 
+.teacher-container-box {
+    border: var(--border-width) solid var(--accent);
+    background-color: var(--background);
+    padding: var(--medium-padding);
+    border-radius: var(--border-radius);
+    width: min(40rem, 90%);
+}
+
 .teacher-content {
     color: var(--accent);
     background-color: var(--background-body);
@@ -116,6 +124,14 @@
 
 }
 
+.hr-brown {
+    width: 100%;
+    margin: 0;
+    border: none;
+    height: 2px;
+    background: var(--accent);
+    opacity: .5;
+}
 
 .teacher-card-item-var-1 {
     display: inline-flex;
@@ -124,6 +140,7 @@
     padding: var(--card-item-padding);
     border-radius: var(--card-item-radius);
     transition: background-color var(--animation-time-1), color var(--animation-time-1);
+    font-weight: 600;
 }
 
 .teacher-card-item-var-2 {
@@ -173,6 +190,7 @@
     border-style: solid;
     border-color: var(--accent);
     transition: ease-in-out var(--animation-time-1);
+    text-decoration: none;
 }
 
 .button-variant-1:hover, .button-variant-1::selection {

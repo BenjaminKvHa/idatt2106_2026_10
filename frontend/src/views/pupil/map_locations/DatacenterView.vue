@@ -51,7 +51,6 @@ let defeatSoundRef: HTMLAudioElement | null = null
 
 const showGuidePopup = ref(true)
 const showHelpPopup = ref(false)
-const showHintPopup = ref(false)
 const showResultPopup = ref(false)
 const resultType = ref<ResultType>(null)
 

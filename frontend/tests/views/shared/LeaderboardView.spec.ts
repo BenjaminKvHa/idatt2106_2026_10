@@ -34,7 +34,7 @@ describe('LeaderboardView', () => {
 
     const wrapper = mountLeaderboardView()
 
-    expect(wrapper.text()).toContain('Loading leaderboard...')
+    expect(wrapper.text()).toContain('Laster ledertavle...')
   })
 
   it('fetches classroom leaderboard entries from the backend endpoint', async () => {

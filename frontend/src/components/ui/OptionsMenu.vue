@@ -2,14 +2,11 @@
 import { useRouter } from 'vue-router'
 import { clearAuthSessionStorage, post } from '@/utils/apiUtils'
 import BaseModal from '@/components/ui/BaseModal.vue'
-import { useAudio } from '@/composables/useAudio'
-import volume2Icon from '@/assets/icons/volume-2.svg'
-import volumeXIcon from '@/assets/icons/volume-x.svg'
+import VolumeControl from '@/components/ui/VolumeControl.vue'
 
 const emit = defineEmits<{ (e: 'close'): void }>()
 
 const router = useRouter()
-const { volume, isMuted, setVolume, toggleMute } = useAudio()
 
 async function logout() {
   try {
@@ -31,25 +28,10 @@ function close() {
     <h2 class="settings-modal-title">Innstillinger</h2>
 
     <div class="settings-grid">
-      <!--no API endpoint for changing username rn -->
       <div style="display: flex; flex-direction: column; gap: var(--thin-gap);">
         <div class="settings-field">
           <label for="options-volume-slider">Volum</label>
-          <div class="volume-row">
-            <button type="button" class="mute-btn" :aria-label="isMuted ? 'Skru på lyd' : 'Demp lyd'" @click="toggleMute">
-              <img :src="isMuted ? volumeXIcon : volume2Icon" alt="" aria-hidden="true" class="volume-icon" />
-            </button>
-            <input
-              id="options-volume-slider"
-              :value="volume"
-              type="range"
-              min="0"
-              max="100"
-              :disabled="isMuted"
-              @input="setVolume(+($event.target as HTMLInputElement).value)"
-            />
-            <span class="volume-label">{{ isMuted ? 'Dempet' : volume + '%' }}</span>
-          </div>
+          <VolumeControl input-id="options-volume-slider" />
         </div>
       </div>
     </div>

@@ -32,7 +32,31 @@ import PhotographerView from '@/views/pupil/map_locations/PhotographerView.vue'
 import PupilsWaitingPageView from '@/views/pupil/PupilsWaitingPageView.vue'
 import PupilsWelcomeGuideView from '@/views/pupil/PupilsWelcomeGuideView.vue'
 import PupilsProfileView from '@/views/pupil/PupilsProfileView.vue'
+import PupilsEditAvatarView from '@/views/pupil/PupilsEditAvatarView.vue'
 import TeachersEditClassroom from '@/views/teacher/TeachersEditClassroom.vue'
+import { getJwtDataWithRefresh } from '@/utils/jwtUtils'
+import { get } from '@/utils/apiUtils'
+
+type MeProfile = { role: string; classroomCode: string | null; membershipConfirmed: boolean }
+const ME_CACHE_KEY = 'me-profile-cache'
+
+async function fetchMeCached(): Promise<MeProfile | null> {
+  const cached = sessionStorage.getItem(ME_CACHE_KEY)
+  if (cached) {
+    try { return JSON.parse(cached) as MeProfile } catch { /* fall through */ }
+  }
+  try {
+    const me = await get<MeProfile>('/api/me')
+    sessionStorage.setItem(ME_CACHE_KEY, JSON.stringify(me))
+    return me
+  } catch {
+    return null
+  }
+}
+
+export function clearMeCache() {
+  sessionStorage.removeItem(ME_CACHE_KEY)
+}
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -98,14 +122,14 @@ const router = createRouter({
               component: TeachersCreateClassroomView,
             },
             {
-              path: ':classroomName',
+              path: ':classroomCode',
               meta: {
                 breadcrumb: (route: RouteLocationNormalizedLoaded) =>
-                  String(route.params.classroomName)
+                  String(route.params.classroomCode)
                     .replace(/-/g, ' ')
                     .replace(/\b\w/g, (c) => c.toUpperCase()),
                 tabs: (route: RouteLocationNormalizedLoaded) => {
-                  const base = `/teacher/classrooms/${route.params.classroomName}`
+                  const base = `/teacher/classrooms/${route.params.classroomCode}`
                   return [
                     { label: 'Ledertavle', to: `${base}/leaderboard` },
                     { label: 'Elever', to: `${base}/pupils` },
@@ -115,7 +139,7 @@ const router = createRouter({
                   ]
                 },
               },
-              redirect: (to) => `/teacher/classrooms/${to.params.classroomName}/leaderboard`,
+              redirect: (to) => `/teacher/classrooms/${to.params.classroomCode}/leaderboard`,
               children: [
                 {
                   path: 'edit-classroom',
@@ -178,6 +202,10 @@ const router = createRouter({
         {
           path: 'profile',
           component: PupilsProfileView,
+        },
+        {
+          path: 'profile/avatar',
+          component: PupilsEditAvatarView,
         },
         {
           path: 'classroom',
@@ -245,6 +273,27 @@ const router = createRouter({
       component: NotFoundView,
     },
   ],
+})
+
+router.beforeEach(async (to) => {
+  const requiresPupil = to.path.startsWith('/pupil') || to.path.startsWith('/join-classroom')
+  const requiresTeacher = to.path.startsWith('/teacher')
+
+  if (!requiresPupil && !requiresTeacher) return true
+
+  const jwt = await getJwtDataWithRefresh()
+  if (!jwt?.role) return '/sign-in'
+
+  if (requiresTeacher && jwt.role !== 'TEACHER') return '/pupil'
+  if (requiresPupil && jwt.role !== 'PUPIL') return '/teacher/classrooms'
+
+  if (jwt.role === 'PUPIL' && to.path.startsWith('/pupil')) {
+    const me = await fetchMeCached()
+    if (!me?.classroomCode) return '/join-classroom/enter-classroom-code'
+    if (!me.membershipConfirmed) return '/join-classroom/waiting-classroom'
+  }
+
+  return true
 })
 
 export default router

@@ -82,7 +82,7 @@ function handleBlobbyClick() {
 <style scoped>
 .blobby-wrapper {
   position: absolute;
-  top: 10.5%;
+  top: 8.5%;
   right: 6%;
   width: clamp(90px, 30%, 420px);
   z-index: 10;

@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import creatureSitting from '@/assets/icons/blobby/creatureSitting.png'
 import { post } from '@/utils/apiUtils'
+import WipNotice from '@/components/shared/WipNotice.vue'
 
 const router = useRouter()
 
@@ -11,6 +12,8 @@ const waiting = ref(false)
 const errorMessage = ref('')
 
 function handleInput(event: Event) {
+  errorMessage.value = ''
+
   const target = event.target as HTMLInputElement
 
   let value = target.value
@@ -38,7 +41,7 @@ async function handleConfirm() {
       },
     })
   } catch (e) {
-    errorMessage.value = "Noe gikk galt"
+    errorMessage.value = "Kunne ikke bli med i klasserommet. Sjekk koden og prøv igjen."
     console.error(e)
   } finally {
     waiting.value = false
@@ -67,7 +70,10 @@ async function handleConfirm() {
       </div>
     </div>
 
-    <p>WIP: Validerer ikke klasserom enda, alle 6 bokstaver lange koder redirecter</p>
+    <WipNotice message="WIP: Validerer ikke klasserom enda, alle 6 bokstaver lange koder redirecter" />
+    <p v-if="errorMessage" class="error-message" role="alert">
+      {{ errorMessage }}
+    </p>
 
     <div class="buttons">
       <button
@@ -75,7 +81,7 @@ async function handleConfirm() {
         @click="handleConfirm()"
         :disabled="classroomCode.length !== 6 || waiting"
       >
-        Bekreft
+        {{ waiting ? 'Sender...' : 'Bekreft' }}
       </button>
     </div>
   </main>

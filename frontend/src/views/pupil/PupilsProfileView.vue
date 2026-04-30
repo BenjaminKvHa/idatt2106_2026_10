@@ -10,9 +10,8 @@ import {
   put,
   type BackendAccountRole,
 } from '@/utils/apiUtils'
-import { useAudio } from '@/composables/useAudio'
-import volume2Icon from '@/assets/icons/volume-2.svg'
-import volumeXIcon from '@/assets/icons/volume-x.svg'
+import { clearMeCache } from '@/router'
+import VolumeControl from '@/components/ui/VolumeControl.vue'
 
 type ProfileResponse = {
   email: string
@@ -36,7 +35,6 @@ const leavingClassroom = ref(false)
 const signingOut = ref(false)
 const editingNickname = ref(false)
 
-const { volume, isMuted, setVolume, toggleMute } = useAudio()
 const nicknameDraft = ref('')
 const savingNickname = ref(false)
 
@@ -78,6 +76,7 @@ async function leaveClassroom() {
 
   try {
     await del(`/api/classrooms/${profile.value.classroomCode}/pupils/me`)
+    clearMeCache()
     await router.push('/pupil')
   } catch (requestError) {
     actionError.value =
@@ -99,6 +98,7 @@ async function signOut() {
     // Clearing local auth state still signs the user out from the frontend.
   } finally {
     clearAuthSessionStorage()
+    clearMeCache()
     signingOut.value = false
     await router.push('/sign-in')
   }
@@ -246,32 +246,52 @@ async function saveNickname() {
               <p>{{ isMuted ? 'Dempet' : volume + '%' }}</p>
             </div>
 
-            <p v-if="actionError" class="action-error pupil-error">{{ actionError }}</p>
+            <button
+              v-else-if="isInClassroom"
+              class="pupil-button pupil-button-secondary"
+              type="button"
+              @click="startNicknameEdit"
+            >
+              Bytt kallenavn for klasserom
+            </button>
+          </div>
 
-            <div class="actions">
-              <button
-                v-if="isInClassroom"
-                class="pupil-button pupil-button-danger"
-                type="button"
-                :disabled="leavingClassroom"
-                @click="leaveClassroom"
-              >
-                {{ leavingClassroom ? 'Forlater...' : 'Forlat klasserom' }}
-              </button>
+          <div v-if="isInClassroom" class="setting-card pupil-inner-card">
+            <span class="pupil-label">Klasseromskode</span>
+            <p>{{ profile.classroomCode }}</p>
+          </div>
 
-              <button
-                class="pupil-button pupil-button-danger"
-                type="button"
-                :disabled="signingOut"
-                @click="signOut"
-              >
-                {{ signingOut ? 'Logger ut...' : 'Logg ut' }}
-              </button>
-            </div>
-          </section>
-        </div>
-      </section>
-    </main>
+          <div class="setting-card pupil-inner-card">
+            <label class="pupil-label" for="profile-volume-slider">Volum</label>
+            <VolumeControl input-id="profile-volume-slider" />
+          </div>
+
+          <p v-if="actionError" class="action-error pupil-error">{{ actionError }}</p>
+
+          <div class="actions">
+            <button
+              v-if="isInClassroom"
+              class="pupil-button pupil-button-danger"
+              type="button"
+              :disabled="leavingClassroom"
+              @click="leaveClassroom"
+            >
+              {{ leavingClassroom ? 'Forlater...' : 'Forlat klasserom' }}
+            </button>
+
+            <button
+              class="pupil-button pupil-button-danger"
+              type="button"
+              :disabled="signingOut"
+              @click="signOut"
+            >
+              {{ signingOut ? 'Logger ut...' : 'Logg ut' }}
+            </button>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
   </div>
 </template>
 
@@ -335,10 +355,6 @@ async function saveNickname() {
   gap: 0.5rem;
 }
 
-input[type='range'] {
-  width: 100%;
-}
-
 .nickname-editor {
   display: flex;
   flex-direction: column;
@@ -349,7 +365,34 @@ input[type='range'] {
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.6rem;
+  gap: 0.75rem;
+}
+
+.secondary-button,
+.danger-button {
+  border: var(--border-thin) solid var(--brown-dark);
+  padding: 0.85rem 1rem;
+  color: black !important;
+  border-radius: 1rem;
+  font-weight: 600;
+}
+
+.secondary-button {
+  background-color: var(--beige-medium);
+}
+
+.danger-button {
+  background-color: var(--red-danger);
+}
+
+.secondary-button:disabled,
+.danger-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.error {
+  color: #9f1d1d;
 }
 
 .action-error {

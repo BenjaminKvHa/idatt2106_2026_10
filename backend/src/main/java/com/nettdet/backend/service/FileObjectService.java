@@ -74,6 +74,42 @@ public class FileObjectService {
     }
 
     @Transactional
+    public FileObject uploadOrReplace(
+            String objectKey,
+            byte[] bytes,
+            String contentType,
+            Account uploadedBy,
+            Classroom classroom,
+            ClassroomAccess accessLevel,
+            String fileName) {
+        PutObjectRequest putRequest = PutObjectRequest.builder()
+                .bucket(bucket)
+                .key(objectKey)
+                .contentType(contentType)
+                .build();
+
+        s3Client.putObject(putRequest, RequestBody.fromBytes(bytes));
+
+        return repository.findByObjectKey(objectKey)
+                .map(existing -> {
+                    existing.setUploadedByAccount(uploadedBy);
+                    existing.setClassroom(classroom);
+                    existing.setAccessLevel(accessLevel);
+                    existing.setFileName(fileName);
+                    return repository.save(existing);
+                })
+                .orElseGet(() -> {
+                    FileObject fileObject = new FileObject();
+                    fileObject.setObjectKey(objectKey);
+                    fileObject.setUploadedByAccount(uploadedBy);
+                    fileObject.setClassroom(classroom);
+                    fileObject.setAccessLevel(accessLevel);
+                    fileObject.setFileName(fileName);
+                    return repository.save(fileObject);
+                });
+    }
+
+    @Transactional
     public void delete(Long fileObjectId) {
         FileObject fileObject = repository.findById(fileObjectId)
                 .orElseThrow(() -> new EntityNotFoundException("File object not found"));

@@ -70,6 +70,7 @@ class MeControllerTest {
                         "detektiv1",
                         "ABCABC",
                         42L,
+                        "white_redditor-black_detective",
                         true));
 
         // Act: Perform GET /me with authentication
@@ -81,7 +82,8 @@ class MeControllerTest {
                 .andExpect(jsonPath("$.role").value("PUPIL"))
                 .andExpect(jsonPath("$.username").value("detektiv1"))
                 .andExpect(jsonPath("$.classroomCode").value("ABCABC"))
-                .andExpect(jsonPath("$.avatarFileObjectId").value(42));
+                .andExpect(jsonPath("$.avatarFileObjectId").value(42))
+                .andExpect(jsonPath("$.avatarSelection").value("white_redditor-black_detective"));
 
         // Assert: Verify service was called with correct email
         verify(accountService).getAuthenticatedProfile(argThat(email -> email.equals("user@example.com")));
@@ -100,6 +102,7 @@ class MeControllerTest {
                         null,
                         null,
                         null,
+                        null,
                         false));
 
         // Act: Perform GET /me with teacher authentication
@@ -111,7 +114,8 @@ class MeControllerTest {
                 .andExpect(jsonPath("$.role").value("TEACHER"))
                 .andExpect(jsonPath("$.username").doesNotExist())
                 .andExpect(jsonPath("$.classroomCode").doesNotExist())
-                .andExpect(jsonPath("$.avatarFileObjectId").doesNotExist());
+                .andExpect(jsonPath("$.avatarFileObjectId").doesNotExist())
+                .andExpect(jsonPath("$.avatarSelection").doesNotExist());
 
         // Assert: Verify service was called with correct email
         verify(accountService).getAuthenticatedProfile(argThat(email -> email.equals("teacher@example.com")));
@@ -145,6 +149,7 @@ class MeControllerTest {
                         "newUsername",
                         "ABCABC",
                         42L,
+                        "white_redditor-black_detective",
                         true));
 
         // Act: Perform PUT /me with pupil authentication
@@ -215,6 +220,7 @@ class MeControllerTest {
                         "detektiv1",
                         "ABCABC",
                         42L,
+                        "white_redditor-black_detective",
                         true));
 
         // Act: Perform PUT /me with different email in query param (should be ignored)

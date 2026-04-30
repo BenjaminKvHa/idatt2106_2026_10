@@ -2,7 +2,8 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AvatarAssetsContainer from '@/components/pupil/AvatarAssetsContainer.vue'
-import { patch } from '@/utils/apiUtils'
+import { get, patch, type BackendAccountRole } from '@/utils/apiUtils'
+import { clearMeCache } from '@/utils/authRedirect'
 
 type AvatarAsset = {
   assetType: string
@@ -12,6 +13,16 @@ type AvatarAsset = {
 
 type UpdateAvatarRequest = {
   avatar: string
+}
+
+type ProfileResponse = {
+  email: string
+  legalName: string
+  role: BackendAccountRole
+  username: string | null
+  classroomCode: string | null
+  avatarFileObjectId: number | null
+  avatarSelection: string | null
 }
 
 const router = useRouter()
@@ -27,7 +38,12 @@ const currentSkincolor = ref<AvatarAsset | null>(null)
 const currentHairstyle = ref<AvatarAsset | null>(null)
 const currentCostume = ref<AvatarAsset | null>(null)
 
-const previewLayers = computed(() => [currentSkincolor.value, currentHairstyle.value, currentCostume.value].filter(Boolean) as AvatarAsset[])
+const previewLayers = computed(
+  () =>
+    [currentSkincolor.value, currentHairstyle.value, currentCostume.value].filter(
+      Boolean,
+    ) as AvatarAsset[],
+)
 const avatarSelection = computed(() => {
   if (!currentSkincolor.value || !currentHairstyle.value || !currentCostume.value) {
     return ''
@@ -58,9 +74,12 @@ async function loadAvatarAssets() {
   errorMessage.value = ''
 
   try {
-    const response = await fetch('/api/avatar-assets', {
-      credentials: 'include',
-    })
+    const [profile, response] = await Promise.all([
+      get<ProfileResponse>('/api/me'),
+      fetch('/api/avatar-assets', {
+        credentials: 'include',
+      }),
+    ])
 
     if (!response.ok) {
       throw new Error(`Request failed with status ${response.status}`)
@@ -71,14 +90,24 @@ async function loadAvatarAssets() {
     hairAssets.value = assets.filter((asset) => asset.assetType === 'hair')
     costumeAssets.value = assets.filter((asset) => asset.assetType === 'costume')
 
-    currentSkincolor.value = skinAssets.value[0] ?? null
-    currentHairstyle.value = hairAssets.value[0] ?? null
-    currentCostume.value = costumeAssets.value[0] ?? null
+    applyInitialAvatarSelection(profile.avatarSelection)
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Kunne ikke laste avatarvalg'
   } finally {
     loading.value = false
   }
+}
+
+function applyInitialAvatarSelection(selection: string | null) {
+  const parts = selection?.split('_') ?? []
+  const [skinName, hairName, costumeName] = parts.length === 3 ? parts : []
+
+  currentSkincolor.value =
+    skinAssets.value.find((asset) => asset.name === skinName) ?? skinAssets.value[0] ?? null
+  currentHairstyle.value =
+    hairAssets.value.find((asset) => asset.name === hairName) ?? hairAssets.value[0] ?? null
+  currentCostume.value =
+    costumeAssets.value.find((asset) => asset.name === costumeName) ?? costumeAssets.value[0] ?? null
 }
 
 async function saveAvatar() {
@@ -93,6 +122,7 @@ async function saveAvatar() {
     }
 
     await patch('/api/me', payload)
+    clearMeCache()
     await router.push('/pupil/profile')
   } catch (error) {
     saveError.value = error instanceof Error ? error.message : 'Kunne ikke lagre avatar'

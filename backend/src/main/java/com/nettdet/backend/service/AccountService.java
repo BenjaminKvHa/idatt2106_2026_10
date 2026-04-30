@@ -29,6 +29,8 @@ import com.nettdet.backend.security.JwtUserPrincipal;
 public class AccountService {
 
     private static final Logger logger = LoggerFactory.getLogger(AccountService.class);
+    private static final String AVATAR_IMAGE_PREFIX = "avatar-images/";
+    private static final String PNG_EXTENSION = ".png";
 
     private final AccountRepository accountRepository;
     private final PupilClassroomMembershipRepository pupilClassroomMembershipRepository;
@@ -100,9 +102,43 @@ public class AccountService {
         Long avatarFileObjectId = membership != null && membership.getAvatarFileObject() != null
                 ? membership.getAvatarFileObject().getId()
                 : null;
+        String avatarSelection = membership != null && membership.getAvatarFileObject() != null
+                ? extractAvatarSelection(membership.getAvatarFileObject().getObjectKey())
+                : null;
         boolean membershipConfirmed = membership != null && membership.isMembershipConfirmedByTeacher();
 
-        return AuthMeResponse.from(account, username, classroomCode, avatarFileObjectId, membershipConfirmed);
+        return AuthMeResponse.from(
+                account,
+                username,
+                classroomCode,
+                avatarFileObjectId,
+                avatarSelection,
+                membershipConfirmed);
+    }
+
+    static String extractAvatarSelection(String objectKey) {
+        if (objectKey == null || objectKey.isBlank()) {
+            return null;
+        }
+
+        String normalizedObjectKey = objectKey.startsWith("/") ? objectKey.substring(1) : objectKey;
+        if (!normalizedObjectKey.startsWith(AVATAR_IMAGE_PREFIX)
+                || !normalizedObjectKey.endsWith(PNG_EXTENSION)) {
+            return null;
+        }
+
+        String fileName = normalizedObjectKey.substring(AVATAR_IMAGE_PREFIX.length());
+        if (fileName.contains("/")) {
+            return null;
+        }
+
+        String selection = fileName.substring(0, fileName.length() - PNG_EXTENSION.length());
+        String[] parts = selection.split("_", -1);
+        if (parts.length != 3 || parts[0].isBlank() || parts[1].isBlank() || parts[2].isBlank()) {
+            return null;
+        }
+
+        return selection;
     }
 
     @Transactional

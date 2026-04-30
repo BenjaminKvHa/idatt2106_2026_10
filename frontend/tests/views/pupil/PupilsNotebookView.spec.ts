@@ -30,8 +30,8 @@ async function finishChapterLoad() {
 describe('PupilsNotebookView', () => {
   beforeEach(() => {
     vi.useFakeTimers()
-    mockedGet.mockReset()
-    mockedPut.mockReset()
+    vi.clearAllMocks()
+    vi.spyOn(window.HTMLMediaElement.prototype, 'play').mockImplementation(() => Promise.resolve())
   })
 
   afterEach(() => {

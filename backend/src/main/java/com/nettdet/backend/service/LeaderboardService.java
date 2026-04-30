@@ -24,6 +24,19 @@ import com.nettdet.backend.repository.ClassroomRepository;
 import com.nettdet.backend.repository.PupilClassroomMembershipRepository;
 import com.nettdet.backend.security.JwtUserPrincipal;
 
+/**
+ * Service class responsible for calculating and retrieving leaderboard rankings.
+ * 
+ * <p>Provides rankings at two levels:
+ * <ul>
+ *   <li><b>Global Classroom Leaderboard:</b> Aggregates total XP from all pupils 
+ *       within each classroom to rank classrooms against each other.</li>
+ *   <li><b>Classroom Pupil Leaderboard:</b> Ranks individual pupils within a 
+ *       specific classroom based on their personal XP.</li>
+ * </ul>
+ * 
+ * <p>Ranking logic handles ties by assigning the same rank to identical scores.
+ */
 @Service
 public class LeaderboardService {
 
@@ -42,6 +55,13 @@ public class LeaderboardService {
         this.pupilXpService = pupilXpService;
     }
 
+    /**
+     * Retrieves the global leaderboard of all classrooms.
+     * 
+     * <p>Classrooms are ranked by the sum of XP from all their confirmed pupil members.
+     *
+     * @return a list of {@link ClassroomLeaderboardEntryResponse} ordered by total score
+     */
     @Transactional(readOnly = true)
     public List<ClassroomLeaderboardEntryResponse> getGlobalClassroomLeaderboard() {
         return buildRankedClassroomScores().stream()
@@ -52,6 +72,14 @@ public class LeaderboardService {
                 .toList();
     }
 
+    /**
+     * Retrieves an overview of classrooms owned by the acting teacher, 
+     * including their global ranking.
+     * 
+     * @param principal the authenticated teacher principal
+     * @return a list of {@link TeacherClassroomOverviewResponse}
+     * @throws AccessDeniedException if the principal is not a teacher
+     */
     @Transactional(readOnly = true)
     public List<TeacherClassroomOverviewResponse> getTeacherClassrooms(JwtUserPrincipal principal) {
         verifyTeacherPrincipal(principal);
@@ -74,6 +102,11 @@ public class LeaderboardService {
                 .toList();
     }
 
+    /**
+     * Calculates the total XP for all classrooms and assigns global ranks.
+     * 
+     * @return a list of {@link RankedClassroomScore} records
+     */
     private List<RankedClassroomScore> buildRankedClassroomScores() {
         Map<String, ClassroomScore> scoresByClassroom = new LinkedHashMap<>();
         for (Classroom classroom : classroomRepository.findAll()) {
@@ -125,6 +158,17 @@ public class LeaderboardService {
         return rankedScores;
     }
 
+    /**
+     * Retrieves the internal leaderboard for a specific classroom.
+     * 
+     * <p>Ranks pupils within the classroom by their individual XP.
+     *
+     * @param classroomCode the code of the classroom
+     * @param principal     the authenticated teacher principal
+     * @return a {@link ClassroomPupilLeaderboardResponse} containing the ranked pupils
+     * @throws AccessDeniedException   if the principal is not an owner of the classroom
+     * @throws EntityNotFoundException if the classroom is not found
+     */
     @Transactional(readOnly = true)
     public ClassroomPupilLeaderboardResponse getClassroomLeaderboard(String classroomCode, JwtUserPrincipal principal) {
         verifyTeacherPrincipal(principal);
@@ -176,9 +220,15 @@ public class LeaderboardService {
         }
     }
 
+    /**
+     * Internal data carrier for a pupil's XP score.
+     */
     private record PupilScore(String accountEmail, String username, long totalXp) {
     }
 
+    /**
+     * Internal data carrier for a classroom's total XP score.
+     */
     private static final class ClassroomScore {
         private final String classroomCode;
         private final String classroomName;
@@ -203,6 +253,9 @@ public class LeaderboardService {
         }
     }
 
+    /**
+     * Internal data carrier for a classroom's total XP and its global rank.
+     */
     private record RankedClassroomScore(
             String classroomCode,
             String classroomName,

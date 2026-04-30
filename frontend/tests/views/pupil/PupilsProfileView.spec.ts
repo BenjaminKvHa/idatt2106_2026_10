@@ -18,6 +18,10 @@ vi.mock('@/router', () => ({
   clearMeCache: vi.fn(),
 }))
 
+vi.mock('@/utils/authRedirect', () => ({
+  clearMeCache: vi.fn(),
+}))
+
 vi.mock('vue-router', () => ({
   RouterLink: {
     props: ['to'],
@@ -48,6 +52,10 @@ function mountProfileView() {
       stubs: {
         TopBar: true,
         VolumeControl: true,
+        RouterLink: {
+          props: ['to'],
+          template: '<a :href="to"><slot /></a>',
+        },
       },
     },
   })
@@ -93,6 +101,26 @@ describe('PupilsProfileView', () => {
     expect(wrapper.text()).toContain('Kart testklasse (MAPAAA)')
   })
 
+  it('links accepted pupils to the dedicated profile avatar editor', async () => {
+    mockedGet
+      .mockResolvedValueOnce(profileWithClassroom)
+      .mockResolvedValueOnce({
+        classroomCode: 'MAPAAA',
+        classroomName: 'Kart testklasse',
+        classroomDescription: null,
+      })
+
+    const wrapper = mountProfileView()
+
+    await flushPromises()
+
+    const avatarLink = wrapper.find('a[href="/pupil/profile/avatar"]')
+
+    expect(avatarLink.exists()).toBe(true)
+    expect(avatarLink.text()).toContain('Bytt avatar')
+    expect(wrapper.find('a[href^="/join-classroom/set-avatar"]').exists()).toBe(false)
+  })
+
   it('falls back to classroom code when classroom metadata fails to load', async () => {
     mockedGet
       .mockResolvedValueOnce(profileWithClassroom)
@@ -119,5 +147,64 @@ describe('PupilsProfileView', () => {
     expect(mockedGet).toHaveBeenCalledTimes(1)
     expect(mockedGet).toHaveBeenCalledWith('/api/me')
     expect(wrapper.text()).not.toContain('Klasserom')
+  })
+
+  it('opens an in-app confirmation popup before leaving classroom', async () => {
+    mockedGet
+      .mockResolvedValueOnce(profileWithClassroom)
+      .mockResolvedValueOnce({
+        classroomCode: 'MAPAAA',
+        classroomName: 'Kart testklasse',
+        classroomDescription: null,
+      })
+
+    const wrapper = mountProfileView()
+
+    await flushPromises()
+    await wrapper.find('.pupil-button-danger').trigger('click')
+
+    expect(wrapper.find('.leave-classroom-popup').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Er du sikker på at du vil forlate klasserommet?')
+    expect(mockedDel).not.toHaveBeenCalled()
+  })
+
+  it('closes leave classroom popup without leaving when cancelled', async () => {
+    mockedGet
+      .mockResolvedValueOnce(profileWithClassroom)
+      .mockResolvedValueOnce({
+        classroomCode: 'MAPAAA',
+        classroomName: 'Kart testklasse',
+        classroomDescription: null,
+      })
+
+    const wrapper = mountProfileView()
+
+    await flushPromises()
+    await wrapper.find('.pupil-button-danger').trigger('click')
+    await wrapper.find('.cancel-leave-button').trigger('click')
+
+    expect(wrapper.find('.leave-classroom-popup').exists()).toBe(false)
+    expect(mockedDel).not.toHaveBeenCalled()
+  })
+
+  it('leaves classroom only after confirming in the popup', async () => {
+    mockedGet
+      .mockResolvedValueOnce(profileWithClassroom)
+      .mockResolvedValueOnce({
+        classroomCode: 'MAPAAA',
+        classroomName: 'Kart testklasse',
+        classroomDescription: null,
+      })
+    mockedDel.mockResolvedValue({})
+
+    const wrapper = mountProfileView()
+
+    await flushPromises()
+    await wrapper.find('.pupil-button-danger').trigger('click')
+    await wrapper.find('.confirm-leave-button').trigger('click')
+    await flushPromises()
+
+    expect(mockedDel).toHaveBeenCalledWith('/api/classrooms/MAPAAA/pupils/me')
+    expect(routerPush).toHaveBeenCalledWith('/pupil')
   })
 })

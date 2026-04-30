@@ -40,6 +40,19 @@ const profileRoute = computed(() =>
   profile.value?.role === 'TEACHER' ? '/teacher/profile' : '/pupil/profile',
 )
 
+const pupilBackRoutes: Record<string, string> = {
+  '/pupil/classroom/map': '/pupil',
+  '/pupil/classroom/map/news': '/pupil/classroom/map',
+  '/pupil/classroom/map/photographer': '/pupil/classroom/map',
+  '/pupil/classroom/map/datacenter': '/pupil/classroom/map',
+  '/pupil/classroom/notebook': '/pupil',
+  '/pupil/classroom/mystery': '/pupil',
+  '/pupil/classroom/medals': '/pupil',
+  '/pupil/classroom/help': '/pupil',
+  '/pupil/classroom/leaderboard': '/pupil',
+  '/pupil/profile/avatar': '/pupil/profile',
+}
+
 async function loadProfile() {
   try {
     profile.value = await get<MeResponse>('/api/me')
@@ -51,11 +64,19 @@ async function loadProfile() {
 onMounted(loadProfile)
 
 function goBack() {
-  if (typeof window !== 'undefined' && !props.previousPageUrl) {
-    window.history.back()
-  } else {
-    router.push(props.previousPageUrl || '#')
+  if (props.previousPageUrl) {
+    router.push(props.previousPageUrl)
+    return
   }
+
+  if (route.path === '/pupil/profile') {
+    window.history.back()
+    return
+  }
+
+  const path = route.path
+  const target = pupilBackRoutes[path] ?? (path.startsWith('/pupil') ? '/pupil' : homeRoute.value)
+  router.push(target)
 }
 
 const isOnHome = computed(

@@ -14,6 +14,15 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
+/**
+ * Represents a persistent refresh token used for maintaining user sessions.
+ * 
+ * <p>Refresh tokens are issued during authentication and allow clients to obtain new
+ * access tokens without re-entering credentials. Each token is linked to an {@link Account}
+ * and has a finite lifetime defined by {@link RefreshTokenUtil#REFRESH_TOKEN_LIFETIME}.
+ * 
+ * <p>Inherits audit information from {@link CreatedAtEntity}.
+ */
 @Entity
 @Table(name = "refresh_token")
 public class RefreshToken extends CreatedAtEntity {

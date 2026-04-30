@@ -19,6 +19,14 @@ import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
+/**
+ * Service class responsible for managing {@link FileObject} entities and their physical 
+ * storage in S3/MinIO.
+ * 
+ * <p>Handles the core operations of uploading, reading, and deleting files. 
+ * This service ensures that metadata in the database stays synchronized with the 
+ * actual file content in the object store.
+ */
 @Service
 public class FileObjectService {
 
@@ -26,6 +34,9 @@ public class FileObjectService {
     private final FileObjectRepository repository;
     private final String bucket;
 
+    /**
+     * Data carrier for a stored file's metadata and its raw content.
+     */
     public record StoredFile(
             FileObject fileObject,
             String contentType,
@@ -41,6 +52,21 @@ public class FileObjectService {
         this.bucket = bucket;
     }
 
+    /**
+     * Uploads a file to the object store and persists its metadata in the database.
+     * 
+     * <p>If the database persistence fails, the file is automatically deleted 
+     * from the object store to maintain consistency.
+     *
+     * @param objectKey    the unique key for the file in the object store
+     * @param bytes        the raw content of the file
+     * @param contentType  the MIME type of the file
+     * @param uploadedBy   the account responsible for the upload
+     * @param classroom    the optional classroom context
+     * @param accessLevel  the {@link ClassroomAccess} level for the file
+     * @param fileName     the display name for the file
+     * @return the created and persisted {@link FileObject}
+     */
     @Transactional
     public FileObject upload(
             String objectKey,
@@ -73,6 +99,12 @@ public class FileObjectService {
         }
     }
 
+    /**
+     * Deletes a file from both the object store and the database.
+     * 
+     * @param fileObjectId the ID of the file object to delete
+     * @throws EntityNotFoundException if the file object is not found in the database
+     */
     @Transactional
     public void delete(Long fileObjectId) {
         FileObject fileObject = repository.findById(fileObjectId)
@@ -86,6 +118,13 @@ public class FileObjectService {
         repository.delete(fileObject);
     }
 
+    /**
+     * Retrieves a file's content and metadata by its database ID.
+     * 
+     * @param fileObjectId the ID of the file object
+     * @return a {@link StoredFile} containing bytes and metadata
+     * @throws EntityNotFoundException if the file object is not found
+     */
     @Transactional(readOnly = true)
     public StoredFile read(Long fileObjectId) {
         FileObject fileObject = repository.findById(fileObjectId)
@@ -104,6 +143,13 @@ public class FileObjectService {
         return new StoredFile(fileObject, contentType, response.asByteArray());
     }
 
+    /**
+     * Retrieves a file's content and metadata by its object key.
+     * 
+     * @param objectKey the unique key of the file in the object store
+     * @return a {@link StoredFile} containing bytes and metadata
+     * @throws EntityNotFoundException if the file object metadata is not found
+     */
     @Transactional(readOnly = true)
     public StoredFile read(String objectKey) {
         FileObject fileObject = repository.findByObjectKey(objectKey)

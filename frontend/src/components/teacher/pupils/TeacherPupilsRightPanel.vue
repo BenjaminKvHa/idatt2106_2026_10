@@ -81,10 +81,18 @@ const emit = defineEmits<{
 }
 
 .details-card {
-  width: min(820px, 100%);
+  width: min(calc(30*16rem), 100%);
   border: 7px solid var(--accent);
   border-radius: 38px;
   padding: 28px;
+}
+@media (max-width: 768px) {
+  .details-card {
+    width: 100%;
+    border: var(--border-thin) solid var(--accent);
+    border-radius: 1rem;
+    padding: .5rem;
+  }
 }
 
 .button-grid {

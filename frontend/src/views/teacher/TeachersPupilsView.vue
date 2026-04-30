@@ -399,6 +399,12 @@ watch(
   padding: 24px;
 }
 
+@media (max-width: 768px) {
+  .pupils-view {
+    padding: .5rem;
+  }
+}
+
 .pupils-view h1,
 .pupils-view h2,
 .pupils-view h3,

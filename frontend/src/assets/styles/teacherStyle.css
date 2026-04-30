@@ -121,7 +121,6 @@
     flex: 1;
     height: auto;
     overflow: auto;
-
 }
 
 .hr-brown {
@@ -141,6 +140,17 @@
     border-radius: var(--card-item-radius);
     transition: background-color var(--animation-time-1), color var(--animation-time-1);
     font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .teacher-card-body {
+        padding: var(--thin-padding);
+    }
+    .teacher-card-item-var-1 {
+        font-size: small;
+        word-wrap:break-word;
+        border-radius: .5rem;
+    }
 }
 
 .teacher-card-item-var-2 {

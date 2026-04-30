@@ -22,14 +22,23 @@ type ProfileResponse = {
   avatarFileObjectId: number | null
 }
 
+type ClassroomResponse = {
+  classroomCode: string
+  classroomName: string
+  classroomDescription: string | null
+}
+
 type UpdateMeRequest = {
   username: string
 }
 
 const router = useRouter()
 const profile = ref<ProfileResponse | null>(null)
+const classroom = ref<ClassroomResponse | null>(null)
 const loading = ref(true)
+const classroomLoading = ref(false)
 const error = ref<string | null>(null)
+const classroomError = ref<string | null>(null)
 const actionError = ref<string | null>(null)
 const leavingClassroom = ref(false)
 const signingOut = ref(false)
@@ -46,18 +55,47 @@ const avatarUrl = computed(() =>
 
 const isInClassroom = computed(() => Boolean(profile.value?.classroomCode))
 
+const classroomDisplayName = computed(() => {
+  const classroomCode = profile.value?.classroomCode
+  if (!classroomCode) return ''
+
+  return classroom.value?.classroomName
+    ? `${classroom.value.classroomName} (${classroomCode})`
+    : classroomCode
+})
+
 async function loadProfile() {
   loading.value = true
   error.value = null
+  classroom.value = null
+  classroomError.value = null
   actionError.value = null
 
   try {
     profile.value = await get<ProfileResponse>('/api/me')
     nicknameDraft.value = profile.value.username ?? ''
+
+    if (profile.value.classroomCode) {
+      await loadClassroom(profile.value.classroomCode)
+    }
   } catch (fetchError) {
     error.value = fetchError instanceof Error ? fetchError.message : 'Failed to load profile'
   } finally {
     loading.value = false
+  }
+}
+
+async function loadClassroom(classroomCode: string) {
+  classroomLoading.value = true
+  classroomError.value = null
+
+  try {
+    classroom.value = await get<ClassroomResponse>(`/api/classrooms/${classroomCode}`)
+  } catch {
+    classroom.value = null
+    classroomError.value = 'Kunne ikke laste klasseromsnavn.'
+  } finally {
+    classroomLoading.value = false
   }
 }
 
@@ -257,8 +295,10 @@ async function saveNickname() {
           </div>
 
           <div v-if="isInClassroom" class="setting-card pupil-inner-card">
-            <span class="pupil-label">Klasseromskode</span>
-            <p>{{ profile.classroomCode }}</p>
+            <span class="pupil-label">Klasserom</span>
+            <p v-if="classroomLoading">Laster klasserom...</p>
+            <p v-else>{{ classroomDisplayName }}</p>
+            <p v-if="classroomError" class="classroom-error">{{ classroomError }}</p>
           </div>
 
           <div class="setting-card pupil-inner-card">

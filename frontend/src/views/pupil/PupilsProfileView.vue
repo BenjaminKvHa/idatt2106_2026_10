@@ -255,45 +255,6 @@ async function saveNickname() {
               <p>{{ profile.classroomCode }}</p>
             </div>
 
-            <div class="setting-card pupil-inner-card">
-              <label class="pupil-label" for="volume-slider">Volum</label>
-              <div class="volume-row">
-                <button
-                  type="button"
-                  class="mute-btn"
-                  :aria-label="isMuted ? 'Skru på lyd' : 'Demp lyd'"
-                  @click="toggleMute"
-                >
-                  <img
-                    :src="isMuted ? volumeXIcon : volume2Icon"
-                    alt=""
-                    aria-hidden="true"
-                    class="volume-icon"
-                  />
-                </button>
-                <input
-                  id="volume-slider"
-                  :value="volume"
-                  type="range"
-                  min="0"
-                  max="100"
-                  :disabled="isMuted"
-                  @input="setVolume(+($event.target as HTMLInputElement).value)"
-                />
-              </div>
-              <p>{{ isMuted ? 'Dempet' : volume + '%' }}</p>
-            </div>
-
-            <button
-              v-else-if="isInClassroom"
-              class="pupil-button pupil-button-secondary"
-              type="button"
-              @click="startNicknameEdit"
-            >
-              Bytt kallenavn for klasserom
-            </button>
-          </div>
-
           <div v-if="isInClassroom" class="setting-card pupil-inner-card">
             <span class="pupil-label">Klasserom</span>
             <p v-if="classroomLoading">Laster klasserom...</p>

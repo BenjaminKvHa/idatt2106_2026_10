@@ -46,6 +46,7 @@ const {
 } = useDifficultyProgression()
 
 const showHelpPopup = ref(false)
+const showHintPopup = ref(false)
 
 const currentTask = ref<NewsVerificationResponse | null>(null)
 const imageUrls = ref<string[]>([])
@@ -53,6 +54,10 @@ const selectedFileId = ref<number | null>(null)
 
 function closeHelpPopup(): void {
   showHelpPopup.value = false
+}
+
+function closeHintPopup(): void {
+  showHintPopup.value = false
 }
 
 function revokeImageUrls(): void {
@@ -182,9 +187,8 @@ onBeforeUnmount(revokeImageUrls)
           <p class="progress-text">
             Nivå {{ stepIndex + 1 }} / {{ DIFFICULTIES.length }} — {{ difficultyLabel }}
           </p>
-        </div>
 
-        <HintCreature :chapter-id="NYHETSKVARTALET_CHAPTER_ID" />
+          <HintCreature :chapter-id="NYHETSKVARTALET_CHAPTER_ID" />
 
         <PupilNewsTask
           :task-description="currentTask.taskDescription"

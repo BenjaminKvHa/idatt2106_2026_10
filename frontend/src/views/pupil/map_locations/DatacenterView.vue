@@ -51,6 +51,7 @@ let defeatSoundRef: HTMLAudioElement | null = null
 
 const showGuidePopup = ref(true)
 const showHelpPopup = ref(false)
+const showHintPopup = ref(false)
 const showResultPopup = ref(false)
 const resultType = ref<ResultType>(null)
 
@@ -323,9 +324,7 @@ onBeforeUnmount(revokeAllImageUrls)
             <p>Nivå {{ currentLevelIndex + 1 }}/{{ levels.length }}</p>
           </div>
 
-          <HintCreature
-            hint="Les oppgaven nøye. Se etter små detaljer som kan avsløre riktig svar."
-          />
+          <HintCreature :chapter-id="DATASENTERET_CHAPTER_ID" />
 
           <div class="pupil-panel pupil-task-text-box">
             <p>

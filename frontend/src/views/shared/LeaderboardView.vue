@@ -61,7 +61,7 @@ onMounted(loadLeaderboard)
 </script>
 
 <template>
-  <div class="pupil-scene-screen">
+  <div class="leaderboard-page-bg pupil-scene-screen">
     <TopBar title="Ledertavle" />
 
     <PinboardLayout heading-id="leaderboard-title">
@@ -103,6 +103,18 @@ onMounted(loadLeaderboard)
 </template>
 
 <style scoped>
+.leaderboard-page-bg {
+  min-height: 100vh;
+  background-image: url('@/assets/backgrounds/hjemskjerm-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+.leaderboard-page {
+  background: transparent;
+}
 
 .board-content {
   position: absolute;

@@ -333,12 +333,7 @@ onMounted(() => {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  background: var(--beige-medium);
-}
 
-.stops-card {
-  width: 100%;
-  min-height: calc(100vh - 5rem);
   background:
     linear-gradient(var(--beige-medium-40), var(--beige-medium-40)),
     url('@/assets/backgrounds/map-bg.png');
@@ -346,6 +341,12 @@ onMounted(() => {
   background-position: center top;
   background-repeat: no-repeat;
   background-attachment: scroll;
+}
+
+.stops-card {
+  width: 100%;
+  min-height: calc(100vh - 4.2rem);
+  background: transparent;
   box-sizing: border-box;
   padding: 28px 36px 24px;
   overflow: visible;

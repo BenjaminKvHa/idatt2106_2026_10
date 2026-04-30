@@ -210,6 +210,73 @@ const handleRegister = async (): Promise<void> => {
 </template>
 
 <style scoped>
+* {
+  box-sizing: border-box;
+}
+
+.signup-page,
+.page {
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.signup-page::before,
+.page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('@/assets/backgrounds/welcomeBackground.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(8px);
+  transform: scale(1.04);
+  z-index: 0;
+}
+
+.signup-page::after,
+.page::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgb(239 211 175 / 35%);
+  z-index: 1;
+}
+
+.signup-card,
+.frame {
+  position: relative;
+  z-index: 2;
+}
+
+.signup-card {
+  width: 340px;
+  background: #ffffff;
+  border: 1px solid #666;
+  display: flex;
+  flex-direction: column;
+}
+
+.signup-body {
+  padding: 28px 34px 30px;
+  background: #ffffff;
+}
+
+.brand-logo {
+  height: 36px;
+  margin-bottom: 18px;
+}
+
+.header-text {
+  margin-bottom: 18px;
+}
+
 @import '@/assets/styles/feideStyle.css';
 
 h1 {

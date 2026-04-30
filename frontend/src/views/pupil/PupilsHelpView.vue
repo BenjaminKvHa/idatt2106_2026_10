@@ -4,7 +4,7 @@ import TopBar from '@/components/pupil/TopBar.vue'
 </script>
 
 <template>
-  <div class="pupil-scene-screen">
+  <div class="help-page-bg pupil-scene-screen">
     <TopBar title="Hjelp" />
 
     <PinboardLayout heading-id="help-title">
@@ -37,6 +37,18 @@ import TopBar from '@/components/pupil/TopBar.vue'
 </template>
 
 <style scoped>
+.help-page-bg {
+  min-height: 100vh;
+
+  background-image: url('@/assets/backgrounds/hjemskjerm-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+.help-page {
+  background: transparent;
+}
 
 .text-box {
   position: absolute;

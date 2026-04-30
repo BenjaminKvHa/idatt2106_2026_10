@@ -81,13 +81,10 @@ const canSubmit = computed(() => {
 })
 
 const pageStyle = computed(() => ({
-  background: `
+  backgroundImage: `
     linear-gradient(rgb(255 255 255 / 45%), rgb(255 255 255 / 45%)),
     url(${datacenterBg})
   `,
-  backgroundSize: 'cover',
-  backgroundPosition: 'center',
-  backgroundAttachment: 'fixed',
 }))
 
 const resultImage = computed(() => (resultType.value === 'victory' ? VictoryImage : DefeatImage))
@@ -314,149 +311,164 @@ onBeforeUnmount(revokeAllImageUrls)
 </script>
 
 <template>
-  <TopBar title="Datasenteret" />
+  <div class="datacenter-page-bg" :style="pageStyle">
+    <TopBar title="Datasenteret" />
+    <div class="pupil-task-page">
+      <div class="pupil-center-container datacenter-container">
+        <p v-if="loading">Laster oppgaver…</p>
+        <p v-else-if="error" class="pupil-error">{{ error }}</p>
 
-  <div class="pupil-task-page" :style="pageStyle">
-    <div class="pupil-center-container datacenter-container">
-      <p v-if="loading">Laster oppgaver…</p>
-      <p v-else-if="error" class="pupil-error">{{ error }}</p>
-
-      <template v-else-if="currentLevel">
-        <div class="progress-box pupil-panel">
-          <p>Nivå {{ currentLevelIndex + 1 }}/{{ levels.length }}</p>
-        </div>
-
-        <HintCreature :chapter-id="DATASENTERET_CHAPTER_ID" />
-
-        <div class="pupil-panel pupil-task-text-box">
-          <p>
-            {{
-              currentLevel.task.format === 'IMAGE_VERIFICATION'
-                ? currentLevel.task.imageTask?.taskDescription
-                : currentLevel.task.newsTask?.taskDescription
-            }}
-          </p>
-        </div>
-
-        <div class="pupil-panel pupil-task-card task-card">
-          <PupilImageTask
-            v-if="currentLevel.task.format === 'IMAGE_VERIFICATION'"
-            :image-url="currentLevel.imageUrls[0]"
-            :categories="CATEGORIES"
-            :justifications="currentLevel.task.imageTask?.justifications ?? []"
-            :selected-category="currentLevel.selectedCategory"
-            :selected-justification="currentLevel.selectedJustification"
-            :result="currentLevel.result"
-            :submitting="submitting"
-            @select-category="selectCategory"
-            @select-justification="selectJustification"
-          />
-
-          <PupilNewsTask
-            v-else
-            :file-ids="currentLevel.task.newsTask?.fileIds ?? []"
-            :image-urls="currentLevel.imageUrls"
-            :selected-file-id="currentLevel.selectedFileId"
-            :result="currentLevel.result"
-            :submitting="submitting"
-            select-button-text="Dette er den falske"
-            @select-file="selectFileId"
-          />
-
-          <button
-            v-if="currentLevel.task.format === 'IMAGE_VERIFICATION'"
-            class="submit-button pupil-orange-button"
-            :disabled="!canSubmit"
-            @click="submit"
-          >
-            Svar
-          </button>
-
-          <button
-            v-else-if="
-              currentLevel.task.format === 'NEWS_VERIFICATION' &&
-              currentLevel.selectedFileId !== null &&
-              !currentLevel.result
-            "
-            class="submit-button pupil-orange-button"
-            :disabled="!canSubmit"
-            @click="submit"
-          >
-            Bekreft svar
-          </button>
-
-          <div
-            v-if="currentLevel.result"
-            class="pupil-feedback-box"
-            :class="currentLevel.result.correct ? 'pupil-feedback-correct' : 'pupil-feedback-wrong'"
-          >
-            <p class="pupil-feedback-title">
-              {{ currentLevel.result.correct ? 'Riktig!' : 'Feil!' }}
-            </p>
-            <p>{{ currentLevel.result.feedback }}</p>
+        <template v-else-if="currentLevel">
+          <div class="progress-box pupil-panel">
+            <p>Nivå {{ currentLevelIndex + 1 }}/{{ levels.length }}</p>
           </div>
-        </div>
 
-        <div class="navigation-bar">
-          <button
-            class="nav-button nav-button-secondary"
-            :disabled="currentLevelIndex === 0"
-            @click="goToPreviousLevel"
-          >
-            Forrige
-          </button>
+          <HintCreature
+            hint="Les oppgaven nøye. Se etter små detaljer som kan avsløre riktig svar."
+          />
 
-          <button
-            v-if="!isLastLevel"
-            class="nav-button nav-button-primary"
-            :disabled="!isCurrentLevelAnswered"
-            @click="goToNextLevel"
-          >
-            Neste
-          </button>
+          <div class="pupil-panel pupil-task-text-box">
+            <p>
+              {{
+                currentLevel.task.format === 'IMAGE_VERIFICATION'
+                  ? currentLevel.task.imageTask?.taskDescription
+                  : currentLevel.task.newsTask?.taskDescription
+              }}
+            </p>
+          </div>
 
-          <button
-            v-else
-            class="nav-button nav-button-primary"
-            :disabled="!isCurrentLevelAnswered"
-            @click="finishGame"
-          >
-            Fullfør
-          </button>
-        </div>
-      </template>
+          <div class="pupil-panel pupil-task-card task-card">
+            <PupilImageTask
+              v-if="currentLevel.task.format === 'IMAGE_VERIFICATION'"
+              :image-url="currentLevel.imageUrls[0]"
+              :categories="CATEGORIES"
+              :justifications="currentLevel.task.imageTask?.justifications ?? []"
+              :selected-category="currentLevel.selectedCategory"
+              :selected-justification="currentLevel.selectedJustification"
+              :result="currentLevel.result"
+              :submitting="submitting"
+              @select-category="selectCategory"
+              @select-justification="selectJustification"
+            />
 
-      <TaskGuide v-if="showGuidePopup" @close="showGuidePopup = false">
-        <h2>Velkommen til datasenteret!</h2>
-        <p>Klarer du å svare riktig på alle oppgavene og slå datatyven?</p>
-        <img :src="DatatyvenImage" alt="Datatyven" class="guide-image" />
-      </TaskGuide>
+            <PupilNewsTask
+              v-else
+              :file-ids="currentLevel.task.newsTask?.fileIds ?? []"
+              :image-urls="currentLevel.imageUrls"
+              :selected-file-id="currentLevel.selectedFileId"
+              :result="currentLevel.result"
+              :submitting="submitting"
+              select-button-text="Dette er den falske"
+              @select-file="selectFileId"
+            />
 
-      <TaskGuide v-if="showHelpPopup" @close="showHelpPopup = false">
-        <h2>Trenger du hjelp?</h2>
-        <p>Inne på denne siden skal du løse oppgaver for å bekjempe datatyven.</p>
-        <ul>
-          <li>Det er én oppgave på hvert nivå.</li>
-          <li>Du kan bare svare én gang på hver oppgave.</li>
-          <li>Du må svare riktig på alle nivåene for å vinne.</li>
-        </ul>
-      </TaskGuide>
+            <button
+              v-if="currentLevel.task.format === 'IMAGE_VERIFICATION'"
+              class="submit-button pupil-orange-button"
+              :disabled="!canSubmit"
+              @click="submit"
+            >
+              Svar
+            </button>
 
-      <CompleteGamePopup
-        :show="showResultPopup"
-        :success="resultType === 'victory'"
-        :image="resultImage"
-        :image-alt="resultAltText"
-        :kicker="resultKicker"
-        :title="resultTitle"
-        :message="resultMessage"
-        :sub-message="resultSubmessage"
-        :highlight-title="resultHighlightTitle"
-        :highlight-text="resultHighlightText"
-        @close="closeResultPopup"
-        @retry="resetGame"
-        @map="goBackToMap"
-      />
+            <button
+              v-else-if="
+                currentLevel.task.format === 'NEWS_VERIFICATION' &&
+                currentLevel.selectedFileId !== null &&
+                !currentLevel.result
+              "
+              class="submit-button pupil-orange-button"
+              :disabled="!canSubmit"
+              @click="submit"
+            >
+              Bekreft svar
+            </button>
+
+            <div
+              v-if="currentLevel.result"
+              class="pupil-feedback-box"
+              :class="
+                currentLevel.result.correct ? 'pupil-feedback-correct' : 'pupil-feedback-wrong'
+              "
+            >
+              <p class="pupil-feedback-title">
+                {{ currentLevel.result.correct ? 'Riktig!' : 'Feil!' }}
+              </p>
+              <p>{{ currentLevel.result.feedback }}</p>
+            </div>
+          </div>
+
+          <div class="navigation-bar">
+            <button
+              class="nav-button nav-button-secondary"
+              :disabled="currentLevelIndex === 0"
+              @click="goToPreviousLevel"
+            >
+              Forrige
+            </button>
+
+            <button
+              v-if="!isLastLevel"
+              class="nav-button nav-button-primary"
+              :disabled="!isCurrentLevelAnswered"
+              @click="goToNextLevel"
+            >
+              Neste
+            </button>
+
+            <button
+              v-else
+              class="nav-button nav-button-primary"
+              :disabled="!isCurrentLevelAnswered"
+              @click="finishGame"
+            >
+              Fullfør
+            </button>
+          </div>
+        </template>
+
+        <TaskGuide v-if="showGuidePopup" @close="showGuidePopup = false">
+          <h2>Velkommen til datasenteret!</h2>
+          <p>Klarer du å svare riktig på alle oppgavene og slå datatyven?</p>
+          <img :src="DatatyvenImage" alt="Datatyven" class="guide-image" />
+        </TaskGuide>
+
+        <TaskGuide v-if="showHelpPopup" @close="showHelpPopup = false">
+          <h2>Trenger du hjelp?</h2>
+          <p>Inne på denne siden skal du løse oppgaver for å bekjempe datatyven.</p>
+          <ul>
+            <li>Det er én oppgave på hvert nivå.</li>
+            <li>Du kan bare svare én gang på hver oppgave.</li>
+            <li>Du må svare riktig på alle nivåene for å vinne.</li>
+          </ul>
+        </TaskGuide>
+
+        <TaskGuide v-if="showHintPopup" @close="showHintPopup = false">
+          <h2>Tips 💡</h2>
+          <p>Les oppgaven nøye før du svarer.</p>
+          <ul>
+            <li>Se etter små detaljer som kan avsløre riktig svar.</li>
+            <li>Ta deg god tid – du kan ikke svare på nytt.</li>
+            <li>Bruk det du har lært tidligere i spillet.</li>
+          </ul>
+        </TaskGuide>
+
+        <CompleteGamePopup
+          :show="showResultPopup"
+          :success="resultType === 'victory'"
+          :image="resultImage"
+          :image-alt="resultAltText"
+          :kicker="resultKicker"
+          :title="resultTitle"
+          :message="resultMessage"
+          :sub-message="resultSubmessage"
+          :highlight-title="resultHighlightTitle"
+          :highlight-text="resultHighlightText"
+          @close="closeResultPopup"
+          @retry="resetGame"
+          @map="goBackToMap"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -527,6 +539,18 @@ p {
   margin: 1rem auto 0;
   display: block;
   object-fit: contain;
+}
+
+.datacenter-page-bg {
+  min-height: 100vh;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+.pupil-task-page {
+  min-height: calc(100vh - 3.4rem);
 }
 
 @media (max-width: 768px) {

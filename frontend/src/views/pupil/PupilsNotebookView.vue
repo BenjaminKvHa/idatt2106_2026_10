@@ -153,13 +153,13 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="pupil-scene-screen">
+  <div
+    class="notebook-page-bg pupil-scene-screen"
+    :style="{ backgroundImage: `url(${woodBackground})` }"
+  >
     <TopBar title="Notatbok" />
 
-    <main
-      class="notebook-page pupil-scene-page"
-      :style="{ backgroundImage: `url(${woodBackground})` }"
-    >
+    <main class="notebook-page pupil-scene-page">
       <section class="book-stage" aria-labelledby="chapter-title">
         <img class="book-image" :src="bookImage" alt="" aria-hidden="true" />
 
@@ -249,7 +249,16 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+.notebook-page-bg {
+  min-height: 100vh;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
 .notebook-page {
+  background: transparent;
   padding: clamp(0.35rem, 1vw, 0.85rem);
 }
 

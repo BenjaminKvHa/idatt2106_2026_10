@@ -141,62 +141,109 @@ async function saveNickname() {
 </script>
 
 <template>
-  <TopBar title="Profil" />
+  <div class="profile-page-bg">
+    <TopBar title="Profil" />
 
-  <main class="page pupil-page-center">
-    <section class="profile-card pupil-card">
-      <p v-if="loading">Loading profile...</p>
-      <p v-else-if="error" class="pupil-error">{{ error }}</p>
+    <main class="page pupil-page-center">
+      <section class="profile-card pupil-card">
+        <p v-if="loading">Loading profile...</p>
+        <p v-else-if="error" class="pupil-error">{{ error }}</p>
 
-      <div v-else-if="profile" class="profile-layout">
-        <section class="avatar-panel pupil-panel">
-          <img class="profile-img" :src="avatarUrl" alt="Profile avatar" />
-          <p class="pupil-meta-text">{{ profile.legalName || 'No name' }} - {{ profile.email }}</p>
-          <p class="pupil-meta-text">{{ profile.role }}</p>
+        <div v-else-if="profile" class="profile-layout">
+          <section class="avatar-panel pupil-panel">
+            <img class="profile-img" :src="avatarUrl" alt="Profile avatar" />
+            <p class="pupil-meta-text">
+              {{ profile.legalName || 'No name' }} - {{ profile.email }}
+            </p>
+            <p class="pupil-meta-text">{{ profile.role }}</p>
 
-          <RouterLink to="/pupil/profile/avatar">
-            <button
-              v-if="isInClassroom"
-              class="pupil-button pupil-button-secondary"
-              type="button"
-            >
-              Bytt avatar
-            </button>
-          </RouterLink>
-        </section>
+            <RouterLink :to="`/join-classroom/set-avatar?classroomCode=${profile.classroomCode}`">
+              <button
+                v-if="isInClassroom"
+                class="pupil-button pupil-button-secondary"
+                type="button"
+              >
+                Bytt avatar
+              </button>
+            </RouterLink>
+          </section>
 
-        <section class="settings-panel pupil-panel">
-          <div v-if="isInClassroom" class="setting-card pupil-inner-card">
-            <span class="pupil-label">Kallenavn for klasserom</span>
-            <p>{{ profile.username ?? 'Ikke satt enda' }}</p>
+          <section class="settings-panel pupil-panel">
+            <div v-if="isInClassroom" class="setting-card pupil-inner-card">
+              <span class="pupil-label">Kallenavn for klasserom</span>
+              <p>{{ profile.username ?? 'Ikke satt enda' }}</p>
 
-            <div v-if="isInClassroom && editingNickname" class="nickname-editor">
-              <input
-                v-model="nicknameDraft"
-                class="pupil-input"
-                type="text"
-                placeholder="Skriv nytt kallenavn"
-              />
+              <div v-if="isInClassroom && editingNickname" class="nickname-editor">
+                <input
+                  v-model="nicknameDraft"
+                  class="pupil-input"
+                  type="text"
+                  placeholder="Skriv nytt kallenavn"
+                />
 
-              <div class="nickname-actions">
-                <button
-                  class="pupil-button pupil-button-secondary"
-                  type="button"
-                  :disabled="savingNickname"
-                  @click="cancelNicknameEdit"
-                >
-                  Avbryt
-                </button>
+                <div class="nickname-actions">
+                  <button
+                    class="pupil-button pupil-button-secondary"
+                    type="button"
+                    :disabled="savingNickname"
+                    @click="cancelNicknameEdit"
+                  >
+                    Avbryt
+                  </button>
 
-                <button
-                  class="pupil-button pupil-button-secondary"
-                  type="button"
-                  :disabled="savingNickname"
-                  @click="saveNickname"
-                >
-                  {{ savingNickname ? 'Lagrer...' : 'Lagre kallenavn' }}
-                </button>
+                  <button
+                    class="pupil-button pupil-button-secondary"
+                    type="button"
+                    :disabled="savingNickname"
+                    @click="saveNickname"
+                  >
+                    {{ savingNickname ? 'Lagrer...' : 'Lagre kallenavn' }}
+                  </button>
+                </div>
               </div>
+
+              <button
+                v-else-if="isInClassroom"
+                class="pupil-button pupil-button-secondary"
+                type="button"
+                @click="startNicknameEdit"
+              >
+                Bytt kallenavn for klasserom
+              </button>
+            </div>
+
+            <div v-if="isInClassroom" class="setting-card pupil-inner-card">
+              <span class="pupil-label">Klasseromskode</span>
+              <p>{{ profile.classroomCode }}</p>
+            </div>
+
+            <div class="setting-card pupil-inner-card">
+              <label class="pupil-label" for="volume-slider">Volum</label>
+              <div class="volume-row">
+                <button
+                  type="button"
+                  class="mute-btn"
+                  :aria-label="isMuted ? 'Skru på lyd' : 'Demp lyd'"
+                  @click="toggleMute"
+                >
+                  <img
+                    :src="isMuted ? volumeXIcon : volume2Icon"
+                    alt=""
+                    aria-hidden="true"
+                    class="volume-icon"
+                  />
+                </button>
+                <input
+                  id="volume-slider"
+                  :value="volume"
+                  type="range"
+                  min="0"
+                  max="100"
+                  :disabled="isMuted"
+                  @input="setVolume(+($event.target as HTMLInputElement).value)"
+                />
+              </div>
+              <p>{{ isMuted ? 'Dempet' : volume + '%' }}</p>
             </div>
 
             <button
@@ -245,12 +292,27 @@ async function saveNickname() {
       </div>
     </section>
   </main>
+  </div>
 </template>
 
 <style scoped>
 .profile-card {
   width: min(64rem, 100%);
   padding: 1.25rem;
+}
+
+.profile-page-bg {
+  min-height: 100vh;
+
+  background-image: url('@/assets/backgrounds/hjemskjerm-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+.page {
+  background: transparent;
 }
 
 .profile-layout {

@@ -5,9 +5,8 @@ import TopBar from '@/components/pupil/TopBar.vue'
 import { get } from '@/utils/apiUtils'
 
 const routerPush = vi.fn()
-const historyBack = vi.fn()
 
-let routeFullPath = '/pupil/classroom/map'
+let routePath = '/pupil/classroom/map'
 
 vi.mock('@/utils/apiUtils', () => ({
   get: vi.fn(),
@@ -19,7 +18,10 @@ vi.mock('vue-router', () => ({
   }),
   useRoute: () => ({
     get fullPath() {
-      return routeFullPath
+      return routePath
+    },
+    get path() {
+      return routePath
     },
   }),
   RouterLink: {
@@ -56,9 +58,7 @@ function mountTopBar(props = {}) {
 describe('TopBar', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    routeFullPath = '/pupil/classroom/map'
-
-    vi.spyOn(window.history, 'back').mockImplementation(historyBack)
+    routePath = '/pupil/classroom/map'
 
     mockedGet.mockResolvedValue({
       email: 'ola@example.com',
@@ -147,7 +147,7 @@ describe('TopBar', () => {
   })
 
   it('does not show back and home buttons on home route', async () => {
-    routeFullPath = '/pupil'
+    routePath = '/pupil'
 
     const wrapper = mountTopBar()
 
@@ -156,17 +156,73 @@ describe('TopBar', () => {
     expect(wrapper.find('.nav-icon-parent').exists()).toBe(false)
   })
 
-  it('goes back with browser history when no previousPageUrl is given', async () => {
+  it('routes from map page back to pupil dashboard', async () => {
     const wrapper = mountTopBar()
 
     await flushPromises()
 
     await wrapper.find('button.nav-icon-parent').trigger('click')
 
-    expect(historyBack).toHaveBeenCalled()
+    expect(routerPush).toHaveBeenCalledWith('/pupil')
+  })
+
+  it.each([
+    '/pupil/classroom/map/news',
+    '/pupil/classroom/map/photographer',
+    '/pupil/classroom/map/datacenter',
+  ])('routes from chapter task page %s back to map', async (path) => {
+    routePath = path
+    const wrapper = mountTopBar()
+
+    await flushPromises()
+
+    await wrapper.find('button.nav-icon-parent').trigger('click')
+
+    expect(routerPush).toHaveBeenCalledWith('/pupil/classroom/map')
+  })
+
+  it.each([
+    '/pupil/classroom/notebook',
+    '/pupil/classroom/mystery',
+    '/pupil/classroom/medals',
+    '/pupil/classroom/help',
+    '/pupil/classroom/leaderboard',
+    '/pupil/profile',
+  ])('routes from feature page %s back to pupil dashboard', async (path) => {
+    routePath = path
+    const wrapper = mountTopBar()
+
+    await flushPromises()
+
+    await wrapper.find('button.nav-icon-parent').trigger('click')
+
+    expect(routerPush).toHaveBeenCalledWith('/pupil')
+  })
+
+  it('routes from pupil avatar edit back to profile', async () => {
+    routePath = '/pupil/profile/avatar'
+    const wrapper = mountTopBar()
+
+    await flushPromises()
+
+    await wrapper.find('button.nav-icon-parent').trigger('click')
+
+    expect(routerPush).toHaveBeenCalledWith('/pupil/profile')
+  })
+
+  it('routes unmapped pupil pages back to pupil dashboard', async () => {
+    routePath = '/pupil/classroom/unknown'
+    const wrapper = mountTopBar()
+
+    await flushPromises()
+
+    await wrapper.find('button.nav-icon-parent').trigger('click')
+
+    expect(routerPush).toHaveBeenCalledWith('/pupil')
   })
 
   it('uses previousPageUrl when back button is clicked', async () => {
+    routePath = '/pupil/classroom/map/news'
     const wrapper = mountTopBar({
       previousPageUrl: '/pupil/custom-back',
     })

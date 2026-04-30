@@ -10,7 +10,7 @@ import {
   put,
   type BackendAccountRole,
 } from '@/utils/apiUtils'
-import { clearMeCache } from '@/router'
+import { clearMeCache } from '@/utils/authRedirect'
 import VolumeControl from '@/components/ui/VolumeControl.vue'
 
 type ProfileResponse = {
@@ -251,44 +251,39 @@ async function saveNickname() {
             </div>
 
             <div v-if="isInClassroom" class="setting-card pupil-inner-card">
-              <span class="pupil-label">Klasseromskode</span>
-              <p>{{ profile.classroomCode }}</p>
+              <span class="pupil-label">Klasserom</span>
+              <p v-if="classroomLoading">Laster klasserom...</p>
+              <p v-else>{{ classroomDisplayName }}</p>
+              <p v-if="classroomError" class="classroom-error">{{ classroomError }}</p>
             </div>
 
-          <div v-if="isInClassroom" class="setting-card pupil-inner-card">
-            <span class="pupil-label">Klasserom</span>
-            <p v-if="classroomLoading">Laster klasserom...</p>
-            <p v-else>{{ classroomDisplayName }}</p>
-            <p v-if="classroomError" class="classroom-error">{{ classroomError }}</p>
-          </div>
+            <div class="setting-card pupil-inner-card">
+              <label class="pupil-label" for="profile-volume-slider">Volum</label>
+              <VolumeControl input-id="profile-volume-slider" />
+            </div>
 
-          <div class="setting-card pupil-inner-card">
-            <label class="pupil-label" for="profile-volume-slider">Volum</label>
-            <VolumeControl input-id="profile-volume-slider" />
-          </div>
+            <p v-if="actionError" class="action-error pupil-error">{{ actionError }}</p>
 
-          <p v-if="actionError" class="action-error pupil-error">{{ actionError }}</p>
+            <div class="actions">
+              <button
+                v-if="isInClassroom"
+                class="pupil-button pupil-button-danger"
+                type="button"
+                :disabled="leavingClassroom"
+                @click="leaveClassroom"
+              >
+                {{ leavingClassroom ? 'Forlater...' : 'Forlat klasserom' }}
+              </button>
 
-          <div class="actions">
-            <button
-              v-if="isInClassroom"
-              class="pupil-button pupil-button-danger"
-              type="button"
-              :disabled="leavingClassroom"
-              @click="leaveClassroom"
-            >
-              {{ leavingClassroom ? 'Forlater...' : 'Forlat klasserom' }}
-            </button>
-
-            <button
-              class="pupil-button pupil-button-danger"
-              type="button"
-              :disabled="signingOut"
-              @click="signOut"
-            >
-              {{ signingOut ? 'Logger ut...' : 'Logg ut' }}
-            </button>
-          </div>
+              <button
+                class="pupil-button pupil-button-danger"
+                type="button"
+                :disabled="signingOut"
+                @click="signOut"
+              >
+                {{ signingOut ? 'Logger ut...' : 'Logg ut' }}
+              </button>
+            </div>
         </section>
       </div>
     </section>

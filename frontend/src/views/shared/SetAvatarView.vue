@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AvatarAssetsContainer from '@/components/pupil/AvatarAssetsContainer.vue'
 import { put } from '@/utils/apiUtils'
-import { clearMeCache } from '@/router'
+import { clearMeCache } from '@/utils/authRedirect'
 
 type AvatarAsset = {
   assetType: string

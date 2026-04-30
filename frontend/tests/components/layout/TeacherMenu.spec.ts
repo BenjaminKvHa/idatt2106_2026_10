@@ -51,6 +51,14 @@ function mountTeacherMenu() {
           emits: ['close'],
           template: '<section data-test="options-menu"><button type="button" @click="$emit(\'close\')">Close</button></section>',
         },
+        NotificationsMenu: {
+          emits: ['close'],
+          template: '<section data-test="notifications-menu"><button type="button" @click="$emit(\'close\')">Close</button></section>',
+        },
+        RouterLink: {
+          props: ['to'],
+          template: '<a :data-to="to"><slot /></a>',
+        },
       },
     },
   })
@@ -110,34 +118,28 @@ describe('TeacherMenu', () => {
     expect(wrapper.text()).toContain('Ingen klasserom')
   })
 
-  it('navigates to the teacher classrooms overview when the Klasserom button is clicked', async () => {
+  it('links to the teacher classrooms overview from the Klasserom button', () => {
     const wrapper = mountTeacherMenu()
 
-    await wrapper.find('.teacher-card-title').trigger('click')
-
-    expect(routerPush).toHaveBeenCalledWith('/teacher/classrooms')
+    expect(wrapper.find('.teacher-card-title').attributes('data-to')).toBe('/teacher/classrooms')
   })
 
-  it('navigates to the create classroom page when the new classroom button is clicked', async () => {
+  it('links to the create classroom page from the new classroom button', () => {
     const wrapper = mountTeacherMenu()
 
-    await wrapper.find('.teacher-menu-button').trigger('click')
-
-    expect(routerPush).toHaveBeenCalledWith('/teacher/classrooms/new')
+    expect(wrapper.find('.teacher-menu-button').attributes('data-to')).toBe('/teacher/classrooms/new')
   })
 
-  it('navigates to the selected classroom leaderboard using the classroom slug', async () => {
+  it('links to the selected classroom leaderboard using the classroom code', () => {
     const wrapper = mountTeacherMenu()
     const classroomButton = wrapper.findAll('.teacher-card-item-var-1').find((button) => button.text() === 'Norsk Gruppe')
-    console.log(wrapper.html())
-    await classroomButton?.trigger('click')
 
-    expect(routerPush).toHaveBeenCalledWith('/teacher/classrooms/norsk-gruppe/leaderboard')
+    expect(classroomButton?.attributes('data-to')).toBe('/teacher/classrooms/DEFDEF/leaderboard')
   })
 
   it('marks the classrooms overview as active outside the new classroom route', () => {
-    routeState.path = '/teacher/classrooms/matte-1a/oversikt'
-    routeState.params = { classroomName: 'matte-1a' }
+    routeState.path = '/teacher/classrooms/ABCABC/leaderboard'
+    routeState.params = { classroomCode: 'ABCABC' }
 
     const wrapper = mountTeacherMenu()
 

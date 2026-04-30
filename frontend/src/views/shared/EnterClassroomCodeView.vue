@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import creatureSitting from '@/assets/icons/blobby/creatureSitting.png'
 import { post } from '@/utils/apiUtils'
+import { clearMeCache } from '@/utils/authRedirect'
 import WipNotice from '@/components/shared/WipNotice.vue'
 
 const router = useRouter()
@@ -33,6 +34,7 @@ async function handleConfirm() {
 
   try {
     await post(`/api/pupil/classrooms/${classroomCode.value}/join`, {})
+    clearMeCache()
 
     await router.push({
       path: '/join-classroom/set-avatar',

@@ -62,42 +62,51 @@ describe('TeachersClassroomView.vue', () => {
     )
   })
 
+  function mountView() {
+    return mount(TeachersClassroomsView, {
+      global: {
+        stubs: {
+          RouterLink: {
+            props: ['to'],
+            template: '<a :data-to="to"><slot /></a>',
+          },
+        },
+      },
+    })
+  }
+
   it('renders classroom cards when classrooms exist', () => {
     classroomsMock.value = [
       {
         classroomName: 'Matte Klasse',
-        classroomCode: 'ABC123',
+        classroomCode: 'ABCABC',
         totalScore: 250,
         globalRank: 4,
       },
     ]
 
-    const wrapper = mount(TeachersClassroomsView)
+    const wrapper = mountView()
 
     expect(wrapper.text()).toContain('Matte Klasse')
-    expect(wrapper.text()).toContain('ABC123')
+    expect(wrapper.text()).toContain('ABCABC')
     expect(wrapper.text()).toContain('250')
     expect(wrapper.text()).toContain('#4')
     expect(wrapper.find('button').text()).toBe('Gå til klasserom')
   })
 
-  it('navigates to sanitized classroom leaderboard when button is clicked', async () => {
+  it('links to the classroom leaderboard using the classroom code', () => {
     classroomsMock.value = [
       {
         classroomName: 'Matte Klasse',
-        classroomCode: 'ABC123',
+        classroomCode: 'ABCABC',
         totalScore: 250,
         globalRank: 4,
       },
     ]
 
-    const wrapper = mount(TeachersClassroomsView)
+    const wrapper = mountView()
 
-    await wrapper.find('button').trigger('click')
-
-    expect(pushMock).toHaveBeenCalledWith(
-      '/teacher/classrooms/matte-klasse/leaderboard'
-    )
+    expect(wrapper.find('a').attributes('data-to')).toBe('/teacher/classrooms/ABCABC/leaderboard')
   })
 
   it('does not render classrooms while loading', () => {

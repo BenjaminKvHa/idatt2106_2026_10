@@ -184,10 +184,6 @@ onBeforeUnmount(revokeImageUrls)
             </p>
           </div>
 
-          <p class="progress-text">
-            Nivå {{ stepIndex + 1 }} / {{ DIFFICULTIES.length }} — {{ difficultyLabel }}
-          </p>
-
           <HintCreature :chapter-id="NYHETSKVARTALET_CHAPTER_ID" />
 
         <PupilNewsTask
@@ -245,25 +241,6 @@ onBeforeUnmount(revokeImageUrls)
 
         <div class="popup-actions">
           <button class="popup-btn popup-btn-play" @click="closeHelpPopup">Ok</button>
-        </div>
-      </div>
-    </div>
-
-    <div v-if="showHintPopup" class="popup-overlay" @click="closeHintPopup">
-      <div class="hint-popup" @click.stop>
-        <h2 class="popup-title">Tips 💡</h2>
-
-        <div class="hint-text">
-          <p>Tenk som en detektiv.</p>
-          <ul>
-            <li>Se etter detaljer som ikke passer inn</li>
-            <li>Vær ekstra obs på tekst, bilder og overskrifter</li>
-            <li>Det som virker litt rart, er ofte verdt å undersøke nærmere</li>
-          </ul>
-        </div>
-
-        <div class="popup-actions">
-          <button class="popup-btn popup-btn-play" @click="closeHintPopup">Ok</button>
         </div>
       </div>
     </div>

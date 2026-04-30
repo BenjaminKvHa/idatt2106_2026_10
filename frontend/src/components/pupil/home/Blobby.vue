@@ -96,6 +96,7 @@ function handleBlobbyClick() {
   cursor: pointer;
   width: 100%;
   transform-origin: bottom center;
+  outline: none;
 }
 
 .blobby-image {
@@ -103,6 +104,17 @@ function handleBlobbyClick() {
   height: auto;
   display: block;
   filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.2));
+  transition: transform ease-in-out var(--icon-transition-duration), filter ease-in-out var(--icon-transition-duration);
+}
+
+.blobby-button:hover .blobby-image,
+.blobby-button:focus-visible .blobby-image {
+  transform: scale(var(--icon-hover-scale)) rotate(var(--icon-hover-rotate));
+  filter:
+    drop-shadow(0 -2px 0 var(--beige-light-100))
+    drop-shadow(2px 0 0 var(--beige-light-100))
+    drop-shadow(0 2px 0 var(--beige-light-100))
+    drop-shadow(-2px 0 0 var(--beige-light-100));
 }
 
 .blobby-button.animate {

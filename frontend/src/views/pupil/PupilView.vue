@@ -45,11 +45,26 @@ const buttons = [
 
 <style scoped>
 .screen {
+  --screen-overlay-opacity: 0.4;
+
+  --board-max-width: 1400px;
+  --board-aspect-ratio: 1400 / 900;
+
+  --icon-width: clamp(195px, 22vw, 360px);
+
+  --row-1-top: 21%;
+  --row-2-top: 49%;
+  --col-left: 28%;
+  --col-center: 50%;
+  --col-right: 72%;
+}
+
+
+.screen {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
   position: relative;
-
   background: url('@/assets/backgrounds/hjemskjerm-bg.png') no-repeat center center;
   background-size: cover;
 }
@@ -58,7 +73,7 @@ const buttons = [
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, var(--screen-overlay-opacity));
   z-index: 0;
   pointer-events: none;
 }
@@ -93,8 +108,8 @@ const buttons = [
 /* pin-board */
 .image-wrapper {
   position: relative;
-  width: min(96vw, 1400px);
-  aspect-ratio: 1400 / 900;
+  width: min(96vw, var(--board-max-width));
+  aspect-ratio: var(--board-aspect-ratio);
 }
 
 .image-wrapper > img {
@@ -104,59 +119,46 @@ const buttons = [
   display: block;
 }
 
-/* icons */
+/* icon buttons */
 .overlay-button {
   position: absolute;
   cursor: pointer;
-  width: clamp(195px, 22vw, 360px);
+  width: var(--icon-width);
   transform: translateX(-50%);
+  outline: none;
 }
 
 .overlay-button img {
   display: block;
   width: 100%;
+  transition:
+    filter ease-in-out var(--icon-transition-duration),
+    transform ease-in-out var(--icon-transition-duration);
 }
 
-.overlay-button:hover img {
-  transform: scale(1.05);
-  transition: transform 0.15s ease;
+.overlay-button:hover img,
+.overlay-button:focus-visible img {
+  transform: scale(var(--icon-hover-scale)) rotate(var(--icon-hover-rotate));
+  filter:
+    drop-shadow(0 -2px 0 var(--beige-light-100))
+    drop-shadow(2px 0 0 var(--beige-light-100))
+    drop-shadow(0 2px 0 var(--beige-light-100))
+    drop-shadow(-2px 0 0 var(--beige-light-100));
 }
 
-/* positions */
-.medals {
-  top: 21%;
-  left: 28%;
-}
+/* icon positions */
 
-.map {
-  top: 21%;
-  left: 50%;
-}
-
-.leaderboard {
-  top: 21%;
-  left: 72%;
-}
-
-.mystery {
-  top: 49%;
-  left: 28%;
-}
-
-.notes {
-  top: 49%;
-  left: 72%;
-}
-
-.help {
-  top: 49%;
-  left: 50%;
-}
+.medals     { top: var(--row-1-top); left: var(--col-left);   }
+.map        { top: var(--row-1-top); left: var(--col-center); }
+.leaderboard{ top: var(--row-1-top); left: var(--col-right);  }
+.mystery    { top: var(--row-2-top); left: var(--col-left);   }
+.help       { top: var(--row-2-top); left: var(--col-center); }
+.notes      { top: var(--row-2-top); left: var(--col-right);  }
 
 /* tablet screen */
 @media (max-width: 768px) {
-  .overlay-button {
-    width: clamp(104px, 20vw, 178px);
+  .screen {
+    --icon-width: clamp(104px, 20vw, 178px);
   }
 
   .map {
@@ -164,14 +166,10 @@ const buttons = [
   }
 }
 
-/* phone screen */
 @media (max-width: 540px) {
-  .image-wrapper {
-    width: min(96vw, 900px);
-  }
-
-  .overlay-button {
-    width: clamp(48px, 11vw, 100px);
+  .screen {
+    --icon-width: clamp(48px, 11vw, 100px);
+    --board-max-width: 900px;
   }
 
   .map {
@@ -180,6 +178,12 @@ const buttons = [
 }
 
 @media (max-width: 480px) {
+  .screen {
+    --icon-width: clamp(58px, 19vw, 96px);
+    --row-1-top: 24%;
+    --row-2-top: 52%;
+  }
+
   .page {
     align-items: center;
     padding: 0.5rem;
@@ -187,40 +191,6 @@ const buttons = [
 
   .image-wrapper {
     width: 96vw;
-  }
-
-  .overlay-button {
-    width: clamp(58px, 19vw, 96px);
-  }
-
-  .medals {
-    top: 24%;
-    left: 28%;
-  }
-
-  .map {
-    top: 24%;
-    left: 50%;
-  }
-
-  .leaderboard {
-    top: 24%;
-    left: 72%;
-  }
-
-  .mystery {
-    top: 52%;
-    left: 28%;
-  }
-
-  .notes {
-    top: 52%;
-    left: 72%;
-  }
-
-  .help {
-    top: 52%;
-    left: 50%;
   }
 }
 </style>

@@ -2,6 +2,7 @@
 @import 'teacherStyle.css';
 @import 'pupilTaskStyle.css';
 @import 'pupilStyle.css';
+@import 'selectStyle.css';
 
 .transition {
   transition: all 0.1s;
@@ -11,32 +12,12 @@ button {
   outline: none;
 }
 
+
 *:focus-visible {
-  outline: 3px solid var(--beige-light-100);
+  outline: 3px solid var(--brown-dark);
   outline-offset: 3px;
-  border-radius: 4px;
 }
 
-a:focus-visible:has(img),
-button:focus-visible:has(img) {
-  outline: none;
-}
-
-a:has(img) img,
-button:has(img) img {
-  transition: filter ease 0.2s, transform ease-in-out 0.1s;
-}
-
-a:focus-visible img,
-button:focus-visible img {
-  filter:
-    drop-shadow(0 -2px 0 var(--beige-light-100))
-    drop-shadow(2px 0 0 var(--beige-light-100))
-    drop-shadow(0 2px 0 var(--beige-light-100))
-    drop-shadow(-2px 0 0 var(--beige-light-100));
-
-  transform: scale(1.05) rotate(4deg);
-}
 .center-content {
   display: flex;
   gap: 1rem;

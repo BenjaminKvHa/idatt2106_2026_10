@@ -606,9 +606,19 @@ onMounted(() => {
   cursor: pointer;
 }
 
-.stop-circle.unlocked:hover {
+.stop-circle.unlocked:hover,
+.stop-circle.unlocked:focus-visible {
   transform: scale(1.05);
   transition: 0.2s;
+}
+
+.stop-circle:focus-visible {
+  outline: 4px solid var(--beige-light-100);
+  outline-offset: 5px;
+  box-shadow:
+    0 0 0 9px var(--brown-dark-40),
+    0 8px 18px rgba(0, 0, 0, 0.12),
+    inset 0 0 0 3px rgba(255, 255, 255, 0.3);
 }
 
 .stop-circle.locked {

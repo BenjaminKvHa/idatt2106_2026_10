@@ -98,6 +98,7 @@ async function openHintPopup() {
   background: transparent;
   padding: 0;
   cursor: pointer;
+  outline: none;
 }
 
 .hint-creature-button img {
@@ -106,10 +107,12 @@ async function openHintPopup() {
   object-fit: contain;
   pointer-events: none;
   filter: drop-shadow(0 8px 10px rgb(0 0 0 / 25%));
+  transition: transform ease-in-out var(--icon-transition-duration), filter ease-in-out var(--icon-transition-duration);
 }
 
-.hint-creature-button:hover img {
-  transform: scale(1.08);
+.hint-creature-button:hover img,
+.hint-creature-button:focus-visible img {
+  transform: scale(var(--icon-hover-scale)) rotate(var(--icon-hover-rotate));
 }
 
 .hint-creature-button:disabled {

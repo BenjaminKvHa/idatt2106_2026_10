@@ -124,32 +124,32 @@ const buttons = [
 
 /* positions */
 .medals {
-  top: 21%;
+  top: 20%;
   left: 28%;
 }
 
 .map {
-  top: 21%;
+  top: 20%;
   left: 50%;
 }
 
 .leaderboard {
-  top: 21%;
+  top: 20%;
   left: 72%;
 }
 
 .mystery {
-  top: 49%;
+  top: 55%;
   left: 28%;
 }
 
 .notes {
-  top: 49%;
+  top: 55%;
   left: 72%;
 }
 
 .help {
-  top: 49%;
+  top: 55%;
   left: 50%;
 }
 
@@ -194,32 +194,32 @@ const buttons = [
   }
 
   .medals {
-    top: 24%;
+    top: 22%;
     left: 28%;
   }
 
   .map {
-    top: 24%;
+    top: 22%;
     left: 50%;
   }
 
   .leaderboard {
-    top: 24%;
+    top: 22%;
     left: 72%;
   }
 
   .mystery {
-    top: 52%;
+    top: 58%;
     left: 28%;
   }
 
   .notes {
-    top: 52%;
+    top: 58%;
     left: 72%;
   }
 
   .help {
-    top: 52%;
+    top: 58%;
     left: 50%;
   }
 }

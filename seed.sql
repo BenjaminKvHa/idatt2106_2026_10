@@ -1,28 +1,40 @@
--- Development seed data for local Docker Compose.
+-- Development/demo seed data for local Docker Compose.
 -- compose.yaml runs this automatically after the backend is healthy, so Java boot seeders
--- such as ChapterSeeder and TaskSeeder have completed first.
-
+-- such as ChapterSeeder, TaskSeeder, MedalAssetInitializer, and DemoAssetInitializer have completed first.
+--
 -- Optional manual rerun on macOS/Linux: docker compose exec -T db psql -U app -d app < seed.sql
 -- Optional manual rerun on Windows: Get-Content .\seed.sql | docker compose exec -T db psql -U app -d app
--- Accounts you can log in with:
--- demo.teacher@example.com
--- map.partial@example.com
--- map.complete@example.com
--- teacher.multi@example.com
--- teacher.shared@example.com
--- rank.two@example.com
--- rank.three@example.com
-
--- Password: Test1234
+--
+-- Password for every documented login user: Test1234
+--
+-- Teacher demo logins:
+-- teacher.anna@example.com   | owns DEMOAA, DEMOBB, MAPAAA | rich classroom data, pending requests, notifications
+-- teacher.marius@example.com | shares DEMOAA               | shared-teacher classroom testing
+-- teacher.empty@example.com  | owns EMPTYA                 | mostly empty classroom state
+--
+-- Pupil demo logins:
+-- pupil.start@example.com       | DEMOAA confirmed | no progress yet
+-- pupil.pending@example.com     | DEMOAA pending   | waiting-room flow
+-- pupil.map.partial@example.com | MAPAAA confirmed | chapter 1+2 complete, chapter 3 unlocked
+-- pupil.complete@example.com    | DEMOAA confirmed | all chapters complete
+-- pupil.stuck@example.com       | DEMOAA confirmed | stuck/progress notification scenario
+-- pupil.weekly@example.com      | DEMOAA confirmed | approved weekly mystery and medal scenario
+--
+-- Compatibility logins kept for older manual testing:
+-- map.partial@example.com, map.complete@example.com, rank.two@example.com, rank.three@example.com
 
 INSERT INTO classroom (classroom_code, classroom_name, classroom_description)
 VALUES
-    ('MAPAAA', 'Kart testklasse', 'Utviklingsklasse for kartvisning'),
-    ('MAPAAB', 'Mellomklasse', 'Ekstra klasse for ranking og teacher-overview'),
-    ('MAPAAC', 'Sisteklasse', 'Ekstra klasse for ranking og teacher-overview'),
-    ('CHAPAA', 'Kapitteltestklasse', 'Utviklingsklasse for kapittelvisning'),
-    ('TESTAA', 'Demo testklasse A', 'Utviklingsklasse for lærer- og varslingsvisning'),
-    ('TESTBB', 'Demo testklasse B', 'Ekstra utviklingsklasse for lærer- og varslingsvisning')
+    ('DEMOAA', 'Demo 5A', 'Hovedklasse med full demoaktivitet for lærervisning.'),
+    ('DEMOBB', 'Demo 6B', 'Ekstra klasse med egne elever og ukens mysterium-bidrag.'),
+    ('MAPAAA', 'Kart testklasse', 'Klasse for kartprogresjon og delvis fullført spill.'),
+    ('LEADAA', 'Ledertavle testklasse', 'Klasse som gir flere rader på ledertavlen.'),
+    ('EMPTYA', 'Tom demoklasse', 'Klasse for å teste tomme lærerflater.'),
+    ('CHAPAA', 'Kapitteltestklasse', 'Utviklingsklasse for kapittelvisning.'),
+    ('MAPAAB', 'Mellomklasse', 'Kompatibilitetsklasse for eldre rankingtester.'),
+    ('MAPAAC', 'Sisteklasse', 'Kompatibilitetsklasse for eldre rankingtester.'),
+    ('TESTAA', 'Demo testklasse A', 'Kompatibilitetsklasse for eldre lærer- og varslingsvisning.'),
+    ('TESTBB', 'Demo testklasse B', 'Kompatibilitetsklasse for eldre lærer- og varslingsvisning.')
 ON CONFLICT (classroom_code) DO UPDATE
 SET
     classroom_name = EXCLUDED.classroom_name,
@@ -44,103 +56,86 @@ SELECT setval(
     TRUE
 );
 
+WITH demo_accounts (email, legal_name, role) AS (
+    VALUES
+        ('teacher.anna@example.com', 'Anna Berg', 'TEACHER'),
+        ('teacher.marius@example.com', 'Marius Holm', 'TEACHER'),
+        ('teacher.empty@example.com', 'Eline Strand', 'TEACHER'),
+        ('pupil.start@example.com', 'Sofie Start', 'PUPIL'),
+        ('pupil.pending@example.com', 'Peder Pending', 'PUPIL'),
+        ('pupil.map.partial@example.com', 'Maja Kart', 'PUPIL'),
+        ('pupil.complete@example.com', 'Oskar Komplett', 'PUPIL'),
+        ('pupil.stuck@example.com', 'Nora Fastlåst', 'PUPIL'),
+        ('pupil.weekly@example.com', 'Ibrahim Mysterium', 'PUPIL'),
+        ('pupil.alva@example.com', 'Alva Solheim', 'PUPIL'),
+        ('pupil.jonas@example.com', 'Jonas Bakke', 'PUPIL'),
+        ('pupil.emma@example.com', 'Emma Lie', 'PUPIL'),
+        ('pupil.noah@example.com', 'Noah Vik', 'PUPIL'),
+        ('pupil.sara@example.com', 'Sara Moen', 'PUPIL'),
+        ('pupil.theodor@example.com', 'Theodor Dahl', 'PUPIL'),
+        ('pupil.lina@example.com', 'Lina Aas', 'PUPIL'),
+        ('pupil.mathias@example.com', 'Mathias Lund', 'PUPIL'),
+        ('pupil.pending.nora@example.com', 'Nora Søker', 'PUPIL'),
+        ('pupil.pending.aksel@example.com', 'Aksel Søker', 'PUPIL'),
+        ('pupil.pending.ida@example.com', 'Ida Søker', 'PUPIL'),
+        ('pupil.pending.leo@example.com', 'Leo Søker', 'PUPIL'),
+        ('pupil.pending.frida@example.com', 'Frida Søker', 'PUPIL'),
+        ('demo.teacher@example.com', 'Demo Teacher', 'TEACHER'),
+        ('teacher.multi@example.com', 'Teacher Multi', 'TEACHER'),
+        ('teacher.shared@example.com', 'Teacher Shared', 'TEACHER'),
+        ('demo.alice@example.com', 'Alice Accepted', 'PUPIL'),
+        ('demo.bob@example.com', 'Bob Accepted', 'PUPIL'),
+        ('demo.carla@example.com', 'Carla Accepted', 'PUPIL'),
+        ('demo.pending.one@example.com', 'Pending One', 'PUPIL'),
+        ('demo.pending.two@example.com', 'Pending Two', 'PUPIL'),
+        ('demo.pending.three@example.com', 'Pending Three', 'PUPIL'),
+        ('map.partial@example.com', 'Map Partial', 'PUPIL'),
+        ('map.complete@example.com', 'Map Complete', 'PUPIL'),
+        ('rank.two@example.com', 'Rank Two', 'PUPIL'),
+        ('rank.three@example.com', 'Rank Three', 'PUPIL'),
+        ('chapter.test@example.com', 'Chapter Test', 'PUPIL')
+)
 INSERT INTO account (email, password_data, legal_name, account_role)
-VALUES
-    (
-        'demo.teacher@example.com',
-        '$2a$10$d8rn.gEcXxyXDGh6NTzF2uZTAlOI5m/T1x5Hh/8A7.BeLhGY232ym',
-        'Demo Teacher',
-        'TEACHER'
-    ),
-    (
-        'demo.alice@example.com',
-        '$2a$10$d8rn.gEcXxyXDGh6NTzF2uZTAlOI5m/T1x5Hh/8A7.BeLhGY232ym',
-        'Alice Accepted',
-        'PUPIL'
-    ),
-    (
-        'demo.bob@example.com',
-        '$2a$10$d8rn.gEcXxyXDGh6NTzF2uZTAlOI5m/T1x5Hh/8A7.BeLhGY232ym',
-        'Bob Accepted',
-        'PUPIL'
-    ),
-    (
-        'demo.carla@example.com',
-        '$2a$10$d8rn.gEcXxyXDGh6NTzF2uZTAlOI5m/T1x5Hh/8A7.BeLhGY232ym',
-        'Carla Accepted',
-        'PUPIL'
-    ),
-    (
-        'demo.pending.one@example.com',
-        '$2a$10$d8rn.gEcXxyXDGh6NTzF2uZTAlOI5m/T1x5Hh/8A7.BeLhGY232ym',
-        'Pending One',
-        'PUPIL'
-    ),
-    (
-        'demo.pending.two@example.com',
-        '$2a$10$d8rn.gEcXxyXDGh6NTzF2uZTAlOI5m/T1x5Hh/8A7.BeLhGY232ym',
-        'Pending Two',
-        'PUPIL'
-    ),
-    (
-        'demo.pending.three@example.com',
-        '$2a$10$d8rn.gEcXxyXDGh6NTzF2uZTAlOI5m/T1x5Hh/8A7.BeLhGY232ym',
-        'Pending Three',
-        'PUPIL'
-    ),
-    (
-        'map.partial@example.com',
-        '$2a$10$d8rn.gEcXxyXDGh6NTzF2uZTAlOI5m/T1x5Hh/8A7.BeLhGY232ym',
-        'Map Partial',
-        'PUPIL'
-    ),
-    (
-        'map.complete@example.com',
-        '$2a$10$d8rn.gEcXxyXDGh6NTzF2uZTAlOI5m/T1x5Hh/8A7.BeLhGY232ym',
-        'Map Complete',
-        'PUPIL'
-    ),
-    (
-        'rank.two@example.com',
-        '$2a$10$d8rn.gEcXxyXDGh6NTzF2uZTAlOI5m/T1x5Hh/8A7.BeLhGY232ym',
-        'Rank Two',
-        'PUPIL'
-    ),
-    (
-        'rank.three@example.com',
-        '$2a$10$d8rn.gEcXxyXDGh6NTzF2uZTAlOI5m/T1x5Hh/8A7.BeLhGY232ym',
-        'Rank Three',
-        'PUPIL'
-    ),
-    (
-        'chapter.test@example.com',
-        '$2a$10$d8rn.gEcXxyXDGh6NTzF2uZTAlOI5m/T1x5Hh/8A7.BeLhGY232ym',
-        'Chapter Test',
-        'PUPIL'
-    ),
-    (
-        'teacher.multi@example.com',
-        '$2a$10$d8rn.gEcXxyXDGh6NTzF2uZTAlOI5m/T1x5Hh/8A7.BeLhGY232ym',
-        'Teacher Multi',
-        'TEACHER'
-    ),
-    (
-        'teacher.shared@example.com',
-        '$2a$10$d8rn.gEcXxyXDGh6NTzF2uZTAlOI5m/T1x5Hh/8A7.BeLhGY232ym',
-        'Teacher Shared',
-        'TEACHER'
-    )
+SELECT
+    email,
+    '$2a$10$d8rn.gEcXxyXDGh6NTzF2uZTAlOI5m/T1x5Hh/8A7.BeLhGY232ym',
+    legal_name,
+    role::account_role_enum
+FROM demo_accounts
 ON CONFLICT (email) DO UPDATE
 SET
     password_data = EXCLUDED.password_data,
     legal_name = EXCLUDED.legal_name,
     account_role = EXCLUDED.account_role;
 
+WITH demo_files (object_key, uploaded_by, classroom_code, access_level, file_name) AS (
+    VALUES
+        ('avatar-images/pupil-start.png', NULL, NULL, 'PUBLIC', 'pupil-start.png'),
+        ('avatar-images/pupil-pending.png', NULL, NULL, 'PUBLIC', 'pupil-pending.png'),
+        ('avatar-images/pupil-map-partial.png', NULL, NULL, 'PUBLIC', 'pupil-map-partial.png'),
+        ('avatar-images/pupil-complete.png', NULL, NULL, 'PUBLIC', 'pupil-complete.png'),
+        ('avatar-images/pupil-stuck.png', NULL, NULL, 'PUBLIC', 'pupil-stuck.png'),
+        ('avatar-images/pupil-weekly.png', NULL, NULL, 'PUBLIC', 'pupil-weekly.png'),
+        ('avatar-images/demo-filler-a.png', NULL, NULL, 'PUBLIC', 'demo-filler-a.png'),
+        ('avatar-images/demo-filler-b.png', NULL, NULL, 'PUBLIC', 'demo-filler-b.png'),
+        ('avatar-images/demo_alice.png', NULL, NULL, 'PUBLIC', 'demo_alice.png'),
+        ('avatar-images/demo_bob.png', NULL, NULL, 'PUBLIC', 'demo_bob.png'),
+        ('avatar-images/demo_carla.png', NULL, NULL, 'PUBLIC', 'demo_carla.png'),
+        ('weekly-mysteries/demo-fake-news-1.png', 'pupil.weekly@example.com', 'DEMOAA', 'ONLY_CLASS', 'demo-fake-news-1.png'),
+        ('weekly-mysteries/demo-crowd-1.png', 'pupil.alva@example.com', 'DEMOAA', 'ONLY_CLASS', 'demo-crowd-1.png'),
+        ('weekly-mysteries/demo-flowers-1.png', 'pupil.jonas@example.com', 'DEMOAA', 'ONLY_TEACHERS_IN_CLASS', 'demo-flowers-1.png'),
+        ('weekly-mysteries/demo-datacenter-news-1.png', 'pupil.sara@example.com', 'DEMOBB', 'ONLY_CLASS', 'demo-datacenter-news-1.png'),
+        ('weekly-mysteries/demo-earth-1.png', 'pupil.theodor@example.com', 'DEMOBB', 'ONLY_TEACHERS_IN_CLASS', 'demo-earth-1.png'),
+        ('weekly-mysteries/demo-building-1.png', 'pupil.map.partial@example.com', 'MAPAAA', 'ONLY_CLASS', 'demo-building-1.png')
+)
 INSERT INTO file_object (object_key, uploaded_by, classroom_code, access_level, file_name)
-VALUES
-    ('avatar-images/demo_alice.png', NULL, NULL, 'PUBLIC', 'demo_alice.png'),
-    ('avatar-images/demo_bob.png', NULL, NULL, 'PUBLIC', 'demo_bob.png'),
-    ('avatar-images/demo_carla.png', NULL, NULL, 'PUBLIC', 'demo_carla.png')
+SELECT
+    object_key,
+    uploaded_by,
+    classroom_code,
+    access_level::classroom_access_enum,
+    file_name
+FROM demo_files
 ON CONFLICT (object_key) DO UPDATE
 SET
     uploaded_by = EXCLUDED.uploaded_by,
@@ -150,6 +145,12 @@ SET
 
 INSERT INTO account_classroom_bridge_teacher (account_email, classroom_code)
 VALUES
+    ('teacher.anna@example.com', 'DEMOAA'),
+    ('teacher.anna@example.com', 'DEMOBB'),
+    ('teacher.anna@example.com', 'MAPAAA'),
+    ('teacher.marius@example.com', 'DEMOAA'),
+    ('teacher.empty@example.com', 'EMPTYA'),
+    ('demo.teacher@example.com', 'TESTAA'),
     ('teacher.multi@example.com', 'MAPAAA'),
     ('teacher.multi@example.com', 'MAPAAB'),
     ('teacher.shared@example.com', 'MAPAAB'),
@@ -157,6 +158,39 @@ VALUES
     ('teacher.shared@example.com', 'TESTAA')
 ON CONFLICT (account_email, classroom_code) DO NOTHING;
 
+WITH membership_seed (email, classroom_code, username, confirmed, avatar_key) AS (
+    VALUES
+        ('pupil.start@example.com', 'DEMOAA', 'start.sofie', TRUE, 'avatar-images/pupil-start.png'),
+        ('pupil.pending@example.com', 'DEMOAA', 'venter.peder', FALSE, 'avatar-images/pupil-pending.png'),
+        ('pupil.map.partial@example.com', 'MAPAAA', 'kart.maja', TRUE, 'avatar-images/pupil-map-partial.png'),
+        ('pupil.complete@example.com', 'DEMOAA', 'komplett.oskar', TRUE, 'avatar-images/pupil-complete.png'),
+        ('pupil.stuck@example.com', 'DEMOAA', 'fast.nora', TRUE, 'avatar-images/pupil-stuck.png'),
+        ('pupil.weekly@example.com', 'DEMOAA', 'mysterium.ibrahim', TRUE, 'avatar-images/pupil-weekly.png'),
+        ('pupil.alva@example.com', 'DEMOAA', 'alva.detektiv', TRUE, 'avatar-images/demo-filler-a.png'),
+        ('pupil.jonas@example.com', 'DEMOAA', 'jonas.kilde', TRUE, 'avatar-images/demo-filler-b.png'),
+        ('pupil.emma@example.com', 'DEMOAA', 'emma.foto', TRUE, 'avatar-images/demo-filler-a.png'),
+        ('pupil.noah@example.com', 'DEMOAA', 'noah.nett', TRUE, 'avatar-images/demo-filler-b.png'),
+        ('pupil.sara@example.com', 'DEMOBB', 'sara.spor', TRUE, 'avatar-images/demo-filler-a.png'),
+        ('pupil.theodor@example.com', 'DEMOBB', 'theodor.tips', TRUE, 'avatar-images/demo-filler-b.png'),
+        ('pupil.lina@example.com', 'DEMOBB', 'lina.logg', TRUE, 'avatar-images/demo-filler-a.png'),
+        ('pupil.mathias@example.com', 'LEADAA', 'mathias.rank', TRUE, 'avatar-images/demo-filler-b.png'),
+        ('pupil.pending.nora@example.com', 'DEMOAA', 'nora.soker', FALSE, 'avatar-images/demo-filler-a.png'),
+        ('pupil.pending.aksel@example.com', 'DEMOAA', 'aksel.soker', FALSE, 'avatar-images/demo-filler-b.png'),
+        ('pupil.pending.ida@example.com', 'DEMOBB', 'ida.soker', FALSE, 'avatar-images/demo-filler-a.png'),
+        ('pupil.pending.leo@example.com', 'DEMOBB', 'leo.soker', FALSE, 'avatar-images/demo-filler-b.png'),
+        ('pupil.pending.frida@example.com', 'MAPAAA', 'frida.soker', FALSE, 'avatar-images/demo-filler-a.png'),
+        ('demo.alice@example.com', 'TESTAA', 'alice', TRUE, 'avatar-images/demo_alice.png'),
+        ('demo.bob@example.com', 'TESTAA', 'bob', TRUE, 'avatar-images/demo_bob.png'),
+        ('demo.carla@example.com', 'TESTBB', 'carla', TRUE, 'avatar-images/demo_carla.png'),
+        ('demo.pending.one@example.com', 'TESTAA', 'pending.one', FALSE, NULL),
+        ('demo.pending.two@example.com', 'TESTAA', 'pending.two', FALSE, NULL),
+        ('demo.pending.three@example.com', 'TESTBB', 'pending.three', FALSE, NULL),
+        ('map.partial@example.com', 'MAPAAA', 'map.partial', TRUE, 'avatar-images/pupil-map-partial.png'),
+        ('map.complete@example.com', 'MAPAAB', 'map.complete', TRUE, 'avatar-images/pupil-complete.png'),
+        ('rank.two@example.com', 'MAPAAB', 'rank.two', TRUE, 'avatar-images/demo-filler-a.png'),
+        ('rank.three@example.com', 'MAPAAC', 'rank.three', TRUE, 'avatar-images/demo-filler-b.png'),
+        ('chapter.test@example.com', 'CHAPAA', 'chapter.test', TRUE, 'avatar-images/pupil-start.png')
+)
 INSERT INTO pupil_classroom_membership (
     account_email,
     classroom_code,
@@ -164,18 +198,14 @@ INSERT INTO pupil_classroom_membership (
     membership_confirmed_by_teacher,
     avatar_file_object_id
 )
-VALUES
-    ('demo.alice@example.com', 'TESTAA', 'alice', TRUE, (SELECT id FROM file_object WHERE object_key = 'avatar-images/demo_alice.png')),
-    ('demo.bob@example.com', 'TESTAA', 'bob', TRUE, (SELECT id FROM file_object WHERE object_key = 'avatar-images/demo_bob.png')),
-    ('demo.carla@example.com', 'TESTBB', 'carla', TRUE, (SELECT id FROM file_object WHERE object_key = 'avatar-images/demo_carla.png')),
-    ('demo.pending.one@example.com', 'TESTAA', 'pending.one', FALSE, NULL),
-    ('demo.pending.two@example.com', 'TESTAA', 'pending.two', FALSE, NULL),
-    ('demo.pending.three@example.com', 'TESTBB', 'pending.three', FALSE, NULL),
-    ('map.partial@example.com', 'MAPAAA', 'map.partial', TRUE, NULL),
-    ('map.complete@example.com', 'MAPAAB', 'map.complete', TRUE, NULL),
-    ('rank.two@example.com', 'MAPAAB', 'rank.two', TRUE, NULL),
-    ('rank.three@example.com', 'MAPAAC', 'rank.three', TRUE, NULL),
-    ('chapter.test@example.com', 'CHAPAA', 'chapter.test', TRUE, 1)
+SELECT
+    membership_seed.email,
+    membership_seed.classroom_code,
+    membership_seed.username,
+    membership_seed.confirmed,
+    file_object.id
+FROM membership_seed
+LEFT JOIN file_object ON file_object.object_key = membership_seed.avatar_key
 ON CONFLICT (account_email) DO UPDATE
 SET
     classroom_code = EXCLUDED.classroom_code,
@@ -188,27 +218,47 @@ WITH progression_seed (
     chapter_id,
     successful_runs,
     highscore,
-    unsuccessful_streak
-)
-AS (
+    unsuccessful_streak,
+    current_run_attempts,
+    current_run_correct,
+    own_notes
+) AS (
     VALUES
-        ('demo.alice@example.com', 1, 3, 3, 0),
-        ('demo.alice@example.com', 2, 0, 2, 1),
-        ('demo.bob@example.com', 1, 0, 1, 1),
-        ('demo.carla@example.com', 1, 3, 3, 0),
-        ('demo.carla@example.com', 2, 3, 3, 0),
-        ('demo.carla@example.com', 3, 0, 2, 1),
-        ('map.partial@example.com', 1, 3, 3, 0),
-        ('map.partial@example.com', 2, 3, 3, 0),
-        ('map.complete@example.com', 1, 3, 3, 0),
-        ('map.complete@example.com', 2, 3, 3, 0),
-        ('map.complete@example.com', 3, 5, 5, 0),
-        ('rank.two@example.com', 1, 1, 3, 0),
-        ('rank.two@example.com', 2, 0, 1, 1),
-        ('rank.three@example.com', 1, 0, 1, 1)
+        ('pupil.map.partial@example.com', 1, 3, 3, 0, 0, 0, 'Nyhetskvartalet er ferdig. Jeg må alltid sjekke kilden.'),
+        ('pupil.map.partial@example.com', 2, 3, 3, 0, 0, 0, 'Fotografen er ferdig. Skygger og detaljer avslører mye.'),
+        ('pupil.complete@example.com', 1, 3, 3, 0, 0, 0, 'Fullført med full score.'),
+        ('pupil.complete@example.com', 2, 3, 3, 0, 0, 0, 'Fullført med full score.'),
+        ('pupil.complete@example.com', 3, 5, 5, 0, 0, 0, 'Hele spillet er fullført.'),
+        ('pupil.stuck@example.com', 1, 0, 2, 5, 5, 2, 'Jeg står fast på kildesjekken.'),
+        ('pupil.weekly@example.com', 1, 1, 3, 0, 0, 0, 'Jeg fant et godt eksempel til Ukens mysterium.'),
+        ('pupil.alva@example.com', 1, 2, 3, 0, 0, 0, ''),
+        ('pupil.alva@example.com', 2, 1, 2, 0, 0, 0, ''),
+        ('pupil.jonas@example.com', 1, 1, 2, 0, 0, 0, ''),
+        ('pupil.emma@example.com', 1, 3, 3, 0, 0, 0, ''),
+        ('pupil.emma@example.com', 2, 2, 3, 0, 0, 0, ''),
+        ('pupil.noah@example.com', 1, 0, 1, 3, 3, 1, ''),
+        ('pupil.sara@example.com', 1, 3, 3, 0, 0, 0, ''),
+        ('pupil.sara@example.com', 2, 3, 3, 0, 0, 0, ''),
+        ('pupil.theodor@example.com', 1, 1, 2, 0, 0, 0, ''),
+        ('pupil.lina@example.com', 1, 0, 2, 2, 2, 1, ''),
+        ('pupil.mathias@example.com', 1, 3, 3, 0, 0, 0, ''),
+        ('pupil.mathias@example.com', 2, 3, 2, 0, 0, 0, ''),
+        ('demo.alice@example.com', 1, 3, 3, 0, 0, 0, ''),
+        ('demo.alice@example.com', 2, 0, 2, 1, 1, 1, ''),
+        ('demo.bob@example.com', 1, 0, 1, 1, 1, 0, ''),
+        ('demo.carla@example.com', 1, 3, 3, 0, 0, 0, ''),
+        ('demo.carla@example.com', 2, 3, 3, 0, 0, 0, ''),
+        ('demo.carla@example.com', 3, 0, 2, 1, 1, 0, ''),
+        ('map.partial@example.com', 1, 3, 3, 0, 0, 0, 'Jeg har tre stjerner i første kapittel.'),
+        ('map.partial@example.com', 2, 3, 3, 0, 0, 0, 'Jeg har tre stjerner i andre kapittel.'),
+        ('map.complete@example.com', 1, 3, 3, 0, 0, 0, ''),
+        ('map.complete@example.com', 2, 3, 3, 0, 0, 0, ''),
+        ('map.complete@example.com', 3, 5, 5, 0, 0, 0, ''),
+        ('rank.two@example.com', 1, 1, 3, 0, 0, 0, ''),
+        ('rank.two@example.com', 2, 0, 1, 1, 1, 0, ''),
+        ('rank.three@example.com', 1, 0, 1, 1, 1, 0, '')
 ),
-chapter_tips (chapter_id, tips)
-AS (
+chapter_tips (chapter_id, tips) AS (
     VALUES
         (1, ARRAY[
             'Se nøye på kilden før du bestemmer deg.',
@@ -239,6 +289,8 @@ INSERT INTO pupil_chapter_bridge_progression (
     successful_runs,
     highscore,
     unsuccessful_streak,
+    current_run_attempts,
+    current_run_correct,
     notebook_json
 )
 SELECT
@@ -247,15 +299,19 @@ SELECT
     progression_seed.successful_runs,
     progression_seed.highscore,
     progression_seed.unsuccessful_streak,
+    progression_seed.current_run_attempts,
+    progression_seed.current_run_correct,
     jsonb_build_object(
         'tips',
         CASE
             WHEN progression_seed.successful_runs >= 1
                 THEN to_jsonb(COALESCE(chapter_tips.tips, ARRAY[]::TEXT[]))
+            WHEN progression_seed.email = 'pupil.stuck@example.com'
+                THEN to_jsonb(ARRAY['Se nøye på kilden før du bestemmer deg.']::TEXT[])
             ELSE '[]'::jsonb
         END,
         'ownNotes',
-        ''
+        progression_seed.own_notes
     )
 FROM progression_seed
 LEFT JOIN chapter_tips ON chapter_tips.chapter_id = progression_seed.chapter_id
@@ -264,14 +320,47 @@ SET
     successful_runs = EXCLUDED.successful_runs,
     highscore = EXCLUDED.highscore,
     unsuccessful_streak = EXCLUDED.unsuccessful_streak,
+    current_run_attempts = EXCLUDED.current_run_attempts,
+    current_run_correct = EXCLUDED.current_run_correct,
     notebook_json = EXCLUDED.notebook_json;
 
--- Weekly mysteries: a mix of approved (different ISO weeks) and pending,
--- across the TESTAA classroom so demo.alice / demo.bob / demo.pending pupils see them.
--- file_object ids 1..10 come from TaskSeeder. weekly_mystery.file_object_id is UNIQUE,
--- so each id is used at most once below.
-DELETE FROM weekly_mystery WHERE classroom_code IN ('TESTAA', 'TESTBB');
+DELETE FROM weekly_mystery
+USING file_object
+WHERE weekly_mystery.file_object_id = file_object.id
+  AND (
+      weekly_mystery.classroom_code IN ('DEMOAA', 'DEMOBB', 'MAPAAA', 'TESTAA', 'TESTBB')
+      OR file_object.object_key LIKE 'weekly-mysteries/demo-%'
+  );
 
+WITH mystery_seed (
+    object_key,
+    classroom_code,
+    account_email,
+    comment,
+    approved,
+    approved_at,
+    created_at
+) AS (
+    VALUES
+        ('weekly-mysteries/demo-fake-news-1.png', 'DEMOAA', 'pupil.weekly@example.com',
+         'Denne artikkelen bruker veldig dramatisk overskrift, men bildet virker mistenkelig.',
+         TRUE, NOW() - INTERVAL '1 day', NOW() - INTERVAL '1 day 2 hours'),
+        ('weekly-mysteries/demo-crowd-1.png', 'DEMOAA', 'pupil.alva@example.com',
+         'Flere ansikter i folkemengden ser nesten like ut.',
+         TRUE, NOW() - INTERVAL '3 days', NOW() - INTERVAL '3 days 1 hour'),
+        ('weekly-mysteries/demo-flowers-1.png', 'DEMOAA', 'pupil.jonas@example.com',
+         'Blomstene har rare kanter og bakgrunnen virker kunstig.',
+         FALSE, NULL, NOW() - INTERVAL '4 hours'),
+        ('weekly-mysteries/demo-datacenter-news-1.png', 'DEMOBB', 'pupil.sara@example.com',
+         'Denne nyhetssaken ser ut til å blande ekte og falsk informasjon.',
+         TRUE, NOW() - INTERVAL '2 days', NOW() - INTERVAL '2 days 3 hours'),
+        ('weekly-mysteries/demo-earth-1.png', 'DEMOBB', 'pupil.theodor@example.com',
+         'Jorda ser altfor glatt ut, og detaljene stemmer ikke helt.',
+         FALSE, NULL, NOW() - INTERVAL '7 hours'),
+        ('weekly-mysteries/demo-building-1.png', 'MAPAAA', 'pupil.map.partial@example.com',
+         'Bygningen ser generert ut fordi vinduene ikke følger samme mønster.',
+         TRUE, NOW() - INTERVAL '8 days', NOW() - INTERVAL '8 days 2 hours')
+)
 INSERT INTO weekly_mystery (
     file_object_id,
     classroom_code,
@@ -281,69 +370,49 @@ INSERT INTO weekly_mystery (
     approved_at,
     created_at
 )
-
-VALUES
-    -- Current week (TESTAA): two approved + one pending
-    (1, 'TESTAA', 'demo.alice@example.com',
-     'Bildet ser veldig ekte ut, men jeg er litt usikker på øynene.',
-     TRUE,  NOW() - INTERVAL '1 day',  NOW() - INTERVAL '1 day 2 hours'),
-    (2, 'TESTAA', 'demo.bob@example.com',
-     'Folkene i mengden ser nesten identiske ut – ser KI-generert ut.',
-     TRUE,  NOW() - INTERVAL '2 days', NOW() - INTERVAL '2 days 3 hours'),
-    (3, 'TESTAA', 'demo.alice@example.com',
-     'Skarpheten på jorda er for perfekt. Jeg tror dette er KI.',
-     FALSE, NULL,                       NOW() - INTERVAL '4 hours'),
-
-    -- Last week (TESTAA): one approved
-    (4, 'TESTAA', 'demo.bob@example.com',
-     'Blomstene har for glatte teksturer.',
-     TRUE,  NOW() - INTERVAL '8 days',  NOW() - INTERVAL '8 days 2 hours'),
-
-    -- Two weeks ago (TESTAA): one approved
-    (5, 'TESTAA', 'demo.alice@example.com',
-     'Trærne ser duplisert ut og himmelen er rar.',
-     TRUE,  NOW() - INTERVAL '15 days', NOW() - INTERVAL '15 days 4 hours'),
-
-    -- TESTBB: one approved this week + one pending
-    (6, 'TESTBB', 'demo.carla@example.com',
-     'Ansiktet i bakgrunnen ser litt forvrengt ut.',
-     TRUE,  NOW() - INTERVAL '1 day',   NOW() - INTERVAL '1 day 1 hour'),
-    (7, 'TESTBB', 'demo.carla@example.com',
-     'Logoen på skiltet ser ikke riktig ut.',
-     FALSE, NULL,                       NOW() - INTERVAL '6 hours');
-
-
+SELECT
+    file_object.id,
+    mystery_seed.classroom_code,
+    mystery_seed.account_email,
+    mystery_seed.comment,
+    mystery_seed.approved,
+    mystery_seed.approved_at,
+    mystery_seed.created_at
+FROM mystery_seed
+JOIN file_object ON file_object.object_key = mystery_seed.object_key;
 
 DELETE FROM notification
-WHERE classroom_code = 'MAPAAA'
-  AND notification_text IN (
-      'Alice Accepted har bedt om hjelp i Nyhetskvartalet',
-      'Bob Accepted venter på tilbakemelding fra lærer',
-      'Carla Accepted har fullført Fotografen'
-  );
+WHERE classroom_code IN ('DEMOAA', 'DEMOBB', 'MAPAAA', 'TESTAA', 'TESTBB');
 
 INSERT INTO notification (
     classroom_code,
     account_email,
     notification_text,
-    status_notifications
+    status_notifications,
+    created_at
 )
 VALUES
-    (
-        'MAPAAA',
-        'demo.alice@example.com',
-        'Alice Accepted har bedt om hjelp i Nyhetskvartalet',
-        'UNREAD'
-    ),
-    (
-        'MAPAAA',
-        'demo.bob@example.com',
-        'Bob Accepted venter på tilbakemelding fra lærer',
-        'UNREAD'
-    ),
-    (
-        'MAPAAA',
-        'demo.carla@example.com',
-        'Carla Accepted har fullført Fotografen',
-        'READ'
-    );
+    ('DEMOAA', 'pupil.weekly@example.com',
+     'Ibrahim Mysterium har sendt inn et nytt bidrag til Ukens mysterium.',
+     'UNREAD', NOW() - INTERVAL '4 hours'),
+    ('DEMOAA', 'pupil.complete@example.com',
+     'Oskar Komplett har fullført Datasenteret for første gang.',
+     'UNREAD', NOW() - INTERVAL '1 day'),
+    ('DEMOAA', 'pupil.stuck@example.com',
+     'Nora Fastlåst står fast på Nyhetskvartalet og kan trenge hjelp.',
+     'UNREAD', NOW() - INTERVAL '2 days'),
+    ('DEMOAA', 'pupil.pending@example.com',
+     'Peder Pending venter på å bli godkjent i Demo 5A.',
+     'READ', NOW() - INTERVAL '3 days'),
+    ('DEMOBB', 'pupil.theodor@example.com',
+     'Theodor Dahl har sendt inn et nytt bidrag til Ukens mysterium.',
+     'UNREAD', NOW() - INTERVAL '7 hours'),
+    ('MAPAAA', 'pupil.map.partial@example.com',
+     'Maja Kart har fullført Fotografen for første gang.',
+     'READ', NOW() - INTERVAL '8 days'),
+    ('TESTAA', 'demo.alice@example.com',
+     'Alice Accepted har bedt om hjelp i Nyhetskvartalet.',
+     'UNREAD', NOW() - INTERVAL '2 days'),
+    ('TESTAA', 'demo.bob@example.com',
+     'Bob Accepted venter på tilbakemelding fra lærer.',
+     'UNREAD', NOW() - INTERVAL '1 day');

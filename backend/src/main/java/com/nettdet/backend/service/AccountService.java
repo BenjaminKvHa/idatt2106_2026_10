@@ -25,6 +25,13 @@ import com.nettdet.backend.repository.AccountRepository;
 import com.nettdet.backend.repository.PupilClassroomMembershipRepository;
 import com.nettdet.backend.security.JwtUserPrincipal;
 
+/**
+ * Service class responsible for managing user accounts and their profiles.
+ * 
+ * <p>Handles core authentication workflows such as registration and login,
+ * as well as profile-related actions like updating usernames and avatars.
+ * Implements rate-limiting for avatar updates to ensure system stability.
+ */
 @Service
 public class AccountService {
 
@@ -48,6 +55,14 @@ public class AccountService {
         this.avatarService = avatarService;
     }
 
+    /**
+     * Registers a new user account in the system.
+     * Validates that the email is unique and encodes the provided password.
+     *
+     * @param request the registration details including email, password, legal name, and role
+     * @return the newly created and persisted {@link Account}
+     * @throws IllegalArgumentException if an account with the given email already exists
+     */
     public Account register(RegisterRequest request) {
         logger.info("Attempting to register account: {}", request.email());
 
@@ -67,6 +82,13 @@ public class AccountService {
         return saved;
     }
 
+    /**
+     * Authenticates a user based on email and password.
+     *
+     * @param request the login credentials
+     * @return the authenticated {@link Account}
+     * @throws BadCredentialsException if the email is not found or the password doesn't match
+     */
     public Account login(LoginRequest request) {
         logger.info("Login attempt for account: {}", request.email());
 
@@ -85,10 +107,24 @@ public class AccountService {
         return account;
     }
 
+    /**
+     * Retrieves an account entity based on its email address.
+     * 
+     * @param email the email to search for
+     * @return the found {@link Account}
+     * @throws java.util.NoSuchElementException if no account is found
+     */
     public Account getAccountFromEmail(String email ) {
         return accountRepository.findByEmail(email).get();
     }
 
+    /**
+     * Constructs a comprehensive profile response for the authenticated user.
+     * Aggregates account data with pupil membership and classroom details if applicable.
+     *
+     * @param email the email of the authenticated account
+     * @return an {@link AuthMeResponse} containing aggregated profile data
+     */
     @Transactional(readOnly = true)
     public AuthMeResponse getAuthenticatedProfile(String email) {
         Account account = getAccountFromEmail(email);
@@ -105,6 +141,15 @@ public class AccountService {
         return AuthMeResponse.from(account, username, classroomCode, avatarFileObjectId, membershipConfirmed);
     }
 
+    /**
+     * Updates the display username for a pupil's profile.
+     * 
+     * @param principal the authenticated user principal
+     * @param request   the update request containing the new username
+     * @return the updated {@link AuthMeResponse}
+     * @throws AccessDeniedException    if the user is not authenticated or not a pupil
+     * @throws IllegalArgumentException if the username is blank or the pupil is not in a classroom
+     */
     @Transactional
     public AuthMeResponse updateAuthenticatedProfile(JwtUserPrincipal principal, UpdateMeRequest request) {
         if (principal == null || principal.email() == null) {
@@ -128,6 +173,16 @@ public class AccountService {
         return getAuthenticatedProfile(principal.email());
     }
 
+    /**
+     * Updates the avatar for a pupil's profile with rate-limiting.
+     * 
+     * @param principal the authenticated user principal
+     * @param request   the update request containing avatar data
+     * @return the updated {@link AuthMeResponse}
+     * @throws AccessDeniedException    if the user is not authenticated or not a pupil
+     * @throws IllegalStateException    if the update request is made within the cooldown period
+     * @throws IllegalArgumentException if the avatar data is blank or the pupil is not in a classroom
+     */
     @Transactional
     public AuthMeResponse updateAvatar(JwtUserPrincipal principal, UpdateAvatarRequest request) {
         if (principal == null || principal.email() == null) {

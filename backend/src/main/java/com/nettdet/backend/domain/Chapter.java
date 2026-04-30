@@ -11,6 +11,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+/**
+ * Represents a learning module or "chapter" within the educational curriculum.
+ * 
+ * <p>A Chapter serves as a container for multiple {@link Task}s and defines the requirements
+ * for completion (number of successful runs). It also tracks progress for pupils through
+ * {@link PupilChapterBridgeProgression}.
+ * 
+ * <p>Inherits audit information from {@link CreatedAtEntity}.
+ */
 @Entity
 @Table(name = "chapter")
 public class Chapter extends CreatedAtEntity {

@@ -31,6 +31,27 @@ import com.nettdet.backend.service.TaskAdminService;
 
 import jakarta.persistence.EntityNotFoundException;
 
+/**
+ * {@code TaskSeeder} is the primary content ingestion component for the application.
+ * <p>
+ * This {@link ApplicationRunner} scans a structured directory of task assets to populate
+ * the database with educational content. It handles multiple task types, including:
+ * <ul>
+ *     <li><b>News Verification:</b> Comparing real vs. fake news articles.</li>
+ *     <li><b>Image Verification:</b> Identifying AI-generated, manipulated, or real photos.</li>
+ *     <li><b>Datacenter Tasks:</b> Complex, multi-format "final boss" challenges.</li>
+ * </ul>
+ * </p>
+ * <p>
+ * The seeder follows a hierarchical directory convention:
+ * {@code {chapter}/{difficulty}/{task_name}/{assets}}. Asset metadata (like whether a photo
+ * is real or AI-generated) is derived from filename suffixes (e.g., {@code _ekte}, {@code _ki}).
+ * </p>
+ * <p>
+ * This component runs with {@code @Order(4)}, ensuring that chapters and core S3
+ * infrastructure are already initialized.
+ * </p>
+ */
 @Component
 @Order(4)
 public class TaskSeeder implements ApplicationRunner {
@@ -51,6 +72,14 @@ public class TaskSeeder implements ApplicationRunner {
     private final ChapterRepository chapterRepository;
     private final TaskAdminService taskAdminService;
 
+    /**
+     * Constructs a {@code TaskSeeder} with its required dependencies.
+     *
+     * @param fileObjectService service for uploading task assets to S3
+     * @param fileObjectRepository repository for verifying asset existence
+     * @param chapterRepository repository for loading chapter entities
+     * @param taskAdminService service for creating task domain objects
+     */
     public TaskSeeder(FileObjectService fileObjectService,
                       FileObjectRepository fileObjectRepository,
                       ChapterRepository chapterRepository,
@@ -66,6 +95,12 @@ public class TaskSeeder implements ApplicationRunner {
                 .orElseThrow(() -> new EntityNotFoundException("Chapter not found: " + id));
     }
 
+    /**
+     * Orchestrates the seeding of tasks for all chapters.
+     *
+     * @param args incoming application arguments (unused)
+     * @throws RuntimeException if the seeding process fails due to I/O or database errors
+     */
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
@@ -92,6 +127,16 @@ public class TaskSeeder implements ApplicationRunner {
     // NYHETSKVARTALET (chap1)
     // --------------------------------------------------
 
+    /**
+     * Seeds tasks for Chapter 1: Nyhetskvartalet.
+     * <p>
+     * This chapter focuses on news verification, comparing pairs of "ekte" (real)
+     * and "falsk" (fake) newspaper front pages.
+     * </p>
+     *
+     * @param chapDir the base directory for Chapter 1 assets
+     * @throws IOException if the filesystem cannot be scanned
+     */
     private void seedNyhetskvartalet(Path chapDir) throws IOException {
         if (!Files.exists(chapDir)) {
             logger.warn("Nyhetskvartalet directory not found: {}", chapDir);
@@ -108,6 +153,12 @@ public class TaskSeeder implements ApplicationRunner {
         }
     }
 
+    /**
+     * Seeds a single news verification task.
+     *
+     * @param taskDir directory containing the pair of news images
+     * @param difficulty the assigned difficulty level
+     */
     private void seedNyhetskvartaletTask(Path taskDir, TaskDifficulty difficulty) {
         String taskName = taskDir.getFileName().toString();
         try {
@@ -148,6 +199,16 @@ public class TaskSeeder implements ApplicationRunner {
     // FOTOGRAFEN (chap2)
     // --------------------------------------------------
 
+    /**
+     * Seeds tasks for Chapter 2: Fotografen.
+     * <p>
+     * This chapter focuses on image source identification, categorizing images as
+     * real, AI-generated, or manipulated.
+     * </p>
+     *
+     * @param chapDir the base directory for Chapter 2 assets
+     * @throws IOException if the filesystem cannot be scanned
+     */
     private void seedFotografen(Path chapDir) throws IOException {
         if (!Files.exists(chapDir)) {
             logger.warn("Fotografen directory not found: {}", chapDir);
@@ -164,6 +225,12 @@ public class TaskSeeder implements ApplicationRunner {
         }
     }
 
+    /**
+     * Seeds tasks derived from images in a specific directory.
+     *
+     * @param taskDir directory containing image files for the task
+     * @param difficulty the assigned difficulty level
+     */
     private void seedFotografenTask(Path taskDir, TaskDifficulty difficulty) {
         String taskName = taskDir.getFileName().toString();
         try {
@@ -209,6 +276,16 @@ public class TaskSeeder implements ApplicationRunner {
     // DATASENTERET (chap3 — final boss)
     // --------------------------------------------------
 
+    /**
+     * Seeds tasks for Chapter 3: Datasenteret.
+     * <p>
+     * This chapter combines both news and image verification formats into a high-stakes
+     * "final boss" sequence.
+     * </p>
+     *
+     * @param chapDir the base directory for Chapter 3 assets
+     * @throws IOException if the filesystem cannot be scanned
+     */
     private void seedDatasenteret(Path chapDir) throws IOException {
         if (!Files.exists(chapDir)) {
             logger.warn("Datasenteret directory not found: {}", chapDir);
@@ -230,6 +307,11 @@ public class TaskSeeder implements ApplicationRunner {
         }
     }
 
+    /**
+     * Seeds a news verification task for the Datasenteret chapter.
+     *
+     * @param taskDir directory containing the pair of news images
+     */
     private void seedDatasenteretNewsTask(Path taskDir) {
         String taskName = taskDir.getFileName().toString();
         try {
@@ -267,6 +349,11 @@ public class TaskSeeder implements ApplicationRunner {
         }
     }
 
+    /**
+     * Seeds an image verification task for the Datasenteret chapter.
+     *
+     * @param taskDir directory containing image files for the task
+     */
     private void seedDatasenteretImageTask(Path taskDir) {
         String taskName = taskDir.getFileName().toString();
         try {
@@ -312,6 +399,14 @@ public class TaskSeeder implements ApplicationRunner {
     // HELPERS
     // --------------------------------------------------
 
+    /**
+     * Checks if a file exists in the database and uploads it to S3 if missing.
+     *
+     * @param objectKey the unique S3 key for the asset
+     * @param filePath the local filesystem path to the asset
+     * @return the unique ID of the {@code FileObject} record
+     * @throws IOException if the file cannot be read
+     */
     private Long getOrUploadFile(String objectKey, Path filePath) throws IOException {
         String contentType = determineContentType(filePath.getFileName().toString());
         String fileName = filePath.getFileName().toString();
@@ -349,6 +444,13 @@ public class TaskSeeder implements ApplicationRunner {
         return "application/octet-stream";
     }
 
+    /**
+     * Determines the {@link ImageCategory} based on filename suffixes.
+     *
+     * @param fileName name of the file to inspect
+     * @return the identified category
+     * @throws IllegalArgumentException if no known suffix is found
+     */
     private ImageCategory determineCategory(String fileName) {
         String lower = fileName.toLowerCase();
         if (lower.contains("_ekte")) return ImageCategory.REAL;

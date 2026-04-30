@@ -21,6 +21,13 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+/**
+ * Represents metadata for a file stored in an external object storage service (e.g., AWS S3).
+ * 
+ * <p>Each FileObject contains a unique {@code objectKey} used to retrieve the physical content,
+ * original filename, and access control settings via {@link ClassroomAccess}. It may be 
+ * associated with a specific {@link Classroom} and is tracked by the uploader's {@link Account}.
+ */
 @Entity
 @Table(name = "file_object")
 public class FileObject {

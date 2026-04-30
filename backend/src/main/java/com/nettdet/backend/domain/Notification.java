@@ -17,6 +17,17 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+/**
+ * Represents a system alert or notification directed at teachers within a classroom.
+ * 
+ * <p>Notifications are used to inform teachers about significant events regarding pupil progress,
+ * such as when a pupil is struggling with a chapter or has reached a milestone. Each notification
+ * is associated with a {@link Classroom} and references the {@link PupilClassroomMembership} 
+ * of the relevant pupil. The notification's lifecycle (e.g., READ, UNREAD) is tracked via 
+ * {@link NotificationStatus}.
+ * 
+ * <p>Inherits audit information from {@link CreatedAtEntity}.
+ */
 @Entity
 @Table(name = "notification")
 public class Notification extends CreatedAtEntity {

@@ -14,6 +14,15 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+/**
+ * Represents the detailed progression of a pupil within a specific {@link Chapter}.
+ * 
+ * <p>This entity acts as a bridge between {@link PupilClassroomMembership} and {@link Chapter},
+ * tracking performance metrics such as high scores, successful run counts, and current attempt
+ * statistics. It also stores the pupil's personal notes and unlocked tips in a JSONB format.
+ * 
+ * <p>Inherits audit information from {@link CreatedAtEntity}.
+ */
 @Entity
 @Table(name = "pupil_chapter_bridge_progression")
 public class PupilChapterBridgeProgression extends CreatedAtEntity {

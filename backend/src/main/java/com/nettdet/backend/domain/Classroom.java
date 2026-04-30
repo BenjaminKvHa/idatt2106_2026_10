@@ -5,6 +5,14 @@ import java.util.List;
 
 import jakarta.persistence.*;
 
+/**
+ * Represents a virtual learning environment or "classroom" within the system.
+ * 
+ * <p>A Classroom is uniquely identified by a 6-character access code and serves as a
+ * collaborative space for teachers and pupils. It aggregates educational resources
+ * ({@link Task}s, {@link FileObject}s) and manages participation through
+ * {@link AccountClassroomBridgeTeacher} and {@link PupilClassroomMembership}.
+ */
 @Entity
 @Table(name = "classroom")
 public class Classroom {

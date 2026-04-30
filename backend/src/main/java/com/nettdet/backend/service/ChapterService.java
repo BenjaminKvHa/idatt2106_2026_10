@@ -42,6 +42,22 @@ import com.nettdet.backend.repository.PupilClassroomMembershipRepository;
 import com.nettdet.backend.repository.TaskRepository;
 import com.nettdet.backend.validation.TaskValidator;
 
+/**
+ * Service class responsible for managing chapter progression, task delivery, and validation.
+ * 
+ * <p>This service orchestrates the core gameplay loop for pupils, including:
+ * <ul>
+ *   <li>Retrieving eligible tasks based on chapter, difficulty, and classroom context.</li>
+ *   <li>Handling specialized "Datasenteret" runs (Chapter 3) with specific task sequences.</li>
+ *   <li>Validating pupil answers and updating their progression state.</li>
+ *   <li>Tracking highscores, successful runs, and unsuccessful streaks.</li>
+ *   <li>Triggering notifications for teachers based on pupil progress or struggles.</li>
+ *   <li>Managing notebook tips through the {@link TipService}.</li>
+ * </ul>
+ * 
+ * <p>Task validation is delegated to specific {@link TaskValidator} implementations
+ * mapped by chapter type.
+ */
 @Service
 public class ChapterService {
 
@@ -91,6 +107,18 @@ public class ChapterService {
     // CHAPTER: FOTOGRAFEN
     // -------------------------------------------
 
+    /**
+     * Fetches a random image verification task for a pupil.
+     * 
+     * <p>If this is the start of a new run (EASY difficulty), any existing abandoned 
+     * run state is reset.
+     *
+     * @param pupilEmail the email of the pupil
+     * @param chapterId  the ID of the chapter (typically 1)
+     * @param difficulty the difficulty level requested
+     * @return an {@link ImageVerificationResponse} containing the task data
+     * @throws NoSuchElementException if no eligible tasks are found
+     */
     @Transactional
     public ImageVerificationResponse fetchImageVerificationTask(String pupilEmail, Long chapterId, TaskDifficulty difficulty) {
         logger.info("Fetching image verification task for pupil {} chapter {} at difficulty {}",
@@ -113,6 +141,18 @@ public class ChapterService {
     // CHAPTER: NYHETSKVARTALET
     // -------------------------------------------
 
+    /**
+     * Fetches a random news verification task for a pupil.
+     * 
+     * <p>If this is the start of a new run (EASY difficulty), any existing abandoned 
+     * run state is reset. The order of file IDs in the response is randomized.
+     *
+     * @param pupilEmail the email of the pupil
+     * @param chapterId  the ID of the chapter (typically 2)
+     * @param difficulty the difficulty level requested
+     * @return a {@link NewsVerificationResponse} containing the task data
+     * @throws NoSuchElementException if no eligible tasks are found
+     */
     @Transactional
     public NewsVerificationResponse fetchNewsVerificationTask(String pupilEmail, Long chapterId, TaskDifficulty difficulty) {
         logger.info("Fetching news verification task for pupil {} chapter {} at difficulty {}",
@@ -136,6 +176,18 @@ public class ChapterService {
     // CHAPTER: DATASENTERET (final boss)
     // -------------------------------------------
 
+    /**
+     * Fetches a full "Datasenteret" (Chapter 3) run for a pupil.
+     * 
+     * <p>A Datasenteret run consists of a fixed sequence of 5 tasks (2 news, 3 image).
+     * The tasks are picked randomly from the HARD difficulty pool for the pupil's classroom.
+     *
+     * @param pupilEmail the email of the pupil
+     * @param chapterId  the ID of the chapter (must be 3)
+     * @return a {@link DatacenterRunResponse} containing the ordered sequence of tasks
+     * @throws IllegalArgumentException if chapterId is not the Datasenteret chapter
+     * @throws NoSuchElementException   if there are not enough tasks of each format in the pool
+     */
     @Transactional
     public DatacenterRunResponse fetchDatacenterRun(String pupilEmail, Long chapterId) {
         logger.info("Fetching Datasenteret run for pupil {} chapter {}", pupilEmail, chapterId);
@@ -188,6 +240,20 @@ public class ChapterService {
         return new DatacenterRunResponse(ordered);
     }
 
+    /**
+     * Validates an answer for a specialized Datasenteret task.
+     * 
+     * <p>Handles the different task formats within Datasenteret (image and news verification)
+     * and dispatches to the appropriate validator. Updates the pupil's run state.
+     *
+     * @param pupilEmail the email of the pupil
+     * @param taskId     the ID of the task being answered
+     * @param request    the answer payload
+     * @return a {@link ValidationResult} indicating if the answer was correct and providing feedback
+     * @throws NoSuchElementException   if the task is not found
+     * @throws IllegalArgumentException if the task is not a Datasenteret task or the format is invalid
+     * @throws AccessDeniedException    if the task does not belong to the pupil's classroom
+     */
     @Transactional
     public ValidationResult validateDatacenterAnswer(String pupilEmail, Long taskId, DatacenterAnswerRequest request) {
         logger.info("Validating Datasenteret answer for pupil {} task {}", pupilEmail, taskId);
@@ -322,6 +388,21 @@ public class ChapterService {
     // VALIDATION (generic — dispatches by chapter type)
     // --------------------------------------------------
 
+    /**
+     * Validates a pupil's answer for a standard chapter task.
+     * 
+     * <p>Dispatches validation to the registered {@link TaskValidator} for the given 
+     * chapter type. Records the attempt and updates the pupil's progression state.
+     *
+     * @param pupilEmail  the email of the pupil
+     * @param chapterType the type of chapter (e.g., "FOTOGRAFEN", "NYHETSKVARTALET")
+     * @param taskId      the ID of the task being answered
+     * @param request     the answer payload
+     * @return a {@link ValidationResult} containing correctness, feedback, and run status
+     * @throws IllegalArgumentException if no validator is registered for the chapter type
+     * @throws NoSuchElementException   if the task is not found
+     * @throws AccessDeniedException    if the task does not belong to the pupil's classroom
+     */
     @Transactional
     public ValidationResult validateAnswer(String pupilEmail, String chapterType, Long taskId, Object request) {
         logger.info("Validating answer for chapter type {} against task id {}", chapterType, taskId);
@@ -372,6 +453,11 @@ public class ChapterService {
     // CHAPTER LISTING
     // --------------------------------------------------
 
+    /**
+     * Retrieves all chapters available in the system, ordered by ID.
+     * 
+     * @return a list of {@link ChapterResponse} objects
+     */
     @Transactional(readOnly = true)
     public List<ChapterResponse> getAllChapters() {
         return chapterRepository.findAllByOrderByIdAsc().stream()
@@ -383,6 +469,16 @@ public class ChapterService {
     // PROGRESSION LOOKUP (for frontend run-state recovery)
     // --------------------------------------------------
 
+    /**
+     * Retrieves the current progression state for a pupil in a specific chapter.
+     * 
+     * <p>Used by the frontend to recover run state (e.g., number of attempts in the 
+     * current run) and display highscores.
+     *
+     * @param pupilEmail the email of the pupil
+     * @param chapterId  the ID of the chapter
+     * @return a {@link ChapterProgressionResponse} with the pupil's stats
+     */
     @Transactional(readOnly = true)
     public ChapterProgressionResponse getProgression(String pupilEmail, Long chapterId) {
         PupilChapterBridgeProgression progression = progressionRepository

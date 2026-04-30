@@ -17,6 +17,15 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+/**
+ * Represents an individual educational exercise or "task" within the system.
+ * 
+ * <p>Tasks are the building blocks of a {@link Chapter} and can also be scoped to a
+ * specific {@link Classroom}. Each task has a {@link TaskDifficulty} level and stores its 
+ * complete configuration, content, and logic in a JSONB format ({@code taskJson}).
+ * 
+ * <p>Inherits audit information from {@link CreatedAtEntity}.
+ */
 @Entity
 @Table(name = "task")
 public class Task extends CreatedAtEntity {

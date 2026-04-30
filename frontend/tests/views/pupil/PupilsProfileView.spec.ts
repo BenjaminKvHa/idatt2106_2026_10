@@ -48,6 +48,10 @@ function mountProfileView() {
       stubs: {
         TopBar: true,
         VolumeControl: true,
+        RouterLink: {
+          props: ['to'],
+          template: '<a :href="to"><slot /></a>',
+        },
       },
     },
   })
@@ -91,6 +95,26 @@ describe('PupilsProfileView', () => {
     expect(mockedGet).toHaveBeenNthCalledWith(1, '/api/me')
     expect(mockedGet).toHaveBeenNthCalledWith(2, '/api/classrooms/MAPAAA')
     expect(wrapper.text()).toContain('Kart testklasse (MAPAAA)')
+  })
+
+  it('links accepted pupils to the dedicated profile avatar editor', async () => {
+    mockedGet
+      .mockResolvedValueOnce(profileWithClassroom)
+      .mockResolvedValueOnce({
+        classroomCode: 'MAPAAA',
+        classroomName: 'Kart testklasse',
+        classroomDescription: null,
+      })
+
+    const wrapper = mountProfileView()
+
+    await flushPromises()
+
+    const avatarLink = wrapper.find('a[href="/pupil/profile/avatar"]')
+
+    expect(avatarLink.exists()).toBe(true)
+    expect(avatarLink.text()).toContain('Bytt avatar')
+    expect(wrapper.find('a[href^="/join-classroom/set-avatar"]').exists()).toBe(false)
   })
 
   it('falls back to classroom code when classroom metadata fails to load', async () => {

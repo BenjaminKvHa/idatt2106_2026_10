@@ -10,12 +10,12 @@ import leaderboardIcon from '@/assets/icons/homescreen/icon_leaderboard.png'
 import helpIcon from '@/assets/icons/homescreen/icon_help.png'
 
 const buttons = [
-  { to: '/pupil/classroom/notebook', class: 'notes', icon: notesIcon },
-  { to: '/pupil/classroom/mystery', class: 'mystery', icon: mysteryIcon },
   { to: '/pupil/classroom/medals', class: 'medals', icon: medalsIcon },
   { to: '/pupil/classroom/map', class: 'map', icon: mapIcon },
   { to: '/pupil/classroom/leaderboard', class: 'leaderboard', icon: leaderboardIcon },
+  { to: '/pupil/classroom/mystery', class: 'mystery', icon: mysteryIcon },
   { to: '/pupil/classroom/help', class: 'help', icon: helpIcon },
+  { to: '/pupil/classroom/notebook', class: 'notes', icon: notesIcon },
 ]
 </script>
 

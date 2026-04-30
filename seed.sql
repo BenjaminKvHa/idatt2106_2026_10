@@ -1,8 +1,9 @@
--- Manual development seed data for the pupil map flow.
--- Apply after schema.sql has created the database objects.
+-- Development seed data for local Docker Compose.
+-- compose.yaml runs this automatically after the backend is healthy, so Java boot seeders
+-- such as ChapterSeeder and TaskSeeder have completed first.
 
--- Run this to seed the database: docker compose exec -T db psql -U app -d app < seed.sql
--- Run this to seed the database on windows: Get-Content .\seed.sql | docker compose exec -T db psql -U app -d app
+-- Optional manual rerun on macOS/Linux: docker compose exec -T db psql -U app -d app < seed.sql
+-- Optional manual rerun on Windows: Get-Content .\seed.sql | docker compose exec -T db psql -U app -d app
 -- Accounts you can log in with:
 -- demo.teacher@example.com
 -- map.partial@example.com

@@ -335,6 +335,29 @@ public class TaskAdminService {
     }
 
     // --------------------------------------------------
+    // TASK DELETION
+    // --------------------------------------------------
+
+    /**
+     * Deletes a classroom-scoped task. The teacher must belong to the task's classroom.
+     * Global (classroom-less) tasks cannot be deleted via this method.
+     * <p>
+     * Room for improvement: associated MinIO file objects are intentionally not removed, so
+     * orphaned blobs will accumulate until a future cleanup pass is implemented.
+     */
+    @Transactional
+    public void deleteTask(Long taskId, JwtUserPrincipal principal) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new EntityNotFoundException("Task not found: " + taskId));
+        if (task.getClassroom() == null) {
+            throw new AccessDeniedException("Global tasks cannot be deleted via this endpoint");
+        }
+        authorizeTaskMutation(task, principal);
+        taskRepository.delete(task);
+        logger.info("Deleted task id={} from classroom={}", taskId, task.getClassroom().getClassroomCode());
+    }
+
+    // --------------------------------------------------
     // TASK CREATION: GENERIC
     // --------------------------------------------------
 

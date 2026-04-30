@@ -370,6 +370,57 @@ class TaskAdminServiceTest {
         assertEquals(202L, json.get("correctFileId").asLong());
     }
 
+    // ----- DELETE -----
+
+    @DisplayName("Deleting a classroom-scoped task removes it when the teacher belongs to that classroom")
+    @Test
+    void deleteTask_whenTeacherInClassroom_deletesTask() {
+        Classroom classroom = new Classroom();
+        classroom.setClassroomCode(CLASSROOM_CODE);
+        Task existing = imageTaskRow(70L, FOTOGRAFEN_ID, 42L, classroom);
+        when(taskRepository.findById(70L)).thenReturn(Optional.of(existing));
+        when(teacherBridgeRepository.existsByIdAccountEmailAndIdClassroomCode("teacher@example.com", CLASSROOM_CODE))
+                .thenReturn(true);
+
+        taskAdminService.deleteTask(70L, teacher);
+
+        verify(taskRepository).delete(existing);
+        verify(fileObjectService, never()).delete(any());
+    }
+
+    @DisplayName("Deleting a global (classroom-less) task is rejected")
+    @Test
+    void deleteTask_whenTaskIsGlobal_throwsAccessDenied() {
+        Task existing = imageTaskRow(71L, FOTOGRAFEN_ID, 42L, null);
+        when(taskRepository.findById(71L)).thenReturn(Optional.of(existing));
+
+        assertThrows(AccessDeniedException.class, () -> taskAdminService.deleteTask(71L, teacher));
+        verify(taskRepository, never()).delete(any(Task.class));
+    }
+
+    @DisplayName("Deleting a classroom-scoped task is denied if the teacher is not in that classroom")
+    @Test
+    void deleteTask_whenTeacherNotInClassroom_throwsAccessDenied() {
+        Classroom classroom = new Classroom();
+        classroom.setClassroomCode(CLASSROOM_CODE);
+        Task existing = imageTaskRow(72L, FOTOGRAFEN_ID, 42L, classroom);
+        when(taskRepository.findById(72L)).thenReturn(Optional.of(existing));
+        when(teacherBridgeRepository.existsByIdAccountEmailAndIdClassroomCode("teacher@example.com", CLASSROOM_CODE))
+                .thenReturn(false);
+
+        assertThrows(AccessDeniedException.class, () -> taskAdminService.deleteTask(72L, teacher));
+        verify(taskRepository, never()).delete(any(Task.class));
+    }
+
+    @DisplayName("Deleting a non-existent task throws EntityNotFoundException")
+    @Test
+    void deleteTask_whenTaskMissing_throwsEntityNotFound() {
+        when(taskRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> taskAdminService.deleteTask(999L, teacher));
+        verify(taskRepository, never()).delete(any(Task.class));
+    }
+
     // ----- LISTING -----
 
     @DisplayName("Listing tasks for a classroom returns tasks scoped to that chapter and classroom when teacher is authorized")

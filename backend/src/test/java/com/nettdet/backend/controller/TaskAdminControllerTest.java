@@ -1,10 +1,12 @@
 package com.nettdet.backend.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -238,6 +240,28 @@ class TaskAdminControllerTest {
                 .andExpect(jsonPath("$[0].id").value(7));
 
         verify(taskAdminService).listNyhetskvartaletTasksForClassroom("teacher@example.com", "ABCABC");
+    }
+
+    @DisplayName("Allows teachers to delete a classroom-scoped task and returns 204")
+    @Test
+    void deleteTask_whenTeacher_returnsNoContent() throws Exception {
+        mockMvc.perform(delete("/admin/tasks/42")
+                        .with(authentication(authFor(teacherPrincipal(), "TEACHER"))))
+                .andExpect(status().isNoContent());
+
+        verify(taskAdminService).deleteTask(eq(42L), any());
+    }
+
+    @DisplayName("Denies pupils from deleting a task")
+    @Test
+    void deleteTask_whenPupil_returnsForbidden() throws Exception {
+        JwtUserPrincipal principal = new JwtUserPrincipal("Pupil", "pupil@example.com", "PUPIL");
+
+        mockMvc.perform(delete("/admin/tasks/42")
+                        .with(authentication(authFor(principal, "PUPIL"))))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(taskAdminService);
     }
 
     @DisplayName("Allows teachers to list Datasenteret tasks scoped to a classroom")

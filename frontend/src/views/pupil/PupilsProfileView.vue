@@ -10,7 +10,7 @@ import {
   put,
   type BackendAccountRole,
 } from '@/utils/apiUtils'
-import { clearMeCache } from '@/router'
+import { clearMeCache } from '@/utils/authRedirect'
 import VolumeControl from '@/components/ui/VolumeControl.vue'
 
 type ProfileResponse = {

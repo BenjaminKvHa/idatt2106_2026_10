@@ -1,7 +1,6 @@
 package com.nettdet.backend.repository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDateTime;
@@ -48,22 +47,24 @@ class NotificationRepositoryTest {
         assertEquals("Pupil Name", notifications.get(0).getPupilClassroomMembership().getAccount().getLegalName());
     }
 
-    @DisplayName("Reports unread notifications only for the requested classroom")
+    @DisplayName("Counts unread notifications only for the requested classroom")
     @Test
-    void existsByClassroomClassroomCodeAndStatusNotifications_whenUnreadExistsInClassroom_returnsTrueOnlyForThatClassroom() {
+    void countByClassroomClassroomCodeAndStatusNotifications_whenUnreadExistsInClassroom_returnsCountOnlyForThatClassroom() {
         insertNotificationData();
         insertNotification("ABCABC", "pupil@example.com", "Unread notification", "UNREAD",
                 LocalDateTime.of(2026, 4, 23, 10, 0));
+        insertNotification("ABCABC", "pupil@example.com", "Second unread notification", "UNREAD",
+                LocalDateTime.of(2026, 4, 23, 11, 0));
         insertNotification("XYZXYZ", "other@example.com", "Read notification", "READ",
                 LocalDateTime.of(2026, 4, 23, 10, 0));
 
-        boolean hasUnreadForRequestedClassroom = notificationRepository
-                .existsByClassroomClassroomCodeAndStatusNotifications("ABCABC", NotificationStatus.UNREAD);
-        boolean hasUnreadForOtherClassroom = notificationRepository
-                .existsByClassroomClassroomCodeAndStatusNotifications("XYZXYZ", NotificationStatus.UNREAD);
+        long unreadCountForRequestedClassroom = notificationRepository
+                .countByClassroomClassroomCodeAndStatusNotifications("ABCABC", NotificationStatus.UNREAD);
+        long unreadCountForOtherClassroom = notificationRepository
+                .countByClassroomClassroomCodeAndStatusNotifications("XYZXYZ", NotificationStatus.UNREAD);
 
-        assertTrue(hasUnreadForRequestedClassroom);
-        assertFalse(hasUnreadForOtherClassroom);
+        assertEquals(2L, unreadCountForRequestedClassroom);
+        assertEquals(0L, unreadCountForOtherClassroom);
     }
 
     @DisplayName("Persists notification status updates using the status_notifications column")
@@ -79,12 +80,12 @@ class NotificationRepositoryTest {
         notification.setStatusNotifications(NotificationStatus.READ);
         notificationRepository.saveAndFlush(notification);
 
-        boolean hasUnread = notificationRepository
-                .existsByClassroomClassroomCodeAndStatusNotifications("ABCABC", NotificationStatus.UNREAD);
-        boolean hasRead = notificationRepository
-                .existsByClassroomClassroomCodeAndStatusNotifications("ABCABC", NotificationStatus.READ);
-        assertFalse(hasUnread);
-        assertTrue(hasRead);
+        long unreadCount = notificationRepository
+                .countByClassroomClassroomCodeAndStatusNotifications("ABCABC", NotificationStatus.UNREAD);
+        long readCount = notificationRepository
+                .countByClassroomClassroomCodeAndStatusNotifications("ABCABC", NotificationStatus.READ);
+        assertEquals(0L, unreadCount);
+        assertEquals(1L, readCount);
     }
 
     private void insertNotificationData() {

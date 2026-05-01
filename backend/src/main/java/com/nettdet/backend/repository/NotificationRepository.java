@@ -28,14 +28,14 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     List<Notification> findAllByClassroomClassroomCodeOrderByCreatedAtDesc(String classroomCode);
 
     /**
-     * Checks if there are any notifications in a classroom that match a specific status.
-     * Typically used to detect if unread alerts exist for a teacher.
+     * Counts notifications in a classroom that match a specific status.
+     * Typically used to show how many unread alerts exist for a teacher.
      *
      * @param classroomCode       the unique code of the classroom
-     * @param statusNotifications the {@link NotificationStatus} to check for
-     * @return true if at least one matching notification exists, false otherwise
+     * @param statusNotifications the {@link NotificationStatus} to count
+     * @return the number of matching notifications
      */
-    boolean existsByClassroomClassroomCodeAndStatusNotifications(
+    long countByClassroomClassroomCodeAndStatusNotifications(
             String classroomCode,
             NotificationStatus statusNotifications);
 }

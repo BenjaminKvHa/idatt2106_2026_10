@@ -300,7 +300,7 @@ onBeforeUnmount(() => {
 
 .book-content {
   position: absolute;
-  inset: 14% 14.5% 12% 14.5%;
+  inset: 4% 6% 4% 9%;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   column-gap: 9%;
@@ -497,7 +497,6 @@ onBeforeUnmount(() => {
   }
 
   .book-content {
-    inset: 14.5% 14.5% 12.5% 14.5%;
     column-gap: 8.5%;
   }
 
@@ -513,12 +512,11 @@ onBeforeUnmount(() => {
   }
 
   .book-stage {
-    width: min(64rem, 195vw);
+    width: 100%;
     flex: 0 0 auto;
   }
 
   .book-content {
-    inset: 15.5% 14.5% 13% 14.5%;
     column-gap: 8%;
   }
 

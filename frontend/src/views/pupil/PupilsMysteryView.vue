@@ -302,7 +302,7 @@ onBeforeUnmount(() => {
                   aria-label="Åpne bilde i stort format"
                   @click="openImagePreview(mystery)"
                 >
-                  <AuthenticatedImage :src="`/api/objects/${mystery.fileObjectId}`" alt="Innsendt mysterium" />
+                  <AuthenticatedImage :src="`/api/objects/${mystery.fileObjectId}`" alt="Innsendt mysterium" preview-on-click />
                 </button>
 
                 <div class="comment-box">
@@ -379,7 +379,7 @@ onBeforeUnmount(() => {
           ×
         </button>
 
-        <AuthenticatedImage :src="`/api/objects/${selectedImage.fileObjectId}`" alt="Forstørret innsendt mysterium" />
+        <AuthenticatedImage :src="`/api/objects/${selectedImage.fileObjectId}`" alt="Forstørret innsendt mysterium" preview-on-click />
       </div>
     </div>
   </div>

@@ -4,6 +4,7 @@ type JwtPayload = {
   role?: BackendAccountRole
   email?: string
   legalName?: string
+  exp?: number
 }
 
 export function decodeJwtPayload(token: string): JwtPayload | null {
@@ -42,10 +43,22 @@ export function getJwtData(): JwtPayload | null {
   return decodeJwtPayload(getAccessToken());
 }
 
+function isJwtExpired(payload: JwtPayload): boolean {
+  return typeof payload.exp === 'number' && payload.exp * 1000 <= Date.now()
+}
+
 export async function getJwtDataWithRefresh(): Promise<JwtPayload | null> {
-  if (getAccessToken()) return decodeJwtPayload(getAccessToken());
-  else {
+  const currentToken = getAccessToken()
+  if (currentToken) {
+    const currentPayload = decodeJwtPayload(currentToken)
+    if (currentPayload && !isJwtExpired(currentPayload)) return currentPayload
+  }
+
+  try {
     await getNewTokens();
-    return decodeJwtPayload(getAccessToken())
+    const refreshedPayload = decodeJwtPayload(getAccessToken())
+    return refreshedPayload && !isJwtExpired(refreshedPayload) ? refreshedPayload : null
+  } catch {
+    return null
   }
 }

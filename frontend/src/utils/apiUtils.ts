@@ -22,8 +22,7 @@ export function hasAccessToken(): boolean {
 }
 function redirectToSignIn() {
   if (typeof window !== 'undefined') {
-    // window.location.href = '/sign-in'
-    alert("/sign-in redirectToSignIn")
+    window.location.replace('/sign-in')
   }
 }
 
@@ -175,6 +174,7 @@ async function requestForm<T = unknown>(
     await getNewTokens()
     if (!getAccessToken()) {
       clearAuthSessionStorage()
+      redirectToSignIn()
       throw new Error('Unauthorized')
     }
     res = await fetch(endpoint, buildInit())
@@ -183,6 +183,7 @@ async function requestForm<T = unknown>(
   if (!res.ok) {
     if (res.status === 401) {
       clearAuthSessionStorage()
+      redirectToSignIn()
     }
     throw new Error(await parseErrorMessage(res))
   }

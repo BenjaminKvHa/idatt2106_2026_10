@@ -269,9 +269,9 @@ router.beforeEach(async (to) => {
   if (requiresPupil && jwt.role !== 'PUPIL') return '/teacher/classrooms'
 
   if (jwt.role === 'PUPIL') {
-    const me = await fetchMeCached({
-      force: to.path.startsWith('/join-classroom/waiting-classroom'),
-    })
+    const me = await fetchMeCached({ force: true })
+    if (!me) return '/sign-in'
+
     const pupilRoute = getPupilMembershipRoute(me)
 
     if (to.path.startsWith('/pupil') && pupilRoute !== '/pupil' && to.path !== pupilRoute) {

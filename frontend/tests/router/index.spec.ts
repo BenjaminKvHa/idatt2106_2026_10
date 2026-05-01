@@ -180,8 +180,19 @@ describe('router', () => {
     await expect(runGuard('/pupil')).resolves.toBe(true)
 
     expect(mocks.fetchMeCached).toHaveBeenCalledWith({
-      force: false,
+      force: true,
     })
+  })
+
+  it('redirects pupil routes to sign-in when me profile cannot be loaded', async () => {
+    mocks.getJwtDataWithRefresh.mockResolvedValueOnce({
+      role: 'PUPIL',
+    })
+    mocks.fetchMeCached.mockResolvedValueOnce(null)
+
+    await expect(runGuard('/pupil')).resolves.toBe('/sign-in')
+
+    expect(mocks.getPupilMembershipRoute).not.toHaveBeenCalled()
   })
 
   it('redirects pupil route to membership route when pupil is not ready for /pupil', async () => {

@@ -42,7 +42,7 @@ const DATASENTERET_CHAPTER_ID = 3
 const CATEGORIES: { value: ImageCategory; label: string }[] = [
   { value: 'REAL', label: 'Ekte' },
   { value: 'AI_GENERATED', label: 'KI-generert' },
-  { value: 'MANIPULERT', label: 'Manipulert' } as never,
+  { value: 'MANIPULATED', label: 'Manipulert' } as never,
 ]
 
 const { playSound, stopSound } = useAudio()

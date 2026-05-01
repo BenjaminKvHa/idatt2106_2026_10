@@ -16,6 +16,8 @@ import com.nettdet.backend.dto.UpdateMeRequest;
 import com.nettdet.backend.security.JwtUserPrincipal;
 import com.nettdet.backend.service.AccountService;
 
+import jakarta.validation.Valid;
+
 /**
  * REST controller for managing the authenticated user's profile.
  * <p>
@@ -67,7 +69,7 @@ public class MeController {
     @PutMapping
     @PreAuthorize("hasAuthority('PUPIL')")
     public ResponseEntity<AuthMeResponse> updateMe(
-            @RequestBody UpdateMeRequest request,
+            @Valid @RequestBody UpdateMeRequest request,
             @AuthenticationPrincipal JwtUserPrincipal principal) {
         return ResponseEntity.ok(accountService.updateAuthenticatedProfile(principal, request));
     }

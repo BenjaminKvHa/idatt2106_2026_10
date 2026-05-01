@@ -86,8 +86,6 @@ onBeforeUnmount(() => {
 
 .modal-window {
     position: relative;
-    width: fit-content;
-    max-width: 90vw;
     margin: auto;
     display: flex;
     flex-direction: column;

@@ -15,6 +15,13 @@ import com.nettdet.backend.repository.FileObjectRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 
+/**
+ * Service class for managing static avatar assets used by pupils to customize their profiles.
+ * 
+ * <p>Provides functionality to list all available avatar components (e.g., hair, costumes) 
+ * and retrieve the raw file data for a specific asset component. Assets are organized
+ * using a specific path prefix in the object storage.
+ */
 @Service
 public class AvatarAssetService {
 
@@ -28,6 +35,12 @@ public class AvatarAssetService {
         this.fileObjectService = fileObjectService;
     }
 
+    /**
+     * Retrieves a list of all unique avatar assets available in the system.
+     * Parses the object keys to extract asset types, names, and file types.
+     *
+     * @return a sorted list of {@link AvatarAssetResponse} objects
+     */
     @Transactional(readOnly = true)
     public List<AvatarAssetResponse> getAllAssets() {
         List<FileObject> allAssets = new ArrayList<>();
@@ -52,6 +65,15 @@ public class AvatarAssetService {
                 .toList();
     }
 
+    /**
+     * Retrieves the file content and metadata for a specific avatar asset.
+     *
+     * @param assetType the category of the asset (e.g., "costume", "hair")
+     * @param fileName  the name of the file including its extension
+     * @return a {@link FileObjectService.StoredFile} containing the file data
+     * @throws IllegalArgumentException if the path parameters are invalid or contain malicious characters
+     * @throws EntityNotFoundException  if the asset does not exist in storage
+     */
     @Transactional(readOnly = true)
     public FileObjectService.StoredFile getAsset(String assetType, String fileName) {
         if (assetType == null || assetType.isBlank() || fileName == null || fileName.isBlank()) {
@@ -71,6 +93,12 @@ public class AvatarAssetService {
         }
     }
 
+    /**
+     * Normalizes the object key by removing leading slashes.
+     *
+     * @param objectKey the key to normalize
+     * @return the normalized key string
+     */
     private String normalizeObjectKey(String objectKey) {
         if (objectKey == null) {
             return "";
@@ -83,6 +111,13 @@ public class AvatarAssetService {
         return objectKey;
     }
 
+    /**
+     * Parses an asset response DTO from a raw object storage key.
+     * Expects the format: "avatar-assets/{assetType}/{name}.{filetype}"
+     *
+     * @param objectKey the raw key from storage
+     * @return a parsed {@link AvatarAssetResponse}, or null if the key format is invalid
+     */
     private AvatarAssetResponse parseAssetFromKey(String objectKey) {
         if (!objectKey.startsWith(AVATAR_ASSET_PREFIX)) {
             return null;

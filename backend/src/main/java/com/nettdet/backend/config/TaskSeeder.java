@@ -31,6 +31,27 @@ import com.nettdet.backend.service.TaskAdminService;
 
 import jakarta.persistence.EntityNotFoundException;
 
+/**
+ * {@code TaskSeeder} is the primary content ingestion component for the application.
+ * <p>
+ * This {@link ApplicationRunner} scans a structured directory of task assets to populate
+ * the database with educational content. It handles multiple task types, including:
+ * <ul>
+ *     <li><b>News Verification:</b> Comparing real vs. fake news articles.</li>
+ *     <li><b>Image Verification:</b> Identifying AI-generated, manipulated, or real photos.</li>
+ *     <li><b>Datacenter Tasks:</b> Complex, multi-format "final boss" challenges.</li>
+ * </ul>
+ * </p>
+ * <p>
+ * The seeder follows a hierarchical directory convention:
+ * {@code {chapter}/{difficulty}/{task_name}/{assets}}. Asset metadata (like whether a photo
+ * is real or AI-generated) is derived from filename suffixes (e.g., {@code _ekte}, {@code _ki}).
+ * </p>
+ * <p>
+ * This component runs with {@code @Order(4)}, ensuring that chapters and core S3
+ * infrastructure are already initialized.
+ * </p>
+ */
 @Component
 @Order(4)
 public class TaskSeeder implements ApplicationRunner {
@@ -51,6 +72,14 @@ public class TaskSeeder implements ApplicationRunner {
     private final ChapterRepository chapterRepository;
     private final TaskAdminService taskAdminService;
 
+    /**
+     * Constructs a {@code TaskSeeder} with its required dependencies.
+     *
+     * @param fileObjectService service for uploading task assets to S3
+     * @param fileObjectRepository repository for verifying asset existence
+     * @param chapterRepository repository for loading chapter entities
+     * @param taskAdminService service for creating task domain objects
+     */
     public TaskSeeder(FileObjectService fileObjectService,
                       FileObjectRepository fileObjectRepository,
                       ChapterRepository chapterRepository,
@@ -66,6 +95,12 @@ public class TaskSeeder implements ApplicationRunner {
                 .orElseThrow(() -> new EntityNotFoundException("Chapter not found: " + id));
     }
 
+    /**
+     * Orchestrates the seeding of tasks for all chapters.
+     *
+     * @param args incoming application arguments (unused)
+     * @throws RuntimeException if the seeding process fails due to I/O or database errors
+     */
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
@@ -92,6 +127,16 @@ public class TaskSeeder implements ApplicationRunner {
     // NYHETSKVARTALET (chap1)
     // --------------------------------------------------
 
+    /**
+     * Seeds tasks for Chapter 1: Nyhetskvartalet.
+     * <p>
+     * This chapter focuses on news verification, comparing pairs of "ekte" (real)
+     * and "falsk" (fake) newspaper front pages.
+     * </p>
+     *
+     * @param chapDir the base directory for Chapter 1 assets
+     * @throws IOException if the filesystem cannot be scanned
+     */
     private void seedNyhetskvartalet(Path chapDir) throws IOException {
         if (!Files.exists(chapDir)) {
             logger.warn("Nyhetskvartalet directory not found: {}", chapDir);
@@ -108,6 +153,12 @@ public class TaskSeeder implements ApplicationRunner {
         }
     }
 
+    /**
+     * Seeds a single news verification task.
+     *
+     * @param taskDir directory containing the pair of news images
+     * @param difficulty the assigned difficulty level
+     */
     private void seedNyhetskvartaletTask(Path taskDir, TaskDifficulty difficulty) {
         String taskName = taskDir.getFileName().toString();
         try {
@@ -148,6 +199,16 @@ public class TaskSeeder implements ApplicationRunner {
     // FOTOGRAFEN (chap2)
     // --------------------------------------------------
 
+    /**
+     * Seeds tasks for Chapter 2: Fotografen.
+     * <p>
+     * This chapter focuses on image source identification, categorizing images as
+     * real, AI-generated, or manipulated.
+     * </p>
+     *
+     * @param chapDir the base directory for Chapter 2 assets
+     * @throws IOException if the filesystem cannot be scanned
+     */
     private void seedFotografen(Path chapDir) throws IOException {
         if (!Files.exists(chapDir)) {
             logger.warn("Fotografen directory not found: {}", chapDir);
@@ -164,6 +225,12 @@ public class TaskSeeder implements ApplicationRunner {
         }
     }
 
+    /**
+     * Seeds tasks derived from images in a specific directory.
+     *
+     * @param taskDir directory containing image files for the task
+     * @param difficulty the assigned difficulty level
+     */
     private void seedFotografenTask(Path taskDir, TaskDifficulty difficulty) {
         String taskName = taskDir.getFileName().toString();
         try {
@@ -209,6 +276,16 @@ public class TaskSeeder implements ApplicationRunner {
     // DATASENTERET (chap3 — final boss)
     // --------------------------------------------------
 
+    /**
+     * Seeds tasks for Chapter 3: Datasenteret.
+     * <p>
+     * This chapter combines both news and image verification formats into a high-stakes
+     * "final boss" sequence.
+     * </p>
+     *
+     * @param chapDir the base directory for Chapter 3 assets
+     * @throws IOException if the filesystem cannot be scanned
+     */
     private void seedDatasenteret(Path chapDir) throws IOException {
         if (!Files.exists(chapDir)) {
             logger.warn("Datasenteret directory not found: {}", chapDir);
@@ -230,6 +307,11 @@ public class TaskSeeder implements ApplicationRunner {
         }
     }
 
+    /**
+     * Seeds a news verification task for the Datasenteret chapter.
+     *
+     * @param taskDir directory containing the pair of news images
+     */
     private void seedDatasenteretNewsTask(Path taskDir) {
         String taskName = taskDir.getFileName().toString();
         try {
@@ -267,6 +349,11 @@ public class TaskSeeder implements ApplicationRunner {
         }
     }
 
+    /**
+     * Seeds an image verification task for the Datasenteret chapter.
+     *
+     * @param taskDir directory containing image files for the task
+     */
     private void seedDatasenteretImageTask(Path taskDir) {
         String taskName = taskDir.getFileName().toString();
         try {
@@ -312,6 +399,14 @@ public class TaskSeeder implements ApplicationRunner {
     // HELPERS
     // --------------------------------------------------
 
+    /**
+     * Checks if a file exists in the database and uploads it to S3 if missing.
+     *
+     * @param objectKey the unique S3 key for the asset
+     * @param filePath the local filesystem path to the asset
+     * @return the unique ID of the {@code FileObject} record
+     * @throws IOException if the file cannot be read
+     */
     private Long getOrUploadFile(String objectKey, Path filePath) throws IOException {
         String contentType = determineContentType(filePath.getFileName().toString());
         String fileName = filePath.getFileName().toString();
@@ -349,6 +444,13 @@ public class TaskSeeder implements ApplicationRunner {
         return "application/octet-stream";
     }
 
+    /**
+     * Determines the {@link ImageCategory} based on filename suffixes.
+     *
+     * @param fileName name of the file to inspect
+     * @return the identified category
+     * @throws IllegalArgumentException if no known suffix is found
+     */
     private ImageCategory determineCategory(String fileName) {
         String lower = fileName.toLowerCase();
         if (lower.contains("_ekte")) return ImageCategory.REAL;
@@ -366,120 +468,134 @@ public class TaskSeeder implements ApplicationRunner {
     private static final java.util.Map<String, DescriptionPair> IMAGE_DESCRIPTIONS = java.util.Map.ofEntries(
             // Fotografen — easy
             java.util.Map.entry("fotografen_dame_ekte.png", new DescriptionPair(
-                    "Riktig! Skygger og hudtekstur i ansiktet er konsistente – dette bildet er ekte.",
-                    "Ikke helt. Selv om damen ser litt rar ut, er bildet faktisk ekte.")),
+                    "Riktig! Bildet er ekte. Hudteksturen røper det, ekte hud har naturlige porer og småvariasjoner, mens KI-bilder pleier å bli for glatte. Hårvolum er ikke et godt tegn å gå etter, det forekommer både i ekte og oppdiktede bilder.",
+                    "Ikke helt, bildet er ekte. Det er hudteksturen som er nøkkelen: ekte hud har porer og små variasjoner som KI ofte glatter ut. Hårvolum sier lite, det kan finnes på begge typer bilder.")),
             java.util.Map.entry("fotografen_dame_manipulert.png", new DescriptionPair(
-                    "Riktig! Ansiktstrekkene er tydelig redigert – dette bildet er manipulert.",
-                    "Ikke helt. Se nøye på ansiktet – det er klart manipulert.")),
+                    "Riktig! Bildet er manipulert. De ekstra rynkene er lagt på digitalt for å forsterke et inntrykk, manipulerte bilder overdriver gjerne enkelte trekk. Hårvolum er en blindgate, det røper ingenting.",
+                    "Ikke helt, bildet er manipulert. Rynkene er nøkkelen: de er digitalt forsterket for å endre uttrykket. Hårvolum forekommer like gjerne i ekte bilder, så det er ikke en pålitelig ledetråd.")),
             java.util.Map.entry("fotografen_folkemengde_ekte.jpg", new DescriptionPair(
-                    "Riktig! Folkemengden ser variert og naturlig ut – bildet er ekte.",
-                    "Ikke helt. Selv om scenen er travel, er bildet faktisk ekte.")),
+                    "Riktig! Bildet er ekte. Sjekk hender og føtter, KI roter ofte med antall fingre, armer og ben, men her stemmer alt. At alle har samme humør sier ingenting, folk deler stemning også på ekte bilder.",
+                    "Ikke helt, bildet er ekte. Det avgjørende er at ingen har ekstra armer eller ben, et sted KI gjerne avslører seg. Felles humør er ikke et nyttig tegn.")),
             java.util.Map.entry("fotografen_folkemengde_falsk.png", new DescriptionPair(
-                    "Riktig! Folkene smiler unaturlig likt og perspektivet er rart – bildet er KI-generert.",
-                    "Ikke helt. Se hvor like ansiktene er – bildet er KI-generert.")),
+                    "Riktig! Bildet er KI-generert. At absolutt alle ser like glade ut er tegnet, KI gir ofte folkemengder uniforme uttrykk i stedet for variert mimikk. Antall mennesker betyr ingenting i seg selv.",
+                    "Ikke helt, bildet er KI-generert. Legg merke til hvor likt alle smiler, KI lager folkemengder med uniforme uttrykk i stedet for variert mimikk. Antall personer er ikke en god indikator.")),
             java.util.Map.entry("fotografen_jorda_ekte.jpg", new DescriptionPair(
-                    "Riktig! Skydekket og fargene er typiske for satellittbilder – bildet er ekte.",
-                    "Ikke helt. Bildet er faktisk et ekte satellittbilde av jorda.")),
+                    "Riktig! Bildet er ekte. Bakgrunnen ser realistisk ut, ekte satellittbilder viser ikke ekstra stjerner eller solsystem rundt jorda. At jorda 'er flat' er bare tull, jorda er rund.",
+                    "Ikke helt, bildet er ekte. Det er bakgrunnen som teller: ingen unaturlige stjerner eller himmelobjekter, slik ekte satellittbilder ser ut. 'Flat jord' er ikke et reelt argument.")),
             java.util.Map.entry("fotografen_jorda_falsk.png", new DescriptionPair(
-                    "Riktig! Skarpheten er for perfekt for et satellittbilde – dette er KI-generert.",
-                    "Ikke helt. Det er for skarpt og rent til å være et ekte satellittbilde.")),
+                    "Riktig! Bildet er KI-generert. KI har lagt til urealistiske stjerner og himmelobjekter, ekte satellittbilder viser bare svart rom rundt jorda. 'Flat jord' er bare en avsporing.",
+                    "Ikke helt, bildet er KI-generert. Bakgrunnen avslører det: ekstra stjerner og solsystem som ikke hører hjemme i et ekte satellittbilde. 'Flat jord' har ingenting med saken å gjøre.")),
 
             // Fotografen — medium
             java.util.Map.entry("fotografen_asiatisk_dame_ekte.jpg", new DescriptionPair(
-                    "Riktig! Hudtekstur og lys passer naturlig sammen – bildet er ekte.",
-                    "Ikke helt. Bildet er faktisk et ekte portrett.")),
+                    "Riktig! Bildet er ekte. Det avslappede, naturlige uttrykket er typisk for ekte foto, manipulerte bilder pleier å overdrive uttrykk for å skape en effekt. Hun er ikke 'unaturlig glad', det stemmer ikke med bildet.",
+                    "Ikke helt, bildet er ekte. Det naturlige uttrykket er nøkkelen, manipulerte bilder forvrenger gjerne mimikken. Påstanden om 'unaturlig glad' passer ikke her.")),
             java.util.Map.entry("fotografen_asiatisk_dame_manipulert.jpg", new DescriptionPair(
-                    "Riktig! Hudteksturen passer ikke med resten av ansiktet – bildet er manipulert.",
-                    "Ikke helt. Hudteksturen avslører at bildet er manipulert.")),
+                    "Riktig! Bildet er manipulert. Smilet er digitalt forsterket og virker unaturlig stort, typisk for redigerte ansiktsuttrykk. Hun ser ikke 'for sint' ut, så det alternativet er feil.",
+                    "Ikke helt, bildet er manipulert. Sjekk smilet, det er forsterket digitalt og ser unaturlig ut. Hun virker ikke sint, så det alternativet stemmer ikke med bildet.")),
             java.util.Map.entry("fotografen_blomster_ekte.jpg", new DescriptionPair(
-                    "Riktig! Blader og kronblader har naturlige variasjoner – bildet er ekte.",
-                    "Ikke helt. Variasjonene i blomstene viser at bildet er ekte.")),
+                    "Riktig! Bildet er ekte. De skarpe, tydelige detaljene på blomstene tyder på et ekte foto, KI mister ofte skarphet i fine teksturer. Kantene er helt naturlige, ingenting rart der.",
+                    "Ikke helt, bildet er ekte. Den skarpe gjengivelsen av blomstene er det avgjørende, KI sliter med slike fine detaljer. Kantene ser naturlige ut.")),
             java.util.Map.entry("fotografen_blomster_falsk.png", new DescriptionPair(
-                    "Riktig! Teksturene er for glatte og symmetriske – dette er KI-generert.",
-                    "Ikke helt. Den unaturlige glattheten røper at bildet er KI-generert.")),
+                    "Riktig! Bildet er KI-generert. Den slørete kvaliteten er sporet, KI klarer ikke alltid å holde skarpe kanter på fine teksturer som kronblader. Antall blomster er ikke en god indikator.",
+                    "Ikke helt, bildet er KI-generert. Det uskarpe preget røper det, KI smører ut detaljer i blomster. Hvor mange blomster det er, sier ingenting.")),
             java.util.Map.entry("fotografen_naturen_falsk.png", new DescriptionPair(
-                    "Riktig! Trærne er duplisert og himmelen virker kunstig – bildet er KI-generert.",
-                    "Ikke helt. Dupliserte detaljer viser at bildet er KI-generert.")),
+                    "Riktig! Bildet er KI-generert. Den slørete kvaliteten avslører det, KI mister gjerne skarphet i naturlige teksturer som blader og bark. Lyset her er faktisk vanlig, så det er ikke et reelt tegn.",
+                    "Ikke helt, bildet er KI-generert. Den uklare gjengivelsen er sporet, KI sliter med skarpe naturlige detaljer. Lyset er normalt og er ikke det som røper bildet.")),
+            java.util.Map.entry("fotografen_naturen_falsk_1.png", new DescriptionPair(
+                    "Riktig! Bildet er KI-generert. De mange små unaturlige prikkene er klassiske KI-artefakter, digital støy som ekte kameraer ikke produserer på den måten. Bildet er ikke 'for skarpt', det er ikke der problemet ligger.",
+                    "Ikke helt, bildet er KI-generert. Se nøye etter prikkene over hele bildet, det er typiske KI-artefakter. 'For skarpt' er ikke et tegn å lete etter.")),
 
             // Fotografen — hard
             java.util.Map.entry("fotografen_katt_ekte.jpg", new DescriptionPair(
-                    "Riktig! Pels og øyne har naturlige uregelmessigheter – bildet er ekte.",
-                    "Ikke helt. De små feilene i pelsen viser at bildet er ekte.")),
+                    "Riktig! Bildet er ekte. De tydelige detaljene i pels og øyne er nøkkelen, KI sliter med fine teksturer som dyrehår. Uskarp bakgrunn er bare normal dybdeskarphet i fotografi, ikke et tegn på noe.",
+                    "Ikke helt, bildet er ekte. Detaljene i pels og øyne er sporet, ekte kameraer fanger det skarpere enn KI klarer. Uskarp bakgrunn er helt vanlig i ekte foto.")),
             java.util.Map.entry("fotografen_katt_falsk.png", new DescriptionPair(
-                    "Riktig! Pelsen og øynene er unaturlig perfekte – bildet er KI-generert.",
-                    "Ikke helt. Den glatte pelsen avslører at bildet er KI-generert.")),
+                    "Riktig! Bildet er KI-generert. Pelsen ser unaturlig ut, for jevn eller med rare overganger, fordi KI strever med komplekse teksturer som dyrehår. Posisjonen til katten er helt vanlig, det er ikke det som røper bildet.",
+                    "Ikke helt, bildet er KI-generert. Pelsen er nøkkelen, KI klarer ikke å gjengi de små variasjonene i ekte hår. Kattens posisjon er helt naturlig og er ikke en god ledetråd.")),
             java.util.Map.entry("fotografen_naturbilde_ekte.jpg", new DescriptionPair(
-                    "Riktig! Lys, dybde og detaljer ser naturlige ut – bildet er ekte.",
-                    "Ikke helt. Bildet er faktisk et ekte naturfoto.")),
+                    "Riktig! Bildet er ekte. Overgangen mellom himmel og sjø går jevnt og naturlig, KI lager ofte rare horisonter eller fargebånd der. Solen står helt naturlig, så det alternativet er en avsporing.",
+                    "Ikke helt, bildet er ekte. Den jevne, naturlige horisonten er nøkkelen, KI roter ofte med overganger mellom himmel og hav. Solens plassering er helt vanlig.")),
             java.util.Map.entry("fotografen_naturbilde_falsk.png", new DescriptionPair(
-                    "Riktig! Den uvirkelige skarpheten røper at dette er KI-generert.",
-                    "Ikke helt. Den unaturlige skarpheten viser at bildet er KI-generert.")),
+                    "Riktig! Bildet er KI-generert. Lyset oppfører seg ikke fysisk riktig, skygger og lyskilder peker i feil retning, et klassisk KI-problem. Klart vann er ikke i seg selv et tegn, det forekommer på ekte bilder også.",
+                    "Ikke helt, bildet er KI-generert. Følg lyset, KI klarer ikke alltid å plassere skygger riktig i forhold til lyskilden. Klart vann er ikke et godt tegn å gå etter.")),
             java.util.Map.entry("fotografen_ulykke_ekte.jpg", new DescriptionPair(
-                    "Riktig! Skygger, røyk og sløring stemmer med en ekte hendelse – bildet er ekte.",
-                    "Ikke helt. Detaljene i scenen viser at hendelsen er ekte.")),
+                    "Riktig! Bildet er ekte. Bilenes plassering på veien er fysisk realistisk, slik ekte ulykker ser ut, KI roter ofte med sammenhengen mellom objekter. Uklarhet alene betyr ingenting, ekte bilder kan også være uklare.",
+                    "Ikke helt, bildet er ekte. Sjekk hvordan bilene står, plasseringen er fysisk korrekt slik en ekte ulykke ser ut. Et uklart bilde er ikke i seg selv et bevis.")),
+            java.util.Map.entry("fotografen_ulykke_ekte_1.jpg", new DescriptionPair(
+                    "Riktig! Bildet er ekte. Skiltene på bilene er klare og lesbare, KI klarer sjelden å lage konsistent tekst som skiltnumre. Kræsjposisjonen er helt naturlig for en ulykke, så det er ikke det som avgjør.",
+                    "Ikke helt, bildet er ekte. De tydelige skiltene er nøkkelen, KI lager nesten alltid grøtete eller meningsløs tekst. Kræsjposisjonen ser realistisk ut og er ikke en god ledetråd.")),
 
             // Datasenteret (chap3) image tasks
             java.util.Map.entry("datasenteret_foto_maleri_ekte.jpg", new DescriptionPair(
-                    "Riktig! Penselstrøk og lerretstekstur er autentiske – maleriet er ekte.",
-                    "Ikke helt. Penselstrøkene avslører at maleriet er ekte.")),
+                    "Riktig! Bildet er ekte, dette er Mona Lisa. Du ser autentiske penselstrøk og en lerretstekstur som hører til et ekte håndmalt verk. KI-bilder pleier å mangle slike tydelige strøk.",
+                    "Ikke helt, bildet er ekte. Dette er Mona Lisa, og synlige penselstrøk og lerretstekstur er det som skiller et ekte maleri fra et KI-bilde.")),
             java.util.Map.entry("datasenteret_foto_maleri_ki.png", new DescriptionPair(
-                    "Riktig! Detaljene er for symmetriske til å være malt for hånd – KI-generert.",
-                    "Ikke helt. Den jevne symmetrien røper at maleriet er KI-generert.")),
+                    "Riktig! Bildet er KI-generert. Detaljene er pikselete og prikkete med ujevn tekstur, og det finnes ingen tydelige penselstrøk slik et ekte maleri ville hatt. Manglende strøk er et klassisk KI-tegn.",
+                    "Ikke helt, bildet er KI-generert. Pikselete detaljer og fravær av penselstrøk røper det, et ekte maleri ville hatt synlige strøk og lerretstekstur.")),
             java.util.Map.entry("datasenteret_foto_bygning_ekte.jpg", new DescriptionPair(
-                    "Riktig! Materialer og perspektiv ser realistiske ut – bygningen er ekte.",
-                    "Ikke helt. Detaljene i fasaden viser at bygningen er ekte.")),
+                    "Riktig! Bildet er ekte. Lyset reflekteres naturlig, flagget og logoen ser troverdige ut, og himmelen er ikke overdrevent cinematisk slik KI ofte gjør den. Alt henger fysisk sammen.",
+                    "Ikke helt, bildet er ekte. Naturlige refleksjoner, troverdig flagg og logo, og en vanlig himmel uten KI-dramatikk er det som avslører et ekte bilde.")),
             java.util.Map.entry("datasenteret_foto_bygning_ki.png", new DescriptionPair(
-                    "Riktig! Vinduer og geometri er for perfekte – bygningen er KI-generert.",
-                    "Ikke helt. Den uvirkelig perfekte geometrien røper at bygningen er KI-generert.")),
+                    "Riktig! Bildet er KI-generert. Geometrien er unaturlig perfekt, fasaden urealistisk ren, og bygget strekker seg uendelig langs horisonten på en måte ekte arkitektur sjelden gjør.",
+                    "Ikke helt, bildet er KI-generert. Den ulastelig perfekte geometrien og den uendelige fasaden er typiske KI-trekk, ekte bygg har slitasje og uregelmessigheter.")),
             java.util.Map.entry("datasenteret_foto_dame_manipulert.png", new DescriptionPair(
-                    "Riktig! Ansiktstrekk og bakgrunn er tydelig redigert – bildet er manipulert.",
-                    "Ikke helt. Den synlige redigeringen viser at bildet er manipulert.")),
+                    "Riktig! Bildet er manipulert. Hudteksturen er altfor glatt og unaturlig jevn, et tydelig spor etter digital retusjering av ansiktet. Ekte hud har porer og småvariasjoner.",
+                    "Ikke helt, bildet er manipulert. Den unaturlig glatte huden røper digital retusjering, ekte hud har naturlige porer og småvariasjoner.")),
             java.util.Map.entry("datasenteret_foto_mcdonalds_ki.png", new DescriptionPair(
-                    "Riktig! Logo og typografi er forvrengt på en typisk KI-måte – KI-generert.",
-                    "Ikke helt. Den forvrengte logoen røper at bildet er KI-generert."))
+                    "Riktig! Bildet er KI-generert. Ser du nærmere på pomfri-eskene virker de unaturlige, og M-en i bakgrunnen står litt skjevt, klassiske spor etter KI som strever med tekst og logoer.",
+                    "Ikke helt, bildet er KI-generert. Pomfri-detaljene er rare og M-en i bakgrunnen er litt skjev, KI sliter ofte med tekst og kjente logoer."))
     );
 
     // Per-news-pair unique correct/wrong descriptions, keyed by the ekte file's name.
     private static final java.util.Map<String, DescriptionPair> NEWS_DESCRIPTIONS = java.util.Map.ofEntries(
             // Nyhetskvartalet (chap1)
+            // Easy
             java.util.Map.entry("nyhetsartikkel_ekte_1.png", new DescriptionPair(
-                    "Riktig! Den falske forsiden hadde overdrevne overskrifter og en mistenkelig kilde.",
-                    "Ikke helt. Den andre forsiden hadde tydelige tegn på å være falsk.")),
-            java.util.Map.entry("nyhetsartikkel_ekte_2.png", new DescriptionPair(
-                    "Riktig! Den falske forsiden brukte sensasjonelt språk og uklare bilder.",
-                    "Ikke helt. Den andre forsiden var den falske – legg merke til språkbruken.")),
+                    "Riktig! Den falske forsiden gjentok samme bilde flere ganger og var full av store bokstaver og utropstegn, typiske tegn på sensasjonsoppslag fremfor seriøs journalistikk.",
+                    "Ikke helt. Den andre forsiden brukte samme bilde om igjen og ropte med store bokstaver og utropstegn, det er kjennetegn på falske nyheter.")),
             java.util.Map.entry("nyhetsartikkel_ekte_3.png", new DescriptionPair(
-                    "Riktig! Datoen og bylinje på den falske forsiden stemte ikke.",
-                    "Ikke helt. Den andre forsiden hadde inkonsistente datoer.")),
-            java.util.Map.entry("nyhetsartikkel_ekte_4.png", new DescriptionPair(
-                    "Riktig! Den falske forsiden manglet kildehenvisning og hadde rare bildevalg.",
-                    "Ikke helt. Manglende kilder avslørte den andre forsiden som falsk.")),
-            java.util.Map.entry("nyhetsartikkel_ekte_5.png", new DescriptionPair(
-                    "Riktig! Logoen var forvrengt og typografien feil på den falske forsiden.",
-                    "Ikke helt. Logoen på den andre forsiden var forvrengt.")),
+                    "Riktig! Den falske forsiden hadde utropstegn i overskriften, en urealistisk påstand om romvesener, og bildet passet ikke saken.",
+                    "Ikke helt. Den andre forsiden påsto at romvesener var funnet, og bildet matchet ikke overskriften, det er klare tegn på falske nyheter.")),
             java.util.Map.entry("nyhetsartikkel_ekte_6.png", new DescriptionPair(
-                    "Riktig! Den falske forsiden hadde påfallende skrivefeil og uvanlig layout.",
-                    "Ikke helt. Skrivefeilene avslørte den andre forsiden som falsk.")),
+                    "Riktig! Den falske forsiden viste romvesener, som ikke finnes, og enkelte bokstaver (som ø) var forvrengt, typisk for KI-genererte bilder.",
+                    "Ikke helt. Den andre forsiden viste romvesener og hadde rare bokstaver som avslørte at bildet var KI-generert.")),
+
+            // Medium
+            java.util.Map.entry("nyhetsartikkel_ekte_2.png", new DescriptionPair(
+                    "Riktig! På den falske forsiden passet ikke overskriften helt med bildet, noen bokstaver så litt feil ut, og bildet var kornete og av lav kvalitet.",
+                    "Ikke helt. Den andre forsiden hadde et bilde som ikke passet overskriften og dårlig bildekvalitet, det avslørte at den var falsk.")),
             java.util.Map.entry("nyhetsartikkel_ekte_7.png", new DescriptionPair(
-                    "Riktig! Den falske forsiden brukte et bilde som ikke passet med saken.",
-                    "Ikke helt. Bildevalget på den andre forsiden røpet at den var falsk.")),
+                    "Riktig! Den falske forsiden meldte om et dødsfall som ingen andre kilder bekrefter, personen lever fortsatt. Sjekk alltid mot flere uavhengige kilder.",
+                    "Ikke helt. Den andre forsiden meldte om et dødsfall ingen andre kilder bekreftet, personen er fortsatt i live.")),
             java.util.Map.entry("nyhetsartikkel_ekte_8.png", new DescriptionPair(
-                    "Riktig! Den falske forsiden hadde påstander uten kilder.",
-                    "Ikke helt. Påstandene på den andre forsiden manglet kildebelegg.")),
+                    "Riktig! På den falske forsiden var seismologen anonym, og en tilfeldig logo lå over bildet, kilden mangler en tydelig, navngitt fagperson.",
+                    "Ikke helt. Den andre forsiden brukte en anonym ekspert og hadde en tilfeldig logo over bildet, det avslørte at den var falsk.")),
+
+            // Hard
+            java.util.Map.entry("nyhetsartikkel_ekte_4.png", new DescriptionPair(
+                    "Riktig! Selv om overskriftene så realistiske ut, var URL-en manipulert, 'msn' var skrevet om til 'rnsn' for å se ekte ut. Sjekk alltid nettadressen nøye.",
+                    "Ikke helt. Den andre forsiden hadde en forfalsket URL der 'msn' var skrevet som 'rnsn' for å lure leseren.")),
+            java.util.Map.entry("nyhetsartikkel_ekte_5.png", new DescriptionPair(
+                    "Riktig! Den falske forsiden hadde unaturlige journalistnavn som ikke kan verifiseres. Sjekk alltid om bylinen tilhører ekte, kjente personer.",
+                    "Ikke helt. Den andre forsiden brukte oppdiktede journalistnavn, det er et tegn på at kildene ikke kan verifiseres.")),
             java.util.Map.entry("nyhetsartikkel_ekte_9.png", new DescriptionPair(
-                    "Riktig! Layout og fontvalg på den falske forsiden var inkonsistent.",
-                    "Ikke helt. Inkonsistent layout avslørte den andre forsiden som falsk.")),
+                    "Riktig! Den falske forsiden hadde unaturlig språk og påstander om UFO-er, typiske tegn på oppdiktet innhold framfor en seriøs sak.",
+                    "Ikke helt. Den andre forsiden hadde rare formuleringer og handlet om UFO-er, det avslørte at den var falsk.")),
 
             // Datasenteret (chap3) news
             java.util.Map.entry("datasenteret_nyhet_ekte_1.png", new DescriptionPair(
-                    "Riktig! Den falske forsiden hadde sensasjonelle påstander uten kilder.",
-                    "Ikke helt. Manglende kilder på den andre forsiden røpet at den var falsk.")),
+                    "Riktig! Den falske artikkelen brukte bilder som tydelig ikke hørte til teksten, og bildeteksten verken navngir personen eller knytter bildet til saken. Sjekk alltid at bildetekst og innhold henger sammen.",
+                    "Ikke helt. Den andre artikkelen hadde bilder som ikke passet teksten, og bildeteksten manglet identifikasjon av personen og kobling til saken.")),
             java.util.Map.entry("datasenteret_nyhet_ekte_2.png", new DescriptionPair(
-                    "Riktig! Datoer og navn på den falske forsiden stemte ikke overens.",
-                    "Ikke helt. Inkonsistensene på den andre forsiden viste at den var falsk.")),
+                    "Riktig! Den falske artikkelen brukte bilder som ikke hørte til saken, og bildeteksten manglet både fotografkreditering og en beskrivelse av hva bildet faktisk viser.",
+                    "Ikke helt. Den andre artikkelen hadde bilder som ikke passet saken, og bildeteksten manglet fotografnavn og forklaring, det er kjennetegn på falske nyheter.")),
             java.util.Map.entry("datasenteret_nyhet_ekte_3.png", new DescriptionPair(
-                    "Riktig! Bildet på den falske forsiden var manipulert og passet ikke saken.",
-                    "Ikke helt. Det manipulerte bildet avslørte at den andre forsiden var falsk."))
+                    "Riktig! Den falske artikkelen viste et tydelig manipulert bilde og brukte overdrevent mange farger uten grunn. Ekte aviser holder seg til en nøktern, troverdig visuell stil.",
+                    "Ikke helt. Den andre artikkelen hadde et manipulert bilde og overdreven fargebruk, klare tegn på at den ikke var seriøs journalistikk.")),
+            java.util.Map.entry("datasenteret_nyhet_ekte_4.png", new DescriptionPair(
+                    "Riktig! Den falske artikkelen så svært naturlig ut, men bildet virket unaturlig, og under journalistens navn sto 'utrriksjournalist', en feilstaving av 'utenriksjournalist'. Skrivefeil i fagtitler er et avslørende spor.",
+                    "Ikke helt. Den andre artikkelen var oppdiktet, og under journalistnavnet var tittelen feilstavet som 'utrriksjournalist' i stedet for 'utenriksjournalist'. Slike feil i profesjonelle titler røper falske artikler."))
     );
 
     private String getImageCorrectDescription(String fileName, ImageCategory category) {

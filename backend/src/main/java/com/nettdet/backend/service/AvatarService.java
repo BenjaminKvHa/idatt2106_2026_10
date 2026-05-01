@@ -20,6 +20,13 @@ import com.nettdet.backend.repository.FileObjectRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 
+/**
+ * Service class responsible for dynamically generating and managing composite pupil avatars.
+ * 
+ * <p>Avatars are created by layering individual assets (person, hair, costume) into a single 
+ * PNG image. This service handles the parsing of avatar strings, retrieval of component assets, 
+ * image composition, and caching of generated avatars in storage.
+ */
 @Service
 public class AvatarService {
 
@@ -37,6 +44,15 @@ public class AvatarService {
         this.fileObjectRepository = fileObjectRepository;
     }
 
+    /**
+     * Retrieves an existing composite avatar or creates a new one if it doesn't exist.
+     * The avatar string must follow the format {@code person_hair_costume}.
+     *
+     * @param avatar the encoded avatar composition string
+     * @return a {@link FileObject} representing the cached or newly created avatar image
+     * @throws IllegalArgumentException if the avatar string format is invalid
+     * @throws EntityNotFoundException  if any of the required component assets are missing
+     */
     @Transactional
     public FileObject getOrCreateAvatar(String avatar) {
         AvatarParts parts = parseAvatarParts(avatar);
@@ -51,6 +67,15 @@ public class AvatarService {
         return createAndStoreAvatar(parts, avatarBaseName, avatarObjectKey);
     }
 
+    /**
+     * Orchestrates the creation and storage of a new composite avatar.
+     * Loads assets, combines them, and uploads the result to storage.
+     *
+     * @param parts           the parsed avatar components
+     * @param avatarBaseName  the base filename for the avatar
+     * @param avatarObjectKey the full storage key for the avatar
+     * @return the persisted {@link FileObject} for the new avatar
+     */
     private FileObject createAndStoreAvatar(AvatarParts parts, String avatarBaseName, String avatarObjectKey) {
         BufferedImage personImage = readAssetImage("person", parts.person());
         BufferedImage hairImage = readAssetImage("hair", parts.hair());
@@ -69,6 +94,15 @@ public class AvatarService {
                 avatarBaseName + ".png");
     }
 
+    /**
+     * Reads a component asset image from storage.
+     * Tries multiple key variations (with/without leading slashes, with/without extensions).
+     *
+     * @param category the asset category (person, hair, costume)
+     * @param name     the asset name
+     * @return the loaded {@link BufferedImage}
+     * @throws EntityNotFoundException if the asset cannot be found or read
+     */
     private BufferedImage readAssetImage(String category, String name) {
         List<String> candidateKeys = List.of(
                 AVATAR_ASSET_FOLDER + "/" + category + "/" + name + ".png",
@@ -93,6 +127,16 @@ public class AvatarService {
         throw new EntityNotFoundException("Avatar asset not found: " + category + "/" + name);
     }
 
+    /**
+     * Composites multiple images into a single avatar image.
+     * Uses bicubic interpolation and anti-aliasing for high-quality results.
+     *
+     * @param person  the base person image
+     * @param hair    the hair layer image
+     * @param costume the costume layer image
+     * @param size    the target dimensions (square)
+     * @return the combined {@link BufferedImage}
+     */
     private BufferedImage createAvatarImage(BufferedImage person, BufferedImage hair, BufferedImage costume, int size) {
         BufferedImage combined = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = combined.createGraphics();
@@ -109,6 +153,13 @@ public class AvatarService {
         return combined;
     }
 
+    /**
+     * Encodes a {@link BufferedImage} to a PNG byte array.
+     *
+     * @param image the image to encode
+     * @return the PNG encoded bytes
+     * @throws IllegalStateException if encoding fails
+     */
     private byte[] toPngBytes(BufferedImage image) {
         try {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -119,6 +170,13 @@ public class AvatarService {
         }
     }
 
+    /**
+     * Parses and validates the avatar composition string.
+     *
+     * @param avatar the raw avatar string
+     * @return an {@link AvatarParts} record containing the validated components
+     * @throws IllegalArgumentException if the format is invalid or contains forbidden characters
+     */
     private AvatarParts parseAvatarParts(String avatar) {
         if (avatar == null || avatar.isBlank()) {
             throw new IllegalArgumentException("Avatar must not be blank");
@@ -138,6 +196,9 @@ public class AvatarService {
         return new AvatarParts(parts[0], parts[1], parts[2]);
     }
 
+    /**
+     * Internal data carrier for avatar component names.
+     */
     private record AvatarParts(String person, String hair, String costume) {
     }
 }

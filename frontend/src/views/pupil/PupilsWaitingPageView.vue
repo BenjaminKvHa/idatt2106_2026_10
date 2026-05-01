@@ -1,15 +1,21 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { clearMeCache, fetchMeCached } from '@/utils/authRedirect'
 import bgImg from '@/assets/backgrounds/hjemskjerm-bg.png'
+import { del } from '@/utils/apiUtils'
+
 
 const router = useRouter()
+const classroomCode = ref<string | null>(null)
+const canceling = ref(false)
+const cancelError = ref('')
 
 let interval: number | null = null
 
 async function checkStatus() {
   const profile = await fetchMeCached({ force: true })
+  classroomCode.value = profile?.classroomCode ?? null
 
   if (!profile?.classroomCode) {
     clearMeCache()
@@ -23,18 +29,45 @@ async function checkStatus() {
   }
 }
 
+function stopPolling(): void {
+  if (interval) {
+    clearInterval(interval)
+    interval = null
+  }
+}
+
 onMounted(() => {
   checkStatus()
   interval = window.setInterval(checkStatus, 3000)
 })
 
 onUnmounted(() => {
-  if (interval) clearInterval(interval)
+  stopPolling()
 })
 
-function goBack(): void {
-  clearMeCache()
-  router.push('/join-classroom/enter-classroom-code')
+async function cancelJoinRequest(): Promise<void> {
+  if (canceling.value) return
+
+  if (!classroomCode.value) {
+    clearMeCache()
+    await router.push('/join-classroom/enter-classroom-code')
+    return
+  }
+
+  canceling.value = true
+  cancelError.value = ''
+  stopPolling()
+
+  try {
+    await del(`/api/classrooms/${classroomCode.value}/pupils/me`)
+    clearMeCache()
+    await router.push('/join-classroom/enter-classroom-code')
+  } catch {
+    cancelError.value = 'Kunne ikke kansellere forespørselen. Prøv igjen.'
+    interval = window.setInterval(checkStatus, 3000)
+  } finally {
+    canceling.value = false
+  }
 }
 </script>
 
@@ -46,17 +79,12 @@ function goBack(): void {
           <h1>Venter på godkjenning</h1>
           <div class="divider"></div>
           <div class="text">
-            <p>
-              Du venter nå på at en lærer skal godkjenne forespørselen din om å bli med i
-              klasserommet.
+            <p>Du venter nå på at en lærer skal godkjenne forespørselen din om å bli med i klasserommet.</p>
+            <p v-if="classroomCode" class="classroom-code">
+              Klasseromskode: <span>{{ classroomCode }}</span>
             </p>
-            <p>
-              I klasserommet skal dere kjempe om å få flere poeng enn andre klasserom, og kjempe mot
-              dem om å være de beste nettdetektivene.
-            </p>
-            <p>
-              Hvis det tar veldig lang tid å slippe inn i klasserommet må du kontakte læreren din.
-            </p>
+            <p> I klasserommet skal dere kjempe om å få flere poeng enn andre klasserom, og kjempe mot dem om å være de beste nettdetektivene.</p>
+            <p>Hvis det tar veldig lang tid å slippe inn i klasserommet må du kontakte læreren din.</p>
           </div>
         </div>
         <div class="loading-container">
@@ -72,7 +100,10 @@ function goBack(): void {
         </div>
       </div>
       <div class="button-container">
-        <button class="cancel-button" @click="goBack">Kanseller forespørsel</button>
+        <button class="cancel-button" :disabled="canceling" @click="cancelJoinRequest">
+          {{ canceling ? 'Kansellerer...' : 'Kanseller forespørsel' }}
+        </button>
+        <p v-if="cancelError" class="cancel-error" role="alert">{{ cancelError }}</p>
       </div>
     </div>
   </div>
@@ -174,9 +205,20 @@ function goBack(): void {
   max-width: 100%;
 }
 
+.classroom-code {
+  font-weight: 700;
+}
+
+.classroom-code span {
+  letter-spacing: 0.08em;
+}
+
 .button-container {
   margin-top: 0.4rem;
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
   justify-content: center;
   width: 100%;
 }
@@ -202,9 +244,23 @@ function goBack(): void {
   box-shadow: -5px 5px 0 var(--brown-dark);
 }
 
+.cancel-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+  transform: none;
+  box-shadow: -3px 3px 6px var(--brown-dark);
+}
+
 .cancel-button:active {
   transform: translate(3px, 3px);
   box-shadow: -1px 1px 0 var(--brown-dark);
+}
+
+.cancel-error {
+  margin: 0;
+  color: var(--red-danger);
+  font-size: clamp(0.95rem, 3vw, 1.1rem);
+  font-weight: 700;
 }
 
 .loading-container {

@@ -177,6 +177,7 @@
 
 .pupil-button-danger {
   background: var(--red-danger);
+  color: white;
 }
 
 .pupil-button-green {

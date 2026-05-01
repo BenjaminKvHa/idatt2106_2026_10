@@ -47,6 +47,7 @@ const savingClassroom = ref(false)
 const editName = ref('')
 const editDescription = ref('')
 const leaveClassroomPopupOpen = ref(false)
+const deleteClassroomPopupOpen = ref(false)
 
 function syncEditForm() {
   editName.value = classroom.value?.classroomName ?? ''
@@ -180,19 +181,26 @@ async function inviteTeacher() {
   }
 }
 
+function openDeleteClassroomPopup() {
+  if (!classroom.value || deleting.value) return
+  actionError.value = ''
+  deleteClassroomPopupOpen.value = true
+}
+
+function closeDeleteClassroomPopup() {
+  if (deleting.value) return
+  deleteClassroomPopupOpen.value = false
+}
+
 async function deleteClassroom() {
   if (!classroom.value || deleting.value) return
-
-  const confirmed = window.confirm(
-    'Er du sikker på at du vil slette klasserommet? Dette kan ikke angres.',
-  )
-  if (!confirmed) return
 
   deleting.value = true
   actionError.value = ''
 
   try {
     await del(`/api/classrooms/${classroom.value.classroomCode}`)
+    deleteClassroomPopupOpen.value = false
     await router.push('/teacher/classrooms')
   } catch (requestError) {
     actionError.value =
@@ -367,7 +375,7 @@ watch(
           type="button"
           class="action-button destructive-button"
           :disabled="deleting"
-          @click="deleteClassroom"
+          @click="openDeleteClassroomPopup"
         >
           {{ deleting ? 'Sletter...' : 'Slett klasserom' }}
         </button>
@@ -403,6 +411,40 @@ watch(
             @click="leaveClassroom"
           >
             {{ leaving ? 'Forlater...' : 'Bekreft' }}
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <div
+      v-if="deleteClassroomPopupOpen && classroom"
+      class="teacher-confirm-overlay"
+      @click.self="closeDeleteClassroomPopup"
+    >
+      <section class="teacher-confirm-popup" role="dialog" aria-modal="true">
+        <h2>Slett klasserom?</h2>
+        <p>
+          Er du sikker på at du vil slette
+          <strong>{{ classroom.classroomName }}</strong
+          >? Dette kan ikke angres.
+        </p>
+
+        <div class="teacher-confirm-actions">
+          <button
+            type="button"
+            class="teacher-confirm-button teacher-confirm-button-secondary cancel-delete-classroom"
+            :disabled="deleting"
+            @click="closeDeleteClassroomPopup"
+          >
+            Avbryt
+          </button>
+          <button
+            type="button"
+            class="teacher-confirm-button teacher-confirm-button-danger confirm-delete-classroom"
+            :disabled="deleting"
+            @click="deleteClassroom"
+          >
+            {{ deleting ? 'Sletter...' : 'Bekreft' }}
           </button>
         </div>
       </section>

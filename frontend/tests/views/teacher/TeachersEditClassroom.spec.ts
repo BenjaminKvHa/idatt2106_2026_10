@@ -228,7 +228,7 @@ describe('TeachersEditClassroom', () => {
     expect(wrapper.text()).toContain('Kunne ikke invitere lærer')
   })
 
-  it('successfully deletes classroom after confirmation', async () => {
+  it('opens a custom confirmation popup before deleting classroom', async () => {
     vi.mocked(del).mockResolvedValueOnce(undefined)
 
     const wrapper = await mountComponent()
@@ -239,17 +239,20 @@ describe('TeachersEditClassroom', () => {
       ?.trigger('click')
     await flushPromises()
 
-    expect(window.confirm).toHaveBeenCalledWith(
-      'Er du sikker på at du vil slette klasserommet? Dette kan ikke angres.',
-    )
+    expect(window.confirm).not.toHaveBeenCalled()
+    expect(wrapper.find('.teacher-confirm-popup').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Er du sikker på at du vil slette')
+    expect(wrapper.text()).toContain('Dette kan ikke angres')
+    expect(del).not.toHaveBeenCalled()
+
+    await wrapper.find('.confirm-delete-classroom').trigger('click')
+    await flushPromises()
 
     expect(del).toHaveBeenCalledWith('/api/classrooms/ABC123')
     expect(pushMock).toHaveBeenCalledWith('/teacher/classrooms')
   })
 
-  it('does not delete classroom when confirmation is cancelled', async () => {
-    vi.mocked(window.confirm).mockReturnValueOnce(false)
-
+  it('closes delete classroom popup without deleting when cancelled', async () => {
     const wrapper = await mountComponent()
 
     await wrapper
@@ -258,8 +261,14 @@ describe('TeachersEditClassroom', () => {
       ?.trigger('click')
     await flushPromises()
 
+    expect(wrapper.find('.teacher-confirm-popup').exists()).toBe(true)
+    await wrapper.find('.cancel-delete-classroom').trigger('click')
+    await flushPromises()
+
+    expect(window.confirm).not.toHaveBeenCalled()
     expect(del).not.toHaveBeenCalled()
     expect(pushMock).not.toHaveBeenCalled()
+    expect(wrapper.find('.teacher-confirm-popup').exists()).toBe(false)
   })
 
   it('shows error when deleting classroom fails', async () => {
@@ -271,6 +280,7 @@ describe('TeachersEditClassroom', () => {
       .findAll('button')
       .find((button) => button.text() === 'Slett klasserom')
       ?.trigger('click')
+    await wrapper.find('.confirm-delete-classroom').trigger('click')
     await flushPromises()
 
     expect(wrapper.text()).toContain('Kunne ikke slette klasserom')

@@ -164,6 +164,15 @@ describe('PhotographerView', () => {
     await wrapper.find('.bottom-actions button').trigger('click')
     await flushPromises()
 
+    const nextButton = wrapper
+      .findAll('.bottom-actions button')
+      .find((button) => button.text() === 'Se resultat' || button.text() === 'Neste')
+
+    expect(nextButton).toBeDefined()
+
+    await nextButton!.trigger('click')
+    await flushPromises()
+
     expect(wrapper.find('[data-test="complete-popup"]').exists()).toBe(true)
 
     await wrapper.find('[data-test="map"]').trigger('click')

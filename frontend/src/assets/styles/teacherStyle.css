@@ -405,6 +405,9 @@
     .card-grid {
         gap: var(--medium-gap);
     }
+    .form-card {
+        padding: var(--thin-padding);
+    }
 }
 
 .row {

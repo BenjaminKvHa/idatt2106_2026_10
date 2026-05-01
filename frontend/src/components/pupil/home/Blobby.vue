@@ -140,7 +140,6 @@ onBeforeUnmount(() => {
   top: 35%;
   right: 100%;
   width: 100%;
-  max-width: none;
   background: #fff8e8;
   border: 2px solid #5c4033;
   border-radius: 16px;
@@ -148,6 +147,7 @@ onBeforeUnmount(() => {
   font-size: clamp(12px, 1.1vw, 18px);
   text-align: center;
   box-shadow: 0 4px 0 rgba(0, 0, 0, 0.12);
+  min-width: 500px;
 }
 
 @keyframes blobby-bounce {
@@ -205,8 +205,13 @@ onBeforeUnmount(() => {
 @media (max-width: 768px) {
   .blobby-message {
     right: 75%;
-    max-width: 220px;
     font-size: 13px;
+    max-width: 400px;
+    min-width: 300px;
+  }
+  .blobby-wrapper {
+    top: 3.3%;
+    right: 5%;
   }
 }
 

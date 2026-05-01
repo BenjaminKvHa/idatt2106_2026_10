@@ -113,7 +113,7 @@ function handleButtonClick(sound?: string) {
 .overlay-button {
   position: absolute;
   cursor: pointer;
-  width: clamp(10rem, 13vw, 20rem);
+  width: clamp(10rem, 11vw, 20rem);
   transform: translateX(-50%);
   z-index: 2;
 }
@@ -203,7 +203,7 @@ function handleButtonClick(sound?: string) {
     left: 30%;
   }
 }
-@media (max-width: 660px) {
+@media (max-width: 600px) {
   .overlay-button {
     position: absolute;
     cursor: pointer;

@@ -44,7 +44,7 @@
 .pupil-pinboard-stage {
   position: relative;
   z-index: 1;
-  width: min(96vw, 1400px);
+  width: min(90vw, 1400px);
   aspect-ratio: 1400 / 900;
 }
 

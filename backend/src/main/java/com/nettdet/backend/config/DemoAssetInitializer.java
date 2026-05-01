@@ -14,7 +14,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import com.nettdet.backend.domain.enums.ClassroomAccess;
-import com.nettdet.backend.repository.FileObjectRepository;
 import com.nettdet.backend.service.FileObjectService;
 
 @Component
@@ -28,11 +27,9 @@ public class DemoAssetInitializer implements ApplicationRunner {
             "../initial_demo_assets",
             "initial_demo_assets");
 
-    private final FileObjectRepository fileObjectRepository;
     private final FileObjectService fileObjectService;
 
-    public DemoAssetInitializer(FileObjectRepository fileObjectRepository, FileObjectService fileObjectService) {
-        this.fileObjectRepository = fileObjectRepository;
+    public DemoAssetInitializer(FileObjectService fileObjectService) {
         this.fileObjectService = fileObjectService;
     }
 
@@ -67,12 +64,8 @@ public class DemoAssetInitializer implements ApplicationRunner {
         String fileName = path.getFileName().toString();
         String objectKey = objectKeyPrefix + "/" + fileName;
 
-        if (fileObjectRepository.findByObjectKey(objectKey).isPresent()) {
-            return;
-        }
-
         try {
-            fileObjectService.upload(
+            fileObjectService.uploadOrReplace(
                     objectKey,
                     Files.readAllBytes(path),
                     determineContentType(fileName),

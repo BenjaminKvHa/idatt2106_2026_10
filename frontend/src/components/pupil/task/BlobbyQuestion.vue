@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import hintCreature from '@/assets/creatureSittingQuestion.png'
+import hintCreature from '@/assets/icons/blobby/creatureSittingQuestion.png'
 import { get } from '@/utils/apiUtils'
 
 type ChapterTipResponse = {
@@ -46,12 +46,7 @@ async function openHintPopup() {
 
 <template>
   <div class="hint-creature-wrapper">
-    <button
-      type="button"
-      class="hint-creature-button"
-      :disabled="loading"
-      @click="openHintPopup"
-    >
+    <button type="button" class="hint-creature-button" :disabled="loading" @click="openHintPopup">
       <img :src="hintCreature" alt="Få hint" />
     </button>
   </div>
@@ -78,44 +73,6 @@ async function openHintPopup() {
 </template>
 
 <style scoped>
-.hint-creature-wrapper {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 0;
-  height: 0;
-}
-
-.hint-creature-button {
-  position: absolute;
-  top: calc(var(--topbar-height) + 10px);
-  left: 12px;
-  z-index: 999;
-
-  width: 120px;
-  height: 120px;
-  border: none;
-  background: transparent;
-  padding: 0;
-  cursor: pointer;
-}
-
-.hint-creature-button img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  pointer-events: none;
-  filter: drop-shadow(0 8px 10px rgb(0 0 0 / 25%));
-}
-
-.hint-creature-button:hover img {
-  transform: scale(1.08);
-}
-
-.hint-creature-button:disabled {
-  cursor: wait;
-}
-
 .hint-overlay {
   position: fixed;
   inset: 0;
@@ -125,7 +82,6 @@ async function openHintPopup() {
   justify-content: center;
   align-items: center;
 }
-
 .hint-popup {
   width: min(620px, calc(100vw - 32px));
   background: var(--beige-light);
@@ -135,29 +91,24 @@ async function openHintPopup() {
   text-align: center;
   box-shadow: 0 14px 30px rgb(0 0 0 / 25%);
 }
-
 .hint-popup h2 {
   margin: 0 0 1rem;
 }
-
 .hint-popup p {
   margin: 0;
   font-size: 1.15rem;
   line-height: 1.5;
 }
-
 .hint-popup .hint-status {
   margin-top: 1rem;
   font-size: 1rem;
   font-weight: 800;
   color: var(--brown-dark);
 }
-
 .hint-error {
   color: var(--red-error, #9f1f1f);
   font-weight: 800;
 }
-
 .hint-close-button {
   margin-top: 1.5rem;
   padding: 1rem 1.5rem;
@@ -167,11 +118,42 @@ async function openHintPopup() {
   font-weight: 800;
   cursor: pointer;
 }
-
+.hint-creature-wrapper {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  z-index: 999;
+  pointer-events: auto;
+}
+.hint-creature-button {
+  width: 120px;
+  height: 120px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  pointer-events: auto;
+  display: block;
+}
+.hint-creature-button img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 8px 10px rgb(0 0 0 / 25%));
+}
+.hint-creature-button:hover img {
+  transform: scale(1.08);
+}
+.hint-creature-button:disabled {
+  cursor: wait;
+}
 @media (max-width: 768px) {
+  .hint-creature-wrapper {
+    width: 85px;
+    height: 85px;
+  }
   .hint-creature-button {
-    top: calc(var(--topbar-height) + 10px);
-    left: 8px;
     width: 85px;
     height: 85px;
   }

@@ -108,8 +108,7 @@ h2 {
 
 p {
   font-family: 'Inter', sans-serif;
-  display: flex;
-  flex-direction: column;
+  margin: 0;
 }
 
 .page {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import TeacherHelpButton from '@/components/teacher/TeacherHelpButton.vue'
 import { post } from '@/utils/apiUtils'
 import type { CreateClassroomRequest, CreateClassroomResponse } from '@/types/classroom'
 
@@ -14,6 +15,14 @@ const form = ref({
 const loading = ref(false)
 const error = ref('')
 const successMessage = ref('')
+
+const createClassroomHelpSections = [
+  {
+    body: [
+      'Her oppretter du et nytt klasserom. Gi klasserommet et tydelig navn, for eksempel "5A". Beskrivelsen er kun for lærere og kan brukes til korte notater om klassen. Etter oppretting får klasserommet en romkode som elever bruker for å be om å bli med.',
+    ],
+  },
+]
 
 const handleSubmit = async () => {
   error.value = ''
@@ -58,9 +67,10 @@ const handleSubmit = async () => {
 <template>
   <div class="teacher-content form-page-container">
     <div class="form-card">
-      <h2 class="form-title">
-        Opprett nytt klasserom
-      </h2>
+      <div class="form-card-header">
+        <h2 class="form-title">Opprett nytt klasserom</h2>
+        <TeacherHelpButton title="Nytt klasserom" :sections="createClassroomHelpSections" />
+      </div>
 
       <div v-if="error" class="message error" role="alert">
         {{ error }}
@@ -101,6 +111,19 @@ const handleSubmit = async () => {
   </div>
 </template>
 <style scoped>
+.form-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--medium-gap);
+    margin-bottom: var(--thick-padding);
+}
+
+.form-card-header .form-title {
+    margin: 0;
+    text-align: left;
+}
+
 .create-classroom:focus {
     color: var(--txt-sec);
     background-color: var(--accent);

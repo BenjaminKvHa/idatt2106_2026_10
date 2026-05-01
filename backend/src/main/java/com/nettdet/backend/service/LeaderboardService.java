@@ -187,6 +187,7 @@ public class LeaderboardService {
             pupilScores.add(new PupilScore(
                     membership.getAccountEmail(),
                     membership.getUsername(),
+                    membership.getAccount() == null ? null : membership.getAccount().getLegalName(),
                     pupilXpService.calculateMembershipXp(membership)));
         }
 
@@ -194,7 +195,10 @@ public class LeaderboardService {
                 .sorted(Comparator.comparingLong(PupilScore::totalXp).reversed()
                         .thenComparing(PupilScore::username, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER))
                         .thenComparing(PupilScore::accountEmail))
-                .map(score -> new ClassroomPupilLeaderboardEntryResponse(score.username(), score.totalXp()))
+                .map(score -> new ClassroomPupilLeaderboardEntryResponse(
+                        score.username(),
+                        score.legalName(),
+                        score.totalXp()))
                 .toList();
 
         return new ClassroomPupilLeaderboardResponse(
@@ -223,7 +227,7 @@ public class LeaderboardService {
     /**
      * Internal data carrier for a pupil's XP score.
      */
-    private record PupilScore(String accountEmail, String username, long totalXp) {
+    private record PupilScore(String accountEmail, String username, String legalName, long totalXp) {
     }
 
     /**

@@ -123,8 +123,8 @@ class LeaderboardControllerTest {
                         "8A",
                         "Mandagstime for 8A",
                         List.of(
-                                new ClassroomPupilLeaderboardEntryResponse("detektiv1", 240L),
-                                new ClassroomPupilLeaderboardEntryResponse("detektiv2", 120L))));
+                                new ClassroomPupilLeaderboardEntryResponse("detektiv1", "Detektiv En", 240L),
+                                new ClassroomPupilLeaderboardEntryResponse("detektiv2", "Detektiv To", 120L))));
 
         mockMvc.perform(get("/classrooms/ABCABC/leaderboard")
                         .with(authentication(authenticationFor(principal, "TEACHER"))))
@@ -133,8 +133,10 @@ class LeaderboardControllerTest {
                 .andExpect(jsonPath("$.classroomName").value("8A"))
                 .andExpect(jsonPath("$.classroomDescription").value("Mandagstime for 8A"))
                 .andExpect(jsonPath("$.entries[0].username").value("detektiv1"))
+                .andExpect(jsonPath("$.entries[0].legalName").value("Detektiv En"))
                 .andExpect(jsonPath("$.entries[0].totalXp").value(240))
-                .andExpect(jsonPath("$.entries[1].username").value("detektiv2"));
+                .andExpect(jsonPath("$.entries[1].username").value("detektiv2"))
+                .andExpect(jsonPath("$.entries[1].legalName").value("Detektiv To"));
 
         verify(leaderboardService).getClassroomLeaderboard("ABCABC", principal);
     }

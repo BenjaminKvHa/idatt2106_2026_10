@@ -6,6 +6,7 @@ import { get } from '@/utils/apiUtils'
 
 type ClassroomPupilLeaderboardEntry = {
   username: string | null
+  legalName: string | null
   totalXp: number
 }
 
@@ -35,12 +36,15 @@ async function loadLeaderboard() {
   error.value = ''
 
   try {
-    const classroomCodeSlug = typeof route.params.classroomCode === 'string' ? route.params.classroomCode : ''
+    const classroomCodeSlug =
+      typeof route.params.classroomCode === 'string' ? route.params.classroomCode : ''
     if (!classroomCodeSlug) {
       throw new Error('Could not find classroom for this route')
     }
 
-    leaderboard.value = await get<ClassroomPupilLeaderboardResponse>(`/api/classrooms/${classroomCodeSlug}/leaderboard`)
+    leaderboard.value = await get<ClassroomPupilLeaderboardResponse>(
+      `/api/classrooms/${classroomCodeSlug}/leaderboard`,
+    )
   } catch (fetchError) {
     leaderboard.value = null
     error.value = fetchError instanceof Error ? fetchError.message : 'Failed to load leaderboard'

@@ -77,20 +77,20 @@ class NotificationControllerTest {
         verify(notificationService).getTeacherNotifications("ABCABC", principal);
     }
 
-    @DisplayName("Allows authenticated teachers to check unread classroom notifications")
+    @DisplayName("Allows authenticated teachers to count unread classroom notifications")
     @Test
-    void hasUnreadNotifications_whenAuthenticatedTeacher_returnsUnreadStateJson() throws Exception {
+    void getUnreadNotificationsCount_whenAuthenticatedTeacher_returnsUnreadCountJson() throws Exception {
         JwtUserPrincipal principal = teacherPrincipal();
-        when(notificationService.hasUnreadNotifications("ABCABC", principal))
-                .thenReturn(new UnreadNotificationsResponse("ABCABC", true));
+        when(notificationService.getUnreadNotificationsCount("ABCABC", principal))
+                .thenReturn(new UnreadNotificationsResponse("ABCABC", 3));
 
         mockMvc.perform(get("/teacher/classrooms/ABCABC/notifications/unread")
                         .with(authentication(authenticationFor(principal, "TEACHER"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.classroomCode").value("ABCABC"))
-                .andExpect(jsonPath("$.hasUnreadNotifications").value(true));
+                .andExpect(jsonPath("$.unreadNotificationsCount").value(3));
 
-        verify(notificationService).hasUnreadNotifications("ABCABC", principal);
+        verify(notificationService).getUnreadNotificationsCount("ABCABC", principal);
     }
 
     @DisplayName("Denies authenticated pupils from fetching teacher notifications")
@@ -107,17 +107,17 @@ class NotificationControllerTest {
 
     @DisplayName("Delegates teacher identity from JWT principal instead of request input")
     @Test
-    void hasUnreadNotifications_whenAuthenticatedTeacher_delegatesJwtPrincipal() throws Exception {
+    void getUnreadNotificationsCount_whenAuthenticatedTeacher_delegatesJwtPrincipal() throws Exception {
         JwtUserPrincipal principal = teacherPrincipal();
-        when(notificationService.hasUnreadNotifications("ABCABC", principal))
-                .thenReturn(new UnreadNotificationsResponse("ABCABC", false));
+        when(notificationService.getUnreadNotificationsCount("ABCABC", principal))
+                .thenReturn(new UnreadNotificationsResponse("ABCABC", 0));
 
         mockMvc.perform(get("/teacher/classrooms/ABCABC/notifications/unread?teacherEmail=other@example.com")
                         .with(authentication(authenticationFor(principal, "TEACHER"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.hasUnreadNotifications").value(false));
+                .andExpect(jsonPath("$.unreadNotificationsCount").value(0));
 
-        verify(notificationService).hasUnreadNotifications(
+        verify(notificationService).getUnreadNotificationsCount(
                 argThat("ABCABC"::equals),
                 argThat(argument -> argument.email().equals("teacher@example.com") && argument.role().equals("TEACHER")));
     }

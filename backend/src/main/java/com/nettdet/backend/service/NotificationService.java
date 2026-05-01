@@ -35,9 +35,9 @@ import com.nettdet.backend.security.JwtUserPrincipal;
  *         {@code UNREAD} entries it returns as {@code READ}. The returned DTOs reflect the
  *         status the entries had <em>before</em> being flipped, so the UI can highlight them as
  *         freshly-arrived.</li>
- *     <li><b>Badge check</b> – {@link #hasUnreadNotifications(String, JwtUserPrincipal)} performs
- *         a read-only existence query for {@code UNREAD} entries, intended for "do I have a red
- *         dot?" polling.</li>
+ *     <li><b>Badge check</b> – {@link #getUnreadNotificationsCount(String, JwtUserPrincipal)}
+ *         performs a read-only count query for {@code UNREAD} entries, intended for badge
+ *         polling.</li>
  * </ul>
  * Notification creation is invoked from other services (such as
  * {@link WeeklyMysteryService}) and is not exposed as a public endpoint.
@@ -144,29 +144,29 @@ public class NotificationService {
     }
 
     /**
-     * Reports whether the requesting teacher's classroom has any {@code UNREAD} notifications,
+     * Reports how many {@code UNREAD} notifications the requesting teacher's classroom has,
      * without mutating any row.
      * <p>
-     * Intended for lightweight polling (e.g. a "you have unread notifications" badge).
+     * Intended for lightweight polling (e.g. an unread notifications badge).
      *
      * @param classroomCode the classroom to check
      * @param principal     the authenticated teacher; must hold the {@code TEACHER} role and be
      *                      linked to {@code classroomCode}
-     * @return a response carrying the classroom code and the unread flag
+     * @return a response carrying the classroom code and the unread count
      * @throws AccessDeniedException   if the principal is not a teacher of the classroom
      * @throws EntityNotFoundException if the classroom does not exist
      */
     @Transactional(readOnly = true)
-    public UnreadNotificationsResponse hasUnreadNotifications(String classroomCode,
-                                                              JwtUserPrincipal principal) {
+    public UnreadNotificationsResponse getUnreadNotificationsCount(String classroomCode,
+                                                                   JwtUserPrincipal principal) {
         String normalizedClassroomCode = normalizeClassroomCode(classroomCode);
         verifyTeacherAccess(principal, normalizedClassroomCode);
 
-        boolean hasUnreadNotifications = notificationRepository.existsByClassroomClassroomCodeAndStatusNotifications(
+        long unreadNotificationsCount = notificationRepository.countByClassroomClassroomCodeAndStatusNotifications(
                 normalizedClassroomCode,
                 NotificationStatus.UNREAD);
 
-        return new UnreadNotificationsResponse(normalizedClassroomCode, hasUnreadNotifications);
+        return new UnreadNotificationsResponse(normalizedClassroomCode, unreadNotificationsCount);
     }
 
     private void verifyTeacherAccess(JwtUserPrincipal principal, String classroomCode) {

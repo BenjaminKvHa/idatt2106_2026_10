@@ -4,9 +4,25 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import PupilsNotebookView from '@/views/pupil/PupilsNotebookView.vue'
 import { get, put } from '@/utils/apiUtils'
 
+const routerMocks = vi.hoisted(() => ({
+  push: vi.fn(),
+  routeLeaveGuard: undefined as
+    | ((to: { fullPath: string }) => boolean | Promise<boolean>)
+    | undefined,
+}))
+
 vi.mock('@/utils/apiUtils', () => ({
   get: vi.fn(),
   put: vi.fn(),
+}))
+
+vi.mock('vue-router', () => ({
+  useRouter: () => ({
+    push: routerMocks.push,
+  }),
+  onBeforeRouteLeave: vi.fn((guard) => {
+    routerMocks.routeLeaveGuard = guard
+  }),
 }))
 
 const mockedGet = vi.mocked(get)
@@ -31,6 +47,8 @@ describe('PupilsNotebookView', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     vi.clearAllMocks()
+    routerMocks.push.mockReset()
+    routerMocks.routeLeaveGuard = undefined
     vi.spyOn(window.HTMLMediaElement.prototype, 'play').mockImplementation(() => Promise.resolve())
   })
 
@@ -141,7 +159,10 @@ describe('PupilsNotebookView', () => {
     const wrapper = mountNotebookView()
 
     await finishChapterLoad()
-    await wrapper.findAll('.nav-button').find((button) => button.text() === 'Forward')?.trigger('click')
+    await wrapper
+      .findAll('.nav-button')
+      .find((button) => button.text() === 'Forward')
+      ?.trigger('click')
     await flushPromises()
 
     expect(mockedGet).toHaveBeenLastCalledWith('/api/pupil/chapters/2/notebook')
@@ -150,7 +171,6 @@ describe('PupilsNotebookView', () => {
   })
 
   it('stays on the current chapter when unsaved notes are not confirmed for discard', async () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
     mockedGet.mockResolvedValue({
       chapterId: 1,
       tips: [],
@@ -161,19 +181,19 @@ describe('PupilsNotebookView', () => {
 
     await finishChapterLoad()
     await wrapper.find('textarea').setValue('Unsaved note')
-    await wrapper.findAll('.nav-button').find((button) => button.text() === 'Forward')?.trigger('click')
+    await wrapper
+      .findAll('.nav-button')
+      .find((button) => button.text() === 'Forward')
+      ?.trigger('click')
     await flushPromises()
 
-    expect(confirmSpy).toHaveBeenCalledWith(
-      'You have unsaved notes. If you continue, your unsaved changes will be lost.',
-    )
+    expect(wrapper.find('.unsaved-notes-popup').exists()).toBe(true)
     expect(mockedGet).toHaveBeenCalledTimes(1)
     expect(wrapper.text()).toContain('Nyhetskvartalet')
     expect(wrapper.find('textarea').element.value).toBe('Unsaved note')
   })
 
   it('moves to the next chapter when unsaved notes are confirmed for discard', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
     mockedGet
       .mockResolvedValueOnce({
         chapterId: 1,
@@ -190,11 +210,39 @@ describe('PupilsNotebookView', () => {
 
     await finishChapterLoad()
     await wrapper.find('textarea').setValue('Unsaved note')
-    await wrapper.findAll('.nav-button').find((button) => button.text() === 'Forward')?.trigger('click')
+    await wrapper
+      .findAll('.nav-button')
+      .find((button) => button.text() === 'Forward')
+      ?.trigger('click')
+    await wrapper.find('.confirm-discard-notes').trigger('click')
     await flushPromises()
 
     expect(mockedGet).toHaveBeenLastCalledWith('/api/pupil/chapters/2/notebook')
     expect(wrapper.text()).toContain('Fotografen')
     expect(wrapper.find('textarea').element.value).toBe('Second note')
+  })
+
+  it('shows unsaved notes popup before route navigation from the top bar', async () => {
+    mockedGet.mockResolvedValue({
+      chapterId: 1,
+      tips: [],
+      ownNotes: 'First note',
+    })
+
+    const wrapper = mountNotebookView()
+
+    await finishChapterLoad()
+    await wrapper.find('textarea').setValue('Unsaved note')
+
+    expect(routerMocks.routeLeaveGuard?.({ fullPath: '/pupil' })).toBe(false)
+    await flushPromises()
+
+    expect(wrapper.find('.unsaved-notes-popup').exists()).toBe(true)
+    expect(routerMocks.push).not.toHaveBeenCalled()
+
+    await wrapper.find('.confirm-discard-notes').trigger('click')
+    await flushPromises()
+
+    expect(routerMocks.push).toHaveBeenCalledWith('/pupil')
   })
 })

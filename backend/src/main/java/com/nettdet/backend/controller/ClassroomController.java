@@ -297,7 +297,7 @@ public class ClassroomController {
     public ResponseEntity<AcceptedClassroomPupilResponse> updatePupilUsername(
             @PathVariable String classroomCode,
             @PathVariable String pupilEmail,
-            @RequestBody UpdatePupilUsernameRequest request,
+            @Valid @RequestBody UpdatePupilUsernameRequest request,
             @AuthenticationPrincipal JwtUserPrincipal principal) {
         return ResponseEntity.ok(classroomService.updatePupilUsername(classroomCode, pupilEmail, request, principal));
     }

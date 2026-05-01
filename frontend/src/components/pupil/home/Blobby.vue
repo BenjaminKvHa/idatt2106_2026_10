@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 
 import blobbyImage from '@/assets/icons/blobby/creaturePeaking.png'
+import blobbyHoverImage from '@/assets/icons/blobby/creaturePeakingDetective.png'
 import { useAudio } from '@/composables/useAudio'
 
 import blobbySound1 from '@/assets/sounds/blobby/blobby-grunt.mp3'
@@ -13,6 +14,8 @@ import blobbySound5 from '@/assets/sounds/blobby/blobby-blinking.mp3'
 const showBlobbyMessage = ref(false)
 const blobbyStep = ref(0)
 const isAnimatingBlobby = ref(false)
+
+const isHoveringBlobby = ref(false)
 
 const { playSound } = useAudio()
 
@@ -63,10 +66,12 @@ function handleBlobbyClick() {
       type="button"
       aria-label="Blobby"
       data-no-click-sound
+      @mouseenter="isHoveringBlobby = true"
+      @mouseleave="isHoveringBlobby = false"
       @click="handleBlobbyClick"
     >
       <img
-        :src="blobbyImage"
+        :src="isHoveringBlobby ? blobbyHoverImage : blobbyImage"
         alt="Blobby"
         class="blobby-image"
         :class="{ wiggle: isAnimatingBlobby }"
@@ -83,8 +88,8 @@ function handleBlobbyClick() {
 .blobby-wrapper {
   position: absolute;
   top: 8.5%;
-  right: 6%;
-  width: clamp(90px, 30%, 420px);
+  right: 10%;
+  width: clamp(60px, 16%, 180px);
   z-index: 10;
   transform: translateY(-50%);
 }
@@ -103,6 +108,13 @@ function handleBlobbyClick() {
   height: auto;
   display: block;
   filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.2));
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease;
+}
+
+.blobby-button:hover .blobby-image {
+  transform: scale(1.04);
 }
 
 .blobby-button.animate {
@@ -116,7 +128,7 @@ function handleBlobbyClick() {
 .blobby-message {
   position: absolute;
   top: 35%;
-  right: 75%;
+  right: 100%;
   width: 100%;
   max-width: none;
   background: #fff8e8;

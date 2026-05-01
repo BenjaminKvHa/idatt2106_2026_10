@@ -24,6 +24,7 @@ import com.nettdet.backend.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 /**
  * REST controller for handling authentication and authorization requests.
@@ -119,7 +120,7 @@ public class AuthController {
     @Operation(
             summary = "Login",
             description = "Authenticates a user with email and password, sets the refresh-token cookie, and returns a JWT access token.")
-    public ResponseEntity<AuthTokenResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<AuthTokenResponse> login(@Valid @RequestBody LoginRequest request) {
         Account logIn = accountService.login(request);
         String jwtToken = jwtUtil.generateToken(logIn);
         ResponseCookie refCookie = refTokenService.createAndStoreRefreshToken(logIn);
@@ -143,7 +144,7 @@ public class AuthController {
     @Operation(
             summary = "Signup",
             description = "Registers a new pupil or teacher account, sets the refresh-token cookie, and returns a JWT access token.")
-    public ResponseEntity<AuthTokenResponse> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<AuthTokenResponse> register(@Valid @RequestBody RegisterRequest request) {
         logger.info("Registration request received for email: {}", request.email());
 
         Account account = accountService.register(request);

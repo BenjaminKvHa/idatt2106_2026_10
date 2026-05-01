@@ -47,6 +47,7 @@ const showLeaveClassroomPopup = ref(false)
 
 const nicknameDraft = ref('')
 const savingNickname = ref(false)
+const MAX_NICKNAME_LENGTH = 30
 
 const avatarUrl = computed(() =>
   profile.value?.avatarFileObjectId
@@ -167,12 +168,18 @@ function cancelNicknameEdit() {
 async function saveNickname() {
   if (!profile.value?.classroomCode || savingNickname.value) return
 
+  const trimmed = nicknameDraft.value.trim()
+  if (trimmed.length > MAX_NICKNAME_LENGTH) {
+    actionError.value = `Kallenavnet kan være maks ${MAX_NICKNAME_LENGTH} tegn.`
+    return
+  }
+
   savingNickname.value = true
   actionError.value = null
 
   try {
     const payload: UpdateMeRequest = {
-      username: nicknameDraft.value,
+      username: trimmed,
     }
 
     profile.value = await put<ProfileResponse>('/api/me', payload)
@@ -225,8 +232,12 @@ async function saveNickname() {
                   v-model="nicknameDraft"
                   class="pupil-input"
                   type="text"
+                  :maxlength="MAX_NICKNAME_LENGTH"
                   placeholder="Skriv nytt kallenavn"
                 />
+                <p class="nickname-counter">
+                  {{ nicknameDraft.length }} / {{ MAX_NICKNAME_LENGTH }}
+                </p>
 
                 <div class="nickname-actions">
                   <button
@@ -395,6 +406,13 @@ async function saveNickname() {
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
+}
+
+.nickname-counter {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--brown-dark);
+  align-self: flex-end;
 }
 
 .nickname-actions,

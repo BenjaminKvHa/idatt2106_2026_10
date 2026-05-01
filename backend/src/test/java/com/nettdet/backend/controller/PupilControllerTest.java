@@ -281,6 +281,32 @@ class PupilControllerTest {
                         !req.email().equals("other@example.com")));
     }
 
+    // ========== POST /pupil/intro/complete ==========
+
+    @DisplayName("Completes first-time intro using authenticated pupil identity")
+    @Test
+    void completeIntroSequence_whenAuthenticatedPupil_returnsNoContent() throws Exception {
+        JwtUserPrincipal principal = pupilPrincipal();
+
+        mockMvc.perform(post("/pupil/intro/complete")
+                        .with(authentication(authenticationFor(principal, "PUPIL"))))
+                .andExpect(status().isNoContent());
+
+        verify(pupilService).completeIntroSequence("pupil@example.com");
+    }
+
+    @DisplayName("Denies teachers from completing pupil intro")
+    @Test
+    void completeIntroSequence_whenAuthenticatedTeacher_returnsForbidden() throws Exception {
+        JwtUserPrincipal principal = teacherPrincipal();
+
+        mockMvc.perform(post("/pupil/intro/complete")
+                        .with(authentication(authenticationFor(principal, "TEACHER"))))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(pupilService);
+    }
+
     // ========== POST /pupil/classrooms/{classroomCode}/join ==========
 
     @DisplayName("Creates join request using authenticated pupil identity")
@@ -417,6 +443,8 @@ class PupilControllerTest {
         mockMvc.perform(get("/pupil/classrooms/ABCABC/progression"))
                 .andExpect(status().isUnauthorized());
         mockMvc.perform(get("/pupil/classrooms/ABCABC/membership"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/pupil/intro/complete"))
                 .andExpect(status().isUnauthorized());
         mockMvc.perform(post("/pupil/classrooms/ABCABC/join"))
                 .andExpect(status().isUnauthorized());

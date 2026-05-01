@@ -151,6 +151,9 @@ class LeaderboardServiceTest {
         assertEquals("alpha", response.entries().get(0).username());
         assertEquals("zulu", response.entries().get(1).username());
         assertEquals(null, response.entries().get(2).username());
+        assertEquals(List.of("alpha", "zulu", "No Username"), response.entries().stream()
+                .map(entry -> entry.legalName())
+                .toList());
         assertEquals(List.of(120L, 120L, 0L), response.entries().stream()
                 .map(entry -> entry.totalXp())
                 .toList());

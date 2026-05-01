@@ -22,6 +22,7 @@ import com.nettdet.backend.dto.RegisterRequest;
 import com.nettdet.backend.dto.UpdateAvatarRequest;
 import com.nettdet.backend.dto.UpdateMeRequest;
 import com.nettdet.backend.repository.AccountRepository;
+import com.nettdet.backend.repository.PupilChapterBridgeProgressionRepository;
 import com.nettdet.backend.repository.PupilClassroomMembershipRepository;
 import com.nettdet.backend.security.JwtUserPrincipal;
 
@@ -38,9 +39,11 @@ public class AccountService {
     private static final Logger logger = LoggerFactory.getLogger(AccountService.class);
     private static final String AVATAR_IMAGE_PREFIX = "avatar-images/";
     private static final String PNG_EXTENSION = ".png";
+    private static final long INTRO_CHAPTER_ID = 1L;
 
     private final AccountRepository accountRepository;
     private final PupilClassroomMembershipRepository pupilClassroomMembershipRepository;
+    private final PupilChapterBridgeProgressionRepository progressionRepository;
     private final PasswordEncoder passwordEncoder;
     private final AvatarService avatarService;
     private static final Duration AVATAR_UPDATE_COOLDOWN = Duration.ofSeconds(2);
@@ -49,10 +52,12 @@ public class AccountService {
     public AccountService(
             AccountRepository accountRepository,
             PupilClassroomMembershipRepository pupilClassroomMembershipRepository,
+            PupilChapterBridgeProgressionRepository progressionRepository,
             PasswordEncoder passwordEncoder,
             AvatarService avatarService) {
         this.accountRepository = accountRepository;
         this.pupilClassroomMembershipRepository = pupilClassroomMembershipRepository;
+        this.progressionRepository = progressionRepository;
         this.passwordEncoder = passwordEncoder;
         this.avatarService = avatarService;
     }
@@ -142,6 +147,8 @@ public class AccountService {
                 ? extractAvatarSelection(membership.getAvatarFileObject().getObjectKey())
                 : null;
         boolean membershipConfirmed = membership != null && membership.isMembershipConfirmedByTeacher();
+        boolean needsIntroSequence = membershipConfirmed
+                && !progressionRepository.existsByIdEmailAndIdChapterId(email, INTRO_CHAPTER_ID);
 
         return AuthMeResponse.from(
                 account,
@@ -149,7 +156,8 @@ public class AccountService {
                 classroomCode,
                 avatarFileObjectId,
                 avatarSelection,
-                membershipConfirmed);
+                membershipConfirmed,
+                needsIntroSequence);
     }
 
     static String extractAvatarSelection(String objectKey) {

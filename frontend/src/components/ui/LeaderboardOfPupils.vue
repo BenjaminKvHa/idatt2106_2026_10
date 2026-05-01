@@ -1,6 +1,7 @@
 <script setup lang="ts">
 type LeaderboardEntry = {
   username: string | null
+  legalName?: string | null
   totalXp: number
 }
 
@@ -15,17 +16,28 @@ function getDisplayName(username: string | null): string {
 
   return username
 }
+
+function getLegalName(legalName: string | null | undefined): string {
+  return legalName?.trim() ?? ''
+}
 </script>
 
 <template>
-  <div v-if="props.entries.length === 0" class="empty-state">
-    Ingen elever på ledertavlen ennå.
-  </div>
+  <div v-if="props.entries.length === 0" class="empty-state">Ingen elever på ledertavlen ennå.</div>
 
   <ol v-else class="leaderboard-list">
-    <li v-for="(entry, index) in props.entries" :key="`${entry.username}-${index}`" class="leaderboard-item">
+    <li
+      v-for="(entry, index) in props.entries"
+      :key="`${entry.username}-${index}`"
+      class="leaderboard-item"
+    >
       <span class="place">#{{ index + 1 }}</span>
-      <span class="username">{{ getDisplayName(entry.username) }}</span>
+      <span class="name-block">
+        <span class="username">{{ getDisplayName(entry.username) }}</span>
+        <span v-if="getLegalName(entry.legalName)" class="legal-name">
+          {{ getLegalName(entry.legalName) }}
+        </span>
+      </span>
       <span class="xp">{{ entry.totalXp }} XP</span>
     </li>
   </ol>
@@ -68,6 +80,19 @@ function getDisplayName(username: string | null): string {
 
 .username {
   font-weight: 700;
+}
+
+.name-block {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.legal-name {
+  color: var(--brown-dark-80);
+  font-size: 0.85rem;
+  line-height: 1.2;
 }
 
 .xp {

@@ -41,7 +41,12 @@ function formatTimestamp(value: string): string {
 
 <template>
   <article class="mystery-card">
-    <AuthenticatedImage :src="`/api/objects/${props.mystery.fileObjectId}`" alt="Ukens mysterium" class="mystery-image" />
+    <AuthenticatedImage 
+    :src="`/api/objects/${props.mystery.fileObjectId}`" 
+    alt="Ukens mysterium" 
+    class="mystery-image" 
+    preview-on-click
+    />
 
     <div class="mystery-content">
       <div class="mystery-top-row">

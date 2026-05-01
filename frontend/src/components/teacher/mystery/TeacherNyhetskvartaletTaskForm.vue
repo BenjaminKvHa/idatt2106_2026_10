@@ -204,6 +204,7 @@ function submitForm() {
             :src="`/api/objects/${parsedTask.fileId_1}`"
             alt="Fil 1"
             class="preview-image"
+            preview-on-click
           />
         </div>
 
@@ -220,6 +221,7 @@ function submitForm() {
             :src="`/api/objects/${parsedTask.fileId_2}`"
             alt="Fil 2"
             class="preview-image"
+            preview-on-click
           />
         </div>
       </div>

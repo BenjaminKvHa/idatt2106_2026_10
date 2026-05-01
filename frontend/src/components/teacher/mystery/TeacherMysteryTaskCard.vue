@@ -57,6 +57,7 @@ const correctFileSlot = computed(() => {
           :src="`/api/objects/${imageTask.fileId}`"
           alt="Oppgavebilde"
           class="single-task-image"
+          preview-on-click
         />
 
         <div class="task-details">
@@ -93,6 +94,7 @@ const correctFileSlot = computed(() => {
           :src="`/api/objects/${newsTask.fileId_1}`"
           alt="Nyhetsoppgave fil 1"
           class="news-task-image"
+          preview-on-click
           />
           <div class="image-label-row">
             <span v-if="correctFileSlot === 'FILE_1'" class="answer-chip">Riktig</span>
@@ -105,6 +107,7 @@ const correctFileSlot = computed(() => {
           :src="`/api/objects/${newsTask.fileId_2}`"
           alt="Nyhetsoppgave fil 2"
           class="news-task-image"
+          preview-on-click
           />
           <div class="image-label-row">
             <span v-if="correctFileSlot === 'FILE_2'" class="answer-chip">Riktig</span>

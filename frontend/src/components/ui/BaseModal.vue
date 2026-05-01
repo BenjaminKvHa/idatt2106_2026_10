@@ -83,8 +83,10 @@ onBeforeUnmount(() => {
     font-size: 1.2rem;
     line-height: 1;
     padding: 0.25rem 0.5rem;
-    color: inherit;
-    opacity: 0.6;
+    color: white;
+    background-color: rgba(0, 0, 0, 0.7);
+    border-radius: 100%;
+    padding: .5rem;
 }
 
 .modal-close:hover {

@@ -77,6 +77,15 @@ function updateUsername(event: Event) {
   align-items: center;
   background: var(--background);
 }
+@media (max-width: 768px) {
+  .profile-summary-card {
+    border-radius: .5rem;
+    padding: .5rem;
+  }
+  .avatar-area {
+    grid-template-columns: 1fr !important;
+  }
+}
 
 .avatar-area {
   display: grid;

@@ -1,4 +1,10 @@
 <script setup lang="ts">
+import AuthenticatedImage from '@/components/ui/AuthenticatedImage.vue'
+
+defineOptions({
+  name: 'TeacherMysteryCard',
+})
+
 type MysteryCard = {
   id: number
   fileObjectId: number
@@ -30,11 +36,12 @@ function formatTimestamp(value: string): string {
     timeStyle: 'short',
   }).format(parsedDate)
 }
+
 </script>
 
 <template>
   <article class="mystery-card">
-    <img :src="`/api/objects/${props.mystery.fileObjectId}`" alt="Ukens mysterium" class="mystery-image" />
+    <AuthenticatedImage :src="`/api/objects/${props.mystery.fileObjectId}`" alt="Ukens mysterium" class="mystery-image" />
 
     <div class="mystery-content">
       <div class="mystery-top-row">

@@ -19,6 +19,14 @@ import com.nettdet.backend.repository.PupilChapterBridgeProgressionRepository;
 import com.nettdet.backend.repository.WeeklyMysteryRepository;
 import com.nettdet.backend.security.JwtUserPrincipal;
 
+/**
+ * Service class responsible for managing virtual medals awarded to pupils.
+ * 
+ * <p>Medals are awarded for completing chapters or having contributions 
+ * approved in the "Weekly Mystery". This service evaluates the pupil's 
+ * progress against a predefined catalog of medal definitions and returns 
+ * their unlocked/locked status along with corresponding image asset IDs.
+ */
 @Service
 public class MedalService {
 
@@ -26,6 +34,9 @@ public class MedalService {
 
     private static final String LOCKED_MEDAL_OBJECT_KEY = "medal-assets/locked.png";
 
+    /**
+     * Predefined catalog of available medals in the system.
+     */
     private static final List<MedalDefinition> MEDAL_CATALOG = List.of(
             MedalDefinition.chapter(
                     "chapter-1",
@@ -63,6 +74,13 @@ public class MedalService {
         this.fileObjectRepository = fileObjectRepository;
     }
 
+    /**
+     * Retrieves the list of medals for the acting pupil, indicating which are unlocked.
+     * 
+     * @param principal the authenticated pupil principal
+     * @return a list of {@link PupilMedalResponse} objects
+     * @throws AccessDeniedException if the principal is not a pupil
+     */
     @Transactional(readOnly = true)
     public List<PupilMedalResponse> getPupilMedals(JwtUserPrincipal principal) {
         verifyPupilPrincipal(principal);
@@ -86,6 +104,14 @@ public class MedalService {
                 .toList();
     }
 
+    /**
+     * Maps a medal definition and its unlock status to a DTO.
+     * 
+     * @param definition              the medal definition
+     * @param unlocked                whether the medal is unlocked
+     * @param lockedImageFileObjectId the ID of the "locked" placeholder image
+     * @return a {@link PupilMedalResponse}
+     */
     private PupilMedalResponse toResponse(MedalDefinition definition,
                                           boolean unlocked,
                                           Long lockedImageFileObjectId) {
@@ -101,6 +127,14 @@ public class MedalService {
                 imageFileObjectId);
     }
 
+    /**
+     * Evaluates if a specific medal is unlocked for a pupil.
+     * 
+     * @param definition               the medal definition
+     * @param progressionsByChapterId  map of chapter ID to pupil progression
+     * @param hasApprovedWeeklyMystery whether the pupil has an approved weekly mystery
+     * @return true if unlocked, false otherwise
+     */
     private boolean isUnlocked(MedalDefinition definition,
                                Map<Long, PupilChapterBridgeProgression> progressionsByChapterId,
                                boolean hasApprovedWeeklyMystery) {
@@ -114,6 +148,12 @@ public class MedalService {
                 && progression.getSuccessfulRuns() >= 1;
     }
 
+    /**
+     * Helper to find the database ID of a file object by its object key.
+     * 
+     * @param objectKey the object key/path
+     * @return the file object ID, or null if not found
+     */
     private Long findFileObjectId(String objectKey) {
         return fileObjectRepository.findByObjectKey(objectKey)
                 .map(FileObject::getId)
@@ -133,11 +173,17 @@ public class MedalService {
         }
     }
 
+    /**
+     * Types of medals supported by the system.
+     */
     private enum MedalType {
         CHAPTER,
         WEEKLY_MYSTERY
     }
 
+    /**
+     * Internal data structure representing a medal's static properties.
+     */
     private record MedalDefinition(
             String medalKey,
             String name,

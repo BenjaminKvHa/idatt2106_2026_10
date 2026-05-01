@@ -2,12 +2,13 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import TopBar from '@/components/pupil/TopBar.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
+import AuthenticatedImage from '@/components/ui/AuthenticatedImage.vue'
 import mysteryBackground from '@/assets/backgrounds/ukens_mysterium-bg.png'
-import { get, getBlob, postForm } from '@/utils/apiUtils'
+import { get, postForm } from '@/utils/apiUtils'
 
 type SubmittedMystery = {
   id: number
-  imageUrl: string
+  fileObjectId: number
   comment: string
 }
 
@@ -32,6 +33,7 @@ type ProfileResponse = {
 const activeTab = ref<'current' | 'previous'>('current')
 const currentIndex = ref(0)
 const showSubmitPopup = ref(false)
+const selectedImage = ref<SubmittedMystery | null>(null)
 
 const uploadedImage = ref<File | null>(null)
 const uploadedImagePreview = ref('')
@@ -45,7 +47,6 @@ const submitSuccess = ref<string | null>(null)
 const submitting = ref(false)
 
 const groups = ref<WeekGroup[]>([])
-const objectUrls: string[] = []
 
 function isoWeekParts(date: Date): { key: string; week: number; year: number } {
   const tmp = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
@@ -57,17 +58,9 @@ function isoWeekParts(date: Date): { key: string; week: number; year: number } {
   return { key: `${year}-W${String(week).padStart(2, '0')}`, week, year }
 }
 
-function revokeObjectUrls() {
-  while (objectUrls.length) {
-    const url = objectUrls.pop()
-    if (url) URL.revokeObjectURL(url)
-  }
-}
-
 async function loadMysteries() {
   loading.value = true
   loadError.value = null
-  revokeObjectUrls()
   groups.value = []
 
   try {
@@ -94,16 +87,7 @@ async function loadMysteries() {
         buckets.set(wk.key, group)
       }
 
-      let imageUrl = ''
-      try {
-        const blob = await getBlob(`/api/objects/${item.fileObjectId}`)
-        imageUrl = URL.createObjectURL(blob)
-        objectUrls.push(imageUrl)
-      } catch (err) {
-        console.warn('Failed to load mystery image', item.fileObjectId, err)
-      }
-
-      group.mysteries.push({ id: item.id, imageUrl, comment: item.comment })
+      group.mysteries.push({ id: item.id, fileObjectId: item.fileObjectId, comment: item.comment })
     }
 
     const sorted = Array.from(buckets.values()).sort((a, b) => (a.weekKey < b.weekKey ? 1 : -1))
@@ -165,6 +149,14 @@ const openSubmitPopup = () => {
   showSubmitPopup.value = true
 }
 
+const openImagePreview = (mystery: SubmittedMystery) => {
+  selectedImage.value = mystery
+}
+
+const closeImagePreview = () => {
+  selectedImage.value = null
+}
+
 const closeSubmitPopup = () => {
   showSubmitPopup.value = false
   uploadedImage.value = null
@@ -216,7 +208,11 @@ const submitMystery = async () => {
 }
 
 onMounted(loadMysteries)
-onBeforeUnmount(revokeObjectUrls)
+onBeforeUnmount(() => {
+  if (uploadedImagePreview.value) {
+    URL.revokeObjectURL(uploadedImagePreview.value)
+  }
+})
 </script>
 
 <template>
@@ -301,13 +297,14 @@ onBeforeUnmount(revokeObjectUrls)
                 :key="mystery.id"
                 class="submitted-card"
               >
-                <div v-if="mystery.imageUrl" class="image-preview">
-                  <img :src="mystery.imageUrl" alt="Innsendt mysterium" />
-                </div>
-
-                <div v-else class="image-placeholder">
-                  <span>Bilde utilgjengelig</span>
-                </div>
+                <button
+                  class="image-preview"
+                  type="button"
+                  aria-label="Åpne bilde i stort format"
+                  @click="openImagePreview(mystery)"
+                >
+                  <AuthenticatedImage :src="`/api/objects/${mystery.fileObjectId}`" alt="Innsendt mysterium" />
+                </button>
 
                 <div class="comment-box">
                   <span class="case-label">Kommentar</span>
@@ -367,7 +364,24 @@ onBeforeUnmount(revokeObjectUrls)
         </button>
       </div>
       </div>
-    </BaseModal>
+    </div>
+
+    <div
+      v-if="selectedImage"
+      class="image-modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Forstørret mysteriebilde"
+      @click.self="closeImagePreview"
+    >
+      <div class="image-modal">
+        <button class="image-modal-close" type="button" aria-label="Lukk bilde" @click="closeImagePreview">
+          ×
+        </button>
+
+        <AuthenticatedImage :src="`/api/objects/${selectedImage.fileObjectId}`" alt="Forstørret innsendt mysterium" />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -382,7 +396,7 @@ onBeforeUnmount(revokeObjectUrls)
 }
 
 .mystery-panel {
-  width: min(900px, 94vw);
+  width: min(1100px, 94vw);
   background: rgba(35, 22, 45, 0.9);
   border: var(--border-wide) solid var(--brown-medium);
   border-radius: 28px;
@@ -507,8 +521,8 @@ h1 {
 
 .scroll-box {
   width: 100%;
-  max-width: 720px;
-  max-height: 440px;
+  max-width: 900px;
+  max-height: 560px;
   overflow-y: auto;
   padding: 1rem;
   background: rgba(18, 10, 24, 0.65);
@@ -541,7 +555,7 @@ h1 {
   background: var(--beige-light);
   border: var(--border-thin) solid var(--color-text);
   border-radius: 22px;
-  padding: 1rem;
+  padding: 1.2rem;
   margin-bottom: 1rem;
   box-shadow: 0 7px 0 rgba(0, 0, 0, 0.3);
 }
@@ -553,20 +567,27 @@ h1 {
 .image-preview,
 .image-placeholder {
   width: 100%;
-  height: 230px;
+  min-height: 320px;
   border: var(--border-thin) solid var(--color-text);
   border-radius: 18px;
   overflow: hidden;
-  background: linear-gradient(135deg, var(--brown-dark), #2b1935);
+  background: linear-gradient(135deg, #170e20, #2b1935);
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
+.image-preview {
+  padding: 0;
+  cursor: zoom-in;
+}
+
 .image-preview img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  max-height: 520px;
+  object-fit: contain;
+  display: block;
 }
 
 .image-placeholder span {
@@ -780,6 +801,53 @@ textarea {
   cursor: not-allowed;
 }
 
+.image-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1rem, 4vw, 3rem);
+  background: rgba(8, 5, 12, 0.82);
+  backdrop-filter: blur(4px);
+}
+
+.image-modal {
+  position: relative;
+  width: min(1200px, 94vw);
+  max-height: 90vh;
+  padding: clamp(0.75rem, 2vw, 1.25rem);
+  background: rgba(245, 232, 206, 0.96);
+  border: var(--border-wide) solid var(--brown-medium);
+  border-radius: 24px;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.55);
+}
+
+.image-modal img {
+  width: 100%;
+  max-height: calc(90vh - 4rem);
+  object-fit: contain;
+  display: block;
+  border-radius: 16px;
+}
+
+.image-modal-close {
+  position: absolute;
+  top: -1.1rem;
+  right: -1.1rem;
+  width: 3rem;
+  height: 3rem;
+  border: var(--border-thin) solid var(--color-text);
+  border-radius: 999px;
+  background: var(--beige-light);
+  color: var(--brown-dark);
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.35);
+}
+
 @media (max-width: 680px) {
   .content {
     padding: 1rem;
@@ -807,12 +875,12 @@ textarea {
   }
 
   .scroll-box {
-    max-height: 390px;
+    max-height: 450px;
   }
 
   .image-preview,
   .image-placeholder {
-    height: 190px;
+    min-height: 240px;
   }
 
   .cancel-button,

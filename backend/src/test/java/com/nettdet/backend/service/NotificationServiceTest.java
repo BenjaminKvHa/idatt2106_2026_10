@@ -3,7 +3,6 @@ package com.nettdet.backend.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -153,33 +152,33 @@ class NotificationServiceTest {
 
     @DisplayName("Denies unread checks for non-teacher principals")
     @Test
-    void hasUnreadNotifications_whenPrincipalIsNotTeacher_throwsAccessDenied() {
+    void getUnreadNotificationsCount_whenPrincipalIsNotTeacher_throwsAccessDenied() {
         JwtUserPrincipal principal = new JwtUserPrincipal("Pupil Name", PUPIL_EMAIL, AccountRole.PUPIL.name());
 
         assertThrows(
                 AccessDeniedException.class,
-                () -> notificationService.hasUnreadNotifications(CLASSROOM_CODE, principal));
+                () -> notificationService.getUnreadNotificationsCount(CLASSROOM_CODE, principal));
 
         verifyNoInteractions(classroomRepository, teacherBridgeRepository, notificationRepository);
     }
 
-    @DisplayName("Returns unread notification state for classrooms the teacher belongs to")
+    @DisplayName("Returns unread notification count for classrooms the teacher belongs to")
     @Test
-    void hasUnreadNotifications_whenTeacherHasAccess_returnsRepositoryUnreadState() {
+    void getUnreadNotificationsCount_whenTeacherHasAccess_returnsRepositoryUnreadCount() {
         when(classroomRepository.findById(CLASSROOM_CODE)).thenReturn(Optional.of(classroom(CLASSROOM_CODE)));
         when(teacherBridgeRepository.existsByIdAccountEmailAndIdClassroomCode(TEACHER_EMAIL, CLASSROOM_CODE))
                 .thenReturn(true);
-        when(notificationRepository.existsByClassroomClassroomCodeAndStatusNotifications(
+        when(notificationRepository.countByClassroomClassroomCodeAndStatusNotifications(
                 CLASSROOM_CODE,
                 NotificationStatus.UNREAD))
-                .thenReturn(true);
+                .thenReturn(2L);
 
-        UnreadNotificationsResponse response = notificationService.hasUnreadNotifications(
+        UnreadNotificationsResponse response = notificationService.getUnreadNotificationsCount(
                 CLASSROOM_CODE,
                 teacherPrincipal());
 
         assertEquals(CLASSROOM_CODE, response.classroomCode());
-        assertTrue(response.hasUnreadNotifications());
+        assertEquals(2L, response.unreadNotificationsCount());
     }
 
     private JwtUserPrincipal teacherPrincipal() {

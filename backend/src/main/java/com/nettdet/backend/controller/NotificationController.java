@@ -64,10 +64,10 @@ public class NotificationController {
     }
 
     /**
-     * Checks if there are any unread notifications for a specific classroom.
+     * Counts unread notifications for a specific classroom.
      * <p>
      * This is a lightweight endpoint designed for polling or UI notification indicators (like bells).
-     * It returns a boolean status indicating the presence of unread notifications without
+     * It returns the number of unread notifications without
      * modifying their state or returning full details.
      *
      * @param classroomCode the unique code of the classroom
@@ -76,10 +76,10 @@ public class NotificationController {
      */
     @GetMapping("/teacher/classrooms/{classroomCode}/notifications/unread")
     @PreAuthorize("hasAuthority('TEACHER')")
-    @Operation(summary = "Check unread classroom notifications", description = "Returns whether a classroom currently has unread notifications for the teacher notification bell. This endpoint does not fetch notification details and does not mark anything as read.")
-    public ResponseEntity<UnreadNotificationsResponse> hasUnreadNotifications(
+    @Operation(summary = "Count unread classroom notifications", description = "Returns how many unread notifications a classroom currently has for the teacher notification bell. This endpoint does not fetch notification details and does not mark anything as read.")
+    public ResponseEntity<UnreadNotificationsResponse> getUnreadNotificationsCount(
             @PathVariable String classroomCode,
             @AuthenticationPrincipal JwtUserPrincipal principal) {
-        return ResponseEntity.ok(notificationService.hasUnreadNotifications(classroomCode, principal));
+        return ResponseEntity.ok(notificationService.getUnreadNotificationsCount(classroomCode, principal));
     }
 }

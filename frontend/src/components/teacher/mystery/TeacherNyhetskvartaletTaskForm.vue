@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref, watch } from 'vue'
+import AuthenticatedImage from '@/components/ui/AuthenticatedImage.vue'
 import type {
   CorrectFileSlot,
   NewsVerificationTask,
@@ -193,7 +194,14 @@ function submitForm() {
         <div v-if="selectedFile1Preview || parsedTask?.fileId_1" class="preview-panel">
           <strong>Fil 1</strong>
           <img
-            :src="selectedFile1Preview || `/api/objects/${parsedTask?.fileId_1}`"
+            v-if="selectedFile1Preview"
+            :src="selectedFile1Preview"
+            alt="Fil 1"
+            class="preview-image"
+          />
+          <AuthenticatedImage
+            v-else-if="parsedTask?.fileId_1"
+            :src="`/api/objects/${parsedTask.fileId_1}`"
             alt="Fil 1"
             class="preview-image"
           />
@@ -202,7 +210,14 @@ function submitForm() {
         <div v-if="selectedFile2Preview || parsedTask?.fileId_2" class="preview-panel">
           <strong>Fil 2</strong>
           <img
-            :src="selectedFile2Preview || `/api/objects/${parsedTask?.fileId_2}`"
+            v-if="selectedFile2Preview"
+            :src="selectedFile2Preview"
+            alt="Fil 2"
+            class="preview-image"
+          />
+          <AuthenticatedImage
+            v-else-if="parsedTask?.fileId_2"
+            :src="`/api/objects/${parsedTask.fileId_2}`"
             alt="Fil 2"
             class="preview-image"
           />

@@ -19,17 +19,42 @@ import com.nettdet.backend.domain.enums.ClassroomAccess;
 import com.nettdet.backend.repository.FileObjectRepository;
 import com.nettdet.backend.service.FileObjectService;
 
+/**
+ * {@code MedalAssetInitializer} is a Spring Boot {@link ApplicationRunner} responsible for
+ * bootstrapping achievement-related assets (medals) into the system.
+ * <p>
+ * This component scans candidate directories for specific image files required for the
+ * gamification aspects of the platform, such as chapter completion medals and mystery
+ * task rewards.
+ * </p>
+ * <p>
+ * Unlike {@link AvatarAssetInitializer}, this initializer includes a validation step that
+ * logs warnings if a predefined set of "expected" medal files (e.g., {@code locked.png},
+ * {@code chapter-1.png}) is missing from the resolved asset directory.
+ * </p>
+ * <p>
+ * Execution is marked with {@code @Order(3)}, ensuring it runs after chapters have been
+ * seeded but early enough for the system to be fully functional on first launch.
+ * </p>
+ */
 @Component
 @Order(3)
 public class MedalAssetInitializer implements ApplicationRunner {
 
     private static final Logger logger = LoggerFactory.getLogger(MedalAssetInitializer.class);
 
+    /**
+     * Default paths where the initializer looks for the {@code initial_medal_assets} directory.
+     */
     private static final List<String> CANDIDATE_ASSET_DIRECTORIES = List.of(
             "/app/initial_medal_assets",
             "../initial_medal_assets",
             "initial_medal_assets");
 
+    /**
+     * A set of file names that are considered essential for the application's UI.
+     * The absence of these files will trigger a warning log.
+     */
     private static final Set<String> EXPECTED_FILE_NAMES = Set.of(
             "locked.png",
             "chapter-1.png",
@@ -41,11 +66,24 @@ public class MedalAssetInitializer implements ApplicationRunner {
     private final FileObjectService fileObjectService;
     private final List<String> candidateAssetDirectories;
 
+    /**
+     * Primary constructor used by Spring for dependency injection.
+     *
+     * @param fileObjectRepository the repository used to check for existing asset records
+     * @param fileObjectService the service used to upload and persist new medal assets
+     */
     @Autowired
     public MedalAssetInitializer(FileObjectRepository fileObjectRepository, FileObjectService fileObjectService) {
         this(fileObjectRepository, fileObjectService, CANDIDATE_ASSET_DIRECTORIES);
     }
 
+    /**
+     * Internal constructor providing flexibility for testing with custom candidate directories.
+     *
+     * @param fileObjectRepository the repository used to check for existing asset records
+     * @param fileObjectService the service used to upload and persist new medal assets
+     * @param candidateAssetDirectories list of directory paths to scan for assets
+     */
     MedalAssetInitializer(FileObjectRepository fileObjectRepository,
                           FileObjectService fileObjectService,
                           List<String> candidateAssetDirectories) {
@@ -54,6 +92,15 @@ public class MedalAssetInitializer implements ApplicationRunner {
         this.candidateAssetDirectories = candidateAssetDirectories;
     }
 
+    /**
+     * Orchestrates the medal asset seeding process.
+     * <p>
+     * Resolves the asset directory, validates the presence of expected files, and
+     * uploads any new PNG files found in the root of the asset directory.
+     * </p>
+     *
+     * @param args incoming application arguments (unused)
+     */
     @Override
     public void run(ApplicationArguments args) {
         Path assetDirectory = resolveAssetDirectory();
@@ -73,6 +120,12 @@ public class MedalAssetInitializer implements ApplicationRunner {
         }
     }
 
+    /**
+     * Checks the resolved directory against {@link #EXPECTED_FILE_NAMES} and logs
+     * a warning for any missing files.
+     *
+     * @param assetDirectory the path to the resolved medal assets directory
+     */
     private void warnAboutMissingExpectedFiles(Path assetDirectory) {
         for (String fileName : EXPECTED_FILE_NAMES) {
             if (!Files.isRegularFile(assetDirectory.resolve(fileName))) {
@@ -81,6 +134,15 @@ public class MedalAssetInitializer implements ApplicationRunner {
         }
     }
 
+    /**
+     * Checks for the existence of a medal asset and uploads it if missing.
+     * <p>
+     * The object key is constructed as {@code medal-assets/{fileName}}.
+     * Assets are uploaded with {@link ClassroomAccess#PUBLIC} visibility.
+     * </p>
+     *
+     * @param path the local filesystem path to the medal asset file
+     */
     private void seedMedalAsset(Path path) {
         String fileName = path.getFileName().toString();
         String objectKey = "medal-assets/" + fileName;
@@ -105,6 +167,11 @@ public class MedalAssetInitializer implements ApplicationRunner {
         }
     }
 
+    /**
+     * Heuristically resolves the medal asset directory from the list of candidates.
+     *
+     * @return the first valid directory found, or {@code null} if none exist
+     */
     private Path resolveAssetDirectory() {
         return candidateAssetDirectories.stream()
                 .map(Path::of)

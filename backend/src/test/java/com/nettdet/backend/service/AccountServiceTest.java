@@ -1,6 +1,7 @@
 package com.nettdet.backend.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -22,7 +23,11 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.nettdet.backend.domain.Account;
+import com.nettdet.backend.domain.Classroom;
+import com.nettdet.backend.domain.FileObject;
+import com.nettdet.backend.domain.PupilClassroomMembership;
 import com.nettdet.backend.domain.enums.AccountRole;
+import com.nettdet.backend.dto.AuthMeResponse;
 import com.nettdet.backend.dto.LoginRequest;
 import com.nettdet.backend.dto.RegisterRequest;
 import com.nettdet.backend.dto.UpdateMeRequest;
@@ -41,6 +46,9 @@ class AccountServiceTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private AvatarService avatarService;
 
     @InjectMocks
     private AccountService accountService;
@@ -144,6 +152,38 @@ class AccountServiceTest {
         verifyNoInteractions(pupilClassroomMembershipRepository);
     }
 
+    @DisplayName("Derives avatar selection from generated avatar object keys")
+    @Test
+    void getAuthenticatedProfile_whenAvatarKeyIsGenerated_returnsAvatarSelection() {
+        Account account = account("pupil@example.com", "stored-password", "Pupil Name", AccountRole.PUPIL);
+        PupilClassroomMembership membership = membership(
+                account,
+                avatar(42L, "avatar-images/white_redditor-black_detective.png"));
+        when(accountRepository.findByEmail("pupil@example.com")).thenReturn(Optional.of(account));
+        when(pupilClassroomMembershipRepository.findByAccountEmail("pupil@example.com"))
+                .thenReturn(Optional.of(membership));
+
+        AuthMeResponse response = accountService.getAuthenticatedProfile("pupil@example.com");
+
+        assertEquals(42L, response.avatarFileObjectId());
+        assertEquals("white_redditor-black_detective", response.avatarSelection());
+    }
+
+    @DisplayName("Returns no avatar selection for legacy avatar object keys")
+    @Test
+    void getAuthenticatedProfile_whenAvatarKeyIsLegacy_returnsNullAvatarSelection() {
+        Account account = account("pupil@example.com", "stored-password", "Pupil Name", AccountRole.PUPIL);
+        PupilClassroomMembership membership = membership(account, avatar(42L, "avatar-images/pupil-start.png"));
+        when(accountRepository.findByEmail("pupil@example.com")).thenReturn(Optional.of(account));
+        when(pupilClassroomMembershipRepository.findByAccountEmail("pupil@example.com"))
+                .thenReturn(Optional.of(membership));
+
+        AuthMeResponse response = accountService.getAuthenticatedProfile("pupil@example.com");
+
+        assertEquals(42L, response.avatarFileObjectId());
+        assertNull(response.avatarSelection());
+    }
+
     private Account account(String email, String passwordData, String legalName, AccountRole role) {
         Account account = new Account();
         account.setEmail(email);
@@ -151,5 +191,27 @@ class AccountServiceTest {
         account.setLegalName(legalName);
         account.setAccountRole(role);
         return account;
+    }
+
+    private PupilClassroomMembership membership(Account account, FileObject avatar) {
+        Classroom classroom = new Classroom();
+        classroom.setClassroomCode("ABCABC");
+
+        PupilClassroomMembership membership = new PupilClassroomMembership();
+        membership.setAccountEmail(account.getEmail());
+        membership.setAccount(account);
+        membership.setClassroom(classroom);
+        membership.setUsername("detektiv1");
+        membership.setAvatarFileObject(avatar);
+        membership.setMembershipConfirmedByTeacher(true);
+        return membership;
+    }
+
+    private FileObject avatar(Long id, String objectKey) {
+        FileObject avatar = new FileObject();
+        avatar.setId(id);
+        avatar.setObjectKey(objectKey);
+        avatar.setFileName(objectKey);
+        return avatar;
     }
 }

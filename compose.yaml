@@ -26,8 +26,8 @@ services:
     ports:
       - "${FRONTEND_PORT:-3000}:80"
     depends_on:
-      backend:
-        condition: service_started
+      db-seed:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:80/ || exit 1"]
       interval: 15s
@@ -42,6 +42,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./initial_avatar_assets:/app/initial_avatar_assets:ro
+      - ./initial_demo_assets:/app/initial_demo_assets:ro
       - ./initial_taskImage_assets:/app/initial_taskImage_assets:ro
       - ./initial_medal_assets:/app/initial_medal_assets:ro
     depends_on:
@@ -67,6 +68,30 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
+
+  db-seed:
+    image: postgres:16-alpine
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    volumes:
+      - ./seed.sql:/seed.sql:ro
+    environment:
+      PGHOST: db
+      PGPORT: 5432
+      PGDATABASE: ${POSTGRES_DB:-app}
+      PGUSER: ${POSTGRES_USER:-app}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-app}
+    command: >
+      sh -c "
+        echo 'Backend is healthy. Running development seed.sql...';
+        psql -v ON_ERROR_STOP=1 -f /seed.sql;
+        echo 'Development seed.sql completed.'
+      "
+
   minio:
     image: minio/minio:RELEASE.2025-09-07T16-13-09Z-cpuv1
     container_name: minio

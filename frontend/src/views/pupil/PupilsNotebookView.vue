@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
 import { ChevronLeftIcon, ChevronRightIcon } from '@lucide/vue'
 import bookImage from '@/assets/book.png'
 import woodBackground from '@/assets/backgrounds/woodBackground.png'
 import TopBar from '@/components/pupil/TopBar.vue'
 import { get, put } from '@/utils/apiUtils'
 import ConfirmModal from '@/components/ui/ConfirmModal.vue'
+import pageFlipSound from '@/assets/sounds/shared/page-flip-sound.mp3'
+import { useAudio } from '@/composables/useAudio'
+
+const PAGE_FLIP_SOUND_RELATIVE_VOLUME = 1.25
 
 type Chapter = {
   chapterId: number
@@ -22,6 +26,7 @@ function getNotebookEndpoint(chapterId: number): string {
   return `/api/pupil/chapters/${chapterId}/notebook`
 }
 
+const { playSound, stopSound } = useAudio()
 const chapters = ref<Chapter[]>([])
 const currentChapterIndex = ref(0)
 const notebook = ref<NotebookResponse | null>(null)
@@ -50,6 +55,8 @@ const mockChapters: Chapter[] = [
   { chapterId: 2, name: 'Fotografen' },
   { chapterId: 3, name: 'Datasenteret' },
 ]
+
+let soundRef: HTMLAudioElement | null = null
 
 async function mockFetchChapters(): Promise<Chapter[]> {
   await new Promise((resolve) => setTimeout(resolve, 250))
@@ -161,6 +168,8 @@ async function goToPreviousChapter() {
   if (!hasPreviousChapter.value) return
   if (await shouldStayOnCurrentChapter()) return
 
+  soundRef = playSound(pageFlipSound, PAGE_FLIP_SOUND_RELATIVE_VOLUME, 0.15)
+
   currentChapterIndex.value -= 1
   await loadNotebookForCurrentChapter()
 }
@@ -169,12 +178,21 @@ async function goToNextChapter() {
   if (!hasNextChapter.value) return
   if (await shouldStayOnCurrentChapter()) return
 
+  soundRef = playSound(pageFlipSound, PAGE_FLIP_SOUND_RELATIVE_VOLUME, 0.15)
+
   currentChapterIndex.value += 1
   await loadNotebookForCurrentChapter()
 }
 
 onMounted(async () => {
   await loadChapters()
+})
+
+onBeforeUnmount(() => {
+  if (soundRef) {
+    stopSound(soundRef)
+    soundRef = null
+  }
 })
 </script>
 
@@ -208,6 +226,7 @@ onMounted(async () => {
                 class="nav-button nav-button-back pupil-round-icon-button"
                 aria-label="Forrige kapittel"
                 @click="goToPreviousChapter"
+                data-no-click-sound
               >
                 <ChevronLeftIcon aria-hidden="true" />
                 <span class="sr-only">Backward</span>
@@ -238,6 +257,7 @@ onMounted(async () => {
                 class="nav-button nav-button-forward pupil-round-icon-button"
                 aria-label="Neste kapittel"
                 @click="goToNextChapter"
+                data-no-click-sound
               >
                 <span class="sr-only">Forward</span>
                 <ChevronRightIcon aria-hidden="true" />
@@ -329,7 +349,8 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  padding: clamp(3.4rem, 4.6vw, 4.7rem) clamp(0.55rem, 1.25vw, 1.15rem) clamp(0.8rem, 1.45vw, 1.35rem);
+  padding: clamp(3.4rem, 4.6vw, 4.7rem) clamp(0.55rem, 1.25vw, 1.15rem)
+    clamp(0.8rem, 1.45vw, 1.35rem);
 }
 
 .book-page-right {

@@ -149,6 +149,10 @@ export async function getBlob(endpoint: string): Promise<Blob> {
   const res = await rawRequest(endpoint, 'GET')
   return await res.blob()
 }
+export async function getBlobUrl(endpoint: string): Promise<string> {
+  const blob = await getBlob(endpoint)
+  return URL.createObjectURL(blob).toString()
+}
 
 async function requestForm<T = unknown>(
   endpoint: string,

@@ -17,6 +17,21 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+/**
+ * Represents a user account within the system, serving as the central entity for authentication and authorization.
+ * 
+ * <p>An Account is uniquely identified by an email address and contains security credentials,
+ * legal identification, and a designated {@link AccountRole}. It acts as a root for several
+ * relationships, including:
+ * <ul>
+ *     <li>Refresh tokens for session management</li>
+ *     <li>File uploads associated with the user</li>
+ *     <li>Teaching assignments in classrooms (for teachers)</li>
+ *     <li>Classroom memberships (for pupils)</li>
+ * </ul>
+ * 
+ * <p>This entity inherits audit capabilities from {@link CreatedAtEntity}.
+ */
 @Entity
 @Table(name = "account")
 public class Account extends CreatedAtEntity {

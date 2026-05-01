@@ -4,8 +4,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import TeacherMenu from '@/components/teacher/TeacherMenu.vue'
 
-const routerPush = vi.fn()
 const fetchClassrooms = vi.fn()
+const toggleMute = vi.fn()
+const isMuted = ref(false)
 const classrooms = ref([
   {
     classroomCode: 'ABCABC',
@@ -33,11 +34,15 @@ vi.mock('@/composables/useClassrooms', () => ({
   }),
 }))
 
+vi.mock('@/composables/useAudio', () => ({
+  useAudio: () => ({
+    isMuted,
+    toggleMute,
+  }),
+}))
+
 vi.mock('vue-router', () => ({
   useRoute: () => routeState,
-  useRouter: () => ({
-    push: routerPush,
-  }),
 }))
 
 function mountTeacherMenu() {
@@ -50,6 +55,10 @@ function mountTeacherMenu() {
         OptionsMenu: {
           emits: ['close'],
           template: '<section data-test="options-menu"><button type="button" @click="$emit(\'close\')">Close</button></section>',
+        },
+        BaseModal: {
+          emits: ['close'],
+          template: '<section data-test="base-modal"><slot /></section>',
         },
         NotificationsMenu: {
           emits: ['close'],
@@ -66,8 +75,9 @@ function mountTeacherMenu() {
 
 describe('TeacherMenu', () => {
   beforeEach(() => {
-    routerPush.mockReset()
     fetchClassrooms.mockReset()
+    toggleMute.mockReset()
+    isMuted.value = false
     classrooms.value = [
       {
         classroomCode: 'ABCABC',
@@ -127,7 +137,7 @@ describe('TeacherMenu', () => {
   it('links to the create classroom page from the new classroom button', () => {
     const wrapper = mountTeacherMenu()
 
-    expect(wrapper.find('.teacher-menu-button').attributes('data-to')).toBe('/teacher/classrooms/new')
+    expect(wrapper.find('[data-to="/teacher/classrooms/new"]').exists()).toBe(true)
   })
 
   it('links to the selected classroom leaderboard using the classroom code', () => {
@@ -155,7 +165,20 @@ describe('TeacherMenu', () => {
 
     const wrapper = mountTeacherMenu()
 
-    expect(wrapper.find('.teacher-menu-button').classes()).toContain('button-variant-2')
+    expect(wrapper.find('[data-to="/teacher/classrooms/new"]').classes()).toContain('button-variant-2')
+  })
+
+  it('opens the classroom picker modal from the classroom picker button', async () => {
+    const wrapper = mountTeacherMenu()
+
+    expect(wrapper.find('[data-test="base-modal"]').exists()).toBe(false)
+
+    await wrapper.find('.teacher-classroom-picker-button').trigger('click')
+
+    expect(wrapper.find('[data-test="base-modal"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Velg klasserom')
+    expect(wrapper.text()).toContain('Alle klasserom')
+    expect(wrapper.text()).toContain('Matte 1A')
   })
 
   it('opens and closes the settings options menu from the settings button', async () => {

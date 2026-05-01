@@ -21,12 +21,11 @@ import com.nettdet.backend.util.JwtAuthFilter;
 
 /**
  * Main security configuration class for the Spring Boot application.
- * <p>
- * This class defines the security filter chain, which dictates how the application handles 
+ * 
+ * <p>This class defines the security filter chain, which dictates how the application handles 
  * authentication, authorization, CORS, and CSRF protection. It leverages a stateless 
  * session policy suitable for JWT-based architectures and integrates the custom 
  * {@link JwtAuthFilter} into the standard Spring Security pipeline.
- * </p>
  */
 @Configuration
 @EnableWebSecurity
@@ -39,26 +38,32 @@ public class SecurityConfig {
     }
 
     /**
-     * Configures the {@link SecurityFilterChain} to define the application's security perimeter.
-     * <p>
-     * Key configurations include:
-     * <ul>
-     * <li><b>Stateless Sessions:</b> Disables HTTP sessions to ensure every request is independently authenticated via JWT.</li>
-     * <li><b>Endpoint Authorization:</b> Permitting public access to authentication, health, and documentation endpoints while securing all others.</li>
-     * <li><b>CORS Policy:</b> Explicitly allowing cross-origin requests from trusted local development environments.</li>
-     * <li><b>Custom Filter Placement:</b> Injecting {@link JwtAuthFilter} prior to the {@link UsernamePasswordAuthenticationFilter}.</li>
-     * <li><b>CSRF Protection:</b> Disabled, as JWTs are inherently protected against CSRF when stored correctly and state is not maintained via sessions.</li>
-     * </ul>
+     * Configures the password encoder for the application.
+     * Uses {@link BCryptPasswordEncoder} for secure hashing.
      *
-     * @param http the {@link HttpSecurity} object used to build the security configuration.
-     * @return the built {@link SecurityFilterChain}.
-     * @throws Exception if an error occurs during the security configuration process.
+     * @return a BCrypt-based password encoder
      */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Configures the {@link SecurityFilterChain} to define the application's security perimeter.
+     * 
+     * <p>Key configurations include:
+     * <ul>
+     *     <li><b>Stateless Sessions:</b> Disables HTTP sessions to ensure every request is independently authenticated via JWT.</li>
+     *     <li><b>Endpoint Authorization:</b> Permitting public access to authentication, health, and static asset endpoints while securing all others.</li>
+     *     <li><b>CORS Policy:</b> Explicitly allowing cross-origin requests from trusted development environments.</li>
+     *     <li><b>Custom Filter Placement:</b> Injecting {@link JwtAuthFilter} prior to the {@link UsernamePasswordAuthenticationFilter}.</li>
+     *     <li><b>CSRF Protection:</b> Disabled, as JWTs are inherently protected against CSRF in this stateless context.</li>
+     * </ul>
+     *
+     * @param http the {@link HttpSecurity} object used to build the security configuration
+     * @return the built {@link SecurityFilterChain}
+     * @throws Exception if an error occurs during configuration
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         

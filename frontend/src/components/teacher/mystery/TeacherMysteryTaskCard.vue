@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import AuthenticatedImage from '@/components/ui/AuthenticatedImage.vue'
 import {
   CHAPTER_LABELS,
   DATACENTER_FORMAT_LABELS,
@@ -51,7 +52,7 @@ const correctFileSlot = computed(() => {
 
     <template v-if="imageTask">
       <div class="image-task-layout">
-        <img
+        <AuthenticatedImage
           v-if="imageTask.fileId"
           :src="`/api/objects/${imageTask.fileId}`"
           alt="Oppgavebilde"
@@ -87,7 +88,7 @@ const correctFileSlot = computed(() => {
 
       <div class="news-image-grid">
         <div class="image-panel">
-          <img
+          <AuthenticatedImage
           v-if="newsTask.fileId_1"
           :src="`/api/objects/${newsTask.fileId_1}`"
           alt="Nyhetsoppgave fil 1"
@@ -99,7 +100,7 @@ const correctFileSlot = computed(() => {
         </div>
 
         <div class="image-panel">
-          <img
+          <AuthenticatedImage
           v-if="newsTask.fileId_2"
           :src="`/api/objects/${newsTask.fileId_2}`"
           alt="Nyhetsoppgave fil 2"

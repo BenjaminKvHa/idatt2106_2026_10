@@ -181,11 +181,7 @@ onBeforeUnmount(() => {
 
 <template>
   <BaseModal panel-class="teacher-variant-1 notifications-modal-box" @close="close">
-    <div class="modal-header">
-      <h2>Varsler</h2>
-      <button type="button" class="close-button" @click="close">Lukk</button>
-    </div>
-
+    <h2>Varsler</h2>
     <div class="classroom-picker">
       <label for="notifications-classroom">Klasserom</label>
       <select

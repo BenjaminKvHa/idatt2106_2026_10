@@ -4,6 +4,15 @@ import com.nettdet.backend.domain.ids.AccountClassroomBridgeTeacherId;
 
 import jakarta.persistence.*;
 
+/**
+ * Represents a many-to-many bridge entity linking {@link Account}s to {@link Classroom}s with teacher-level access.
+ * 
+ * <p>This entity explicitly defines the teaching relationship, allowing an account to manage
+ * multiple classrooms and a classroom to have multiple teachers. It uses a composite key
+ * {@link AccountClassroomBridgeTeacherId} to ensure unique pairings.
+ * 
+ * <p>Inherits audit information from {@link CreatedAtEntity}.
+ */
 @Entity
 @Table(name = "account_classroom_bridge_teacher")
 public class AccountClassroomBridgeTeacher extends CreatedAtEntity {

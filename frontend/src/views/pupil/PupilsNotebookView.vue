@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
 import { ChevronLeftIcon, ChevronRightIcon } from '@lucide/vue'
+import { onBeforeRouteLeave, useRouter } from 'vue-router'
 import bookImage from '@/assets/book.png'
 import woodBackground from '@/assets/backgrounds/woodBackground.png'
 import TopBar from '@/components/pupil/TopBar.vue'
@@ -26,6 +27,7 @@ function getNotebookEndpoint(chapterId: number): string {
 }
 
 const { playSound, stopSound } = useAudio()
+const router = useRouter()
 const chapters = ref<Chapter[]>([])
 const currentChapterIndex = ref(0)
 const notebook = ref<NotebookResponse | null>(null)
@@ -36,6 +38,10 @@ const savingNotebook = ref(false)
 const loadError = ref<string | null>(null)
 const saveError = ref<string | null>(null)
 const saveStatus = ref<string | null>(null)
+const unsavedNotesPopupOpen = ref(false)
+const skipUnsavedNotesPrompt = ref(false)
+
+let pendingUnsavedNotesAction: (() => void | Promise<void>) | null = null
 
 const currentChapter = computed(() => chapters.value[currentChapterIndex.value] ?? null)
 const hasPreviousChapter = computed(() => currentChapterIndex.value > 0)
@@ -102,14 +108,25 @@ async function loadNotebookForCurrentChapter() {
   }
 }
 
-function shouldStayOnCurrentChapter(): boolean {
-  if (!hasUnsavedOwnNotes.value) {
-    return false
+function requestDiscardUnsavedNotes(onConfirm: () => void | Promise<void>): boolean {
+  if (!hasUnsavedOwnNotes.value || skipUnsavedNotesPrompt.value) {
+    return true
   }
 
-  return !window.confirm(
-    'You have unsaved notes. If you continue, your unsaved changes will be lost.',
-  )
+  pendingUnsavedNotesAction = onConfirm
+  unsavedNotesPopupOpen.value = true
+  return false
+}
+
+function closeUnsavedNotesPopup(): void {
+  unsavedNotesPopupOpen.value = false
+  pendingUnsavedNotesAction = null
+}
+
+async function confirmDiscardUnsavedNotes(): Promise<void> {
+  const action = pendingUnsavedNotesAction
+  closeUnsavedNotesPopup()
+  await action?.()
 }
 
 async function saveOwnNotes() {
@@ -140,8 +157,18 @@ async function saveOwnNotes() {
 
 async function goToPreviousChapter() {
   if (!hasPreviousChapter.value) return
-  if (shouldStayOnCurrentChapter()) return
+  if (
+    !requestDiscardUnsavedNotes(async () => {
+      await moveToPreviousChapter()
+    })
+  ) {
+    return
+  }
 
+  await moveToPreviousChapter()
+}
+
+async function moveToPreviousChapter() {
   soundRef = playSound(pageFlipSound, PAGE_FLIP_SOUND_RELATIVE_VOLUME, 0.15)
 
   currentChapterIndex.value -= 1
@@ -150,13 +177,39 @@ async function goToPreviousChapter() {
 
 async function goToNextChapter() {
   if (!hasNextChapter.value) return
-  if (shouldStayOnCurrentChapter()) return
+  if (
+    !requestDiscardUnsavedNotes(async () => {
+      await moveToNextChapter()
+    })
+  ) {
+    return
+  }
 
+  await moveToNextChapter()
+}
+
+async function moveToNextChapter() {
   soundRef = playSound(pageFlipSound, PAGE_FLIP_SOUND_RELATIVE_VOLUME, 0.15)
 
   currentChapterIndex.value += 1
   await loadNotebookForCurrentChapter()
 }
+
+onBeforeRouteLeave((to) => {
+  if (skipUnsavedNotesPrompt.value || !hasUnsavedOwnNotes.value) {
+    return true
+  }
+
+  requestDiscardUnsavedNotes(async () => {
+    skipUnsavedNotesPrompt.value = true
+    try {
+      await router.push(to.fullPath)
+    } finally {
+      skipUnsavedNotesPrompt.value = false
+    }
+  })
+  return false
+})
 
 onMounted(async () => {
   await loadChapters()
@@ -265,6 +318,36 @@ onBeforeUnmount(() => {
         </div>
       </section>
     </main>
+
+    <div
+      v-if="unsavedNotesPopupOpen"
+      class="pupil-popup-overlay pupil-popup-fixed-center"
+      @click.self="closeUnsavedNotesPopup"
+    >
+      <section class="pupil-hint-popup unsaved-notes-popup" role="dialog" aria-modal="true">
+        <h2 class="pupil-popup-title">Ulagrede notater</h2>
+        <p class="pupil-popup-text">
+          Du har ulagrede notater. Hvis du fortsetter, mister du endringene.
+        </p>
+
+        <div class="pupil-popup-actions">
+          <button
+            type="button"
+            class="pupil-popup-btn cancel-discard-notes"
+            @click="closeUnsavedNotesPopup"
+          >
+            Avbryt
+          </button>
+          <button
+            type="button"
+            class="pupil-popup-btn confirm-discard-notes"
+            @click="confirmDiscardUnsavedNotes"
+          >
+            Bekreft
+          </button>
+        </div>
+      </section>
+    </div>
   </div>
 </template>
 
@@ -477,6 +560,18 @@ onBeforeUnmount(() => {
   font-size: 0.95rem;
   color: var(--red-danger);
   font-weight: 700;
+}
+
+.unsaved-notes-popup {
+  background: var(--beige-light);
+}
+
+.cancel-discard-notes {
+  background: var(--beige-medium);
+}
+
+.confirm-discard-notes {
+  background: var(--red-danger);
 }
 
 .sr-only {

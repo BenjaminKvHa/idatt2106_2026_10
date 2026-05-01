@@ -5,7 +5,12 @@ import PupilView from '@/views/pupil/PupilView.vue'
 
 const routerLinkStub = {
   props: ['to'],
-  template: '<a :href="to"><slot /></a>',
+  emits: ['click'],
+  template: '<a :href="to" @click="$emit(\'click\', $event)"><slot /></a>',
+}
+
+const pinboardLayoutStub = {
+  template: '<div class="pinboard-layout"><slot /></div>',
 }
 
 function mountPupilView() {
@@ -13,6 +18,8 @@ function mountPupilView() {
     global: {
       stubs: {
         TopBar: true,
+        PinboardLayout: pinboardLayoutStub,
+        Blobby: true,
         RouterLink: routerLinkStub,
         RouterView: true,
       },
@@ -25,9 +32,8 @@ describe('PupilView', () => {
   let audioConstructor: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
-    vi.useFakeTimers()
-
     audioPlay = vi.fn().mockResolvedValue(undefined)
+
     audioConstructor = vi.fn(function (this: {
       play: typeof audioPlay
       pause: ReturnType<typeof vi.fn>
@@ -45,14 +51,9 @@ describe('PupilView', () => {
     })
 
     vi.stubGlobal('Audio', audioConstructor as unknown as typeof Audio)
-    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
-      callback(0)
-      return 1
-    })
   })
 
   afterEach(() => {
-    vi.useRealTimers()
     vi.unstubAllGlobals()
   })
 
@@ -92,42 +93,27 @@ describe('PupilView', () => {
     }
   })
 
-  it('shows the Blobby introduction message on the first click', async () => {
+  it('only marks the map button as having its own click sound', () => {
     const wrapper = mountPupilView()
 
-    await wrapper.find('.blobby-button').trigger('click')
-
-    expect(wrapper.find('.blobby-message').text()).toBe(
-      'Hei mitt navn er Blobby. Trykk på meg for å høre hvilke lyder jeg kan lage!',
-    )
-    expect(audioConstructor).not.toHaveBeenCalled()
+    expect(wrapper.find('.overlay-button.map').attributes('data-no-click-sound')).toBe('true')
+    expect(wrapper.find('.overlay-button.notes').attributes('data-no-click-sound')).toBeUndefined()
+    expect(
+      wrapper.find('.overlay-button.mystery').attributes('data-no-click-sound'),
+    ).toBeUndefined()
+    expect(wrapper.find('.overlay-button.medals').attributes('data-no-click-sound')).toBeUndefined()
+    expect(
+      wrapper.find('.overlay-button.leaderboard').attributes('data-no-click-sound'),
+    ).toBeUndefined()
+    expect(wrapper.find('.overlay-button.help').attributes('data-no-click-sound')).toBeUndefined()
   })
 
-  it('plays a Blobby sound after the introduction step', async () => {
+  it('plays the map opening sound when the map button is clicked', async () => {
     const wrapper = mountPupilView()
-    const blobbyButton = wrapper.find('.blobby-button')
 
-    await blobbyButton.trigger('click')
-    await blobbyButton.trigger('click')
+    await wrapper.find('.overlay-button.map').trigger('click')
 
     expect(audioConstructor).toHaveBeenCalledTimes(1)
     expect(audioPlay).toHaveBeenCalledTimes(1)
-    expect(wrapper.find('.blobby-message').exists()).toBe(false)
-  })
-
-  it('resets Blobby and clears the animation after the final interaction', async () => {
-    const wrapper = mountPupilView()
-    const blobbyButton = wrapper.find('.blobby-button')
-
-    for (let clickCount = 0; clickCount < 7; clickCount += 1) {
-      await blobbyButton.trigger('click')
-    }
-
-    expect(blobbyButton.classes()).toContain('animate')
-
-    await vi.advanceTimersByTimeAsync(800)
-
-    expect(blobbyButton.classes()).not.toContain('animate')
-    expect(wrapper.find('.blobby-message').exists()).toBe(false)
   })
 })

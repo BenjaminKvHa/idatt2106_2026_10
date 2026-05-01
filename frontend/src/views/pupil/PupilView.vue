@@ -10,6 +10,8 @@ import leaderboardIcon from '@/assets/icons/homescreen/icon_leaderboard.png'
 import helpIcon from '@/assets/icons/homescreen/icon_help.png'
 import { useAudio } from '@/composables/useAudio'
 import openFileSound from '@/assets/sounds/shared/open-file-sound.mp3'
+import boardBackground from '@/assets/backgrounds/korktavle.png'
+import boardBackgroundLarge from '@/assets/backgrounds/korktavle-stor.png'
 
 const MAP_OPEN_SOUND_RELATIVE_VOLUME = 1.5
 
@@ -36,7 +38,9 @@ function handleButtonClick(sound?: string) {
     <div class="page">
       <div class="center-container">
         <div class="image-wrapper">
-          <img :src="corkboardImage" alt="Background" />
+          <!-- <img :src="corkboardImage" alt="Background" /> -->
+          <img class="pupil-pinboard-image" :src="boardBackground" alt="" aria-hidden="true" />
+          <img class="pupil-pinboard-image-large" :src="boardBackgroundLarge" alt="" aria-hidden="true" />
           <Blobby />
           <router-link
             v-for="btn in buttons"
@@ -57,6 +61,21 @@ function handleButtonClick(sound?: string) {
 </template>
 
 <style scoped>
+
+.pupil-pinboard-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+.pupil-pinboard-image-large {
+  display: none;
+  width: 100%;
+  pointer-events: none;
+  user-select: none;
+}
 .screen {
   min-height: 100dvh;
   display: flex;
@@ -110,18 +129,11 @@ function handleButtonClick(sound?: string) {
   aspect-ratio: 1400 / 900;
 }
 
-.image-wrapper > img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
-}
-
 /* icons */
 .overlay-button {
   position: absolute;
   cursor: pointer;
-  width: clamp(195px, 22vw, 360px);
+  width: clamp(10rem, 13vw, 20rem);
   transform: translateX(-50%);
 }
 
@@ -169,71 +181,47 @@ function handleButtonClick(sound?: string) {
 /* tablet screen */
 @media (max-width: 768px) {
   .overlay-button {
-    width: clamp(104px, 20vw, 178px);
+    position: absolute;
+    cursor: pointer;
+    width: clamp(7rem, 12vw, 17rem);
+    transform: translateX(-50%);
   }
-
+  .pupil-pinboard-image {
+    display: none;
+  }
+  .pupil-pinboard-image-large {
+    display: block;
+  }
   .map {
-    width: clamp(90px, 24vw, 160px);
+    top: 15%;
+    left: 70%;
   }
-}
-
-/* phone screen */
-@media (max-width: 540px) {
-  .image-wrapper {
-    width: min(96vw, 900px);
+  .notes {
+    top: 65%;
+    left: 70%;
   }
-
-  .overlay-button {
-    width: clamp(48px, 11vw, 100px);
-  }
-
-  .map {
-    width: clamp(65px, 15vw, 135px);
-  }
-}
-
-@media (max-width: 480px) {
   .page {
     align-items: center;
     padding: 0.5rem;
   }
-
   .image-wrapper {
     width: 96vw;
   }
-
-  .overlay-button {
-    width: clamp(58px, 19vw, 96px);
-  }
-
   .medals {
-    top: 22%;
-    left: 28%;
+    top: 15%;
+    left: 30%;
   }
-
-  .map {
-    top: 22%;
-    left: 50%;
-  }
-
   .leaderboard {
-    top: 22%;
-    left: 72%;
+    top: 40%;
+    left: 30%;
   }
-
   .mystery {
-    top: 58%;
-    left: 28%;
+    top: 40%;
+    left: 70%;
   }
-
-  .notes {
-    top: 58%;
-    left: 72%;
-  }
-
   .help {
-    top: 58%;
-    left: 50%;
+    top: 65%;
+    left: 30%;
   }
 }
 </style>

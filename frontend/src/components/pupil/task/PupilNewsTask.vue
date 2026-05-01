@@ -46,6 +46,7 @@ function cardClass(fileId: number): string {
             :src="imageUrls[idx]"
             :alt="`Bilde ${Number(idx) + 1}`"
             class="picture"
+            preview-on-click
           />
           <span v-else>Laster…</span>
         </div>

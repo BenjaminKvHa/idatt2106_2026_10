@@ -298,6 +298,12 @@ function medalImageUrl(medal: PupilMedal) {
     0 0.14rem 0.1rem rgba(34, 13, 3, 0.85);
 }
 
+@media (max-width: 768px) {
+  .board-content {
+    padding: 0% 0% 0;
+    inset: 6% 4% 6% !important;
+  }
+}
 @media (max-width: 900px) {
   .board-content {
     inset: 20% 10% 13% 12%;
@@ -309,11 +315,6 @@ function medalImageUrl(medal: PupilMedal) {
 }
 
 @media (max-width: 560px) {
-  .board-content {
-    inset: 16% 7% 10% 9%;
-    padding: 0 0.25rem 0.75rem 0;
-  }
-
   .medals-header {
     flex-direction: column;
     justify-content: center;

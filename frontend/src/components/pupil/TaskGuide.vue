@@ -41,7 +41,6 @@ function confirm(): void {
   background: rgba(0, 0, 0, 0.5);
 }
 .center-container {
-  transform: translateY(-40px);
   gap: 2rem;
   padding: 1rem 1rem 2rem;
   display: flex;
@@ -80,5 +79,12 @@ function confirm(): void {
 
 .guide-text p {
   margin: 0;
+}
+
+@media (max-width: 768px) {
+  .center-container {
+    padding: .5rem .5rem 1rem;
+    width: 95%;
+  }
 }
 </style>

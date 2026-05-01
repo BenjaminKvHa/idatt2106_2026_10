@@ -136,7 +136,8 @@ onMounted(loadLeaderboard)
       <div v-if="!loading && !error && leaderboard.length > itemsPerPage" class="pagination">
         <button :disabled="currentPage === 1" @click="previousPage">Forrige</button>
 
-        <span>Side {{ currentPage }} av {{ totalPages }}</span>
+        <span class="page-large">Side {{ currentPage }} av {{ totalPages }}</span>
+        <span class="page-small">{{ currentPage }}/{{ totalPages }}</span>
 
         <button :disabled="currentPage === totalPages" @click="nextPage">Neste</button>
       </div>
@@ -145,6 +146,12 @@ onMounted(loadLeaderboard)
 </template>
 
 <style scoped>
+.page-small {
+  display: none;
+}
+.page-large {
+  display: block;
+}
 .leaderboard-page-bg {
   min-height: 100vh;
   background-image: url('@/assets/backgrounds/hjemskjerm-bg.png');
@@ -379,7 +386,7 @@ li {
   border-radius: 999px;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .board-content {
     --leaderboard-title-label-height: 4.7rem;
     --leaderboard-entry-label-height: 4.45rem;
@@ -387,9 +394,15 @@ li {
     --leaderboard-title-to-list-overlap: -1rem;
     --leaderboard-entry-overlap: -0.95rem;
     --leaderboard-current-overlap: -0.75rem;
-
-    inset: 13% 9% 19% 9%;
-    padding: 5% 6% 0;
+    
+    padding: 0% 0% 0;
+    inset: 6% 4% 6% !important;
+  }
+  .page-small {
+    display: block;
+  }
+  .page-large {
+    display: none;
   }
 
   .leaderboard-title-label {

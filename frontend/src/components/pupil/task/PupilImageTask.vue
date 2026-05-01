@@ -59,7 +59,7 @@ function justificationClass(
         wrong: result && result.correct === false,
       }"
     >
-      <AuthenticatedImage v-if="imageUrl" :src="imageUrl" alt="Oppgavebilde" class="task-image" />
+      <AuthenticatedImage v-if="imageUrl" :src="imageUrl" alt="Oppgavebilde" class="task-image" preview-on-click />
       <div v-else class="image-placeholder">Laster bilde…</div>
     </div>
 

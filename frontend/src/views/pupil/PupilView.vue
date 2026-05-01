@@ -11,6 +11,8 @@ import helpIcon from '@/assets/icons/homescreen/icon_help.png'
 import { useAudio } from '@/composables/useAudio'
 import openFileSound from '@/assets/sounds/shared/open-file-sound.mp3'
 
+const MAP_OPEN_SOUND_RELATIVE_VOLUME = 1.5
+
 const buttons = [
   { to: '/pupil/classroom/notebook', class: 'notes', icon: notesIcon },
   { to: '/pupil/classroom/mystery', class: 'mystery', icon: mysteryIcon },
@@ -24,7 +26,7 @@ const { playSound } = useAudio()
 
 function handleButtonClick(sound?: string) {
   if (!sound) return
-  playSound(openFileSound, 1, 0.75)
+  playSound(sound, MAP_OPEN_SOUND_RELATIVE_VOLUME, 0.7)
 }
 </script>
 

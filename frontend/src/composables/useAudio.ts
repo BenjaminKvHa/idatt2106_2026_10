@@ -6,7 +6,13 @@ const MUTED_KEY = 'nettdet_muted'
 const volume = ref(65)
 const isMuted = ref(false)
 const audioEl = ref<HTMLAudioElement | null>(null)
+let audioElRelativeVolume = 1
 const activeSounds = new Map<HTMLAudioElement, number>()
+
+function getEffectiveVolume(relativeVolume = 1): number {
+  const safeRelativeVolume = Number.isFinite(relativeVolume) ? Math.max(0, relativeVolume) : 1
+  return Math.min(1, (volume.value / 100) * safeRelativeVolume)
+}
 
 if (typeof window !== 'undefined') {
   const savedVolume = localStorage.getItem(VOLUME_KEY)
@@ -19,18 +25,19 @@ if (typeof window !== 'undefined') {
 
   watchEffect(() => {
     if (!audioEl.value) return
-    audioEl.value.volume = isMuted.value ? 0 : volume.value / 100
+    audioEl.value.volume = isMuted.value ? 0 : getEffectiveVolume(audioElRelativeVolume)
   })
 }
 
 function applyVolume() {
   if (!audioEl.value) return
-  audioEl.value.volume = isMuted.value ? 0 : volume.value / 100
+  audioEl.value.volume = isMuted.value ? 0 : getEffectiveVolume(audioElRelativeVolume)
 }
 
 export function useAudio() {
-  function registerAudioElement(el: HTMLAudioElement) {
+  function registerAudioElement(el: HTMLAudioElement, relativeVolume = 1) {
     audioEl.value = el
+    audioElRelativeVolume = relativeVolume
     applyVolume()
   }
 
@@ -38,7 +45,7 @@ export function useAudio() {
     volume.value = Math.max(0, Math.min(100, val))
     localStorage.setItem(VOLUME_KEY, String(volume.value))
     for (const [sound, relVol] of activeSounds) {
-      sound.volume = (volume.value / 100) * relVol
+      sound.volume = getEffectiveVolume(relVol)
     }
     applyVolume()
   }
@@ -58,11 +65,13 @@ export function useAudio() {
   function playSound(src: string, relVol = 1, startTime = 0): HTMLAudioElement | null {
     if (isMuted.value) return null
     const audio = new Audio(src)
-    audio.volume = (volume.value / 100) * relVol
+    audio.volume = getEffectiveVolume(relVol)
     if (startTime > 0) audio.currentTime = startTime
     activeSounds.set(audio, relVol)
     audio.addEventListener('ended', () => activeSounds.delete(audio), { once: true })
-    audio.play().catch((e) => { console.error('useAudio: playSound failed for', src, e) })
+    audio.play().catch((e) => {
+      console.error('useAudio: playSound failed for', src, e)
+    })
     return audio
   }
 

@@ -19,6 +19,7 @@ const buttons = [
   { to: '/pupil/classroom/leaderboard', class: 'leaderboard', icon: leaderboardIcon },
   { to: '/pupil/classroom/mystery', class: 'mystery', icon: mysteryIcon },
   { to: '/pupil/classroom/help', class: 'help', icon: helpIcon },
+  { to: '/pupil/classroom/notebook', class: 'notes', icon: notesIcon },
 ]
 
 const { playSound } = useAudio()

@@ -363,8 +363,8 @@ onBeforeUnmount(() => {
           {{ submitting ? 'Sender...' : 'Send inn' }}
         </button>
       </div>
-      </div>
     </div>
+  </BaseModal>
 
     <div
       v-if="selectedImage"

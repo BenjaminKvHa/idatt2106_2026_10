@@ -107,8 +107,8 @@ class TaskAdminServiceTest {
     }
 
     private void stubUploadReturning(Long... ids) {
-        var stub = when(fileObjectAccessControlService.upload(any(MultipartFile.class), isNull(),
-                eq(ClassroomAccess.PUBLIC), any(JwtUserPrincipal.class)));
+        var stub = when(fileObjectAccessControlService.upload(any(MultipartFile.class), eq(CLASSROOM_CODE),
+                eq(ClassroomAccess.ONLY_CLASS), any(JwtUserPrincipal.class)));
         if (ids.length == 1) {
             stub.thenReturn(fileObjectWithId(ids[0]));
         } else {
@@ -275,7 +275,8 @@ class TaskAdminServiceTest {
     @DisplayName("Updating a Fotografen task without a file part keeps the existing fileId")
     @Test
     void updateImageVerificationTask_whenNoFile_keepsExistingFileId() throws Exception {
-        Task existing = imageTaskRow(50L, FOTOGRAFEN_ID, 42L, null);
+        Classroom classroom = stubClassroomLookup();
+        Task existing = imageTaskRow(50L, FOTOGRAFEN_ID, 42L, classroom);
         when(taskRepository.findById(50L)).thenReturn(Optional.of(existing));
         when(taskRepository.save(any(Task.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -297,7 +298,8 @@ class TaskAdminServiceTest {
     @DisplayName("Updating a Fotografen task with a new file uploads it and deletes the old one")
     @Test
     void updateImageVerificationTask_whenNewFile_replacesOldFile() throws Exception {
-        Task existing = imageTaskRow(50L, FOTOGRAFEN_ID, 42L, null);
+        Classroom classroom = stubClassroomLookup();
+        Task existing = imageTaskRow(50L, FOTOGRAFEN_ID, 42L, classroom);
         when(taskRepository.findById(50L)).thenReturn(Optional.of(existing));
         stubUploadReturning(99L);
         when(taskRepository.save(any(Task.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -350,7 +352,8 @@ class TaskAdminServiceTest {
     @DisplayName("Updating a Nyhetskvartalet task replaces only the file slot that was provided")
     @Test
     void updateNewsVerificationTask_whenOnlyFile2Provided_replacesOnlyFile2() throws Exception {
-        Task existing = newsTaskRow(60L, NYHETSKVARTALET_ID, 11L, 12L, 12L);
+        Classroom classroom = stubClassroomLookup();
+        Task existing = newsTaskRow(60L, NYHETSKVARTALET_ID, 11L, 12L, 12L, classroom);
         when(taskRepository.findById(60L)).thenReturn(Optional.of(existing));
         stubUploadReturning(202L);
         when(taskRepository.save(any(Task.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -476,10 +479,11 @@ class TaskAdminServiceTest {
         return t;
     }
 
-    private Task newsTaskRow(Long id, Long chapterId, Long fileId1, Long fileId2, Long correctFileId) {
+    private Task newsTaskRow(Long id, Long chapterId, Long fileId1, Long fileId2, Long correctFileId, Classroom classroom) {
         Task t = new Task();
         t.setId(id);
         t.setChapter(chapter(chapterId, "c"));
+        t.setClassroom(classroom);
         t.setDifficulty(TaskDifficulty.EASY);
         t.setTaskJson(String.format(
                 "{\"taskDescription\":\"old\",\"fileId_1\":%d,\"fileId_2\":%d,"

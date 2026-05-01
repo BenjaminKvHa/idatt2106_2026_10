@@ -16,6 +16,8 @@ import TeachersNotebookChapterView from '@/views/teacher/TeachersNotebookChapter
 import TeachersLeaderboardView from '@/views/teacher/TeachersLeaderboardView.vue'
 import TeachersEditTasksView from '@/views/teacher/TeachersEditTasksView.vue'
 import TeachersMysteryView from '@/views/teacher/TeachersMysteryView.vue'
+import TeachersJoinClassroomView from '@/views/teacher/TeachersJoinClassroomView.vue'
+import TeachersJoinDisplayView from '@/views/teacher/TeachersJoinDisplayView.vue'
 import PupilView from '@/views/pupil/PupilView.vue'
 import PupilsClassroomView from '@/views/pupil/PupilsClassroomView.vue'
 import PupilsNotebookView from '@/views/pupil/PupilsNotebookView.vue'
@@ -73,6 +75,10 @@ const router = createRouter({
       ],
     },
     {
+      path: '/teacher/classrooms/:classroomCode/join-display',
+      component: TeachersJoinDisplayView,
+    },
+    {
       path: '/teacher',
       component: TeacherView,
       meta: { breadcrumb: '' },
@@ -113,6 +119,7 @@ const router = createRouter({
                     { label: 'Rediger klasserom', to: `${base}/edit-classroom` },
                     { label: 'Rediger oppgaver', to: `${base}/edit-tasks` },
                     { label: 'Ukens mysterium', to: `${base}/mystery` },
+                    { label: 'Bli med', to: `${base}/join` },
                   ]
                 },
               },
@@ -162,6 +169,11 @@ const router = createRouter({
                   path: 'mystery',
                   meta: { breadcrumb: 'Ukens mysterium' },
                   component: TeachersMysteryView,
+                },
+                {
+                  path: 'join',
+                  meta: { breadcrumb: 'Bli med' },
+                  component: TeachersJoinClassroomView,
                 },
               ],
             },

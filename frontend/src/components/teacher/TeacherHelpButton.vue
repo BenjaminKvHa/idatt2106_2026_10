@@ -1,11 +1,33 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { X } from '@lucide/vue'
 
-const emit = defineEmits<{ (e: 'close'): void }>()
+type TeacherHelpSection = {
+  heading?: string
+  body?: string[]
+  items?: string[]
+}
+
+const props = withDefaults(
+  defineProps<{
+    title: string
+    sections: TeacherHelpSection[]
+    ariaLabel?: string
+    buttonClass?: string
+  }>(),
+  {
+    ariaLabel: 'Hjelp',
+    buttonClass: '',
+  },
+)
+
+const open = ref(false)
+const titleId = `teacher-help-title-${Math.random().toString(36).slice(2)}`
+
+const buttonClasses = computed(() => ['icon-btn-circle', 'teacher-help-trigger', props.buttonClass])
 
 function close() {
-  emit('close')
+  open.value = false
 }
 
 function onKeydown(event: KeyboardEvent) {
@@ -14,8 +36,12 @@ function onKeydown(event: KeyboardEvent) {
   }
 }
 
-onMounted(() => {
-  document.addEventListener('keydown', onKeydown)
+watch(open, (isOpen) => {
+  if (isOpen) {
+    document.addEventListener('keydown', onKeydown)
+  } else {
+    document.removeEventListener('keydown', onKeydown)
+  }
 })
 
 onBeforeUnmount(() => {
@@ -24,52 +50,34 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <Teleport to="body">
+  <button type="button" :class="buttonClasses" :aria-label="ariaLabel" @click="open = true">
+    <span class="teacher-help-mark" aria-hidden="true">?</span>
+  </button>
+
+  <Teleport v-if="open" to="body">
     <div class="teacher-help-backdrop" @click.self="close">
-      <aside class="teacher-help-panel teacher-variant-1" role="dialog" aria-modal="true" aria-labelledby="teacher-help-title">
+      <aside
+        class="teacher-help-panel teacher-variant-1"
+        role="dialog"
+        aria-modal="true"
+        :aria-labelledby="titleId"
+      >
         <header class="teacher-help-header">
-          <h2 id="teacher-help-title" class="inika">Hjelp for lærer</h2>
+          <h2 :id="titleId" class="inika">{{ title }}</h2>
           <button type="button" class="teacher-help-close icon-btn-circle" aria-label="Lukk hjelp" @click="close">
             <X class="teacher-help-icon" />
           </button>
         </header>
 
         <div class="teacher-help-content">
-          <section>
-            <h3>Dette er lærervisningen</h3>
-            <p>
-              Til venstre ser du klasserommene du er lærer for, og knappen for å lage et nytt
-              klasserom. Midten og høyre side viser innholdet for valgt klasserom.
+          <section v-for="(section, sectionIndex) in sections" :key="sectionIndex">
+            <h3 v-if="section.heading">{{ section.heading }}</h3>
+            <p v-for="(paragraph, paragraphIndex) in section.body" :key="paragraphIndex">
+              {{ paragraph }}
             </p>
-          </section>
-
-          <section>
-            <h3>Faner i et klasserom</h3>
-            <ul>
-              <li><strong>Ledertavle:</strong> se poeng og rangering for elevene.</li>
-              <li><strong>Elever:</strong> godkjenn nye elever og se elevenes arbeid.</li>
-              <li><strong>Rediger klasserom:</strong> endre navn, beskrivelse og lærertilgang.</li>
-              <li><strong>Rediger oppgaver:</strong> lag og juster oppgaver for klassen.</li>
-              <li><strong>Ukens mysterium:</strong> se og håndter bidrag fra elevene.</li>
+            <ul v-if="section.items?.length">
+              <li v-for="item in section.items" :key="item">{{ item }}</li>
             </ul>
-          </section>
-
-          <section>
-            <h3>Teste elevflyten</h3>
-            <p>
-              For å teste et klasserom kan du logge ut av lærerbrukeren, lage en ny elevbruker og
-              be om å bli med i klasserommet med romkoden du ser på lærersiden. Logg deretter inn
-              som lærer igjen, godkjenn testeleven under Elever, og prøv elevens notatbok, kart og
-              oppgaver. Da blir det enklere å forklare flyten til elevene senere.
-            </p>
-          </section>
-
-          <section>
-            <h3>Knappene nede til venstre</h3>
-            <p>
-              Bjellen viser varsler, lydknappen demper eller skrur på lyden, tannhjulet åpner
-              innstillinger, og spørsmålstegnet åpner denne hjelpen.
-            </p>
           </section>
         </div>
       </aside>
@@ -78,6 +86,22 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.teacher-help-trigger {
+  --button-diameter: 48px;
+}
+
+.teacher-help-mark {
+  display: block;
+  color: currentColor;
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.teacher-help-trigger:hover .teacher-help-mark {
+  color: var(--txt-sec);
+}
+
 .teacher-help-backdrop {
   position: fixed;
   inset: 0;

@@ -6,6 +6,7 @@ import StateDisplay from '@/components/ui/StateDisplay.vue'
 import TopBar from '@/components/pupil/TopBar.vue'
 import medalsIcon from '@/assets/icons/homescreen/icon_medals.png'
 import { get } from '@/utils/apiUtils'
+import Blobby from '@/components/pupil/home/Blobby.vue'
 
 type PupilMedal = {
   medalKey: string
@@ -41,6 +42,7 @@ function medalImageUrl(medal: PupilMedal) {
     <TopBar title="Medaljer" previous-page-url="/pupil" />
 
     <PinboardLayout heading-id="medals-title">
+      <Blobby message="Her finner du medaljene du har låst opp!" />
       <div class="board-content pupil-thin-scroll">
         <header class="medals-header">
           <img class="medals-icon" :src="medalsIcon" alt="" aria-hidden="true" />

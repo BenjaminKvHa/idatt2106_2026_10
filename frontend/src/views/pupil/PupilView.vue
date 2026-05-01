@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import TopBar from '@/components/pupil/TopBar.vue'
-import corkboardImage from '@/assets/backgrounds/korktavle.png'
+import PinboardLayout from '@/components/pupil/PinboardLayout.vue'
 import Blobby from '@/components/pupil/home/Blobby.vue'
+
 import notesIcon from '@/assets/icons/homescreen/icon_notes.png'
 import mysteryIcon from '@/assets/icons/homescreen/icon_mystery.png'
 import medalsIcon from '@/assets/icons/homescreen/icon_medals.png'
 import mapIcon from '@/assets/icons/homescreen/icon_map.png'
 import leaderboardIcon from '@/assets/icons/homescreen/icon_leaderboard.png'
 import helpIcon from '@/assets/icons/homescreen/icon_help.png'
+
 import { useAudio } from '@/composables/useAudio'
 import openFileSound from '@/assets/sounds/shared/open-file-sound.mp3'
 
@@ -31,98 +33,45 @@ function handleButtonClick(sound?: string) {
 </script>
 
 <template>
-  <div class="screen">
+  <div class="pupil-home-bg pupil-scene-screen">
     <TopBar title="Detektivbyrået" />
-    <div class="page">
-      <div class="center-container">
-        <div class="image-wrapper">
-          <img :src="corkboardImage" alt="Background" />
-          <Blobby />
-          <router-link
-            v-for="btn in buttons"
-            :key="btn.to"
-            :to="btn.to"
-            class="overlay-button"
-            :class="btn.class"
-            :data-no-click-sound="btn.sound ? true : null"
-            @click="handleButtonClick(btn.sound)"
-          >
-            <img :src="btn.icon" />
-          </router-link>
-        </div>
-      </div>
-    </div>
+
+    <PinboardLayout>
+      <Blobby
+        message="Velkommen til hjemskjermen. Her du kan komme deg til de ulike andre sidene. Trykk på knappene inni tavlen for å flytte deg til en ny side."
+      />
+
+      <router-link
+        v-for="btn in buttons"
+        :key="btn.to"
+        :to="btn.to"
+        class="overlay-button"
+        :class="btn.class"
+        :data-no-click-sound="btn.sound ? true : null"
+        @click="handleButtonClick(btn.sound)"
+      >
+        <img :src="btn.icon" alt="" />
+      </router-link>
+    </PinboardLayout>
   </div>
-  <router-view />
 </template>
 
 <style scoped>
-.screen {
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-
-  background: url('@/assets/backgrounds/hjemskjerm-bg.png') no-repeat center center;
+.pupil-home-bg {
+  min-height: 100vh;
+  background-image: url('@/assets/backgrounds/hjemskjerm-bg.png');
   background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
-.screen::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  z-index: 0;
-  pointer-events: none;
-}
-
-.screen > * {
-  position: relative;
-  z-index: 1;
-}
-
-.page {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  background: transparent;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: clamp(0.5rem, 2vw, 2rem);
-}
-
-.center-container {
-  width: 100%;
-  min-height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-  z-index: 1;
-}
-
-/* pin-board */
-.image-wrapper {
-  position: relative;
-  width: min(96vw, 1400px);
-  aspect-ratio: 1400 / 900;
-}
-
-.image-wrapper > img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
-}
-
-/* icons */
 .overlay-button {
   position: absolute;
   cursor: pointer;
   width: clamp(195px, 22vw, 360px);
   transform: translateX(-50%);
+  z-index: 2;
 }
 
 .overlay-button img {
@@ -135,105 +84,65 @@ function handleButtonClick(sound?: string) {
   transition: transform 0.15s ease;
 }
 
-/* positions */
 .medals {
-  top: 20%;
-  left: 28%;
+  top: 22%;
+  left: 26%;
 }
 
 .map {
-  top: 20%;
+  top: 22%;
   left: 50%;
 }
 
 .leaderboard {
-  top: 20%;
-  left: 72%;
+  top: 22%;
+  left: 74%;
 }
 
 .mystery {
-  top: 55%;
-  left: 28%;
-}
-
-.notes {
-  top: 55%;
-  left: 72%;
+  top: 54%;
+  left: 26%;
 }
 
 .help {
-  top: 55%;
+  top: 54%;
   left: 50%;
 }
 
-/* tablet screen */
+.notes {
+  top: 54%;
+  left: 74%;
+}
+
 @media (max-width: 768px) {
   .overlay-button {
-    width: clamp(104px, 20vw, 178px);
+    width: clamp(110px, 20vw, 180px);
   }
 
   .map {
-    width: clamp(90px, 24vw, 160px);
+    width: clamp(100px, 22vw, 170px);
   }
 }
 
-/* phone screen */
 @media (max-width: 540px) {
-  .image-wrapper {
-    width: min(96vw, 900px);
-  }
-
   .overlay-button {
-    width: clamp(48px, 11vw, 100px);
+    width: clamp(70px, 18vw, 110px);
   }
 
   .map {
-    width: clamp(65px, 15vw, 135px);
-  }
-}
-
-@media (max-width: 480px) {
-  .page {
-    align-items: center;
-    padding: 0.5rem;
+    width: clamp(65px, 20vw, 100px);
   }
 
-  .image-wrapper {
-    width: 96vw;
-  }
-
-  .overlay-button {
-    width: clamp(58px, 19vw, 96px);
-  }
-
-  .medals {
-    top: 22%;
-    left: 28%;
-  }
-
-  .map {
-    top: 22%;
-    left: 50%;
-  }
-
+  .medals,
+  .map,
   .leaderboard {
-    top: 22%;
-    left: 72%;
+    top: 26%;
   }
 
-  .mystery {
-    top: 58%;
-    left: 28%;
-  }
-
+  .mystery,
+  .help,
   .notes {
-    top: 58%;
-    left: 72%;
-  }
-
-  .help {
-    top: 58%;
-    left: 50%;
+    top: 56%;
   }
 }
 </style>

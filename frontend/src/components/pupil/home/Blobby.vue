@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 
 import blobbyImage from '@/assets/icons/blobby/creaturePeaking.png'
 import blobbyHoverImage from '@/assets/icons/blobby/creaturePeakingDetective.png'
@@ -11,55 +11,65 @@ import blobbySound3 from '@/assets/sounds/blobby/blobby-pop.mp3'
 import blobbySound4 from '@/assets/sounds/blobby/blobby-plingpling.mp3'
 import blobbySound5 from '@/assets/sounds/blobby/blobby-blinking.mp3'
 
+const props = withDefaults(
+  defineProps<{
+    message?: string
+  }>(),
+  {
+    message: 'Hei mitt navn er Blobby. Trykk på meg for å høre hvilke lyder jeg kan lage!',
+  },
+)
+
 const showBlobbyMessage = ref(false)
 const blobbyStep = ref(0)
 const isAnimatingBlobby = ref(false)
-
 const isHoveringBlobby = ref(false)
 
 const { playSound } = useAudio()
 
-const blobbyMessage = 'Hei mitt navn er Blobby. Trykk på meg for å høre hvilke lyder jeg kan lage!'
-
 const blobbySounds = [blobbySound1, blobbySound2, blobbySound3, blobbySound4, blobbySound5]
 
-function handleBlobbyClick() {
-  if (blobbyStep.value === 0) {
-    showBlobbyMessage.value = true
-    blobbyStep.value = 1
-    return
-  }
+function handleBlobbyClick(event: MouseEvent) {
+  event.stopPropagation()
 
-  if (blobbyStep.value >= 1 && blobbyStep.value <= blobbySounds.length) {
-    showBlobbyMessage.value = false
+  showBlobbyMessage.value = true
 
-    const soundIndex = blobbyStep.value - 1
-    const soundFile = blobbySounds[soundIndex]
-    if (soundFile) playSound(soundFile)
+  const soundFile = blobbySounds[blobbyStep.value]
 
+  if (soundFile) {
+    playSound(soundFile)
     blobbyStep.value += 1
     return
   }
 
-  if (blobbyStep.value === blobbySounds.length + 1) {
+  isAnimatingBlobby.value = false
+
+  requestAnimationFrame(() => {
+    isAnimatingBlobby.value = true
+  })
+
+  setTimeout(() => {
     isAnimatingBlobby.value = false
+  }, 800)
 
-    requestAnimationFrame(() => {
-      isAnimatingBlobby.value = true
-    })
-
-    setTimeout(() => {
-      isAnimatingBlobby.value = false
-    }, 800)
-
-    showBlobbyMessage.value = false
-    blobbyStep.value = 0
-  }
+  blobbyStep.value = 0
 }
+
+function closeBlobbyMessage() {
+  showBlobbyMessage.value = false
+}
+
+onMounted(() => {
+  document.addEventListener('click', closeBlobbyMessage)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', closeBlobbyMessage)
+})
 </script>
 
 <template>
-  <div class="blobby-wrapper">
+  <div class="blobby-wrapper" @click.stop>
     <button
       class="blobby-button"
       :class="{ animate: isAnimatingBlobby }"
@@ -79,7 +89,7 @@ function handleBlobbyClick() {
     </button>
 
     <div v-if="showBlobbyMessage" class="blobby-message">
-      {{ blobbyMessage }}
+      {{ props.message }}
     </div>
   </div>
 </template>

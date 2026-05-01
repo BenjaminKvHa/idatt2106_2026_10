@@ -72,6 +72,12 @@ describe('authRedirect', () => {
     await expect(resolvePostAuthRoute('PUPIL')).resolves.toBe('/pupil/welcome-guide')
   })
 
+  it('resolves pupils to sign-in when the me profile cannot be loaded', async () => {
+    mockedGet.mockRejectedValue(new Error('Unauthorized'))
+
+    await expect(resolvePostAuthRoute('PUPIL')).resolves.toBe('/sign-in')
+  })
+
   it('uses cached me profile unless a fresh profile is requested', async () => {
     mockedGet.mockResolvedValue({
       role: 'PUPIL',

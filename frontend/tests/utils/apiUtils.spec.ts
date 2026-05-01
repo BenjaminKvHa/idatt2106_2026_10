@@ -18,6 +18,7 @@ import {
 } from '@/utils/apiUtils'
 
 const mockFetch = vi.fn()
+const locationReplace = vi.fn()
 
 function createResponse({
                           status = 200,
@@ -55,7 +56,12 @@ describe('apiUtils', () => {
     sessionStorage.clear()
 
     vi.stubGlobal('fetch', mockFetch)
-    vi.stubGlobal('alert', vi.fn())
+    Object.defineProperty(window, 'location', {
+      value: {
+        replace: locationReplace,
+      },
+      configurable: true,
+    })
   })
 
   it('sets, gets, checks and clears access token', () => {
@@ -105,7 +111,7 @@ describe('apiUtils', () => {
     await expect(getNewTokens()).rejects.toThrow('Unable to refresh session')
 
     expect(getAccessToken()).toBe('')
-    expect(window.alert).toHaveBeenCalledWith('/sign-in redirectToSignIn')
+    expect(locationReplace).toHaveBeenCalledWith('/sign-in')
   })
 
   it('throws when refresh response is missing access token', async () => {
@@ -117,7 +123,7 @@ describe('apiUtils', () => {
 
     await expect(getNewTokens()).rejects.toThrow('Refresh response missing access token')
 
-    expect(window.alert).toHaveBeenCalledWith('/sign-in redirectToSignIn')
+    expect(locationReplace).toHaveBeenCalledWith('/sign-in')
   })
 
   it('reuses refresh promise when multiple refresh calls happen at the same time', async () => {
@@ -374,7 +380,7 @@ describe('apiUtils', () => {
     await expect(get('/api/protected')).rejects.toThrow('Request failed with status 401')
 
     expect(getAccessToken()).toBe('')
-    expect(window.alert).toHaveBeenCalledWith('/sign-in redirectToSignIn')
+    expect(locationReplace).toHaveBeenCalledWith('/sign-in')
   })
 
   it('gets blob response', async () => {

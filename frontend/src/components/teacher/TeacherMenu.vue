@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onBeforeUnmount, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import Logo from '@/components/misc/Logo.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
@@ -9,6 +9,14 @@ import TeacherHelpButton from '@/components/teacher/TeacherHelpButton.vue'
 import { BellIcon, Settings, Volume2, VolumeX } from '@lucide/vue'
 import { useClassrooms } from '@/composables/useClassrooms.ts'
 import { useAudio } from '@/composables/useAudio'
+import { get } from '@/utils/apiUtils'
+
+type UnreadNotificationsResponse = {
+  classroomCode: string
+  unreadNotificationsCount: number
+}
+
+const UNREAD_NOTIFICATIONS_REFRESH_MS = 30_000
 
 const settingsOpen = ref(false)
 const notificationsOpen = ref(false)
@@ -16,6 +24,9 @@ const classroomsPickerOpen = ref(false)
 const route = useRoute()
 const { classrooms, fetchClassrooms } = useClassrooms()
 const { isMuted, toggleMute } = useAudio()
+const unreadCountsByClassroom = ref<Record<string, number>>({})
+let unreadPollingHandle: number | null = null
+let disposed = false
 
 const teacherOverviewHelpSections = [
   {
@@ -48,8 +59,92 @@ const teacherOverviewHelpSections = [
   },
 ]
 
-onMounted(() => {
-  fetchClassrooms()
+const unreadNotificationsCount = computed(() =>
+  Object.values(unreadCountsByClassroom.value).reduce((total, count) => total + count, 0),
+)
+
+const unreadNotificationsBadgeLabel = computed(() =>
+  unreadNotificationsCount.value > 99 ? '99+' : String(unreadNotificationsCount.value),
+)
+
+const notificationsAriaLabel = computed(() =>
+  unreadNotificationsCount.value > 0
+    ? `Varsler, ${unreadNotificationsCount.value} uleste`
+    : 'Varsler',
+)
+
+async function refreshUnreadNotificationCount() {
+  const classroomCodes = classrooms.value.map((classroom) => classroom.classroomCode)
+
+  if (classroomCodes.length === 0) {
+    unreadCountsByClassroom.value = {}
+    return
+  }
+
+  const nextCounts: Record<string, number> = {}
+  for (const classroomCode of classroomCodes) {
+    nextCounts[classroomCode] = unreadCountsByClassroom.value[classroomCode] ?? 0
+  }
+
+  const responses = await Promise.allSettled(
+    classroomCodes.map(async (classroomCode) => {
+      const response = await get<UnreadNotificationsResponse>(
+        `/api/teacher/classrooms/${classroomCode}/notifications/unread`,
+      )
+      return { classroomCode, count: response.unreadNotificationsCount }
+    }),
+  )
+
+  for (const response of responses) {
+    if (response.status === 'fulfilled') {
+      nextCounts[response.value.classroomCode] = response.value.count
+    }
+  }
+
+  if (disposed) {
+    return
+  }
+
+  unreadCountsByClassroom.value = nextCounts
+}
+
+function stopUnreadPolling() {
+  if (unreadPollingHandle !== null) {
+    window.clearInterval(unreadPollingHandle)
+    unreadPollingHandle = null
+  }
+}
+
+function startUnreadPolling() {
+  stopUnreadPolling()
+  unreadPollingHandle = window.setInterval(() => {
+    void refreshUnreadNotificationCount()
+  }, UNREAD_NOTIFICATIONS_REFRESH_MS)
+}
+
+function closeNotificationsMenu() {
+  notificationsOpen.value = false
+  void refreshUnreadNotificationCount()
+}
+
+onMounted(async () => {
+  disposed = false
+  await fetchClassrooms()
+  if (disposed) {
+    return
+  }
+
+  await refreshUnreadNotificationCount()
+  if (disposed) {
+    return
+  }
+
+  startUnreadPolling()
+})
+
+onBeforeUnmount(() => {
+  disposed = true
+  stopUnreadPolling()
 })
 
 const isClassroomsActive = computed(() => {
@@ -135,11 +230,19 @@ function closeClassroomsPicker() {
         <div class="teacher-menu-bottom">
             <button 
             type="button" 
-            class="icon-btn-circle" 
-            aria-label="Varsler"
+            class="icon-btn-circle notification-button"
+            :aria-label="notificationsAriaLabel"
             @click="notificationsOpen = true"
             >
                 <BellIcon class="teacher-menu-icon" />
+                <span
+                  v-if="unreadNotificationsCount > 0"
+                  class="notification-badge"
+                  data-test="notification-badge"
+                  aria-hidden="true"
+                >
+                  {{ unreadNotificationsBadgeLabel }}
+                </span>
             </button>
             <button
                 type="button"
@@ -163,7 +266,7 @@ function closeClassroomsPicker() {
     </div>
 
     <OptionsMenu v-if="settingsOpen" @close="settingsOpen = false" />
-    <NotificationsMenu v-if="notificationsOpen" :classroom-code="activeClassroomCode" @close="notificationsOpen = false" />
+    <NotificationsMenu v-if="notificationsOpen" :classroom-code="activeClassroomCode" @close="closeNotificationsMenu" />
     <BaseModal v-if="classroomsPickerOpen" panel-class="teacher-variant-1 classroom-picker-modal" @close="closeClassroomsPicker">
         <h2 class="classroom-picker-title inika">Velg klasserom</h2>
 
@@ -274,6 +377,28 @@ function closeClassroomsPicker() {
   width: 18px;
   height: 18px;
   display: block;
+}
+
+.notification-button {
+  position: relative;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -0.5rem;
+  left: -0.45rem;
+  min-width: 1.4rem;
+  height: 1.4rem;
+  padding: 0 0.32rem;
+  border: 2px solid var(--background);
+  border-radius: 999px;
+  background: var(--warning);
+  color: var(--txt-contrast);
+  font-size: 0.72rem;
+  font-weight: var(--fw-bold);
+  line-height: 1.4rem;
+  text-align: center;
+  box-sizing: border-box;
 }
 
 .classroom-picker-modal {

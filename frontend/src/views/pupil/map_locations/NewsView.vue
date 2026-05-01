@@ -45,12 +45,20 @@ const {
   reset,
 } = useDifficultyProgression()
 
+type NewsStepState = {
+  task: NewsVerificationResponse
+  imageUrls: string[]
+  selectedFileId: number | null
+  result: ValidationResult | null
+}
+
 const showHelpPopup = ref(false)
 const showHintPopup = ref(false)
 
 const currentTask = ref<NewsVerificationResponse | null>(null)
 const imageUrls = ref<string[]>([])
 const selectedFileId = ref<number | null>(null)
+const stepStates = ref<Record<number, NewsStepState>>({})
 
 function closeHelpPopup(): void {
   showHelpPopup.value = false
@@ -60,16 +68,34 @@ function closeHintPopup(): void {
   showHintPopup.value = false
 }
 
-function revokeImageUrls(): void {
-  for (const url of imageUrls.value) URL.revokeObjectURL(url)
+function revokeAllImageUrls(): void {
+  for (const state of Object.values(stepStates.value)) {
+    for (const url of state.imageUrls) URL.revokeObjectURL(url)
+  }
+
+  stepStates.value = {}
   imageUrls.value = []
 }
 
 async function loadTask(): Promise<void> {
   loading.value = true
   error.value = null
-  revokeImageUrls()
   currentTask.value = null
+  imageUrls.value = []
+
+  const savedState = stepStates.value[stepIndex.value]
+
+  if (savedState) {
+    currentTask.value = savedState.task
+    imageUrls.value = savedState.imageUrls
+    selectedFileId.value = savedState.selectedFileId
+    lastResult.value = savedState.result
+    loading.value = false
+    return
+  }
+
+  selectedFileId.value = null
+  lastResult.value = null
 
   try {
     const task = await get<NewsVerificationResponse>(
@@ -79,8 +105,16 @@ async function loadTask(): Promise<void> {
     currentTask.value = task
 
     const blobs = await Promise.all(task.fileIds.map((id) => getBlob(`/api/objects/${id}`)))
+    const urls = blobs.map((blob) => URL.createObjectURL(blob))
 
-    imageUrls.value = blobs.map((blob) => URL.createObjectURL(blob))
+    imageUrls.value = urls
+
+    stepStates.value[stepIndex.value] = {
+      task,
+      imageUrls: urls,
+      selectedFileId: null,
+      result: null,
+    }
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Kunne ikke laste oppgave'
   } finally {
@@ -105,12 +139,26 @@ async function choose(fileId: number): Promise<void> {
 
     lastResult.value = result
     recordResult(result.correct)
+
+    stepStates.value[stepIndex.value] = {
+      task: currentTask.value,
+      imageUrls: imageUrls.value,
+      selectedFileId: fileId,
+      result,
+    }
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Kunne ikke sende svar'
     selectedFileId.value = null
   } finally {
     submitting.value = false
   }
+}
+
+async function previous(): Promise<void> {
+  if (stepIndex.value === 0) return
+
+  stepIndex.value -= 1
+  await loadTask()
 }
 
 async function next(): Promise<void> {
@@ -122,8 +170,6 @@ async function next(): Promise<void> {
   }
 
   advanceStep()
-  selectedFileId.value = null
-
   await loadTask()
 }
 
@@ -144,6 +190,7 @@ function showFinalResult(): void {
 }
 
 async function retryLevel(): Promise<void> {
+  revokeAllImageUrls()
   reset()
   selectedFileId.value = null
 
@@ -151,7 +198,7 @@ async function retryLevel(): Promise<void> {
 }
 
 function goToMap(): void {
-  revokeImageUrls()
+  revokeAllImageUrls()
   router.push('/pupil/classroom/map')
 }
 
@@ -164,7 +211,7 @@ function closeCompletePopup(): void {
 }
 
 onMounted(loadTask)
-onBeforeUnmount(revokeImageUrls)
+onBeforeUnmount(revokeAllImageUrls)
 </script>
 
 <template>
@@ -205,9 +252,19 @@ onBeforeUnmount(revokeImageUrls)
             <span>{{ lastResult.feedback }}</span>
           </div>
 
-          <button v-if="lastResult" class="next-level-button" @click="next">
-            {{ stepIndex === DIFFICULTIES.length - 1 ? 'Se resultat' : 'Gå til neste nivå' }}
-          </button>
+          <div v-if="lastResult" class="navigation-bar">
+            <button
+              class="nav-button nav-button-secondary"
+              :disabled="stepIndex === 0"
+              @click="previous"
+            >
+              Forrige
+            </button>
+
+            <button class="nav-button nav-button-primary" @click="next">
+              {{ stepIndex === DIFFICULTIES.length - 1 ? 'Se resultat' : 'Neste' }}
+            </button>
+          </div>
         </template>
 
         <p v-else-if="loading">Laster oppgave…</p>
@@ -314,41 +371,6 @@ onBeforeUnmount(revokeImageUrls)
   object-fit: contain;
 }
 
-@media (max-width: 1100px) {
-  .center-container {
-    padding-top: 8.2rem;
-  }
-
-  .center-container :deep(.hint-creature-wrapper) {
-    left: 50%;
-    top: 0.1rem;
-    transform: translateX(-50%);
-  }
-}
-
-@media (max-width: 768px) {
-  .page {
-    padding: 1rem;
-    background-attachment: scroll;
-  }
-
-  .center-container {
-    gap: 1rem;
-    padding-top: 7rem;
-  }
-
-  .center-container :deep(.hint-creature-wrapper) {
-    top: 0.2rem;
-  }
-
-  .center-container :deep(.hint-creature-wrapper),
-  .center-container :deep(.hint-creature-button),
-  .center-container :deep(.hint-creature-button img) {
-    width: 85px;
-    height: 85px;
-  }
-}
-
 .progress-container {
   width: min(100%, 540px);
   max-width: 540px;
@@ -401,14 +423,49 @@ onBeforeUnmount(revokeImageUrls)
   color: white;
 }
 
-.next-level-button {
-  width: 100%;
-  max-width: 360px;
-  padding: 0.9rem 1.8rem;
+.navigation-bar {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.nav-button {
+  min-width: 200px;
+  min-height: 58px;
+  padding: 0.85rem 1.8rem;
   border-radius: 24px;
   border: 2px solid var(--brown-dark);
-  background: linear-gradient(180deg, #fff6dc 0%, #f1d7a5 100%);
   font-weight: 850;
+  color: var(--brown-dark);
+  cursor: pointer;
+  background: linear-gradient(180deg, #fff6dc 0%, #f1d7a5 100%);
+  box-shadow: 0 5px 14px rgb(0 0 0 / 14%);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.nav-button:hover:not(:disabled) {
+  background: var(--brown-dark);
+  color: #fff6dc;
+  transform: translateY(-1px);
+  box-shadow: 0 7px 18px rgb(0 0 0 / 16%);
+}
+
+.nav-button:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 3px 9px rgb(0 0 0 / 12%);
+}
+
+.nav-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  transform: none;
+  box-shadow: 0 5px 14px rgb(0 0 0 / 10%);
 }
 
 .error {
@@ -431,5 +488,51 @@ onBeforeUnmount(revokeImageUrls)
   border: 7px solid var(--brown-dark);
   border-radius: 42px;
   padding: 32px 28px;
+}
+
+@media (max-width: 1100px) {
+  .center-container {
+    padding-top: 8.2rem;
+  }
+
+  .center-container :deep(.hint-creature-wrapper) {
+    left: 50%;
+    top: 0.1rem;
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 1rem;
+    background-attachment: scroll;
+  }
+
+  .center-container {
+    gap: 1rem;
+    padding-top: 7rem;
+  }
+
+  .center-container :deep(.hint-creature-wrapper) {
+    top: 0.2rem;
+  }
+
+  .center-container :deep(.hint-creature-wrapper),
+  .center-container :deep(.hint-creature-button),
+  .center-container :deep(.hint-creature-button img) {
+    width: 85px;
+    height: 85px;
+  }
+
+  .navigation-bar {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .nav-button {
+    width: 100%;
+    min-width: 0;
+  }
 }
 </style>

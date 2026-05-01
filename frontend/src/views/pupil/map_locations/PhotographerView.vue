@@ -51,9 +51,14 @@
           <button v-if="!lastResult" @click="submit" :disabled="!canSubmit || submitting">
             Svar
           </button>
-          <button v-else @click="next">
-            {{ stepIndex === DIFFICULTIES.length - 1 ? 'Se resultat' : 'Neste nivå →' }}
-          </button>
+
+          <template v-else>
+            <button :disabled="stepIndex === 0" @click="previous">Forrige</button>
+
+            <button @click="next">
+              {{ stepIndex === DIFFICULTIES.length - 1 ? 'Se resultat' : 'Neste' }}
+            </button>
+          </template>
         </div>
       </div>
 
@@ -142,27 +147,54 @@ const CATEGORIES: { value: ImageCategory; label: string }[] = [
   { value: 'MANIPULATED', label: 'Manipulert' },
 ]
 
+type PhotoStepState = {
+  task: ImageVerificationResponse
+  imageUrl: string
+  selectedCategory: ImageCategory | null
+  selectedJustification: string | null
+  result: ValidationResult | null
+}
+
 const currentTask = ref<ImageVerificationResponse | null>(null)
 const imageUrl = ref('')
 const selectedCategory = ref<ImageCategory | null>(null)
 const selectedJustification = ref<string | null>(null)
+const stepStates = ref<Record<number, PhotoStepState>>({})
 
 const canSubmit = computed(
   () => selectedCategory.value !== null && selectedJustification.value !== null,
 )
 
-function revokeImageUrl() {
-  if (imageUrl.value) {
-    URL.revokeObjectURL(imageUrl.value)
-    imageUrl.value = ''
+function revokeAllImageUrls() {
+  for (const state of Object.values(stepStates.value)) {
+    if (state.imageUrl) URL.revokeObjectURL(state.imageUrl)
   }
+
+  stepStates.value = {}
+  imageUrl.value = ''
 }
 
 async function loadTask() {
   loading.value = true
   error.value = null
-  revokeImageUrl()
   currentTask.value = null
+  imageUrl.value = ''
+
+  const savedState = stepStates.value[stepIndex.value]
+
+  if (savedState) {
+    currentTask.value = savedState.task
+    imageUrl.value = savedState.imageUrl
+    selectedCategory.value = savedState.selectedCategory
+    selectedJustification.value = savedState.selectedJustification
+    lastResult.value = savedState.result
+    loading.value = false
+    return
+  }
+
+  selectedCategory.value = null
+  selectedJustification.value = null
+  lastResult.value = null
 
   try {
     const task = await get<ImageVerificationResponse>(
@@ -172,7 +204,17 @@ async function loadTask() {
     currentTask.value = task
 
     const blob = await getBlob(`/api/objects/${task.fileId}`)
-    imageUrl.value = URL.createObjectURL(blob)
+    const url = URL.createObjectURL(blob)
+
+    imageUrl.value = url
+
+    stepStates.value[stepIndex.value] = {
+      task,
+      imageUrl: url,
+      selectedCategory: null,
+      selectedJustification: null,
+      result: null,
+    }
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Kunne ikke laste oppgave'
   } finally {
@@ -210,11 +252,26 @@ async function submit() {
 
     lastResult.value = result
     recordResult(result.correct)
+
+    stepStates.value[stepIndex.value] = {
+      task: currentTask.value,
+      imageUrl: imageUrl.value,
+      selectedCategory: selectedCategory.value,
+      selectedJustification: selectedJustification.value,
+      result,
+    }
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Kunne ikke sende svar'
   } finally {
     submitting.value = false
   }
+}
+
+async function previous() {
+  if (stepIndex.value === 0) return
+
+  stepIndex.value -= 1
+  await loadTask()
 }
 
 function openResultPopup() {
@@ -245,9 +302,6 @@ async function next() {
   }
 
   advanceStep()
-  selectedCategory.value = null
-  selectedJustification.value = null
-
   await loadTask()
 }
 
@@ -260,6 +314,8 @@ function closeCompletePopup() {
 }
 
 async function retryLevel(): Promise<void> {
+  revokeAllImageUrls()
+
   stepIndex.value = 0
   selectedCategory.value = null
   selectedJustification.value = null
@@ -273,7 +329,7 @@ async function retryLevel(): Promise<void> {
 }
 
 function goToMap() {
-  revokeImageUrl()
+  revokeAllImageUrls()
   router.push('/pupil/classroom/map')
 }
 
@@ -282,7 +338,7 @@ function finish() {
 }
 
 onMounted(loadTask)
-onBeforeUnmount(revokeImageUrl)
+onBeforeUnmount(revokeAllImageUrls)
 </script>
 
 <style scoped>

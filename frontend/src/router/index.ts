@@ -5,21 +5,14 @@ import LeaderboardView from '@/views/shared/LeaderboardView.vue'
 import EnterClassroomCodeView from '@/views/shared/EnterClassroomCodeView.vue'
 import TeacherView from '@/views/teacher/TeacherView.vue'
 import CreateAvatarView from '@/views/shared/SetAvatarView.vue'
-import TeachersProfileView from '@/views/teacher/TeachersProfileView.vue'
-import TeachersNotificationsView from '@/views/teacher/TeachersNotificationsView.vue'
 import TeachersClassroomsView from '@/views/teacher/TeachersClassroomsView.vue'
 import TeachersCreateClassroomView from '@/views/teacher/TeachersCreateClassroomView.vue'
-import TeachersClassroomView from '@/views/teacher/TeachersClassroomView.vue'
 import TeachersPupilsView from '@/views/teacher/TeachersPupilsView.vue'
-import TeachersPupilView from '@/views/teacher/TeachersPupilView.vue'
-import TeachersNotebookChapterView from '@/views/teacher/TeachersNotebookChapterView.vue'
 import TeachersLeaderboardView from '@/views/teacher/TeachersLeaderboardView.vue'
 import TeachersEditTasksView from '@/views/teacher/TeachersEditTasksView.vue'
 import TeachersMysteryView from '@/views/teacher/TeachersMysteryView.vue'
 import PupilView from '@/views/pupil/PupilView.vue'
-import PupilsClassroomView from '@/views/pupil/PupilsClassroomView.vue'
 import PupilsNotebookView from '@/views/pupil/PupilsNotebookView.vue'
-import PupilsNotebookChapterView from '@/views/pupil/PupilsNotebookChapterView.vue'
 import PupilsMysteryView from '@/views/pupil/PupilsMysteryView.vue'
 import PupilsMedalsView from '@/views/pupil/PupilsMedalsView.vue'
 import PupilsHelpView from '@/views/pupil/PupilsHelpView.vue'
@@ -78,14 +71,6 @@ const router = createRouter({
       meta: { breadcrumb: '' },
       children: [
         {
-          path: 'profile',
-          component: TeachersProfileView,
-        },
-        {
-          path: 'notifications',
-          component: TeachersNotificationsView,
-        },
-        {
           path: 'classrooms',
           meta: { breadcrumb: 'Klasserom' },
           children: [
@@ -127,26 +112,6 @@ const router = createRouter({
                   path: 'pupils',
                   meta: { breadcrumb: 'Elever' },
                   component: TeachersPupilsView,
-                  children: [
-                    {
-                      path: ':pupil_id',
-                      children: [
-                        {
-                          path: '',
-                          component: TeachersPupilView,
-                        },
-                        {
-                          path: 'notebook',
-                          children: [
-                            {
-                              path: ':chapter_id',
-                              component: TeachersNotebookChapterView,
-                            },
-                          ],
-                        },
-                      ],
-                    },
-                  ],
                 },
                 {
                   path: 'leaderboard',
@@ -192,10 +157,6 @@ const router = createRouter({
           path: 'classroom',
           children: [
             {
-              component: PupilsClassroomView,
-              path: '',
-            },
-            {
               path: 'leaderboard',
               component: LeaderboardView,
             },
@@ -205,10 +166,6 @@ const router = createRouter({
                 {
                   component: PupilsNotebookView,
                   path: '',
-                },
-                {
-                  path: ':chapter_id',
-                  component: PupilsNotebookChapterView,
                 },
               ],
             },

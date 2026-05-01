@@ -58,9 +58,10 @@ function cardClass(fileId: number): string {
         </p>
 
         <button
+          v-if="!result"
           type="button"
           class="fake-button"
-          :disabled="!!result || submitting"
+          :disabled="submitting"
           @click="emit('selectFile', fileId)"
         >
           {{ selectButtonText ?? 'Velg dette bildet' }}

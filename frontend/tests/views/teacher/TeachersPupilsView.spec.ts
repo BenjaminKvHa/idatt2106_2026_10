@@ -113,7 +113,9 @@ describe('TeachersPupilsView', () => {
         ])
       }
 
-      if (url === '/api/teacher/classrooms/ABC123/pupils/approved@example.com/chapters/1/notebook') {
+      if (
+        url === '/api/teacher/classrooms/ABC123/pupils/approved@example.com/chapters/1/notebook'
+      ) {
         return Promise.resolve({
           chapterId: 1,
           chapterName: 'Nyhetskvartalet',
@@ -277,9 +279,12 @@ describe('TeachersPupilsView', () => {
     await wrapper.find('.save-changes').trigger('click')
     await flushPromises()
 
-    expect(patch).toHaveBeenCalledWith('/api/classrooms/ABC123/pupils/approved@example.com/username', {
-      username: 'newUsername',
-    })
+    expect(patch).toHaveBeenCalledWith(
+      '/api/classrooms/ABC123/pupils/approved@example.com/username',
+      {
+        username: 'newUsername',
+      },
+    )
   })
 
   it('shows error when saving username fails', async () => {
@@ -295,7 +300,7 @@ describe('TeachersPupilsView', () => {
     expect(wrapper.text()).toContain('Failed to save pupil changes')
   })
 
-  it('removes approved pupil after confirmation', async () => {
+  it('opens a custom confirmation popup before removing an approved pupil', async () => {
     vi.mocked(del).mockResolvedValueOnce(undefined)
 
     const wrapper = await mountComponent()
@@ -304,22 +309,32 @@ describe('TeachersPupilsView', () => {
     await wrapper.find('.remove-pupil').trigger('click')
     await flushPromises()
 
-    expect(window.confirm).toHaveBeenCalledWith(
-      'Er du sikker på at du vil fjerne Approved Pupil fra klasserommet?',
-    )
+    expect(window.confirm).not.toHaveBeenCalled()
+    expect(wrapper.find('.teacher-confirm-popup').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Er du sikker på at du vil fjerne')
+    expect(wrapper.text()).toContain('Approved Pupil')
+    expect(del).not.toHaveBeenCalled()
+
+    await wrapper.find('.confirm-remove-pupil').trigger('click')
+    await flushPromises()
+
     expect(del).toHaveBeenCalledWith('/api/classrooms/ABC123/pupils/approved@example.com')
   })
 
-  it('does not remove pupil when confirmation is cancelled', async () => {
-    vi.mocked(window.confirm).mockReturnValueOnce(false)
-
+  it('closes remove pupil popup without removing when cancelled', async () => {
     const wrapper = await mountComponent()
 
     await wrapper.find('.select-pupil').trigger('click')
     await wrapper.find('.remove-pupil').trigger('click')
     await flushPromises()
 
+    expect(wrapper.find('.teacher-confirm-popup').exists()).toBe(true)
+    await wrapper.find('.cancel-remove-pupil').trigger('click')
+    await flushPromises()
+
+    expect(window.confirm).not.toHaveBeenCalled()
     expect(del).not.toHaveBeenCalled()
+    expect(wrapper.find('.teacher-confirm-popup').exists()).toBe(false)
   })
 
   it('shows error when removing pupil fails', async () => {
@@ -329,6 +344,7 @@ describe('TeachersPupilsView', () => {
 
     await wrapper.find('.select-pupil').trigger('click')
     await wrapper.find('.remove-pupil').trigger('click')
+    await wrapper.find('.confirm-remove-pupil').trigger('click')
     await flushPromises()
 
     expect(wrapper.text()).toContain('Failed to remove pupil')

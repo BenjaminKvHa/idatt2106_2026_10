@@ -50,6 +50,8 @@ const notebookError = ref('')
 const selectedNotebookNote = ref('')
 const selectedNotebookChapterName = ref('')
 const savingUsername = ref(false)
+const pupilPendingRemoval = ref<Pupil | null>(null)
+const removingPupil = ref(false)
 
 const stopNames: StopName[] = ['Nyhetskvartalet', 'Fotografen', 'Datasenteret']
 
@@ -76,7 +78,10 @@ const selectedStopNote = computed(() => {
 })
 
 const hasUnsavedUsernameChanges = computed(() => {
-  return selectedPupil.value?.status === 'APPROVED' && editUsername.value !== selectedPupil.value.username
+  return (
+    selectedPupil.value?.status === 'APPROVED' &&
+    editUsername.value !== selectedPupil.value.username
+  )
 })
 
 const editUsername = ref('')
@@ -198,11 +203,11 @@ async function loadPupils() {
 
 async function loadSelectedNotebook() {
   if (
-    activePanel.value !== 'NOTES'
-    || !selectedPupil.value
-    || selectedPupil.value.status !== 'APPROVED'
-    || !selectedStopName.value
-    || !classroomCode.value
+    activePanel.value !== 'NOTES' ||
+    !selectedPupil.value ||
+    selectedPupil.value.status !== 'APPROVED' ||
+    !selectedStopName.value ||
+    !classroomCode.value
   ) {
     notebookLoading.value = false
     notebookError.value = ''
@@ -228,7 +233,8 @@ async function loadSelectedNotebook() {
       selectedNotebookNote.value = ''
       notebookError.value = ''
     } else {
-      notebookError.value = fetchError instanceof Error ? fetchError.message : 'Failed to load notebook'
+      notebookError.value =
+        fetchError instanceof Error ? fetchError.message : 'Failed to load notebook'
     }
   } finally {
     notebookLoading.value = false
@@ -258,7 +264,8 @@ const saveChanges = async (): Promise<void> => {
     pupil.username = updatedPupil.username
     pupil.totalXp = updatedPupil.totalXp
   } catch (requestError) {
-    actionError.value = requestError instanceof Error ? requestError.message : 'Failed to save pupil changes'
+    actionError.value =
+      requestError instanceof Error ? requestError.message : 'Failed to save pupil changes'
     return
   } finally {
     savingUsername.value = false
@@ -267,22 +274,37 @@ const saveChanges = async (): Promise<void> => {
   closeDetails()
 }
 
-const removePupil = async (): Promise<void> => {
+const removePupil = (): void => {
   if (!selectedPupil.value) return
 
-  const confirmed = window.confirm(
-    `Er du sikker på at du vil fjerne ${selectedPupil.value.legalName} fra klasserommet?`,
-  )
+  actionError.value = ''
+  pupilPendingRemoval.value = selectedPupil.value
+}
 
-  if (!confirmed) return
+const closeRemovePupilPopup = (): void => {
+  if (removingPupil.value) return
+  pupilPendingRemoval.value = null
+}
+
+const confirmRemovePupil = async (): Promise<void> => {
+  if (!pupilPendingRemoval.value || removingPupil.value) return
+
+  const pupilToRemove = pupilPendingRemoval.value
+  removingPupil.value = true
 
   try {
     actionError.value = ''
-    await del(`/api/classrooms/${classroomCode.value}/pupils/${selectedPupil.value.email}`)
+    await del(`/api/classrooms/${classroomCode.value}/pupils/${pupilToRemove.email}`)
     await loadPupils()
-    closeDetails()
+    if (selectedPupilEmail.value === pupilToRemove.email) {
+      closeDetails()
+    }
+    pupilPendingRemoval.value = null
   } catch (requestError) {
-    actionError.value = requestError instanceof Error ? requestError.message : 'Failed to remove pupil'
+    actionError.value =
+      requestError instanceof Error ? requestError.message : 'Failed to remove pupil'
+  } finally {
+    removingPupil.value = false
   }
 }
 
@@ -291,11 +313,15 @@ const approvePendingPupil = async (): Promise<void> => {
 
   try {
     actionError.value = ''
-    await put(`/api/classrooms/${classroomCode.value}/pupils/${selectedPupil.value.email}/accept`, {})
+    await put(
+      `/api/classrooms/${classroomCode.value}/pupils/${selectedPupil.value.email}/accept`,
+      {},
+    )
     await loadPupils()
     closeDetails()
   } catch (requestError) {
-    actionError.value = requestError instanceof Error ? requestError.message : 'Failed to approve pupil'
+    actionError.value =
+      requestError instanceof Error ? requestError.message : 'Failed to approve pupil'
   }
 }
 
@@ -314,7 +340,8 @@ const rejectPendingPupil = async (): Promise<void> => {
     await loadPupils()
     closeDetails()
   } catch (requestError) {
-    actionError.value = requestError instanceof Error ? requestError.message : 'Failed to reject pupil'
+    actionError.value =
+      requestError instanceof Error ? requestError.message : 'Failed to reject pupil'
   }
 }
 
@@ -339,13 +366,9 @@ watch(
   },
 )
 
-watch(
-  [selectedPupilEmail, selectedStopName, activePanel],
-  async () => {
-    await loadSelectedNotebook()
-  },
-)
-
+watch([selectedPupilEmail, selectedStopName, activePanel], async () => {
+  await loadSelectedNotebook()
+})
 </script>
 
 <template>
@@ -383,6 +406,40 @@ watch(
         @reject-pending-pupil="rejectPendingPupil"
       />
     </section>
+
+    <div
+      v-if="pupilPendingRemoval"
+      class="teacher-confirm-overlay"
+      @click.self="closeRemovePupilPopup"
+    >
+      <section class="teacher-confirm-popup" role="dialog" aria-modal="true">
+        <h2>Fjern elev?</h2>
+        <p>
+          Er du sikker på at du vil fjerne
+          <strong>{{ pupilPendingRemoval.legalName }}</strong>
+          fra klasserommet?
+        </p>
+
+        <div class="teacher-confirm-actions">
+          <button
+            type="button"
+            class="teacher-confirm-button teacher-confirm-button-secondary cancel-remove-pupil"
+            :disabled="removingPupil"
+            @click="closeRemovePupilPopup"
+          >
+            Avbryt
+          </button>
+          <button
+            type="button"
+            class="teacher-confirm-button teacher-confirm-button-danger confirm-remove-pupil"
+            :disabled="removingPupil"
+            @click="confirmRemovePupil"
+          >
+            {{ removingPupil ? 'Fjerner...' : 'Bekreft' }}
+          </button>
+        </div>
+      </section>
+    </div>
   </main>
 </template>
 
@@ -401,7 +458,7 @@ watch(
 
 @media (max-width: 768px) {
   .pupils-view {
-    padding: .5rem;
+    padding: 0.5rem;
   }
 }
 
@@ -437,6 +494,74 @@ watch(
 
 .state-message.error {
   color: #9f1d1d;
+}
+
+.teacher-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgb(60 42 31 / 45%);
+}
+
+.teacher-confirm-popup {
+  width: min(520px, calc(100vw - 32px));
+  padding: 2rem;
+  border: var(--border-wide) solid var(--brown-dark);
+  border-radius: 24px;
+  background: var(--beige-light);
+  box-shadow: 0 16px 30px var(--brown-dark-20);
+  text-align: center;
+}
+
+.teacher-confirm-popup h2 {
+  margin: 0 0 0.75rem;
+  font-size: 2rem;
+  color: var(--txt);
+}
+
+.teacher-confirm-popup p {
+  margin: 0;
+  color: var(--txt);
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.teacher-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.75rem;
+}
+
+.teacher-confirm-button {
+  min-width: 140px;
+  padding: 0.85rem 1.4rem;
+  border: var(--border-wide) solid var(--brown-dark);
+  border-radius: 18px;
+  color: var(--txt);
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 12px var(--brown-dark-20);
+}
+
+.teacher-confirm-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.teacher-confirm-button-secondary {
+  background: var(--beige-medium);
+}
+
+.teacher-confirm-button-danger {
+  background: var(--red-danger);
 }
 
 .page-title {

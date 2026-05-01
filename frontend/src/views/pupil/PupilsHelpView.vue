@@ -52,20 +52,25 @@ import TopBar from '@/components/pupil/TopBar.vue'
 
 .text-box {
   position: absolute;
+  font-weight: 600;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 
-  top: 18%;
-
-  bottom: 22%;
-
-  left: 16%;
-  right: 16%;
-
+  height: 70%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 
-  padding: 0.75rem 1.25rem;
+  padding: 4rem 3rem 4rem 5rem;
   border-radius: 1rem;
+
+  aspect-ratio: 1.25/1;
+
+  background-image: url('@/assets/paper.png');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 h1 {
@@ -76,7 +81,7 @@ h1 {
   text-align: center;
   font-family: 'Inika', serif;
 
-  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-size: clamp(1.2rem, 3vw, 2rem);
 
   color: var(--brown-dark);
 }
@@ -89,7 +94,7 @@ h1 {
 
   font-family: 'Inter', sans-serif;
   color: var(--brown-dark);
-  font-size: clamp(1rem, 1.6vw, 1.25rem);
+  font-size: clamp(0.7rem, 1.6vw, 1rem);
   line-height: 1.6;
 }
 
@@ -119,12 +124,12 @@ strong {
   }
 
   h1 {
-    font-size: 1.4rem;
+    font-size: 1.2rem;
     margin: 0.3rem 0 0.5rem 0;
   }
 
   .scroll-content {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     line-height: 1.45;
   }
 }

@@ -338,7 +338,6 @@ li {
   gap: clamp(0.45rem, 0.8vw, 0.7rem);
   position: relative;
   isolation: isolate;
-  margin-top: 2.5rem;
   min-height: var(--leaderboard-current-label-height);
   padding: clamp(1rem, 1.45vw, 1.25rem) clamp(3.6rem, 5.7vw, 5.4rem);
   background-image: url('@/assets/woodenLabel.png');

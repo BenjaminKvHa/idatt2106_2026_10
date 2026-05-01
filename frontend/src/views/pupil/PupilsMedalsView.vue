@@ -184,11 +184,13 @@ function medalImageUrl(medal: PupilMedal) {
 }
 
 .medal-grid {
+  --medal-card-size: clamp(12.5rem, 18.5vw, 16rem);
+
   flex: 0 0 auto;
   margin: 0 auto;
   width: min(100%, 68rem);
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, clamp(12.5rem, 18.5vw, 16rem)), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--medal-card-size)), 1fr));
   align-content: start;
   gap: clamp(0.65rem, 1.35vw, 1rem);
   list-style: none;
@@ -198,13 +200,16 @@ function medalImageUrl(medal: PupilMedal) {
 }
 
 .medal-slot {
+  display: flex;
+  justify-content: center;
   min-width: 0;
 }
 
 .medal-card {
   position: relative;
+  width: min(100%, var(--medal-card-size));
   aspect-ratio: 1 / 1;
-  min-height: clamp(12.5rem, 18.5vw, 16rem);
+  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -217,6 +222,7 @@ function medalImageUrl(medal: PupilMedal) {
   background-position: center;
   background-size: 100% 100%;
   box-shadow: none;
+  box-sizing: border-box;
   padding: 15% 14% 13%;
 }
 
@@ -299,8 +305,13 @@ function medalImageUrl(medal: PupilMedal) {
 }
 
 @media (max-width: 900px) {
-  .board-content {
-    inset: 20% 10% 13% 12%;
+  .medals-header {
+    min-height: clamp(4.75rem, 13vw, 6.75rem);
+  }
+
+  .medals-icon {
+    width: clamp(4.75rem, 13vw, 6.75rem);
+    height: clamp(4.75rem, 13vw, 6.75rem);
   }
 
   .medal-grid {
@@ -310,20 +321,19 @@ function medalImageUrl(medal: PupilMedal) {
 
 @media (max-width: 560px) {
   .board-content {
-    inset: 16% 7% 10% 9%;
-    padding: 0 0.25rem 0.75rem 0;
+    inset: 16.3% 7% 13.2% 9%;
+    padding: 0 0.25rem 0.35rem 0;
   }
 
   .medals-header {
     flex-direction: column;
     justify-content: center;
     gap: 0;
-    min-height: auto;
+    min-height: 3.4rem;
   }
 
   .medals-icon {
-    width: clamp(4.5rem, 22vw, 7rem);
-    height: clamp(4.5rem, 22vw, 7rem);
+    display: none;
   }
 
   .medal-progress {
@@ -334,9 +344,28 @@ function medalImageUrl(medal: PupilMedal) {
   }
 
   .medal-grid {
+    --medal-card-size: clamp(10.25rem, 40vw, 12rem);
+
     grid-template-columns: minmax(0, 1fr);
-    width: min(100%, 16rem);
+    width: min(100%, 13rem);
     padding-inline: 0.15rem;
+  }
+
+  .medal-art {
+    width: clamp(4.2rem, 18vw, 5.5rem);
+    height: clamp(3.75rem, 16vw, 4.9rem);
+  }
+
+  .medal-copy h2 {
+    font-size: clamp(0.82rem, 3.9vw, 0.96rem);
+  }
+
+  .medal-copy p {
+    font-size: clamp(0.52rem, 2.7vw, 0.62rem);
+  }
+
+  .medal-status {
+    font-size: clamp(0.56rem, 2.8vw, 0.66rem);
   }
 }
 </style>

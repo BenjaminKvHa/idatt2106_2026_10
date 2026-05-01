@@ -4,6 +4,7 @@ export type MeProfile = {
   role: BackendAccountRole
   classroomCode: string | null
   membershipConfirmed: boolean
+  needsIntroSequence: boolean
 }
 
 const ME_CACHE_KEY = 'me-profile-cache'
@@ -45,6 +46,10 @@ export function getPupilMembershipRoute(profile: MeProfile | null): string {
 
   if (!profile.membershipConfirmed) {
     return '/join-classroom/waiting-classroom'
+  }
+
+  if (profile.needsIntroSequence) {
+    return '/pupil/welcome-guide'
   }
 
   return '/pupil'

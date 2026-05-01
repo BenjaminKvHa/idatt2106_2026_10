@@ -1,9 +1,11 @@
 package com.nettdet.backend.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -32,6 +34,7 @@ import com.nettdet.backend.dto.LoginRequest;
 import com.nettdet.backend.dto.RegisterRequest;
 import com.nettdet.backend.dto.UpdateMeRequest;
 import com.nettdet.backend.repository.AccountRepository;
+import com.nettdet.backend.repository.PupilChapterBridgeProgressionRepository;
 import com.nettdet.backend.repository.PupilClassroomMembershipRepository;
 import com.nettdet.backend.security.JwtUserPrincipal;
 
@@ -43,6 +46,9 @@ class AccountServiceTest {
 
     @Mock
     private PupilClassroomMembershipRepository pupilClassroomMembershipRepository;
+
+    @Mock
+    private PupilChapterBridgeProgressionRepository progressionRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -182,6 +188,40 @@ class AccountServiceTest {
 
         assertEquals(42L, response.avatarFileObjectId());
         assertNull(response.avatarSelection());
+    }
+
+    @DisplayName("Marks confirmed pupils without chapter one progression as needing intro")
+    @Test
+    void getAuthenticatedProfile_whenConfirmedPupilHasNoChapterOneProgression_needsIntroSequence() {
+        Account account = account("pupil@example.com", "stored-password", "Pupil Name", AccountRole.PUPIL);
+        PupilClassroomMembership membership = membership(account, null);
+        when(accountRepository.findByEmail("pupil@example.com")).thenReturn(Optional.of(account));
+        when(pupilClassroomMembershipRepository.findByAccountEmail("pupil@example.com"))
+                .thenReturn(Optional.of(membership));
+        when(progressionRepository.existsByIdEmailAndIdChapterId("pupil@example.com", 1L))
+                .thenReturn(false);
+
+        AuthMeResponse response = accountService.getAuthenticatedProfile("pupil@example.com");
+
+        assertTrue(response.membershipConfirmed());
+        assertTrue(response.needsIntroSequence());
+    }
+
+    @DisplayName("Does not mark confirmed pupils with chapter one progression as needing intro")
+    @Test
+    void getAuthenticatedProfile_whenConfirmedPupilHasChapterOneProgression_doesNotNeedIntroSequence() {
+        Account account = account("pupil@example.com", "stored-password", "Pupil Name", AccountRole.PUPIL);
+        PupilClassroomMembership membership = membership(account, null);
+        when(accountRepository.findByEmail("pupil@example.com")).thenReturn(Optional.of(account));
+        when(pupilClassroomMembershipRepository.findByAccountEmail("pupil@example.com"))
+                .thenReturn(Optional.of(membership));
+        when(progressionRepository.existsByIdEmailAndIdChapterId("pupil@example.com", 1L))
+                .thenReturn(true);
+
+        AuthMeResponse response = accountService.getAuthenticatedProfile("pupil@example.com");
+
+        assertTrue(response.membershipConfirmed());
+        assertFalse(response.needsIntroSequence());
     }
 
     private Account account(String email, String passwordData, String legalName, AccountRole role) {

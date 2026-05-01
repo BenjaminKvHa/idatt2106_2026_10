@@ -36,6 +36,15 @@ public interface PupilChapterBridgeProgressionRepository
     Optional<PupilChapterBridgeProgression> findByIdEmailAndIdChapterId(String email, Long chapterId);
 
     /**
+     * Checks whether a progression record exists for a specific pupil and chapter.
+     *
+     * @param email     the email of the pupil
+     * @param chapterId the unique identifier of the chapter
+     * @return true if the progression record exists, false otherwise
+     */
+    boolean existsByIdEmailAndIdChapterId(String email, Long chapterId);
+
+    /**
      * Finds the progression record for a pupil and chapter within a specific classroom.
      * This ensures the progression is relevant to the current classroom context.
      *

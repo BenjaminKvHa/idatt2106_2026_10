@@ -2,6 +2,8 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ClipboardList, Lock } from '@lucide/vue'
+import { post } from '@/utils/apiUtils'
+import { clearMeCache } from '@/utils/authRedirect'
 
 import aliImg from '@/assets/icons/detectives_and_thief/detective_ali.png'
 import suryaImg from '@/assets/icons/detectives_and_thief/detective_surya.png'
@@ -10,9 +12,25 @@ import bgImg from '@/assets/backgrounds/welcomeBackground.png'
 
 const router = useRouter()
 const activeCharacter = ref<string | null>(null)
+const completingIntro = ref(false)
+const completionError = ref('')
 
-function confirm(): void {
-  router.push('/pupil')
+async function confirm(): Promise<void> {
+  if (completingIntro.value) return
+
+  completingIntro.value = true
+  completionError.value = ''
+
+  try {
+    await post('/api/pupil/intro/complete', undefined)
+    clearMeCache()
+    await router.replace('/pupil')
+  } catch (error) {
+    completionError.value =
+      error instanceof Error ? error.message : 'Kunne ikke starte spillet. Prøv igjen.'
+  } finally {
+    completingIntro.value = false
+  }
 }
 
 function toggleCharacter(character: string): void {
@@ -22,8 +40,7 @@ function toggleCharacter(character: string): void {
 
 <template>
   <div class="center-container" :style="{ backgroundImage: `url(${bgImg})` }">
-    <div class="scene">
-      
+    <div class="scene" :class="{ 'has-active-character': activeCharacter }">
       <div class="heroes">
         <div class="character ali" @click="toggleCharacter('ali')">
           <span class="character-name">Detektiv Ali</span>
@@ -54,26 +71,27 @@ function toggleCharacter(character: string): void {
       </div>
 
       <div class="card">
-        <div class="secret-badge">
-          <Lock :size="14" /> Hemmelig oppdrag
-        </div>
+        <div class="secret-badge"><Lock :size="14" /> Hemmelig oppdrag</div>
 
         <h1>Velkommen, nettdetektiv!</h1>
         <div class="divider"></div>
 
         <div class="text">
-          <span>Akkurat nå er byen din under angrep av <strong>datatyven</strong>.
-            Detektiv Ali og Detektiv Surya trenger din hjelp til å bekjempe datatyven.</span>
+          <span
+            >Akkurat nå er byen din under angrep av <strong>datatyven</strong>. Detektiv Ali og
+            Detektiv Surya trenger din hjelp til å bekjempe datatyven.</span
+          >
         </div>
 
         <div class="mission-box">
-          <div class="mission-label">
-            <ClipboardList :size="13" /> Ditt oppdrag
-          </div>
+          <div class="mission-label"><ClipboardList :size="13" /> Ditt oppdrag</div>
           <div class="steps">
             <div class="step">
               <span class="step-num">1</span>
-              <span>Lær å skille <strong>falsk</strong> fra <strong>ekte</strong> innhold på internett</span>
+              <span
+                >Lær å skille <strong>falsk</strong> fra <strong>ekte</strong> innhold på
+                internett</span
+              >
             </div>
             <div class="step">
               <span class="step-num">2</span>
@@ -86,8 +104,10 @@ function toggleCharacter(character: string): void {
           </div>
         </div>
 
-        <button class="ready-button pupil-button-3d" @click="confirm">
-          Start spillet
+        <p v-if="completionError" class="completion-error" role="alert">{{ completionError }}</p>
+
+        <button class="ready-button pupil-button-3d" :disabled="completingIntro" @click="confirm">
+          {{ completingIntro ? 'Starter...' : 'Start spillet' }}
         </button>
       </div>
     </div>
@@ -97,34 +117,41 @@ function toggleCharacter(character: string): void {
 <style scoped>
 .center-container {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  padding: 3rem 1.5rem;
-  overflow: hidden;
+  padding: clamp(1.25rem, 3vw, 3rem) clamp(0.75rem, 2vw, 1.5rem);
+  overflow-x: hidden;
+  overflow-y: auto;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
 }
 
 .scene {
-  display: flex;
-  align-items: center;
+  --character-width: clamp(12rem, 18vw, 15.625rem);
+
+  display: grid;
+  grid-template-columns: minmax(16rem, max-content) minmax(28rem, 34rem) minmax(10rem, max-content);
+  align-items: end;
   justify-content: center;
-  position: relative;
+  gap: clamp(0.75rem, 2vw, 2rem);
   width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
   z-index: 1;
 }
 
 .heroes {
   display: flex;
   align-items: flex-end;
-  gap: 0.65rem;
-  position: absolute;
-  left: 3%;
-  bottom: 10%;
-  z-index: 1;
+  justify-content: flex-end;
+  gap: clamp(0.45rem, 1vw, 0.65rem);
+  position: relative;
+  min-width: 0;
+  z-index: 2;
 }
 
 .character {
@@ -189,27 +216,25 @@ function toggleCharacter(character: string): void {
   display: block;
   margin-inline: -1.4rem;
   margin-bottom: -0.25rem;
-  filter:
-    drop-shadow(0 6px 0 var(--brown-dark-60))
-    drop-shadow(0 0 12px var(--beige-light-40));
+  filter: drop-shadow(0 6px 0 var(--brown-dark-60)) drop-shadow(0 0 12px var(--beige-light-40));
 }
 
 .ali img {
-  width: 250px;
+  width: var(--character-width);
 }
 
 .surya img {
-  width: 250px;
+  width: var(--character-width);
 }
 
 .villain {
-  right: 15%;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.25rem;
-  position: absolute;
-  z-index: 1;
+  justify-self: start;
+  position: relative;
+  z-index: 2;
   width: fit-content;
   padding: 0.6rem 0.2rem 0.45rem;
   border-radius: 32px;
@@ -261,7 +286,7 @@ function toggleCharacter(character: string): void {
 }
 
 .villain img {
-  width: 250px;
+  width: var(--character-width);
   object-fit: contain;
   position: relative;
   z-index: 1;
@@ -296,6 +321,7 @@ function toggleCharacter(character: string): void {
   left: 50%;
   transform: translateX(-50%);
   width: 210px;
+  max-width: calc(100vw - 2rem);
   background: var(--beige-light);
   color: var(--color-text);
   padding: 10px 14px;
@@ -330,12 +356,14 @@ function toggleCharacter(character: string): void {
 
 .card {
   position: relative;
+  grid-column: 2;
+  grid-row: 1;
   background: var(--beige-light-100);
   border: var(--border-wide) solid var(--brown-dark);
   border-radius: 40px;
   box-shadow: -3px 3px 6px var(--brown-dark);
   max-width: 540px;
-  width: 540px;
+  width: 100%;
   padding: 3rem 2.5rem 2.5rem;
   display: flex;
   flex-direction: column;
@@ -436,8 +464,164 @@ h1 {
   background: var(--green-confirm);
 }
 
+.ready-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.completion-error {
+  margin: 0;
+  color: var(--red-danger);
+  font-weight: 700;
+  text-align: center;
+}
+
+@media (max-width: 1180px) {
+  .center-container {
+    align-items: flex-start;
+  }
+
+  .scene {
+    --character-width: clamp(8.25rem, 18vw, 15.625rem);
+
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    justify-content: stretch;
+    max-width: min(100%, 64rem);
+    gap: 1rem;
+  }
+
+  .scene.has-active-character {
+    padding-bottom: 6rem;
+  }
+
+  .card {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    justify-self: center;
+    max-width: 42rem;
+  }
+
+  .heroes {
+    grid-column: 1;
+    grid-row: 2;
+    justify-content: flex-start;
+    justify-self: start;
+    width: auto;
+  }
+
+  .villain {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+  }
+
+  .character,
+  .villain {
+    max-width: calc(var(--character-width) + 1.5rem);
+  }
+
+  .speech {
+    top: calc(100% + 14px);
+    bottom: auto;
+  }
+
+  .speech::after {
+    top: -8px;
+    bottom: auto;
+    border-color: transparent transparent var(--beige-light) transparent;
+  }
+
+  .ali .speech {
+    left: 0;
+    transform: none;
+  }
+
+  .ali .speech::after {
+    left: calc(var(--character-width) / 2);
+    transform: translateX(-50%);
+  }
+
+  .villain .speech {
+    right: 0;
+    left: auto;
+    transform: none;
+  }
+
+  .villain .speech::after {
+    right: calc(var(--character-width) / 2);
+    left: auto;
+    transform: translateX(50%);
+  }
+}
+
+@media (max-width: 640px) {
+  .center-container {
+    padding: 2rem 0.75rem 1rem;
+  }
+
+  .scene {
+    --character-width: clamp(5.25rem, 24vw, 8rem);
+
+    column-gap: 0.5rem;
+    row-gap: 0.75rem;
+  }
+
+  .card {
+    border-radius: 28px;
+    padding: 2.75rem 1rem 1.25rem;
+    gap: 1rem;
+  }
+
+  .secret-badge {
+    max-width: calc(100% - 1.5rem);
+    justify-content: center;
+    text-align: center;
+    font-size: 13px;
+    padding-inline: 14px;
+  }
+
+  h1 {
+    font-size: 1.65rem;
+  }
+
+  .text {
+    font-size: 1rem;
+    line-height: 1.5;
+    padding: 0;
+  }
+
+  .mission-box {
+    border-radius: 26px;
+    padding: 1rem;
+  }
+
+  .step {
+    gap: 10px;
+    font-size: 14px;
+  }
+
+  .ready-button {
+    width: 100%;
+    padding-inline: 1rem;
+  }
+
+  .character-name {
+    font-size: 14px;
+    max-width: calc(var(--character-width) + 0.75rem);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .speech {
+    width: min(210px, 70vw);
+  }
+}
+
 @keyframes glowPulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     opacity: 0.85;
   }
@@ -448,7 +632,8 @@ h1 {
 }
 
 @keyframes villainPulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     opacity: 0.85;
   }

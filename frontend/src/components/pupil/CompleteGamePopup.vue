@@ -4,6 +4,7 @@ import confetti from 'canvas-confetti'
 import victorySoundFile from '@/assets/sounds/levels/victory-sound.mp3'
 import defeatSoundFile from '@/assets/sounds/levels/evil-laugh.mp3'
 import { useAudio } from '@/composables/useAudio'
+import BaseModal from '@/components/ui/BaseModal.vue'
 
 const props = defineProps<{
   show: boolean
@@ -99,51 +100,46 @@ watch(
 </script>
 
 <template>
-  <div v-if="show" class="game-overlay" @click="closePopup">
-    <div class="game-popup" :class="{ 'game-popup-defeat': !success }" @click.stop>
+  <BaseModal
+    v-if="show"
+    panel-class=""
+    :close-on-backdrop="true"
+    :close-on-escape="true"
+    :showCloseButton="false"
+    @close="closePopup"
+  >
+    <div :class="['game-popup-wrapper', { 'game-popup-defeat': !success }]">
       <div class="game-top">
-        <img :src="image" :alt="imageAlt ?? (success ? 'Seier' : 'Tap')" class="game-image" />
+      <img :src="image" :alt="imageAlt ?? (success ? 'Seier' : 'Tap')" class="game-image" />
+    </div>
+
+    <div class="game-content">
+      <p v-if="kicker" class="game-kicker">{{ kicker }}</p>
+
+      <h2 class="game-title">{{ title }}</h2>
+
+      <p class="game-message">{{ message }}</p>
+      <p v-if="subMessage" class="game-submessage">{{ subMessage }}</p>
+
+      <div v-if="success && (highlightTitle || highlightText)" class="game-highlight">
+        <p v-if="highlightTitle" class="game-highlight-title">{{ highlightTitle }}</p>
+        <p v-if="highlightText">{{ highlightText }}</p>
       </div>
 
-      <div class="game-content">
-        <p v-if="kicker" class="game-kicker">{{ kicker }}</p>
+      <div class="game-actions">
+        <button v-if="!success" class="game-button retry-button" @click="retryGame">
+          Prøv på nytt
+        </button>
 
-        <h2 class="game-title">{{ title }}</h2>
-
-        <p class="game-message">{{ message }}</p>
-        <p v-if="subMessage" class="game-submessage">{{ subMessage }}</p>
-
-        <div v-if="success && (highlightTitle || highlightText)" class="game-highlight">
-          <p v-if="highlightTitle" class="game-highlight-title">{{ highlightTitle }}</p>
-          <p v-if="highlightText">{{ highlightText }}</p>
-        </div>
-
-        <div class="game-actions">
-          <button v-if="!success" class="game-button retry-button" @click="retryGame">
-            Prøv på nytt
-          </button>
-
-          <button class="game-button map-button" @click="goToMap">Tilbake til kartet</button>
-        </div>
+        <button class="game-button map-button" @click="goToMap">Tilbake til kartet</button>
+      </div>
       </div>
     </div>
-  </div>
+  </BaseModal>
 </template>
 
 <style scoped>
-.game-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgb(0 0 0 / 32%);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 24px;
-  z-index: 9999;
-  backdrop-filter: blur(4px);
-}
-
-.game-popup {
+.game-popup-wrapper {
   width: min(980px, calc(100vw - 32px));
   max-height: calc(100vh - 32px);
   overflow-y: auto;
@@ -159,9 +155,10 @@ watch(
     0 22px 60px rgb(0 0 0 / 30%),
     inset 0 3px 0 rgb(255 255 255 / 28%);
   text-align: center;
+  padding: 0;
 }
 
-.game-popup-defeat {
+.game-popup-wrapper.game-popup-defeat {
   background: linear-gradient(
     180deg,
     rgb(255 186 135 / 96%) 0%,
@@ -261,7 +258,7 @@ watch(
 }
 
 @media (max-width: 768px) {
-  .game-popup {
+  .complete-game-popup {
     border-width: 4px;
     border-radius: 28px;
   }

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import hintCreature from '@/assets/creatureSittingQuestion.png'
+import BaseModal from '@/components/ui/BaseModal.vue'
 import { get } from '@/utils/apiUtils'
 
 type ChapterTipResponse = {
@@ -58,23 +59,28 @@ async function openHintPopup() {
 
   <slot />
 
-  <Teleport to="body">
-    <div v-if="showHintPopup" class="hint-overlay" @click="showHintPopup = false">
-      <div class="hint-popup" @click.stop>
-        <h2>Tips 💡</h2>
-        <p v-if="loading">Henter tips...</p>
-        <p v-else-if="errorMessage" class="hint-error">{{ errorMessage }}</p>
-        <template v-else>
-          <p>{{ tip }}</p>
-          <p v-if="newlyAdded" class="hint-status">Tipset er lagret i notatboken din.</p>
-          <p v-else-if="allTipsReceived" class="hint-status">
-            Du har allerede samlet alle tipsene for dette kapittelet.
-          </p>
-        </template>
-        <button class="hint-close-button" @click="showHintPopup = false">Ok</button>
-      </div>
+  <BaseModal 
+    v-if="showHintPopup" 
+    panel-class="no-padding"
+    :show-close-button="false"
+    :close-on-backdrop="true"
+    :close-on-escape="true"
+    @close="showHintPopup = false"
+  >
+    <div class="hint-popup-wrapper">
+      <h2>Tips 💡</h2>
+    <p v-if="loading">Henter tips...</p>
+    <p v-else-if="errorMessage" class="hint-error">{{ errorMessage }}</p>
+    <template v-else>
+      <p>{{ tip }}</p>
+      <p v-if="newlyAdded" class="hint-status">Tipset er lagret i notatboken din.</p>
+      <p v-else-if="allTipsReceived" class="hint-status">
+        Du har allerede samlet alle tipsene for dette kapittelet.
+      </p>
+    </template>
+    <button class="hint-close-button" @click="showHintPopup = false">Ok</button>
     </div>
-  </Teleport>
+  </BaseModal>
 </template>
 
 <style scoped>
@@ -119,17 +125,7 @@ async function openHintPopup() {
   cursor: wait;
 }
 
-.hint-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000000;
-  background: rgb(0 0 0 / 35%);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.hint-popup {
+.hint-popup-wrapper {
   width: min(620px, calc(100vw - 32px));
   background: var(--beige-light);
   border: 5px solid var(--brown-dark);
@@ -139,17 +135,17 @@ async function openHintPopup() {
   box-shadow: 0 14px 30px rgb(0 0 0 / 25%);
 }
 
-.hint-popup h2 {
+.hint-popup-wrapper h2 {
   margin: 0 0 1rem;
 }
 
-.hint-popup p {
+.hint-popup-wrapper p {
   margin: 0;
   font-size: 1.15rem;
   line-height: 1.5;
 }
 
-.hint-popup .hint-status {
+.hint-status {
   margin-top: 1rem;
   font-size: 1rem;
   font-weight: 800;

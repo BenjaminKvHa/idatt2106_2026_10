@@ -1,20 +1,28 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { useKeyboardTrapFactory } from '@pdanpdan/vue-keyboard-trap'
 
 const props = withDefaults(
   defineProps<{
     closeOnBackdrop?: boolean
     closeOnEscape?: boolean
     panelClass?: string
+    showCloseButton?: boolean
+    noPadding?: boolean
   }>(),
   {
     closeOnBackdrop: true,
     closeOnEscape: true,
     panelClass: '',
+    showCloseButton: true,
+    noPadding: false,
   }
 )
 
 const emit = defineEmits<{ (e: 'close'): void }>()
+
+const modalWindow = ref<HTMLElement | null>(null)
+const useKeyboardTrap = useKeyboardTrapFactory()
 
 function requestClose() {
   emit('close')
@@ -33,10 +41,15 @@ function onKeydown(event: KeyboardEvent) {
 }
 
 onMounted(() => {
+  document.body.style.overflow = 'hidden'
   document.addEventListener('keydown', onKeydown)
+  if (modalWindow.value) {
+    useKeyboardTrap(modalWindow.value, { autofocus: true })
+  }
 })
 
 onBeforeUnmount(() => {
+  document.body.style.overflow = ''
   document.removeEventListener('keydown', onKeydown)
 })
 </script>
@@ -44,8 +57,14 @@ onBeforeUnmount(() => {
 <template>
   <Teleport to="body">
     <div class="modal-backdrop" @click.self="onBackdropClick">
-      <div class="modal-window" :class="panelClass" role="dialog" aria-modal="true">
-        <button class="modal-close" @click="requestClose" aria-label="close">✕</button>
+      <div
+        ref="modalWindow"
+        class="modal-window"
+        :class="[panelClass, { 'modal-window--no-padding': noPadding }]"
+        role="dialog"
+        aria-modal="true"
+      >
+        <button v-if="showCloseButton" class="modal-close" @click="requestClose" aria-label="close">✕</button>
         <slot />
       </div>
     </div>
@@ -58,19 +77,32 @@ onBeforeUnmount(() => {
     inset: 0;
     background: var(--obscure);
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: flex-start;
     z-index: 200;
+    overflow-y: auto;
+    padding: 2rem 0;
 }
 
 .modal-window {
     position: relative;
-    width: min(90vw, 640px);
-    max-height: 90vh;
-    overflow: auto;
+    width: fit-content;
+    max-width: 90vw;
+    margin: auto;
     display: flex;
     flex-direction: column;
     padding: var(--thick-padding);
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.modal-window--no-padding {
+    padding: 0;
+}
+
+.modal-window :deep(*) {
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .modal-close {

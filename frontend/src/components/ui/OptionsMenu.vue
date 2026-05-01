@@ -43,7 +43,7 @@ function close() {
 </template>
 
 <style scoped>
-.settings-modal-box {
+:deep(.settings-modal-box) {
     min-width: 320px;
     max-width: 500px;
     width: 90vw;

@@ -5,6 +5,7 @@ import TopBar from '@/components/pupil/TopBar.vue'
 import HintCreature from '@/components/pupil/task/BlobbyQuestion.vue'
 import TaskGuide from '@/components/pupil/TaskGuide.vue'
 import CompleteLevelPopup from '@/components/pupil/CompleteLevelPopup.vue'
+import BaseModal from '@/components/ui/BaseModal.vue'
 import { get, getBlob, post } from '@/utils/apiUtils'
 import type {
   NewsVerificationRequest,
@@ -224,26 +225,31 @@ onBeforeUnmount(revokeImageUrls)
       </p>
     </TaskGuide>
 
-    <div v-if="showHelpPopup" class="popup-overlay" @click="closeHelpPopup">
-      <div class="hint-popup" @click.stop>
+    <BaseModal
+      v-if="showHelpPopup"
+      :close-on-backdrop="true"
+      :close-on-escape="true"
+      @close="closeHelpPopup"
+    >
+      <div class="news-help-popup-wrapper">
         <h2 class="popup-title">Trenger du hjelp?</h2>
 
-        <div class="hint-text">
-          <p>
-            I Nyhetskvartalet skal du undersøke informasjon og finne ut hva som er ekte og falskt.
-          </p>
-          <ul>
-            <li>Les oppgaven nøye før du svarer</li>
-            <li>Sammenlign bildene og se etter rare detaljer</li>
-            <li>Velg det alternativet du mener er falskt</li>
-          </ul>
+      <div class="hint-text">
+        <p>
+          I Nyhetskvartalet skal du undersøke informasjon og finne ut hva som er ekte og falskt.
+        </p>
+        <ul>
+          <li>Les oppgaven nøye før du svarer</li>
+          <li>Sammenlign bildene og se etter rare detaljer</li>
+          <li>Velg det alternativet du mener er falskt</li>
+        </ul>
         </div>
 
         <div class="popup-actions">
           <button class="popup-btn popup-btn-play" @click="closeHelpPopup">Ok</button>
         </div>
       </div>
-    </div>
+    </BaseModal>
 
     <CompleteLevelPopup
       :show="showCompletePopup"
@@ -388,6 +394,16 @@ onBeforeUnmount(revokeImageUrls)
 
 .hint-text li {
   margin-bottom: 6px;
+}
+
+.news-help-popup-wrapper {
+  width: min(560px, calc(100vw - 32px));
+  background: var(--orange-medium-80);
+  border: 4px solid var(--brown-dark);
+  border-radius: 28px;
+  padding: 28px 24px 20px;
+  text-align: center;
+  backdrop-filter: blur(2px);
 }
 
 .popup-btn-play {

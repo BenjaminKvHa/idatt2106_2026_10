@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import BaseModal from '@/components/ui/BaseModal.vue'
+
 withDefaults(
   defineProps<{
     buttonText?: string
@@ -18,7 +20,13 @@ function confirm(): void {
 </script>
 
 <template>
-  <div class="overlay">
+  <BaseModal
+    panel-class=""
+    :close-on-backdrop="false"
+    :close-on-escape="false"
+    :show-close-button="false"
+    @close="confirm"
+  >
     <div class="center-container">
       <div class="guide-text">
         <slot />
@@ -27,21 +35,11 @@ function confirm(): void {
         {{ buttonText }}
       </button>
     </div>
-  </div>
+  </BaseModal>
 </template>
 
 <style scoped>
-.overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.5);
-}
 .center-container {
-  transform: translateY(-40px);
   gap: 2rem;
   padding: 1rem 1rem 2rem;
   display: flex;
@@ -50,8 +48,7 @@ function confirm(): void {
   background: var(--orange-medium);
   border-radius: 40px;
   border: 5px solid var(--brown-dark);
-  width: 80%;
-  max-width: 1000px;
+  width: min(80vw, 1000px);
   box-shadow: -8px 8px 4px var(--brown-dark-60);
   box-sizing: border-box;
 }

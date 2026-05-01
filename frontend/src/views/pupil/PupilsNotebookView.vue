@@ -5,6 +5,7 @@ import bookImage from '@/assets/book.png'
 import woodBackground from '@/assets/backgrounds/woodBackground.png'
 import TopBar from '@/components/pupil/TopBar.vue'
 import { get, put } from '@/utils/apiUtils'
+import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 
 type Chapter = {
   chapterId: number
@@ -95,14 +96,39 @@ async function loadNotebookForCurrentChapter() {
   }
 }
 
-function shouldStayOnCurrentChapter(): boolean {
+const confirmModalShow = ref(false)
+const confirmModalMessage = ref('')
+let confirmModalResolve: ((v: boolean) => void) | null = null
+
+function showConfirmModal(message: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    confirmModalMessage.value = message
+    confirmModalShow.value = true
+    confirmModalResolve = resolve
+  })
+}
+
+function onConfirmModalConfirm() {
+  confirmModalResolve?.(true)
+  confirmModalResolve = null
+  confirmModalShow.value = false
+}
+
+function onConfirmModalCancel() {
+  confirmModalResolve?.(false)
+  confirmModalResolve = null
+  confirmModalShow.value = false
+}
+
+async function shouldStayOnCurrentChapter(): Promise<boolean> {
   if (!hasUnsavedOwnNotes.value) {
     return false
   }
 
-  return !window.confirm(
-    'You have unsaved notes. If you continue, your unsaved changes will be lost.',
+  const proceed = await showConfirmModal(
+    'Du har ulagrede notater. Vil du fortsette uten å lagre?',
   )
+  return !proceed
 }
 
 async function saveOwnNotes() {
@@ -133,7 +159,7 @@ async function saveOwnNotes() {
 
 async function goToPreviousChapter() {
   if (!hasPreviousChapter.value) return
-  if (shouldStayOnCurrentChapter()) return
+  if (await shouldStayOnCurrentChapter()) return
 
   currentChapterIndex.value -= 1
   await loadNotebookForCurrentChapter()
@@ -141,7 +167,7 @@ async function goToPreviousChapter() {
 
 async function goToNextChapter() {
   if (!hasNextChapter.value) return
-  if (shouldStayOnCurrentChapter()) return
+  if (await shouldStayOnCurrentChapter()) return
 
   currentChapterIndex.value += 1
   await loadNotebookForCurrentChapter()
@@ -246,6 +272,15 @@ onMounted(async () => {
       </section>
     </main>
   </div>
+
+  <ConfirmModal
+    v-if="confirmModalShow"
+    :message="confirmModalMessage"
+    confirm-label="Fortsett uten å lagre"
+    cancel-label="Avbryt"
+    @confirm="onConfirmModalConfirm"
+    @cancel="onConfirmModalCancel"
+  />
 </template>
 
 <style scoped>

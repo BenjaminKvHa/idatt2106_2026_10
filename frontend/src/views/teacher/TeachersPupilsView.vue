@@ -5,6 +5,7 @@ import TeacherPupilsLeftPanel from '@/components/teacher/pupils/TeacherPupilsLef
 import TeacherPupilsRightPanel from '@/components/teacher/pupils/TeacherPupilsRightPanel.vue'
 import type { ActivePanel, Pupil, StopName } from '@/components/teacher/pupils/types'
 import { del, get, patch, put } from '@/utils/apiUtils'
+import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 
 type AcceptedPupilResponse = {
   accountEmail: string
@@ -79,6 +80,30 @@ const hasUnsavedUsernameChanges = computed(() => {
   return selectedPupil.value?.status === 'APPROVED' && editUsername.value !== selectedPupil.value.username
 })
 
+const confirmModalShow = ref(false)
+const confirmModalMessage = ref('')
+let confirmModalResolve: ((v: boolean) => void) | null = null
+
+function showConfirmModal(message: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    confirmModalMessage.value = message
+    confirmModalShow.value = true
+    confirmModalResolve = resolve
+  })
+}
+
+function onConfirmModalConfirm() {
+  confirmModalResolve?.(true)
+  confirmModalResolve = null
+  confirmModalShow.value = false
+}
+
+function onConfirmModalCancel() {
+  confirmModalResolve?.(false)
+  confirmModalResolve = null
+  confirmModalShow.value = false
+}
+
 const editUsername = ref('')
 
 watch(
@@ -89,8 +114,8 @@ watch(
   { immediate: true },
 )
 
-const selectPupil = (email: string): void => {
-  if (email !== selectedPupilEmail.value && !confirmDiscardUsernameChanges()) {
+const selectPupil = async (email: string): Promise<void> => {
+  if (email !== selectedPupilEmail.value && !(await confirmDiscardUsernameChanges())) {
     return
   }
 
@@ -123,12 +148,12 @@ const selectStopNote = (stopName: StopName): void => {
   selectedStopName.value = stopName
 }
 
-function confirmDiscardUsernameChanges(): boolean {
+function confirmDiscardUsernameChanges(): Promise<boolean> {
   if (!hasUnsavedUsernameChanges.value) {
-    return true
+    return Promise.resolve(true)
   }
 
-  return window.confirm('Er du sikker på at du vil forlate uten å lagre endringene dine')
+  return showConfirmModal('Er du sikker på at du vil forlate uten å lagre endringene dine')
 }
 
 function handleBeforeUnload(event: BeforeUnloadEvent) {
@@ -270,7 +295,7 @@ const saveChanges = async (): Promise<void> => {
 const removePupil = async (): Promise<void> => {
   if (!selectedPupil.value) return
 
-  const confirmed = window.confirm(
+  const confirmed = await showConfirmModal(
     `Er du sikker på at du vil fjerne ${selectedPupil.value.legalName} fra klasserommet?`,
   )
 
@@ -302,7 +327,7 @@ const approvePendingPupil = async (): Promise<void> => {
 const rejectPendingPupil = async (): Promise<void> => {
   if (!selectedPupil.value) return
 
-  const confirmed = window.confirm(
+  const confirmed = await showConfirmModal(
     `Er du sikker på at du vil avslå ${selectedPupil.value.legalName}?`,
   )
 
@@ -327,7 +352,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('beforeunload', handleBeforeUnload)
 })
 
-onBeforeRouteLeave(() => {
+onBeforeRouteLeave(async () => {
   return confirmDiscardUsernameChanges()
 })
 
@@ -384,6 +409,15 @@ watch(
       />
     </section>
   </main>
+
+  <ConfirmModal
+    v-if="confirmModalShow"
+    :message="confirmModalMessage"
+    confirm-label="Bekreft"
+    cancel-label="Avbryt"
+    @confirm="onConfirmModalConfirm"
+    @cancel="onConfirmModalCancel"
+  />
 </template>
 
 <style scoped>

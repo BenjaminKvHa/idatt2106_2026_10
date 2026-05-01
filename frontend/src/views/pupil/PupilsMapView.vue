@@ -69,56 +69,71 @@
     <p v-if="loadingProgress" class="map-status" role="status">Laster progresjon...</p>
     <p v-else-if="progressError" class="map-status error" role="alert">{{ progressError }}</p>
 
-    <div v-if="activeLockedStop" class="pupil-popup-overlay" @click="closeLockedPopup">
-      <div class="locked-popup" @click.stop>
+    <BaseModal
+      v-if="activeLockedStop"
+      :close-on-backdrop="true"
+      :close-on-escape="true"
+      @close="closeLockedPopup"
+    >
+      <div class="locked-popup-wrapper">
         <h2 class="popup-title">{{ activeLockedStop.name }} er låst.</h2>
-        <p class="popup-text">
-          Få 3 stjerner på {{ activeLockedStop.requiredPreviousStop }} for å låse det opp!
-        </p>
+      <p class="popup-text">
+        Få 3 stjerner på {{ activeLockedStop.requiredPreviousStop }} for å låse det opp!
+      </p>
         <div class="pupil-popup-actions">
           <button class="pupil-popup-btn popup-btn-back" @click="closeLockedPopup">Tilbake</button>
           <button class="pupil-popup-btn popup-btn-play" @click="goToRequiredStop">Spill</button>
         </div>
       </div>
-    </div>
+    </BaseModal>
 
-    <div v-if="showHelpPopup" class="popup-overlay" @click="closeHelpPopup">
-      <div class="hint-popup" @click.stop>
+    <BaseModal
+      v-if="showHelpPopup"
+      :close-on-backdrop="true"
+      :close-on-escape="true"
+      @close="closeHelpPopup"
+    >
+      <div class="map-help-popup-wrapper">
         <h2 class="popup-title">Trenger du hjelp?</h2>
-        <div class="hint-text">
-          <p>
-            Inne på denne siden kan du trykke deg inn på de ulike stoppestedene og gjøre ulike
-            oppgaver knyttet til de.
-          </p>
-          <ul>
-            <li>Begynn med Nyhetskvartalet.</li>
-            <li>Fullfør oppgavene og tjen stjerner for å låse opp neste stoppested.</li>
-            <li>Fullfør alle oppgavene på alle stoppestedene og slå bossen i Datasenteret.</li>
-            <li>Trykk på Hjem for å gå tilbake til hovedskjermen.</li>
-          </ul>
+      <div class="hint-text">
+        <p>
+          Inne på denne siden kan du trykke deg inn på de ulike stoppestedene og gjøre ulike
+          oppgaver knyttet til de.
+        </p>
+        <ul>
+          <li>Begynn med Nyhetskvartalet.</li>
+          <li>Fullfør oppgavene og tjen stjerner for å låse opp neste stoppested.</li>
+          <li>Fullfør alle oppgavene på alle stoppestedene og slå bossen i Datasenteret.</li>
+          <li>Trykk på Hjem for å gå tilbake til hovedskjermen.</li>
+        </ul>
         </div>
         <div class="popup-actions">
           <button class="popup-btn popup-btn-play" @click="closeHelpPopup">Ok</button>
         </div>
       </div>
-    </div>
+    </BaseModal>
 
-    <div v-if="showHintPopup" class="popup-overlay" @click="closeHintPopup">
-      <div class="hint-popup" @click.stop>
+    <BaseModal
+      v-if="showHintPopup"
+      :close-on-backdrop="true"
+      :close-on-escape="true"
+      @close="closeHintPopup"
+    >
+      <div class="map-hint-popup-wrapper">
         <h2 class="popup-title">Tips 💡</h2>
-        <div class="hint-text">
-          <p>Tenk på kartet som en rekkefølge du må følge.</p>
-          <ul>
-            <li>Stoppesteder med lås kan ikke åpnes før forrige kapittel er fullført.</li>
-            <li>Hvis du står fast, gå tilbake og fullfør tidligere oppgaver.</li>
-            <li>Se på stjernene under hvert stoppested for å følge progresjonen din.</li>
-          </ul>
+      <div class="hint-text">
+        <p>Tenk på kartet som en rekkefølge du må følge.</p>
+        <ul>
+          <li>Stoppesteder med lås kan ikke åpnes før forrige kapittel er fullført.</li>
+          <li>Hvis du står fast, gå tilbake og fullfør tidligere oppgaver.</li>
+          <li>Se på stjernene under hvert stoppested for å følge progresjonen din.</li>
+        </ul>
         </div>
         <div class="popup-actions">
           <button class="popup-btn popup-btn-play" @click="closeHintPopup">Ok</button>
         </div>
       </div>
-    </div>
+    </BaseModal>
   </div>
 </template>
 
@@ -126,6 +141,7 @@
 import { computed, onActivated, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/components/pupil/TopBar.vue'
+import BaseModal from '@/components/ui/BaseModal.vue'
 import { get } from '@/utils/apiUtils'
 
 import detektivkontoretImage from '@/assets/icons/stoppesteder/detektivkontoret.png'
@@ -902,14 +918,26 @@ onMounted(() => {
   object-fit: contain;
 }
 
-.popup-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.18);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
+.locked-popup-wrapper {
+  width: min(520px, calc(100vw - 32px));
+  background: var(--orange-medium);
+  border: 4px solid var(--brown-dark);
+  border-radius: 28px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+  padding: 28px 24px 20px;
+  text-align: center;
+}
+
+.map-help-popup-wrapper,
+.map-hint-popup-wrapper {
+  width: min(560px, calc(100vw - 32px));
+  background: var(--orange-medium-80);
+  border: 4px solid var(--brown-dark);
+  border-radius: 28px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+  padding: 28px 24px 20px;
+  text-align: center;
+  backdrop-filter: blur(2px);
 }
 
 .locked-popup {

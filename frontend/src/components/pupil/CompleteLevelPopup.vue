@@ -5,6 +5,7 @@ import confetti from 'canvas-confetti'
 import completedSoundFile from '@/assets/sounds/levels/completedSound.mp3'
 import tryAgainSoundFile from '@/assets/sounds/levels/tryAgainSound.mp3'
 import { useAudio } from '@/composables/useAudio'
+import BaseModal from '@/components/ui/BaseModal.vue'
 
 const router = useRouter()
 const { playSound, stopSound } = useAudio()
@@ -111,67 +112,62 @@ watch(
 </script>
 
 <template>
-  <div v-if="show" class="popup-overlay" @click="closePopup">
-    <div class="complete-popup" :class="{ 'complete-popup-fail': success === false }" @click.stop>
+  <BaseModal
+    v-if="show"
+    panel-class=""
+    :close-on-backdrop="true"
+    :close-on-escape="true"
+    :showCloseButton="false"
+    @close="closePopup"
+  >
+    <div :class="['complete-popup-wrapper', { 'complete-popup-fail': success === false }]">
       <div v-if="currentImage" class="popup-image-wrapper">
-        <img :src="currentImage" :alt="success ? 'Riktig svar' : 'Feil svar'" class="popup-image" />
-      </div>
+      <img :src="currentImage" :alt="success ? 'Riktig svar' : 'Feil svar'" class="popup-image" />
+    </div>
 
-      <h2 class="popup-title">
-        {{ title || (success ? 'Du klarte det!' : 'Du klarte det ikke') }}
-      </h2>
+    <h2 class="popup-title">
+      {{ title || (success ? 'Du klarte det!' : 'Du klarte det ikke') }}
+    </h2>
 
-      <div class="popup-text">
-        <p>
-          {{
-            message ||
-            (success
-              ? 'Gratulerer! Du har fullført nivået.'
-              : 'Å nei! Du løste ikke oppgaven riktig denne gangen.')
-          }}
-        </p>
-        <p>
-          {{
-            subMessage ||
-            (success
-              ? 'Nå har du vist at du kan tenke som en ekte nett-detektiv!'
-              : 'Prøv igjen for å klare nivået.')
-          }}
-        </p>
-      </div>
+    <div class="popup-text">
+      <p>
+        {{
+          message ||
+          (success
+            ? 'Gratulerer! Du har fullført nivået.'
+            : 'Å nei! Du løste ikke oppgaven riktig denne gangen.')
+        }}
+      </p>
+      <p>
+        {{
+          subMessage ||
+          (success
+            ? 'Nå har du vist at du kan tenke som en ekte nett-detektiv!'
+            : 'Prøv igjen for å klare nivået.')
+        }}
+      </p>
+    </div>
 
-      <div class="popup-actions">
-        <template v-if="success">
-          <button class="popup-btn popup-btn-success" @click="goToMap">Tilbake til kartet</button>
-        </template>
+    <div class="popup-actions">
+      <template v-if="success">
+        <button class="popup-btn popup-btn-success" @click="goToMap">Tilbake til kartet</button>
+      </template>
 
-        <template v-else>
-          <button class="popup-btn popup-btn-play" @click="retry">Prøv på nytt</button>
+      <template v-else>
+        <button class="popup-btn popup-btn-play" @click="retry">Prøv på nytt</button>
 
-          <button class="popup-btn popup-btn-map" @click="goToMap">Tilbake til kartet</button>
+        <button class="popup-btn popup-btn-map" @click="goToMap">Tilbake til kartet</button>
         </template>
       </div>
     </div>
-  </div>
+  </BaseModal>
 </template>
 
 <style scoped>
-.popup-btn-success {
-  background: var(--green-confirm);
-}
-
-.popup-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgb(0 0 0 / 18%);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.complete-popup {
+.complete-popup-wrapper {
   width: min(800px, calc(100vw - 32px));
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
   background: var(--orange-medium);
   border: 4px solid var(--brown-dark);
   border-radius: 28px;
@@ -181,7 +177,7 @@ watch(
   backdrop-filter: blur(2px);
 }
 
-.complete-popup-fail {
+.complete-popup-wrapper.complete-popup-fail {
   background: #ff4d4d;
 }
 
@@ -244,6 +240,10 @@ watch(
   transform: scale(0.97);
 }
 
+.popup-btn-success {
+  background: var(--green-confirm);
+}
+
 .popup-btn-play {
   background: var(--green-confirm);
 }
@@ -253,8 +253,8 @@ watch(
 }
 
 @media (max-width: 768px) {
-  .complete-popup {
-    padding: 24px 18px;
+  .complete-level-popup {
+    padding: 24px 18px !important;
   }
 
   .popup-image {

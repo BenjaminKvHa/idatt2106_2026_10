@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import TopBar from '@/components/pupil/TopBar.vue'
+import BaseModal from '@/components/ui/BaseModal.vue'
 import mysteryBackground from '@/assets/backgrounds/ukens_mysterium-bg.png'
 import { get, getBlob, postForm } from '@/utils/apiUtils'
 
@@ -325,49 +326,48 @@ onBeforeUnmount(revokeObjectUrls)
       </section>
     </main>
 
-    <div
+    <BaseModal
       v-if="showSubmitPopup"
-      class="popup-overlay pupil-popup-fixed-center"
-      @click.self="closeSubmitPopup"
+      :close-on-backdrop="true"
+      :close-on-escape="true"
+      @close="closeSubmitPopup"
     >
-      <div class="popup">
-        <button class="close-button" @click="closeSubmitPopup">×</button>
-
+      <div class="mystery-submit-popup-wrapper">
         <h2>Send inn mysterium</h2>
-        <p class="popup-text">
-          Last opp et bilde og legg ved en kommentar om hvorfor bildet er mistenkelig.
-        </p>
+      <p class="popup-text">
+        Last opp et bilde og legg ved en kommentar om hvorfor bildet er mistenkelig.
+      </p>
 
-        <label>
-          Bilde
-          <input type="file" accept="image/*" @change="handleImageUpload" />
-        </label>
+      <label>
+        Bilde
+        <input type="file" accept="image/*" @change="handleImageUpload" />
+      </label>
 
-        <div v-if="uploadedImagePreview" class="popup-image-preview">
-          <img :src="uploadedImagePreview" alt="Forhåndsvisning" />
-        </div>
-
-        <label>
-          Kommentar
-          <textarea
-            v-model="imageComment"
-            placeholder="Skriv hvorfor bildet er mistenkelig..."
-          ></textarea>
-        </label>
-
-        <div class="popup-buttons pupil-responsive-button-row">
-          <button class="cancel-button" @click="closeSubmitPopup">Avbryt</button>
-
-          <button
-            class="submit-button"
-            :disabled="!uploadedImagePreview || !imageComment.trim() || submitting"
-            @click="submitMystery"
-          >
-            {{ submitting ? 'Sender...' : 'Send inn' }}
-          </button>
-        </div>
+      <div v-if="uploadedImagePreview" class="popup-image-preview">
+        <img :src="uploadedImagePreview" alt="Forhåndsvisning" />
       </div>
-    </div>
+
+      <label>
+        Kommentar
+        <textarea
+          v-model="imageComment"
+          placeholder="Skriv hvorfor bildet er mistenkelig..."
+        ></textarea>
+      </label>
+
+      <div class="popup-buttons pupil-responsive-button-row">
+        <button class="cancel-button" @click="closeSubmitPopup">Avbryt</button>
+
+        <button
+          class="submit-button"
+          :disabled="!uploadedImagePreview || !imageComment.trim() || submitting"
+          @click="submitMystery"
+        >
+          {{ submitting ? 'Sender...' : 'Send inn' }}
+        </button>
+      </div>
+      </div>
+    </BaseModal>
   </div>
 </template>
 
@@ -644,7 +644,7 @@ h1 {
   background: rgba(12, 7, 18, 0.75);
 }
 
-.popup {
+.mystery-submit-popup-wrapper {
   position: relative;
   width: min(560px, 92vw);
   max-height: 90vh;
@@ -656,10 +656,52 @@ h1 {
   box-shadow: 0 12px 0 rgba(0, 0, 0, 0.45);
 }
 
-.popup h2 {
+.mystery-submit-popup-wrapper h2 {
   margin: 0 0 0.5rem;
   font-size: 2rem;
   color: var(--brown-dark);
+}
+
+.mystery-submit-popup-wrapper .popup-text {
+  margin: 0 0 1.3rem;
+  line-height: 1.45;
+}
+
+.mystery-submit-popup-wrapper label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.mystery-submit-popup-wrapper input,
+.mystery-submit-popup-wrapper textarea {
+  border: var(--border-thin) solid var(--color-text);
+  border-radius: 14px;
+  padding: 0.8rem;
+  font-size: 1rem;
+  background: var(--beige-light);
+}
+
+.mystery-submit-popup-wrapper textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.mystery-submit-popup-wrapper .popup-image-preview {
+  width: 100%;
+  height: 220px;
+  border: var(--border-thin) solid var(--color-text);
+  border-radius: 18px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.mystery-submit-popup-wrapper .popup-image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .popup-text {

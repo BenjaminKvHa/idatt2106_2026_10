@@ -12,6 +12,7 @@ import {
 } from '@/utils/apiUtils'
 import { clearMeCache } from '@/utils/authRedirect'
 import VolumeControl from '@/components/ui/VolumeControl.vue'
+import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 
 type ProfileResponse = {
   email: string
@@ -41,6 +42,30 @@ const error = ref<string | null>(null)
 const classroomError = ref<string | null>(null)
 const actionError = ref<string | null>(null)
 const leavingClassroom = ref(false)
+
+const confirmModalShow = ref(false)
+const confirmModalMessage = ref('')
+let confirmModalResolve: ((v: boolean) => void) | null = null
+
+function showConfirmModal(message: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    confirmModalMessage.value = message
+    confirmModalShow.value = true
+    confirmModalResolve = resolve
+  })
+}
+
+function onConfirmModalConfirm() {
+  confirmModalResolve?.(true)
+  confirmModalResolve = null
+  confirmModalShow.value = false
+}
+
+function onConfirmModalCancel() {
+  confirmModalResolve?.(false)
+  confirmModalResolve = null
+  confirmModalShow.value = false
+}
 const signingOut = ref(false)
 const editingNickname = ref(false)
 
@@ -106,7 +131,7 @@ onMounted(async () => {
 async function leaveClassroom() {
   if (!profile.value?.classroomCode || leavingClassroom.value) return
 
-  const confirmed = window.confirm('Er du sikker på at du vil forlate klasserommet?')
+  const confirmed = await showConfirmModal('Er du sikker på at du vil forlate klasserommet?')
   if (!confirmed) return
 
   leavingClassroom.value = true
@@ -289,6 +314,15 @@ async function saveNickname() {
     </section>
   </main>
   </div>
+
+  <ConfirmModal
+    v-if="confirmModalShow"
+    :message="confirmModalMessage"
+    confirm-label="Forlat"
+    cancel-label="Avbryt"
+    @confirm="onConfirmModalConfirm"
+    @cancel="onConfirmModalCancel"
+  />
 </template>
 
 <style scoped>

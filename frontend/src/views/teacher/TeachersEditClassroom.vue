@@ -2,6 +2,7 @@
 import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { del, get, post, put } from '@/utils/apiUtils'
+import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 
 type ClassroomDetailsResponse = {
   classroomCode: string
@@ -46,6 +47,30 @@ const editOpen = ref(false)
 const savingClassroom = ref(false)
 const editName = ref('')
 const editDescription = ref('')
+
+const confirmModalShow = ref(false)
+const confirmModalMessage = ref('')
+let confirmModalResolve: ((v: boolean) => void) | null = null
+
+function showConfirmModal(message: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    confirmModalMessage.value = message
+    confirmModalShow.value = true
+    confirmModalResolve = resolve
+  })
+}
+
+function onConfirmModalConfirm() {
+  confirmModalResolve?.(true)
+  confirmModalResolve = null
+  confirmModalShow.value = false
+}
+
+function onConfirmModalCancel() {
+  confirmModalResolve?.(false)
+  confirmModalResolve = null
+  confirmModalShow.value = false
+}
 
 function syncEditForm() {
   editName.value = classroom.value?.classroomName ?? ''
@@ -172,7 +197,7 @@ async function inviteTeacher() {
 async function deleteClassroom() {
   if (!classroom.value || deleting.value) return
 
-  const confirmed = window.confirm('Er du sikker på at du vil slette klasserommet? Dette kan ikke angres.')
+  const confirmed = await showConfirmModal('Er du sikker på at du vil slette klasserommet? Dette kan ikke angres.')
   if (!confirmed) return
 
   deleting.value = true
@@ -191,7 +216,7 @@ async function deleteClassroom() {
 async function leaveClassroom() {
   if (!classroom.value || leaving.value) return
 
-  const confirmed = window.confirm('Er du sikker på at du vil forlate klasserommet?')
+  const confirmed = await showConfirmModal('Er du sikker på at du vil forlate klasserommet?')
   if (!confirmed) return
 
   leaving.value = true
@@ -309,6 +334,15 @@ watch(
       <p v-if="actionError" class="helper-text error-text">{{ actionError }}</p>
     </template>
   </div>
+
+  <ConfirmModal
+    v-if="confirmModalShow"
+    :message="confirmModalMessage"
+    confirm-label="Bekreft"
+    cancel-label="Avbryt"
+    @confirm="onConfirmModalConfirm"
+    @cancel="onConfirmModalCancel"
+  />
 </template>
 
 <style scoped>

@@ -331,7 +331,7 @@ onBeforeUnmount(revokeAllImageUrls)
               <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
             </div>
 
-            <p class="progress-text">Nivå {{ currentLevelIndex + 1 }} / {{ levels.length }}</p>
+            <p class="progress-text">Nivå {{ currentLevelIndex + 1 }}/{{ levels.length }}</p>
           </div>
 
           <div class="pupil-panel pupil-task-text-box">

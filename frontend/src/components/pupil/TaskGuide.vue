@@ -18,13 +18,13 @@ function confirm(): void {
 </script>
 
 <template>
-  <div class="task-guide-overlay">
-    <div class="task-guide-card">
-      <div class="task-guide-text">
+  <div class="task-guide-overlay overlay">
+    <div class="task-guide-card center-container">
+      <div class="task-guide-text guide-text">
         <slot />
       </div>
 
-      <button class="task-guide-button" @click="confirm">
+      <button class="task-guide-button confirm-button" @click="confirm">
         {{ buttonText }}
       </button>
     </div>

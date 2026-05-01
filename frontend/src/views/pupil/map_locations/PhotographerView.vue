@@ -23,29 +23,29 @@
           <h1 class="level">Nivå {{ stepIndex + 1 }} — {{ difficultyLabel }}</h1>
         </div>
 
-        <HintCreature :chapter-id="FOTOGRAFEN_CHAPTER_ID">
-          <div class="task-box">
-            <PupilImageTask
-              :task-description="currentTask.taskDescription"
-              :image-url="imageUrl"
-              :categories="CATEGORIES"
-              :justifications="currentTask.justifications"
-              :selected-category="selectedCategory"
-              :selected-justification="selectedJustification"
-              :result="lastResult"
-              :submitting="submitting"
-              @select-category="selectCategory"
-              @select-justification="selectJustification"
-            />
+        <HintCreature :chapter-id="FOTOGRAFEN_CHAPTER_ID" />
 
-            <div v-if="lastResult" class="answer-feedback">
-              <p>
-                <strong>{{ lastResult.correct ? 'Riktig!' : 'Feil.' }}</strong>
-              </p>
-              <p>{{ lastResult.feedback }}</p>
-            </div>
+        <div class="task-box">
+          <PupilImageTask
+            :task-description="currentTask.taskDescription"
+            :image-url="imageUrl"
+            :categories="CATEGORIES"
+            :justifications="currentTask.justifications"
+            :selected-category="selectedCategory"
+            :selected-justification="selectedJustification"
+            :result="lastResult"
+            :submitting="submitting"
+            @select-category="selectCategory"
+            @select-justification="selectJustification"
+          />
+
+          <div v-if="lastResult" class="answer-feedback">
+            <p>
+              <strong>{{ lastResult.correct ? 'Riktig!' : 'Feil.' }}</strong>
+            </p>
+            <p>{{ lastResult.feedback }}</p>
           </div>
-        </HintCreature>
+        </div>
 
         <div class="bottom-actions">
           <button v-if="!lastResult" @click="submit" :disabled="!canSubmit || submitting">
@@ -306,10 +306,43 @@ onBeforeUnmount(revokeImageUrl)
   padding: 20px;
 }
 
+.task-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  position: relative;
+  overflow: visible !important;
+}
+
+.task-container :deep(.hint-creature-wrapper) {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  left: calc(50% - 535px);
+  top: 5.6rem;
+  z-index: 10;
+}
+
+.task-container :deep(.hint-creature-button) {
+  position: static;
+  width: 120px;
+  height: 120px;
+}
+
+.task-container :deep(.hint-creature-button img) {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .progress-container {
+  position: relative;
+  z-index: 3;
   width: min(100%, 540px);
+  max-width: 540px;
   text-align: center;
-  margin-bottom: 18px;
+  margin-bottom: 1rem;
 }
 
 .progress-bar {
@@ -340,15 +373,6 @@ onBeforeUnmount(revokeImageUrl)
   text-shadow: 0 1px 0 rgb(255 255 255 / 45%);
 }
 
-.task-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  position: relative;
-  overflow: visible !important;
-}
-
 .task-box {
   width: 100%;
   max-width: 760px;
@@ -362,6 +386,7 @@ onBeforeUnmount(revokeImageUrl)
   position: relative;
   overflow: visible !important;
   box-sizing: border-box;
+  z-index: 2;
 }
 
 .answer-feedback {
@@ -438,9 +463,57 @@ onBeforeUnmount(revokeImageUrl)
   margin: 0 auto;
 }
 
+@media (max-width: 1150px) {
+  .task-container :deep(.hint-creature-wrapper) {
+    left: calc(50% - 455px);
+    top: 5.4rem;
+  }
+}
+
+@media (max-width: 1000px) {
+  .task-container {
+    padding-top: 7rem;
+  }
+
+  .content {
+    padding-top: calc(var(--topbar-height));
+  }
+
+  .task-container :deep(.hint-creature-wrapper) {
+    left: 50%;
+    top: -2.2rem;
+    transform: translateX(-50%);
+  }
+}
+
 @media (max-width: 768px) {
   .content {
     padding: 14px;
+    padding-top: calc(var(--topbar-height));
+  }
+
+  .task-container {
+    padding-top: 5.5rem;
+  }
+
+  .task-container :deep(.hint-creature-wrapper) {
+    width: 85px;
+    height: 85px;
+    top: -1.8rem;
+  }
+
+  .task-container :deep(.hint-creature-button) {
+    width: 85px;
+    height: 85px;
+  }
+
+  .progress-container {
+    width: min(100%, 420px);
+    max-width: 420px;
+  }
+
+  .progress-bar {
+    height: 12px;
   }
 
   .task-box {

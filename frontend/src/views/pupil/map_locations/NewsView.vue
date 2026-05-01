@@ -260,7 +260,7 @@ onBeforeUnmount(revokeImageUrls)
   </div>
 </template>
 
-<style scope>
+<style scoped>
 .nyhetskvartalet-page-bg {
   min-height: 100vh;
   background:
@@ -269,6 +269,7 @@ onBeforeUnmount(revokeImageUrls)
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
+  overflow-x: hidden;
 }
 
 .page {
@@ -287,11 +288,73 @@ onBeforeUnmount(revokeImageUrls)
   width: 100%;
   max-width: 1100px;
   gap: 1.5rem;
+  position: relative;
+}
+
+.center-container :deep(.hint-creature-wrapper) {
+  position: absolute;
+  left: -40px;
+  top: 2.8rem;
+  width: 120px;
+  height: 120px;
+  z-index: 20;
+}
+
+.center-container :deep(.hint-creature-button) {
+  width: 120px;
+  height: 120px;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.center-container :deep(.hint-creature-button img) {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+@media (max-width: 1100px) {
+  .center-container {
+    padding-top: 8.2rem;
+  }
+
+  .center-container :deep(.hint-creature-wrapper) {
+    left: 50%;
+    top: 0.1rem;
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 1rem;
+    background-attachment: scroll;
+  }
+
+  .center-container {
+    gap: 1rem;
+    padding-top: 7rem;
+  }
+
+  .center-container :deep(.hint-creature-wrapper) {
+    top: 0.2rem;
+  }
+
+  .center-container :deep(.hint-creature-wrapper),
+  .center-container :deep(.hint-creature-button),
+  .center-container :deep(.hint-creature-button img) {
+    width: 85px;
+    height: 85px;
+  }
 }
 
 .progress-container {
   width: min(100%, 540px);
+  max-width: 540px;
   text-align: center;
+  position: relative;
+  z-index: 3;
 }
 
 .progress-bar {
@@ -301,17 +364,12 @@ onBeforeUnmount(revokeImageUrls)
   border: 2px solid rgb(91 62 43 / 70%);
   border-radius: 999px;
   overflow: hidden;
-  box-shadow:
-    inset 0 2px 5px rgb(0 0 0 / 12%),
-    0 3px 10px rgb(0 0 0 / 10%);
 }
 
 .progress-fill {
   height: 100%;
   background: linear-gradient(90deg, #9df13c 0%, #78d927 55%, #5cc322 100%);
   border-radius: 999px;
-  transition: width 0.4s ease;
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 45%);
 }
 
 .progress-text {
@@ -319,7 +377,12 @@ onBeforeUnmount(revokeImageUrls)
   margin-bottom: 0;
   font-weight: 800;
   color: #1f160f;
-  text-shadow: 0 1px 0 rgb(255 255 255 / 45%);
+}
+
+:deep(.news-task),
+:deep(.pupil-news-task) {
+  position: relative;
+  z-index: 2;
 }
 
 .mini-feedback {
@@ -327,7 +390,6 @@ onBeforeUnmount(revokeImageUrls)
   border: 4px solid var(--brown-dark);
   border-radius: 24px;
   font-weight: 700;
-  box-shadow: 0 5px 0 #5b371f;
 }
 
 .mini-feedback.success {
@@ -346,48 +408,12 @@ onBeforeUnmount(revokeImageUrls)
   border-radius: 24px;
   border: 2px solid var(--brown-dark);
   background: linear-gradient(180deg, #fff6dc 0%, #f1d7a5 100%);
-  color: var(--brown-dark);
-  cursor: pointer;
   font-weight: 850;
-  box-shadow: 0 5px 14px rgb(0 0 0 / 14%);
-  transition:
-    transform 0.15s ease,
-    filter 0.15s ease,
-    box-shadow 0.15s ease;
-}
-
-.next-level-button:hover {
-  filter: brightness(1.03);
-  transform: translateY(-1px);
-  box-shadow: 0 7px 18px rgb(0 0 0 / 16%);
-}
-
-.next-level-button:active {
-  transform: translateY(1px);
-  box-shadow: 0 3px 9px rgb(0 0 0 / 12%);
 }
 
 .error {
   color: #c62828;
   font-weight: 600;
-}
-
-.hint-text {
-  margin-top: 10px;
-  text-align: left;
-}
-
-.hint-text p {
-  margin: 0 0 8px;
-}
-
-.hint-text ul {
-  margin: 0;
-  padding-left: 24px;
-}
-
-.hint-text li {
-  margin-bottom: 6px;
 }
 
 .popup-overlay {
@@ -397,8 +423,6 @@ onBeforeUnmount(revokeImageUrls)
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
-  backdrop-filter: blur(3px);
 }
 
 .hint-popup {
@@ -406,126 +430,6 @@ onBeforeUnmount(revokeImageUrls)
   background: linear-gradient(180deg, #fff0c9 0%, #f5d59a 58%, #e8b86f 100%);
   border: 7px solid var(--brown-dark);
   border-radius: 42px;
-  box-shadow:
-    0 12px 0 #5b371f,
-    0 26px 45px rgb(0 0 0 / 28%),
-    inset 0 4px 0 rgb(255 255 255 / 45%);
   padding: 32px 28px;
-  text-align: center;
-}
-
-.popup-title {
-  margin: 0 0 1rem;
-  color: var(--brown-dark);
-  font-size: clamp(1.8rem, 4vw, 2.8rem);
-  text-shadow: 0 3px 0 rgb(255 255 255 / 45%);
-}
-
-.popup-actions {
-  margin-top: 26px;
-  display: flex;
-  justify-content: center;
-  gap: 22px;
-  flex-wrap: wrap;
-}
-
-.popup-btn {
-  min-width: 180px;
-  padding: 16px 28px;
-  border-radius: 28px;
-  border: 5px solid var(--brown-dark);
-  font-size: 1.15rem;
-  font-weight: 900;
-  color: var(--brown-dark);
-  cursor: pointer;
-  box-shadow: 0 8px 0 #5b371f;
-  transition:
-    transform 0.15s ease,
-    filter 0.15s ease,
-    box-shadow 0.15s ease;
-}
-
-.popup-btn:hover {
-  filter: brightness(1.04);
-  transform: translateY(-2px);
-}
-
-.popup-btn:active {
-  transform: translateY(5px);
-  box-shadow: 0 3px 0 #5b371f;
-}
-
-.popup-btn-play {
-  background: linear-gradient(180deg, #9df13c 0%, #78d927 100%);
-}
-
-.popup-btn-map {
-  background: linear-gradient(180deg, #fff6dc 0%, #f1d7a5 100%);
-}
-
-:deep(.task-guide),
-:deep(.guide-popup),
-:deep(.popup-card) {
-  background: linear-gradient(180deg, #fff0c9 0%, #f5d59a 58%, #e8b86f 100%) !important;
-  border: 7px solid var(--brown-dark) !important;
-  border-radius: 42px !important;
-  box-shadow:
-    0 12px 0 #5b371f,
-    0 26px 45px rgb(0 0 0 / 28%),
-    inset 0 4px 0 rgb(255 255 255 / 45%) !important;
-}
-
-:deep(.task-guide button),
-:deep(.guide-popup button),
-:deep(.popup-card button),
-:deep(.select-button),
-:deep(.news-task button) {
-  background: linear-gradient(180deg, #fff6dc 0%, #f1d7a5 100%) !important;
-  color: var(--brown-dark) !important;
-  border: 5px solid var(--brown-dark) !important;
-  border-radius: 28px !important;
-  font-weight: 900 !important;
-  box-shadow: 0 8px 0 #5b371f !important;
-}
-
-:deep(.task-guide button:hover),
-:deep(.guide-popup button:hover),
-:deep(.popup-card button:hover),
-:deep(.select-button:hover),
-:deep(.news-task button:hover) {
-  filter: brightness(1.04);
-  transform: translateY(-2px);
-}
-
-:deep(.task-guide button:active),
-:deep(.guide-popup button:active),
-:deep(.popup-card button:active),
-:deep(.select-button:active),
-:deep(.news-task button:active) {
-  transform: translateY(5px);
-  box-shadow: 0 3px 0 #5b371f !important;
-}
-
-@media (max-width: 768px) {
-  .page {
-    padding: 1rem;
-    background-attachment: scroll;
-  }
-
-  .next-level-button {
-    border-width: 4px;
-    border-radius: 24px;
-  }
-
-  .hint-popup {
-    padding: 24px 18px;
-    border-width: 5px;
-    border-radius: 30px;
-  }
-
-  .popup-btn {
-    width: 100%;
-    min-width: unset;
-  }
 }
 </style>

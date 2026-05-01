@@ -210,6 +210,7 @@ async function handleConfirm() {
 
 .input-wrapper {
   position: relative;
+  overflow: visible;
 }
 
 .input {
@@ -328,19 +329,30 @@ async function handleConfirm() {
 .hint-box {
   position: absolute;
   top: 0;
-  left: 110%;
+  right: 105%;
 
-  width: 260px;
-  padding: 1rem;
+  width: 200px;
+  padding: 0.8rem;
 
   background: #ffffff;
   border: 3px solid #000;
   border-radius: 0.8rem;
 
-  font-size: 0.95rem;
-  line-height: 1.4;
+  font-size: 0.9rem;
+  line-height: 1.3;
   color: #000;
 
   box-shadow: 0 6px 0 #000;
+
+  white-space: normal;
+  word-break: break-word;
+}
+
+@media (max-width: 768px) {
+  .buttons {
+    justify-content: center;
+    align-items: center;
+    margin-top: 2rem;
+  }
 }
 </style>

@@ -42,7 +42,7 @@ const DATASENTERET_CHAPTER_ID = 3
 const CATEGORIES: { value: ImageCategory; label: string }[] = [
   { value: 'REAL', label: 'Ekte' },
   { value: 'AI_GENERATED', label: 'KI-generert' },
-  { value: 'MANIPULATED', label: 'Manipulert' },
+  { value: 'MANIPULERT', label: 'Manipulert' } as never,
 ]
 
 const { playSound, stopSound } = useAudio()
@@ -324,6 +324,8 @@ onBeforeUnmount(revokeAllImageUrls)
         <p v-else-if="error" class="pupil-error">{{ error }}</p>
 
         <template v-else-if="currentLevel">
+          <HintCreature :chapter-id="DATASENTERET_CHAPTER_ID" />
+
           <div class="progress-container">
             <div class="progress-bar">
               <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
@@ -331,8 +333,6 @@ onBeforeUnmount(revokeAllImageUrls)
 
             <p class="progress-text">Nivå {{ currentLevelIndex + 1 }} / {{ levels.length }}</p>
           </div>
-
-          <HintCreature :chapter-id="DATASENTERET_CHAPTER_ID" />
 
           <div class="pupil-panel pupil-task-text-box">
             <p>
@@ -477,17 +477,38 @@ p {
 }
 
 .datacenter-container {
+  position: relative;
   max-width: 1000px;
+  gap: 0.8rem;
 }
 
-.task-card {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
+.datacenter-container :deep(.hint-creature-wrapper) {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  left: -6.5rem;
+  top: 5rem;
+  z-index: 10;
+}
+
+.datacenter-container :deep(.hint-creature-button) {
+  position: static;
+  width: 120px;
+  height: 120px;
+}
+
+.datacenter-container :deep(.hint-creature-button img) {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .progress-container {
+  position: relative;
+  z-index: 3;
   width: min(100%, 540px);
+  max-width: 540px;
+  margin-bottom: 0.4rem;
   text-align: center;
 }
 
@@ -513,10 +534,21 @@ p {
 
 .progress-text {
   margin-top: 0.5rem;
-  margin-bottom: 0;
   font-weight: 800;
   color: #1f160f;
   text-shadow: 0 1px 0 rgb(255 255 255 / 45%);
+}
+
+.pupil-task-text-box,
+.task-card {
+  position: relative;
+  z-index: 2;
+}
+
+.task-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
 .submit-button {
@@ -570,17 +602,13 @@ p {
   font-weight: 850;
   color: var(--brown-dark);
   cursor: pointer;
+  background: linear-gradient(180deg, #fff6dc 0%, #f1d7a5 100%);
   box-shadow: 0 5px 14px rgb(0 0 0 / 14%);
   transition:
     transform 0.15s ease,
     filter 0.15s ease,
     box-shadow 0.15s ease,
     opacity 0.15s ease;
-}
-
-.nav-button-primary,
-.nav-button-secondary {
-  background: linear-gradient(180deg, #fff6dc 0%, #f1d7a5 100%);
 }
 
 .nav-button:hover:not(:disabled) {
@@ -621,7 +649,98 @@ p {
   min-height: calc(100vh - 3.4rem);
 }
 
+:deep(.complete-game-popup),
+:deep(.complete-level-popup),
+:deep(.popup-card),
+:deep(.result-popup),
+:deep(.complete-popup) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+}
+
+:deep(.complete-game-popup img),
+:deep(.complete-level-popup img),
+:deep(.popup-card img),
+:deep(.result-popup img),
+:deep(.complete-popup img) {
+  width: auto !important;
+  height: auto !important;
+  max-width: 260px !important;
+  max-height: 260px !important;
+  object-fit: contain !important;
+  display: block;
+  margin: 0 auto;
+}
+
+:deep(.complete-game-popup *),
+:deep(.complete-level-popup *),
+:deep(.popup-card *),
+:deep(.result-popup *),
+:deep(.complete-popup *) {
+  max-width: 100%;
+}
+
+:deep(.pupil-feedback-box) {
+  background: #f6d8c9 !important;
+  opacity: 1 !important;
+}
+
+:deep(.pupil-feedback-correct) {
+  background: #dff6c9 !important;
+  opacity: 1 !important;
+}
+
+:deep(.pupil-feedback-wrong) {
+  background: #f6c9c0 !important;
+  opacity: 1 !important;
+}
+
+@media (max-width: 1150px) {
+  .datacenter-container :deep(.hint-creature-wrapper) {
+    left: -3.5rem;
+    top: 5.2rem;
+  }
+}
+
+@media (max-width: 1000px) {
+  .datacenter-container {
+    padding-top: 7rem;
+  }
+
+  .datacenter-container :deep(.hint-creature-wrapper) {
+    left: 50%;
+    top: -0.5rem;
+    transform: translateX(-50%);
+  }
+}
+
 @media (max-width: 768px) {
+  .datacenter-container {
+    padding-top: 5.5rem;
+  }
+
+  .datacenter-container :deep(.hint-creature-wrapper) {
+    width: 85px;
+    height: 85px;
+    top: -0.8rem;
+  }
+
+  .datacenter-container :deep(.hint-creature-button) {
+    width: 85px;
+    height: 85px;
+  }
+
+  .progress-container {
+    width: min(100%, 420px);
+    max-width: 420px;
+  }
+
+  .progress-bar {
+    height: 12px;
+  }
+
   .navigation-bar {
     flex-direction: column;
     align-items: stretch;
@@ -631,9 +750,20 @@ p {
     width: 100%;
     min-width: 0;
   }
+}
 
-  .progress-container {
-    width: 100%;
-  }
+:deep(.pupil-feedback-box) {
+  background: #f6d8c9 !important;
+  opacity: 1 !important;
+  margin-top: 1rem;
+  padding: 1rem;
+}
+
+:deep(.pupil-feedback-correct) {
+  background: #dff6c9 !important;
+}
+
+:deep(.pupil-feedback-wrong) {
+  background: #f6c9c0 !important;
 }
 </style>

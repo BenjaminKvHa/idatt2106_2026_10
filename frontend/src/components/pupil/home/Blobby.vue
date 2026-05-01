@@ -88,8 +88,8 @@ function handleBlobbyClick() {
 .blobby-wrapper {
   position: absolute;
   top: 8.5%;
-  right: 6%;
-  width: clamp(90px, 30%, 420px);
+  right: 10%;
+  width: clamp(60px, 16%, 180px);
   z-index: 10;
   transform: translateY(-50%);
 }
@@ -128,7 +128,7 @@ function handleBlobbyClick() {
 .blobby-message {
   position: absolute;
   top: 35%;
-  right: 75%;
+  right: 100%;
   width: 100%;
   max-width: none;
   background: #fff8e8;

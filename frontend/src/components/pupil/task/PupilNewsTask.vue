@@ -90,7 +90,6 @@ function cardClass(fileId: number): string {
 }
 
 .task-wrapper {
-  position: relative;
   width: min(100%, 800px);
   padding: 1.35rem 2rem;
   background: linear-gradient(180deg, #fff3d6 0%, #f4d7a2 100%);
@@ -110,72 +109,67 @@ function cardClass(fileId: number): string {
 
 .picture-wrapper {
   display: flex;
-  gap: 2rem;
+  gap: 1.4rem;
   margin-top: 1rem;
-  margin-bottom: 0;
-  flex-wrap: wrap;
+  width: 100%;
   justify-content: center;
   align-items: flex-start;
-  width: 100%;
+  flex-wrap: nowrap;
 }
 
 .picture-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.6rem;
-  flex: 1 1 300px;
-  max-width: 520px;
-  width: 100%;
+  flex: 0 1 calc(50% - 0.7rem);
+  max-width: 430px;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
   padding: 0;
-  border-radius: 26px;
-  background: rgb(255 255 255 / 58%);
-  border: 2px solid rgb(91 62 43 / 32%);
-  box-shadow: 0 6px 16px rgb(0 0 0 / 10%);
-  overflow: visible;
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease,
-    background 0.18s ease;
 }
 
-.picture-card:hover {
+.picture-card:hover .picture-placeholder {
   transform: translateY(-3px);
   box-shadow: 0 10px 22px rgb(0 0 0 / 14%);
-}
-
-.picture-card.selected {
-  border-color: rgb(91 62 43 / 65%);
-  box-shadow:
-    0 0 0 4px rgb(255 240 201 / 75%),
-    0 10px 22px rgb(0 0 0 / 14%);
-}
-
-.picture-card.correct {
-  box-shadow:
-    0 0 0 4px var(--green-confirm),
-    0 10px 22px rgb(0 0 0 / 14%);
-  background: rgb(120 190 120 / 20%);
-}
-
-.picture-card.wrong {
-  box-shadow:
-    0 0 0 4px #d95b43,
-    0 10px 22px rgb(0 0 0 / 14%);
-  background: rgb(217 91 67 / 16%);
 }
 
 .picture-placeholder {
   width: 100%;
   background-color: #fff6dc;
   border: 3px solid var(--brown-dark);
-  border-radius: 22px;
+  border-radius: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  padding: 0;
   box-sizing: border-box;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.picture-card.selected .picture-placeholder {
+  border: 4px solid #7b5740;
+  box-shadow:
+    0 0 0 6px rgb(91 62 43 / 18%),
+    0 12px 26px rgb(0 0 0 / 18%);
+}
+
+.picture-card.selected.correct .picture-placeholder {
+  border: 4px solid var(--green-confirm);
+  box-shadow:
+    0 0 0 6px rgb(130 223 48 / 28%),
+    0 12px 26px rgb(0 0 0 / 18%);
+}
+
+.picture-card.selected.wrong .picture-placeholder {
+  border: 4px solid #d95b43;
+  box-shadow:
+    0 0 0 6px rgb(217 91 67 / 24%),
+    0 12px 26px rgb(0 0 0 / 18%);
 }
 
 .picture {
@@ -186,50 +180,58 @@ function cardClass(fileId: number): string {
 }
 
 .answer-label {
-  margin: 0;
-  padding: 0.45rem 1.2rem;
+  align-self: center;
+  width: auto;
+  max-width: calc(100% - 2rem);
+  margin: 1rem 0 0;
+  padding: 0.55rem 1.6rem;
   border: 2px solid var(--brown-dark);
   border-radius: 999px;
-  font-weight: 800;
+  font-weight: 850;
+  text-align: center;
 }
 
 .correct-label {
   background: var(--green-confirm);
+  color: #1f160f;
 }
 
 .wrong-label {
   background: #d95b43;
   color: white;
+  border-radius: 999px;
 }
 
 .fake-button,
 .confirm-button {
   width: calc(100% - 2rem);
-  max-width: 420px;
+  max-width: 360px;
   padding: 0.9rem 1.8rem;
-  margin-top: 0.75rem;
-  margin-bottom: 0;
-
+  margin-top: 1.2rem;
   border-radius: 24px;
   border: 2px solid var(--brown-dark);
-
   background: linear-gradient(180deg, #fff6dc 0%, #f1d7a5 100%);
   color: var(--brown-dark);
-
   cursor: pointer;
   font-weight: 850;
-
   box-shadow: 0 5px 14px rgb(0 0 0 / 14%);
-
   transition:
     transform 0.15s ease,
     filter 0.15s ease,
-    box-shadow 0.15s ease;
+    box-shadow 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.picture-card.selected .fake-button {
+  background: linear-gradient(180deg, #6f5139 0%, #4a301f 100%);
+  color: #fff6dc;
+  border-color: #2a1b12;
 }
 
 .fake-button:hover:not(:disabled),
 .confirm-button:hover:not(:disabled) {
-  filter: brightness(1.03);
+  filter: brightness(1.04);
   transform: translateY(-1px);
   box-shadow: 0 7px 18px rgb(0 0 0 / 16%);
 }
@@ -246,7 +248,17 @@ function cardClass(fileId: number): string {
   opacity: 0.75;
   transform: none;
   filter: none;
-  box-shadow: 0 5px 14px rgb(0 0 0 / 14%);
+}
+
+@media (max-width: 900px) {
+  .picture-wrapper {
+    flex-wrap: wrap;
+  }
+
+  .picture-card {
+    flex: 1 1 100%;
+    max-width: 520px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -266,7 +278,6 @@ function cardClass(fileId: number): string {
 
   .fake-button,
   .confirm-button {
-    border-width: 2px;
     border-radius: 20px;
   }
 }

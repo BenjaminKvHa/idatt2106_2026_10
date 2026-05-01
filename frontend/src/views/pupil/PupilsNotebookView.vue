@@ -8,6 +8,7 @@ import { get, put } from '@/utils/apiUtils'
 import pageFlipSound from '@/assets/sounds/shared/page-flip-sound.mp3'
 import { useAudio } from '@/composables/useAudio'
 
+const PAGE_FLIP_SOUND_RELATIVE_VOLUME = 1.25
 
 type Chapter = {
   chapterId: number
@@ -141,7 +142,7 @@ async function goToPreviousChapter() {
   if (!hasPreviousChapter.value) return
   if (shouldStayOnCurrentChapter()) return
 
-  soundRef = playSound(pageFlipSound, 1, 0.15)
+  soundRef = playSound(pageFlipSound, PAGE_FLIP_SOUND_RELATIVE_VOLUME, 0.15)
 
   currentChapterIndex.value -= 1
   await loadNotebookForCurrentChapter()
@@ -151,7 +152,7 @@ async function goToNextChapter() {
   if (!hasNextChapter.value) return
   if (shouldStayOnCurrentChapter()) return
 
-  soundRef = playSound(pageFlipSound, 1, 0.15)
+  soundRef = playSound(pageFlipSound, PAGE_FLIP_SOUND_RELATIVE_VOLUME, 0.15)
 
   currentChapterIndex.value += 1
   await loadNotebookForCurrentChapter()
@@ -167,8 +168,6 @@ onBeforeUnmount(() => {
     soundRef = null
   }
 })
-
-
 </script>
 
 <template>
@@ -315,7 +314,8 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  padding: clamp(3.4rem, 4.6vw, 4.7rem) clamp(0.55rem, 1.25vw, 1.15rem) clamp(0.8rem, 1.45vw, 1.35rem);
+  padding: clamp(3.4rem, 4.6vw, 4.7rem) clamp(0.55rem, 1.25vw, 1.15rem)
+    clamp(0.8rem, 1.45vw, 1.35rem);
 }
 
 .book-page-right {

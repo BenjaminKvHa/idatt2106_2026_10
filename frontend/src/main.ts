@@ -8,13 +8,14 @@ import backgroundMusicFile from '@/assets/sounds/shared/backgroundMusic.mp3'
 import { useAudio } from '@/composables/useAudio'
 
 const { registerAudioElement, playSound, isMuted } = useAudio()
+const BACKGROUND_MUSIC_RELATIVE_VOLUME = 0.65
 
 const app = createApp(App)
 
 const backgroundMusic = new Audio(backgroundMusicFile)
 backgroundMusic.loop = true
 backgroundMusic.preload = 'auto'
-registerAudioElement(backgroundMusic)
+registerAudioElement(backgroundMusic, BACKGROUND_MUSIC_RELATIVE_VOLUME)
 
 let backgroundMusicStarted = false
 
@@ -52,14 +53,14 @@ document.addEventListener(
     if (shouldSkipClickSound) return
 
     const clickableElement = target.closest(
-      'button:not(:disabled), a[href], [role="button"], .clickable, [data-click-sound], input[type="button"], input[type="submit"]'
+      'button:not(:disabled), a[href], [role="button"], .clickable, [data-click-sound], input[type="button"], input[type="submit"]',
     )
 
     if (!clickableElement) return
 
     playClickSound()
   },
-  true
+  true,
 )
 
 app.use(router)

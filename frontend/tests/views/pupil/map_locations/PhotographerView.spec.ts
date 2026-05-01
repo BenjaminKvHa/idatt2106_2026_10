@@ -43,7 +43,11 @@ function mountPhotographerView() {
         },
         CompleteLevelPopup: {
           props: ['show', 'title', 'message'],
-          template: '<div v-if="show" data-test="complete-popup">{{ title }} {{ message }}</div>',
+          template: `<div v-if="show" data-test="complete-popup">
+                      <p>{{ title }}</p>
+                      <p>{{ message }}</p>
+                      <button data-test="map" @click="$emit('map')">Til kartet</button>
+                      </div>`,
         },
         PupilImageTask: {
           name: 'PupilImageTask',
@@ -161,7 +165,7 @@ describe('PhotographerView', () => {
     await wrapper.find('.bottom-actions button').trigger('click')
     await flushPromises()
 
-    await wrapper.find('.primary-btn').trigger('click')
+    await wrapper.find('[data-test="map"]').trigger('click')
 
     expect(routerPush).toHaveBeenCalledWith('/pupil/classroom/map')
   })

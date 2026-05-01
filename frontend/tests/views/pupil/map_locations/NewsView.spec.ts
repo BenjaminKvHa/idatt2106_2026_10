@@ -145,6 +145,7 @@ describe('NewsView', () => {
     await wrapper.find('[data-test="select-file"]').trigger('click')
     await flushPromises()
 
-    expect(wrapper.find('.next-level-button').exists()).toBe(true)
+    expect(wrapper.find('.nav-button-primary').exists()).toBe(true)
+    expect(wrapper.find('.nav-button-primary').text()).toBe('Neste')
   })
 })

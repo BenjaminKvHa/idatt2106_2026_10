@@ -43,11 +43,13 @@ function mountPhotographerView() {
         },
         CompleteLevelPopup: {
           props: ['show', 'title', 'message'],
-          template: `<div v-if="show" data-test="complete-popup">
-                      <p>{{ title }}</p>
-                      <p>{{ message }}</p>
-                      <button data-test="map" @click="$emit('map')">Til kartet</button>
-                      </div>`,
+          template: `
+            <div v-if="show" data-test="complete-popup">
+              <p>{{ title }}</p>
+              <p>{{ message }}</p>
+              <button data-test="map" @click="$emit('map')">Til kartet</button>
+            </div>
+          `,
         },
         PupilImageTask: {
           name: 'PupilImageTask',
@@ -62,14 +64,14 @@ function mountPhotographerView() {
             'submitting',
           ],
           template: `
-        <div data-test="image-task">
-          <p>{{ taskDescription }}</p>
-          <button data-test="category" @click="$emit('select-category', 'REAL')">Ekte</button>
-          <button data-test="justification" @click="$emit('select-justification', 'Fordi bildet ser ekte ut')">
-            Begrunnelse
-          </button>
-        </div>
-      `,
+            <div data-test="image-task">
+              <p>{{ taskDescription }}</p>
+              <button data-test="category" @click="$emit('select-category', 'REAL')">Ekte</button>
+              <button data-test="justification" @click="$emit('select-justification', 'Fordi bildet ser ekte ut')">
+                Begrunnelse
+              </button>
+            </div>
+          `,
         },
       },
     },
@@ -162,8 +164,16 @@ describe('PhotographerView', () => {
     await wrapper.find('.bottom-actions button').trigger('click')
     await flushPromises()
 
-    await wrapper.find('.bottom-actions button').trigger('click')
+    const resultButton = wrapper
+      .findAll('.bottom-actions button')
+      .find((button) => button.text() === 'Se resultat')
+
+    expect(resultButton).toBeDefined()
+
+    await resultButton!.trigger('click')
     await flushPromises()
+
+    expect(wrapper.find('[data-test="complete-popup"]').exists()).toBe(true)
 
     await wrapper.find('[data-test="map"]').trigger('click')
 

@@ -63,7 +63,8 @@ export async function resolvePostAuthRoute(role?: BackendAccountRole): Promise<s
   }
 
   if (role === 'PUPIL') {
-    return getPupilMembershipRoute(await fetchMeCached({ force: true }))
+    const profile = await fetchMeCached({ force: true })
+    return profile ? getPupilMembershipRoute(profile) : '/sign-in'
   }
 
   return '/'

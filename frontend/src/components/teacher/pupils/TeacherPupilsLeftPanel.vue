@@ -21,6 +21,7 @@ function selectPupil(email: string) {
   <aside class="pupil-list-panel">
     <h1 class="page-title">Elever</h1>
 
+    <p v-if="approvedPupils.length === 0">Ingen elever</p>
     <div class="list-section">
       <TeacherPupilPreview
         v-for="pupil in approvedPupils"

@@ -70,7 +70,7 @@ class TaskAdminControllerTest {
         when(taskAdminService.createImageVerificationTask(any(), any(), any())).thenReturn(taskWithId(1L));
 
         String metadata = """
-                {"chapterId": 2, "difficulty": "EASY", "taskDescription": "x",
+                {"chapterId": 2, "classroomCode": "ABCABC", "difficulty": "EASY", "taskDescription": "x",
                  "correctCategory": "REAL", "correctJustification": "j",
                  "justifications": ["j"], "correctDescription": "ok", "falseDescription": "no"}
                 """;
@@ -91,7 +91,7 @@ class TaskAdminControllerTest {
         when(taskAdminService.createNewsVerificationTask(any(), any(), any(), any())).thenReturn(taskWithId(2L));
 
         String metadata = """
-                {"chapterId": 1, "difficulty": "MEDIUM", "taskDescription": "x",
+                {"chapterId": 1, "classroomCode": "ABCABC", "difficulty": "MEDIUM", "taskDescription": "x",
                  "correctFileSlot": "FILE_1",
                  "correctDescription": "ok", "incorrectDescription": "no"}
                 """;
@@ -113,7 +113,7 @@ class TaskAdminControllerTest {
         when(taskAdminService.createDatacenterImageTask(any(), any(), any())).thenReturn(taskWithId(3L));
 
         String metadata = """
-                {"taskDescription": "x", "correctCategory": "AI_GENERATED", "correctJustification": "j",
+                {"classroomCode": "ABCABC", "taskDescription": "x", "correctCategory": "AI_GENERATED", "correctJustification": "j",
                  "justifications": ["j"], "correctDescription": "ok", "falseDescription": "no"}
                 """;
 
@@ -133,7 +133,7 @@ class TaskAdminControllerTest {
         when(taskAdminService.createDatacenterNewsTask(any(), any(), any(), any())).thenReturn(taskWithId(4L));
 
         String metadata = """
-                {"taskDescription": "x", "correctFileSlot": "FILE_1",
+                {"classroomCode": "ABCABC", "taskDescription": "x", "correctFileSlot": "FILE_1",
                  "correctDescription": "ok", "incorrectDescription": "no"}
                 """;
 

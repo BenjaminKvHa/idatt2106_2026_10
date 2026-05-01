@@ -297,6 +297,19 @@ watch(
         </div>
       </section>
 
+      <p v-if="actionError" class="helper-text error-text">{{ (() => {
+        let out = actionError;
+        switch (actionError){
+          case "Request failed with status 404":
+            out = "Fant ikke lærer";
+            break;
+          case "Request failed with status 400":
+            out = "Epost feil formatert"
+            break;
+        }
+        return out;
+      })() }}</p>
+      
       <div class="action-grid">
         <button v-if="canLeave" type="button" class="action-button destructive-button" :disabled="leaving" @click="leaveClassroom">
           {{ leaving ? 'Forlater...' : 'Forlat klasserom' }}
@@ -306,7 +319,6 @@ watch(
         </button>
       </div>
 
-      <p v-if="actionError" class="helper-text error-text">{{ actionError }}</p>
     </template>
   </div>
 </template>

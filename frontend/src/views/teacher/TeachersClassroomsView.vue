@@ -1,11 +1,8 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { useClassrooms } from '@/composables/useClassrooms'
-import { sanitizeClassroomName } from '@/composables/useClassroomName'
 import StateDisplay from '@/components/ui/StateDisplay.vue'
 
-const router = useRouter()
 const { classrooms, loading, error, fetchClassrooms } = useClassrooms()
 
 onMounted(() => {
@@ -57,18 +54,55 @@ onMounted(() => {
 <style scoped>
 
 .card-classroom-name {
-    font-size: 1.2rem;
-    font-weight: var(--fw-bold);
+  font-size: 1.2rem;
+  font-weight: var(--fw-bold);
+  overflow-wrap: anywhere;
 }
 
 .card-classroom-code {
-    font-size: 0.8rem;
-    opacity: 0.9;
+  font-size: 0.8rem;
+  opacity: 0.9;
+  letter-spacing: 0.08em;
 }
 
 .teacher-menu-button {
-    width: 100%;
-    padding: 0.85rem 1rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+}
+
+.teacher-card-body {
+  min-width: 0;
+}
+
+.row {
+  gap: 0.75rem;
+}
+
+.row span {
+  min-width: 0;
+}
+
+.value {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .teacher-card {
+    min-height: 0;
+  }
+
+  .teacher-card-header,
+  .teacher-card-body {
+    padding: 0.9rem;
+  }
+
+  .card-classroom-name {
+    font-size: 1.05rem;
+  }
+
+  .teacher-menu-button {
+    padding: 0.75rem 0.85rem;
+  }
 }
 
 </style>

@@ -33,7 +33,6 @@ import TeacherTopbar from '@/components/ui/TeacherTopbar.vue'
   align-self: start;
   z-index: 20;
   height: 100vh;
-  display: flex;
 }
 
 .teacher-main {
@@ -41,6 +40,7 @@ import TeacherTopbar from '@/components/ui/TeacherTopbar.vue'
   grid-template-rows: auto 1fr;
   min-height: 0;
   min-width: 0;
+  flex-grow: 1;
 }
 
 .teacher-content {
@@ -48,5 +48,27 @@ import TeacherTopbar from '@/components/ui/TeacherTopbar.vue'
   min-width: 0;
   overflow: auto;
   padding: var(--medium-padding);
+}
+
+@media (max-width: 1200px) {
+  .teacher-page {
+    grid-template-columns: minmax(180px, 16rem) 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .teacher-page {
+    grid-template-columns: minmax(140px, 10rem) 1fr;
+  }
+
+  .teacher-content {
+    padding: var(--thin-padding);
+  }
+}
+
+@media (max-width: 640px) {
+  .teacher-page {
+    grid-template-columns: minmax(110px, 7rem) 1fr;
+  }
 }
 </style>

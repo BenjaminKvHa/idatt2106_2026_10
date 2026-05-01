@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import TopBar from '@/components/pupil/TopBar.vue'
+import AuthenticatedImage from '@/components/ui/AuthenticatedImage.vue'
 import mysteryBackground from '@/assets/backgrounds/ukens_mysterium-bg.png'
-import { get, getBlob, postForm } from '@/utils/apiUtils'
+import { get, postForm } from '@/utils/apiUtils'
 
 type SubmittedMystery = {
   id: number
-  imageUrl: string
+  fileObjectId: number
   comment: string
 }
 
@@ -45,7 +46,6 @@ const submitSuccess = ref<string | null>(null)
 const submitting = ref(false)
 
 const groups = ref<WeekGroup[]>([])
-const objectUrls: string[] = []
 
 function isoWeekParts(date: Date): { key: string; week: number; year: number } {
   const tmp = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
@@ -57,17 +57,9 @@ function isoWeekParts(date: Date): { key: string; week: number; year: number } {
   return { key: `${year}-W${String(week).padStart(2, '0')}`, week, year }
 }
 
-function revokeObjectUrls() {
-  while (objectUrls.length) {
-    const url = objectUrls.pop()
-    if (url) URL.revokeObjectURL(url)
-  }
-}
-
 async function loadMysteries() {
   loading.value = true
   loadError.value = null
-  revokeObjectUrls()
   groups.value = []
 
   try {
@@ -94,16 +86,7 @@ async function loadMysteries() {
         buckets.set(wk.key, group)
       }
 
-      let imageUrl = ''
-      try {
-        const blob = await getBlob(`/api/objects/${item.fileObjectId}`)
-        imageUrl = URL.createObjectURL(blob)
-        objectUrls.push(imageUrl)
-      } catch (err) {
-        console.warn('Failed to load mystery image', item.fileObjectId, err)
-      }
-
-      group.mysteries.push({ id: item.id, imageUrl, comment: item.comment })
+      group.mysteries.push({ id: item.id, fileObjectId: item.fileObjectId, comment: item.comment })
     }
 
     const sorted = Array.from(buckets.values()).sort((a, b) => (a.weekKey < b.weekKey ? 1 : -1))
@@ -166,7 +149,6 @@ const openSubmitPopup = () => {
 }
 
 const openImagePreview = (mystery: SubmittedMystery) => {
-  if (!mystery.imageUrl) return
   selectedImage.value = mystery
 }
 
@@ -225,7 +207,11 @@ const submitMystery = async () => {
 }
 
 onMounted(loadMysteries)
-onBeforeUnmount(revokeObjectUrls)
+onBeforeUnmount(() => {
+  if (uploadedImagePreview.value) {
+    URL.revokeObjectURL(uploadedImagePreview.value)
+  }
+})
 </script>
 
 <template>
@@ -311,18 +297,13 @@ onBeforeUnmount(revokeObjectUrls)
                 class="submitted-card"
               >
                 <button
-                  v-if="mystery.imageUrl"
                   class="image-preview"
                   type="button"
                   aria-label="Åpne bilde i stort format"
                   @click="openImagePreview(mystery)"
                 >
-                  <img :src="mystery.imageUrl" alt="Innsendt mysterium" />
+                  <AuthenticatedImage :src="`/api/objects/${mystery.fileObjectId}`" alt="Innsendt mysterium" />
                 </button>
-
-                <div v-else class="image-placeholder">
-                  <span>Bilde utilgjengelig</span>
-                </div>
 
                 <div class="comment-box">
                   <span class="case-label">Kommentar</span>
@@ -398,7 +379,7 @@ onBeforeUnmount(revokeObjectUrls)
           ×
         </button>
 
-        <img :src="selectedImage.imageUrl" alt="Forstørret innsendt mysterium" />
+        <AuthenticatedImage :src="`/api/objects/${selectedImage.fileObjectId}`" alt="Forstørret innsendt mysterium" />
       </div>
     </div>
   </div>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref, watch } from 'vue'
+import AuthenticatedImage from '@/components/ui/AuthenticatedImage.vue'
 import type {
   FotografenTaskFormValues,
   ImageCategory,
@@ -278,7 +279,14 @@ function submitForm() {
 
       <div v-if="selectedFilePreview || parsedTask?.fileId" class="preview-panel">
         <img
-          :src="selectedFilePreview || `/api/objects/${parsedTask?.fileId}`"
+          v-if="selectedFilePreview"
+          :src="selectedFilePreview"
+          :alt="task ? 'Eksisterende eller nytt oppgavebilde' : 'Valgt oppgavebilde'"
+          class="preview-image"
+        />
+        <AuthenticatedImage
+          v-else-if="parsedTask?.fileId"
+          :src="`/api/objects/${parsedTask.fileId}`"
           :alt="task ? 'Eksisterende eller nytt oppgavebilde' : 'Valgt oppgavebilde'"
           class="preview-image"
         />

@@ -186,12 +186,12 @@ const autoTitle = computed<string>(() => {
   padding: 4px var(--medium-padding);
   cursor: pointer;
   white-space: nowrap;
+  border-radius: var(--border-radius-2) var(--border-radius-2) 0 0;
 }
 
 .topbar-tab-button-1{
   margin-bottom: 0;
   background-color: var(--background-body);
-  border-radius: var(--border-radius-2) var(--border-radius-2) 0 0;
   border-style: none;
 }
 
@@ -203,7 +203,6 @@ const autoTitle = computed<string>(() => {
 .topbar-tab-button-2{
   margin-bottom: 0;
   background-color: var(--background-sec);
-  border-radius: var(--border-radius-2) var(--border-radius-2) 0 0;
   border-style: none;
   color: var(--txt);
 }
@@ -211,5 +210,15 @@ const autoTitle = computed<string>(() => {
 .topbar-tab-button-2:hover {
   background-color: var(--background-body);
   color: var(--txt);
+}
+
+
+@media (max-width: 768px) {
+  .topbar-tab {
+    border-radius: var(--border-radius-2);
+  }
+  .topbar-tabs {
+    padding: var(--thin-padding);
+  }
 }
 </style>

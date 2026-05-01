@@ -23,6 +23,14 @@ function mountTask(props = {}) {
       result: null,
       ...props,
     },
+    global: {
+      stubs: {
+        AuthenticatedImage: {
+          props: ['src', 'alt'],
+          template: '<img :src="src" :alt="alt" />',
+        },
+      },
+    },
   })
 }
 

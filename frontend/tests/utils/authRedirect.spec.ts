@@ -31,9 +31,12 @@ describe('authRedirect', () => {
       role: 'PUPIL',
       classroomCode: null,
       membershipConfirmed: false,
+      needsIntroSequence: false,
     })
 
-    await expect(resolvePostAuthRoute('PUPIL')).resolves.toBe('/join-classroom/enter-classroom-code')
+    await expect(resolvePostAuthRoute('PUPIL')).resolves.toBe(
+      '/join-classroom/enter-classroom-code',
+    )
   })
 
   it('resolves pending pupils to the waiting page', async () => {
@@ -41,6 +44,7 @@ describe('authRedirect', () => {
       role: 'PUPIL',
       classroomCode: 'MAPAAA',
       membershipConfirmed: false,
+      needsIntroSequence: false,
     })
 
     await expect(resolvePostAuthRoute('PUPIL')).resolves.toBe('/join-classroom/waiting-classroom')
@@ -51,9 +55,21 @@ describe('authRedirect', () => {
       role: 'PUPIL',
       classroomCode: 'MAPAAA',
       membershipConfirmed: true,
+      needsIntroSequence: false,
     })
 
     await expect(resolvePostAuthRoute('PUPIL')).resolves.toBe('/pupil')
+  })
+
+  it('resolves confirmed pupils without chapter one progression to the welcome guide', async () => {
+    mockedGet.mockResolvedValue({
+      role: 'PUPIL',
+      classroomCode: 'MAPAAA',
+      membershipConfirmed: true,
+      needsIntroSequence: true,
+    })
+
+    await expect(resolvePostAuthRoute('PUPIL')).resolves.toBe('/pupil/welcome-guide')
   })
 
   it('uses cached me profile unless a fresh profile is requested', async () => {
@@ -61,6 +77,7 @@ describe('authRedirect', () => {
       role: 'PUPIL',
       classroomCode: 'MAPAAA',
       membershipConfirmed: true,
+      needsIntroSequence: false,
     })
 
     await fetchMeCached()
@@ -75,16 +92,30 @@ describe('authRedirect', () => {
 
   it('maps pupil membership states to their route', () => {
     expect(getPupilMembershipRoute(null)).toBe('/join-classroom/enter-classroom-code')
-    expect(getPupilMembershipRoute({
-      role: 'PUPIL',
-      classroomCode: 'MAPAAA',
-      membershipConfirmed: false,
-    })).toBe('/join-classroom/waiting-classroom')
-    expect(getPupilMembershipRoute({
-      role: 'PUPIL',
-      classroomCode: 'MAPAAA',
-      membershipConfirmed: true,
-    })).toBe('/pupil')
+    expect(
+      getPupilMembershipRoute({
+        role: 'PUPIL',
+        classroomCode: 'MAPAAA',
+        membershipConfirmed: false,
+        needsIntroSequence: false,
+      }),
+    ).toBe('/join-classroom/waiting-classroom')
+    expect(
+      getPupilMembershipRoute({
+        role: 'PUPIL',
+        classroomCode: 'MAPAAA',
+        membershipConfirmed: true,
+        needsIntroSequence: true,
+      }),
+    ).toBe('/pupil/welcome-guide')
+    expect(
+      getPupilMembershipRoute({
+        role: 'PUPIL',
+        classroomCode: 'MAPAAA',
+        membershipConfirmed: true,
+        needsIntroSequence: false,
+      }),
+    ).toBe('/pupil')
   })
 
   it('clears the cached me profile', async () => {
@@ -92,6 +123,7 @@ describe('authRedirect', () => {
       role: 'PUPIL',
       classroomCode: 'MAPAAA',
       membershipConfirmed: true,
+      needsIntroSequence: false,
     })
 
     await fetchMeCached()

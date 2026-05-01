@@ -35,11 +35,7 @@ import PupilsProfileView from '@/views/pupil/PupilsProfileView.vue'
 import PupilsEditAvatarView from '@/views/pupil/PupilsEditAvatarView.vue'
 import TeachersEditClassroom from '@/views/teacher/TeachersEditClassroom.vue'
 import { getJwtDataWithRefresh } from '@/utils/jwtUtils'
-import {
-  clearMeCache,
-  fetchMeCached,
-  getPupilMembershipRoute,
-} from '@/utils/authRedirect'
+import { clearMeCache, fetchMeCached, getPupilMembershipRoute } from '@/utils/authRedirect'
 
 export { clearMeCache } from '@/utils/authRedirect'
 
@@ -73,10 +69,6 @@ const router = createRouter({
         {
           path: 'waiting-classroom',
           component: PupilsWaitingPageView,
-        },
-        {
-          path: 'welcome-guide',
-          component: PupilsWelcomeGuideView,
         },
       ],
     },
@@ -193,6 +185,10 @@ const router = createRouter({
           component: PupilsEditAvatarView,
         },
         {
+          path: 'welcome-guide',
+          component: PupilsWelcomeGuideView,
+        },
+        {
           path: 'classroom',
           children: [
             {
@@ -273,18 +269,20 @@ router.beforeEach(async (to) => {
   if (requiresPupil && jwt.role !== 'PUPIL') return '/teacher/classrooms'
 
   if (jwt.role === 'PUPIL') {
-    const me = await fetchMeCached({ force: to.path.startsWith('/join-classroom/waiting-classroom') })
+    const me = await fetchMeCached({
+      force: to.path.startsWith('/join-classroom/waiting-classroom'),
+    })
     const pupilRoute = getPupilMembershipRoute(me)
 
-    if (to.path.startsWith('/pupil') && pupilRoute !== '/pupil') {
+    if (to.path.startsWith('/pupil') && pupilRoute !== '/pupil' && to.path !== pupilRoute) {
       return pupilRoute
     }
 
     if (to.path.startsWith('/join-classroom')) {
       const isSetAvatarRoute = to.path.startsWith('/join-classroom/set-avatar')
 
-      if (pupilRoute === '/pupil') {
-        return '/pupil'
+      if (pupilRoute.startsWith('/pupil')) {
+        return pupilRoute
       }
 
       if (pupilRoute === '/join-classroom/enter-classroom-code' && isSetAvatarRoute) {

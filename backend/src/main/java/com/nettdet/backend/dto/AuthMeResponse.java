@@ -11,7 +11,8 @@ public record AuthMeResponse(
     String classroomCode,
     Long avatarFileObjectId,
     String avatarSelection,
-    boolean membershipConfirmed
+    boolean membershipConfirmed,
+    boolean needsIntroSequence
 ) {
     public static AuthMeResponse from(
             Account account,
@@ -19,7 +20,8 @@ public record AuthMeResponse(
             String classroomCode,
             Long avatarFileObjectId,
             String avatarSelection,
-            boolean membershipConfirmed) {
+            boolean membershipConfirmed,
+            boolean needsIntroSequence) {
         return new AuthMeResponse(
             account.getEmail(),
             account.getLegalName(),
@@ -28,7 +30,8 @@ public record AuthMeResponse(
             classroomCode,
             avatarFileObjectId,
             avatarSelection,
-            membershipConfirmed
+            membershipConfirmed,
+            needsIntroSequence
         );
     }
 }

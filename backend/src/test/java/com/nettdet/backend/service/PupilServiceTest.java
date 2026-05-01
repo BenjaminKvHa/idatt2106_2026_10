@@ -23,6 +23,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 
 import com.nettdet.backend.domain.Account;
 import com.nettdet.backend.domain.Chapter;
@@ -37,7 +38,9 @@ import com.nettdet.backend.dto.PupilProgressionResponse;
 import com.nettdet.backend.dto.PupilRequest;
 import com.nettdet.backend.dto.PupilResponse;
 import com.nettdet.backend.repository.AccountRepository;
+import com.nettdet.backend.repository.ChapterRepository;
 import com.nettdet.backend.repository.ClassroomRepository;
+import com.nettdet.backend.repository.PupilChapterBridgeProgressionRepository;
 import com.nettdet.backend.repository.PupilClassroomMembershipRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -50,10 +53,19 @@ class PupilServiceTest {
     private PupilClassroomMembershipRepository pupilMembershipRepository;
 
     @Mock
+    private PupilChapterBridgeProgressionRepository progressionRepository;
+
+    @Mock
     private AccountRepository accountRepository;
 
     @Mock
     private ClassroomRepository classroomRepository;
+
+    @Mock
+    private ChapterRepository chapterRepository;
+
+    @Mock
+    private NotebookJsonService notebookJsonService;
 
     @Mock
     private AvatarService avatarService;
@@ -135,6 +147,61 @@ class PupilServiceTest {
 
         assertFalse(unconfirmedMember);
         assertFalse(missingMember);
+    }
+
+    @DisplayName("Completes intro by creating default chapter one progression for confirmed pupil")
+    @Test
+    void completeIntroSequence_whenChapterOneProgressionIsMissing_savesDefaultProgression() {
+        PupilClassroomMembership membership = membership(true, "detektiv1", null);
+        Chapter chapter = chapter(1L);
+        when(pupilMembershipRepository.findByAccountEmailAndMembershipConfirmedByTeacherTrue(PUPIL_EMAIL))
+                .thenReturn(Optional.of(membership));
+        when(progressionRepository.existsByIdEmailAndIdChapterId(PUPIL_EMAIL, 1L))
+                .thenReturn(false);
+        when(chapterRepository.findById(1L)).thenReturn(Optional.of(chapter));
+        when(notebookJsonService.defaultNotebookJson()).thenReturn("{\"tips\":[],\"ownNotes\":\"\"}");
+
+        pupilService.completeIntroSequence(PUPIL_EMAIL);
+
+        ArgumentCaptor<PupilChapterBridgeProgression> progressionCaptor =
+                ArgumentCaptor.forClass(PupilChapterBridgeProgression.class);
+        verify(progressionRepository).save(progressionCaptor.capture());
+        PupilChapterBridgeProgression saved = progressionCaptor.getValue();
+        assertEquals(new PupilChapterBridgeProgressionId(PUPIL_EMAIL, 1L), saved.getId());
+        assertSame(membership, saved.getPupilClassroomMembership());
+        assertSame(chapter, saved.getChapter());
+        assertEquals(0, saved.getSuccessfulRuns());
+        assertEquals(0, saved.getHighscore());
+        assertEquals(0, saved.getUnsuccessfulStreak());
+        assertEquals(0, saved.getCurrentRunAttempts());
+        assertEquals(0, saved.getCurrentRunCorrect());
+        assertEquals("{\"tips\":[],\"ownNotes\":\"\"}", saved.getNotebookJson());
+    }
+
+    @DisplayName("Completing intro is idempotent when chapter one progression already exists")
+    @Test
+    void completeIntroSequence_whenChapterOneProgressionExists_doesNotOverwriteProgression() {
+        when(pupilMembershipRepository.findByAccountEmailAndMembershipConfirmedByTeacherTrue(PUPIL_EMAIL))
+                .thenReturn(Optional.of(membership(true, "detektiv1", null)));
+        when(progressionRepository.existsByIdEmailAndIdChapterId(PUPIL_EMAIL, 1L))
+                .thenReturn(true);
+
+        pupilService.completeIntroSequence(PUPIL_EMAIL);
+
+        verify(chapterRepository, never()).findById(any());
+        verify(progressionRepository, never()).save(any());
+    }
+
+    @DisplayName("Rejects intro completion without confirmed pupil membership")
+    @Test
+    void completeIntroSequence_whenConfirmedMembershipIsMissing_throwsAccessDeniedException() {
+        when(pupilMembershipRepository.findByAccountEmailAndMembershipConfirmedByTeacherTrue(PUPIL_EMAIL))
+                .thenReturn(Optional.empty());
+
+        assertThrows(AccessDeniedException.class, () -> pupilService.completeIntroSequence(PUPIL_EMAIL));
+
+        verify(progressionRepository, never()).existsByIdEmailAndIdChapterId(any(), any());
+        verify(progressionRepository, never()).save(any());
     }
 
     @DisplayName("Creates unconfirmed classroom join request for existing account and classroom")
@@ -270,6 +337,14 @@ class PupilServiceTest {
         return classroom;
     }
 
+    private Chapter chapter(Long chapterId) {
+        Chapter chapter = new Chapter();
+        chapter.setId(chapterId);
+        chapter.setChapterName("Chapter " + chapterId);
+        chapter.setSuccessfulRunsNeededForCompletion(3);
+        return chapter;
+    }
+
     private PupilClassroomMembership membership(boolean confirmed, String username, FileObject avatar) {
         PupilClassroomMembership membership = new PupilClassroomMembership();
         membership.setAccountEmail(PUPIL_EMAIL);
@@ -286,14 +361,9 @@ class PupilServiceTest {
                                                       Integer successfulRuns,
                                                       Integer highscore,
                                                       Integer unsuccessfulStreak) {
-        Chapter chapter = new Chapter();
-        chapter.setId(chapterId);
-        chapter.setChapterName("Chapter " + chapterId);
-        chapter.setSuccessfulRunsNeededForCompletion(3);
-
         PupilChapterBridgeProgression progression = new PupilChapterBridgeProgression();
         progression.setId(new PupilChapterBridgeProgressionId(PUPIL_EMAIL, chapterId));
-        progression.setChapter(chapter);
+        progression.setChapter(chapter(chapterId));
         progression.setSuccessfulRuns(successfulRuns);
         progression.setHighscore(highscore);
         progression.setUnsuccessfulStreak(unsuccessfulStreak);

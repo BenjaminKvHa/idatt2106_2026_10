@@ -116,6 +116,23 @@ public class PupilController {
     }
 
     /**
+     * Marks the first-time pupil intro sequence as completed.
+     * <p>
+     * This materializes the first chapter progression row if it does not already exist.
+     *
+     * @param principal the security principal of the authenticated pupil
+     * @return a {@link ResponseEntity} with status 204 (NO_CONTENT)
+     */
+    @PostMapping("/intro/complete")
+    @PreAuthorize("hasAuthority('PUPIL')")
+    @Operation(summary = "Complete first-time intro", description = "Creates the default chapter 1 progression row for the authenticated confirmed pupil if it does not already exist.")
+    public ResponseEntity<Void> completeIntroSequence(
+            @AuthenticationPrincipal JwtUserPrincipal principal) {
+        pupilService.completeIntroSequence(principal.email());
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
      * Submits a request for the authenticated pupil to join a classroom.
      * <p>
      * Creates an initial membership record with a status of 'PENDING'. A teacher managing

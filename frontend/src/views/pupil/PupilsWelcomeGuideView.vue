@@ -2,6 +2,8 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ClipboardList, Lock } from '@lucide/vue'
+import { post } from '@/utils/apiUtils'
+import { clearMeCache } from '@/utils/authRedirect'
 
 import aliImg from '@/assets/icons/detectives_and_thief/detective_ali.png'
 import suryaImg from '@/assets/icons/detectives_and_thief/detective_surya.png'
@@ -10,9 +12,25 @@ import bgImg from '@/assets/backgrounds/welcomeBackground.png'
 
 const router = useRouter()
 const activeCharacter = ref<string | null>(null)
+const completingIntro = ref(false)
+const completionError = ref('')
 
-function confirm(): void {
-  router.push('/pupil')
+async function confirm(): Promise<void> {
+  if (completingIntro.value) return
+
+  completingIntro.value = true
+  completionError.value = ''
+
+  try {
+    await post('/api/pupil/intro/complete', undefined)
+    clearMeCache()
+    await router.replace('/pupil')
+  } catch (error) {
+    completionError.value =
+      error instanceof Error ? error.message : 'Kunne ikke starte spillet. Prøv igjen.'
+  } finally {
+    completingIntro.value = false
+  }
 }
 
 function toggleCharacter(character: string): void {
@@ -23,7 +41,6 @@ function toggleCharacter(character: string): void {
 <template>
   <div class="center-container" :style="{ backgroundImage: `url(${bgImg})` }">
     <div class="scene">
-      
       <div class="heroes">
         <div class="character ali" @click="toggleCharacter('ali')">
           <span class="character-name">Detektiv Ali</span>
@@ -54,26 +71,27 @@ function toggleCharacter(character: string): void {
       </div>
 
       <div class="card">
-        <div class="secret-badge">
-          <Lock :size="14" /> Hemmelig oppdrag
-        </div>
+        <div class="secret-badge"><Lock :size="14" /> Hemmelig oppdrag</div>
 
         <h1>Velkommen, nettdetektiv!</h1>
         <div class="divider"></div>
 
         <div class="text">
-          <span>Akkurat nå er byen din under angrep av <strong>datatyven</strong>.
-            Detektiv Ali og Detektiv Surya trenger din hjelp til å bekjempe datatyven.</span>
+          <span
+            >Akkurat nå er byen din under angrep av <strong>datatyven</strong>. Detektiv Ali og
+            Detektiv Surya trenger din hjelp til å bekjempe datatyven.</span
+          >
         </div>
 
         <div class="mission-box">
-          <div class="mission-label">
-            <ClipboardList :size="13" /> Ditt oppdrag
-          </div>
+          <div class="mission-label"><ClipboardList :size="13" /> Ditt oppdrag</div>
           <div class="steps">
             <div class="step">
               <span class="step-num">1</span>
-              <span>Lær å skille <strong>falsk</strong> fra <strong>ekte</strong> innhold på internett</span>
+              <span
+                >Lær å skille <strong>falsk</strong> fra <strong>ekte</strong> innhold på
+                internett</span
+              >
             </div>
             <div class="step">
               <span class="step-num">2</span>
@@ -86,8 +104,10 @@ function toggleCharacter(character: string): void {
           </div>
         </div>
 
-        <button class="ready-button pupil-button-3d" @click="confirm">
-          Start spillet
+        <p v-if="completionError" class="completion-error" role="alert">{{ completionError }}</p>
+
+        <button class="ready-button pupil-button-3d" :disabled="completingIntro" @click="confirm">
+          {{ completingIntro ? 'Starter...' : 'Start spillet' }}
         </button>
       </div>
     </div>
@@ -189,9 +209,7 @@ function toggleCharacter(character: string): void {
   display: block;
   margin-inline: -1.4rem;
   margin-bottom: -0.25rem;
-  filter:
-    drop-shadow(0 6px 0 var(--brown-dark-60))
-    drop-shadow(0 0 12px var(--beige-light-40));
+  filter: drop-shadow(0 6px 0 var(--brown-dark-60)) drop-shadow(0 0 12px var(--beige-light-40));
 }
 
 .ali img {
@@ -436,8 +454,21 @@ h1 {
   background: var(--green-confirm);
 }
 
+.ready-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.completion-error {
+  margin: 0;
+  color: var(--red-danger);
+  font-weight: 700;
+  text-align: center;
+}
+
 @keyframes glowPulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     opacity: 0.85;
   }
@@ -448,7 +479,8 @@ h1 {
 }
 
 @keyframes villainPulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     opacity: 0.85;
   }

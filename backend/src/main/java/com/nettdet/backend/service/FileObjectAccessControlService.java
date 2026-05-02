@@ -1,7 +1,10 @@
 package com.nettdet.backend.service;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.UUID;
+
+import javax.imageio.ImageIO;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -30,6 +33,10 @@ import jakarta.persistence.EntityNotFoundException;
  */
 @Service
 public class FileObjectAccessControlService {
+
+    private static final String PNG_CONTENT_TYPE = "image/png";
+    private static final String JPEG_CONTENT_TYPE = "image/jpeg";
+    private static final String INVALID_IMAGE_MESSAGE = "Only PNG and JPEG images are allowed";
 
     private final FileObjectService fileObjectService;
     private final FileObjectRepository fileObjectRepository;
@@ -97,22 +104,17 @@ public class FileObjectAccessControlService {
             }
         }
 
-        String objectKey = generateObjectKey(file.getOriginalFilename());
-        String fileName = normalizeFileName(file.getOriginalFilename());
-        String contentType = normalizeContentType(file.getContentType());
+        ValidatedImageUpload validatedImage = validateAndReadSupportedImage(file);
+        String objectKey = generateObjectKey(validatedImage.fileName());
 
-        try {
-            return fileObjectService.upload(
-                    objectKey,
-                    file.getBytes(),
-                    contentType,
-                    actor,
-                    classroom,
-                    accessLevel,
-                    fileName);
-        } catch (IOException exception) {
-            throw new IllegalArgumentException("Could not read uploaded file bytes");
-        }
+        return fileObjectService.upload(
+                objectKey,
+                validatedImage.bytes(),
+                validatedImage.contentType(),
+                actor,
+                classroom,
+                accessLevel,
+                validatedImage.fileName());
     }
 
     /**
@@ -154,22 +156,17 @@ public class FileObjectAccessControlService {
                         classroomCode)
                 .orElseThrow(() -> new AccessDeniedException("Confirmed classroom membership is required"));
 
-        String objectKey = generateObjectKey(file.getOriginalFilename());
-        String fileName = normalizeFileName(file.getOriginalFilename());
-        String contentType = normalizeContentType(file.getContentType());
+        ValidatedImageUpload validatedImage = validateAndReadSupportedImage(file);
+        String objectKey = generateObjectKey(validatedImage.fileName());
 
-        try {
-            return fileObjectService.upload(
-                    objectKey,
-                    file.getBytes(),
-                    contentType,
-                    actor,
-                    classroom,
-                    ClassroomAccess.ONLY_TEACHERS_IN_CLASS,
-                    fileName);
-        } catch (IOException exception) {
-            throw new IllegalArgumentException("Could not read uploaded file bytes");
-        }
+        return fileObjectService.upload(
+                objectKey,
+                validatedImage.bytes(),
+                validatedImage.contentType(),
+                actor,
+                classroom,
+                ClassroomAccess.ONLY_TEACHERS_IN_CLASS,
+                validatedImage.fileName());
     }
 
     /**
@@ -299,11 +296,54 @@ public class FileObjectAccessControlService {
         return originalFileName;
     }
 
-    private String normalizeContentType(String contentType) {
-        if (contentType == null || contentType.isBlank()) {
-            return "application/octet-stream";
+    private ValidatedImageUpload validateAndReadSupportedImage(MultipartFile file) {
+        byte[] bytes;
+        try {
+            bytes = file.getBytes();
+        } catch (IOException exception) {
+            throw new IllegalArgumentException("Could not read uploaded file bytes");
         }
-        return contentType;
+
+        ensureReadableImage(bytes);
+        String contentType = detectSupportedImageContentType(file.getContentType(), file.getOriginalFilename());
+        String fileName = normalizeFileName(file.getOriginalFilename());
+        return new ValidatedImageUpload(bytes, contentType, fileName);
+    }
+
+    private void ensureReadableImage(byte[] bytes) {
+        try {
+            if (ImageIO.read(new ByteArrayInputStream(bytes)) == null) {
+                throw new IllegalArgumentException(INVALID_IMAGE_MESSAGE);
+            }
+        } catch (IOException exception) {
+            throw new IllegalArgumentException(INVALID_IMAGE_MESSAGE);
+        }
+    }
+
+    private String detectSupportedImageContentType(String contentType, String originalFileName) {
+        if (PNG_CONTENT_TYPE.equalsIgnoreCase(contentType) || hasFileExtension(originalFileName, ".png")) {
+            return PNG_CONTENT_TYPE;
+        }
+
+        if (JPEG_CONTENT_TYPE.equalsIgnoreCase(contentType)
+                || "image/jpg".equalsIgnoreCase(contentType)
+                || hasFileExtension(originalFileName, ".jpg")
+                || hasFileExtension(originalFileName, ".jpeg")) {
+            return JPEG_CONTENT_TYPE;
+        }
+
+        throw new IllegalArgumentException(INVALID_IMAGE_MESSAGE);
+    }
+
+    private boolean hasFileExtension(String fileName, String extension) {
+        if (fileName == null || fileName.isBlank()) {
+            return false;
+        }
+
+        return fileName.toLowerCase().endsWith(extension);
+    }
+
+    private record ValidatedImageUpload(byte[] bytes, String contentType, String fileName) {
     }
 
 }

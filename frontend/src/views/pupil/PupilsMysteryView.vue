@@ -319,18 +319,19 @@ onBeforeUnmount(() => {
     >
       <div class="mystery-submit-popup-wrapper">
         <h2>Send inn mysterium</h2>
-      <p class="popup-text">
-        Last opp et bilde og legg ved en kommentar om hvorfor bildet er mistenkelig.
-      </p>
 
-      <label>
-        Bilde
-        <input type="file" accept="image/*" @change="handleImageUpload" />
-      </label>
+        <p class="popup-text">
+          Last opp et bilde og legg ved en kommentar om hvorfor bildet er mistenkelig.
+        </p>
 
-      <div v-if="uploadedImagePreview" class="popup-image-preview">
-        <img :src="uploadedImagePreview" alt="Forhåndsvisning" />
-      </div>
+        <label>
+          Bilde
+          <input type="file" accept="image/png,image/jpeg" @change="handleImageUpload" />
+        </label>
+
+        <div v-if="uploadedImagePreview" class="popup-image-preview">
+          <img :src="uploadedImagePreview" alt="Forhåndsvisning" />
+        </div>
 
       <label>
         Kommentar

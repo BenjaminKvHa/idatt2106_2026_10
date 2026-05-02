@@ -23,7 +23,7 @@ function cardClass(fileId: number): string {
   if (props.selectedFileId !== fileId) return ''
   if (!props.result) return 'selected'
 
-  return props.result.correct ? 'selected correct' : 'selected wrong'
+  return props.result.correct ? 'selected pupil-correct' : 'selected pupil-wrong'
 }
 </script>
 
@@ -95,18 +95,16 @@ function cardClass(fileId: number): string {
 .task-wrapper {
   width: min(100%, 800px);
   padding: 1.35rem 2rem;
-  background: linear-gradient(180deg, #fff3d6 0%, #f4d7a2 100%);
+  background: var(--gradient-beige-btn);
   border: 3px solid var(--brown-dark);
   border-radius: 30px;
   box-sizing: border-box;
-  box-shadow:
-    0 6px 18px rgb(0 0 0 / 13%),
-    inset 0 2px 0 rgb(255 255 255 / 45%);
+  box-shadow: 0 6px 18px var(--brown-dark-20)
 }
 
 .task-wrapper p {
   margin: 0;
-  color: #1f160f;
+  color: black;
   font-weight: 750;
 }
 
@@ -140,7 +138,7 @@ function cardClass(fileId: number): string {
 
 .picture-placeholder {
   width: 100%;
-  background-color: #fff6dc;
+  background-color: var(--beige-light-100);
   border: 3px solid var(--brown-dark);
   border-radius: 24px;
   display: flex;
@@ -155,24 +153,24 @@ function cardClass(fileId: number): string {
 }
 
 .picture-card.selected .picture-placeholder {
-  border: 4px solid #7b5740;
+  border: 4px solid var(--brown-dark-80);
   box-shadow:
     0 0 0 6px rgb(91 62 43 / 18%),
     0 12px 26px rgb(0 0 0 / 18%);
 }
 
 .picture-card.selected.correct .picture-placeholder {
-  border: 4px solid var(--green-confirm);
+  border: 4px solid var(--green-confirm-100);
   box-shadow:
-    0 0 0 6px rgb(130 223 48 / 28%),
-    0 12px 26px rgb(0 0 0 / 18%);
+    0 0 0 6px var(--green-confirm),
+    0 12px 26px var(--brown-dark-20);
 }
 
 .picture-card.selected.wrong .picture-placeholder {
-  border: 4px solid #d95b43;
+  border: 4px solid var(--red-danger);
   box-shadow:
-    0 0 0 6px rgb(217 91 67 / 24%),
-    0 12px 26px rgb(0 0 0 / 18%);
+    0 0 0 6px var(--red-danger-20),
+    0 12px 26px var(--brown-dark-20);
 }
 
 .picture {
@@ -196,11 +194,11 @@ function cardClass(fileId: number): string {
 
 .correct-label {
   background: var(--green-confirm);
-  color: #1f160f;
+  color: var(--brown-dark);
 }
 
 .wrong-label {
-  background: #d95b43;
+  background: var(--red-danger);
   color: white;
   border-radius: 999px;
 }
@@ -213,7 +211,7 @@ function cardClass(fileId: number): string {
   margin-top: 1.2rem;
   border-radius: 24px;
   border: 2px solid var(--brown-dark);
-  background: linear-gradient(180deg, #fff6dc 0%, #f1d7a5 100%);
+  background: var(--gradient-popup);
   color: var(--brown-dark);
   cursor: pointer;
   font-weight: 850;
@@ -227,9 +225,9 @@ function cardClass(fileId: number): string {
 }
 
 .picture-card.selected .fake-button {
-  background: linear-gradient(180deg, #6f5139 0%, #4a301f 100%);
-  color: #fff6dc;
-  border-color: #2a1b12;
+  background: var(--gradient-brown);
+  color: var(--beige-light-100);
+  border-color: var(--brown-dark);
 }
 
 .fake-button:hover:not(:disabled),

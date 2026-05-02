@@ -25,7 +25,6 @@ const {
   stepIndex,
   lastResult,
   runCorrect,
-  runAttempts,
   runDone,
   loading,
   submitting,
@@ -53,7 +52,6 @@ type NewsStepState = {
 }
 
 const showHelpPopup = ref(false)
-const showHintPopup = ref(false)
 
 const currentTask = ref<NewsVerificationResponse | null>(null)
 const imageUrls = ref<string[]>([])
@@ -62,10 +60,6 @@ const stepStates = ref<Record<number, NewsStepState>>({})
 
 function closeHelpPopup(): void {
   showHelpPopup.value = false
-}
-
-function closeHintPopup(): void {
-  showHintPopup.value = false
 }
 
 function revokeAllImageUrls(): void {
@@ -247,7 +241,7 @@ onBeforeUnmount(revokeAllImageUrls)
           <div
             v-if="lastResult"
             class="mini-feedback"
-            :class="{ success: lastResult.correct, fail: !lastResult.correct }"
+            :class="{ success: lastResult.correct ? 'pupil-correct' : 'pupil-points' }"
           >
             <span>{{ lastResult.feedback }}</span>
           </div>
@@ -348,23 +342,6 @@ onBeforeUnmount(revokeAllImageUrls)
   position: relative;
 }
 
-.center-container :deep(.hint-creature-wrapper) {
-  position: absolute;
-  left: -40px;
-  top: 2.8rem;
-  width: 120px;
-  height: 120px;
-  z-index: 20;
-}
-
-.center-container :deep(.hint-creature-button) {
-  width: 120px;
-  height: 120px;
-  background: transparent;
-  border: none;
-  padding: 0;
-}
-
 .center-container :deep(.hint-creature-button img) {
   width: 100%;
   height: 100%;
@@ -382,15 +359,15 @@ onBeforeUnmount(revokeAllImageUrls)
 .progress-bar {
   width: 100%;
   height: 14px;
-  background: rgb(255 246 220 / 55%);
-  border: 2px solid rgb(91 62 43 / 70%);
+  background: var(--beige-light-60);
+  border: 2px solid var(--brown-dark-80);
   border-radius: 999px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #9df13c 0%, #78d927 55%, #5cc322 100%);
+  background: var(--gradient-progressbar);
   border-radius: 999px;
 }
 
@@ -398,13 +375,7 @@ onBeforeUnmount(revokeAllImageUrls)
   margin-top: 0.5rem;
   margin-bottom: 0;
   font-weight: 800;
-  color: #1f160f;
-}
-
-:deep(.news-task),
-:deep(.pupil-news-task) {
-  position: relative;
-  z-index: 2;
+  color: black;
 }
 
 .mini-feedback {
@@ -412,15 +383,6 @@ onBeforeUnmount(revokeAllImageUrls)
   border: 4px solid var(--brown-dark);
   border-radius: 24px;
   font-weight: 700;
-}
-
-.mini-feedback.success {
-  background: var(--green-confirm);
-}
-
-.mini-feedback.fail {
-  background: #d95b43;
-  color: white;
 }
 
 .navigation-bar {
@@ -439,7 +401,7 @@ onBeforeUnmount(revokeAllImageUrls)
   font-weight: 850;
   color: var(--brown-dark);
   cursor: pointer;
-  background: linear-gradient(180deg, #fff6dc 0%, #f1d7a5 100%);
+  background: var(--gradient-beige-btn);
   box-shadow: 0 5px 14px rgb(0 0 0 / 14%);
   transition:
     transform 0.15s ease,
@@ -451,7 +413,7 @@ onBeforeUnmount(revokeAllImageUrls)
 
 .nav-button:hover:not(:disabled) {
   background: var(--brown-dark);
-  color: #fff6dc;
+  color: white;
   transform: translateY(-1px);
   box-shadow: 0 7px 18px rgb(0 0 0 / 16%);
 }
@@ -468,11 +430,6 @@ onBeforeUnmount(revokeAllImageUrls)
   box-shadow: 0 5px 14px rgb(0 0 0 / 10%);
 }
 
-.error {
-  color: #c62828;
-  font-weight: 600;
-}
-
 .popup-overlay {
   position: fixed;
   inset: 0;
@@ -484,7 +441,7 @@ onBeforeUnmount(revokeAllImageUrls)
 
 .hint-popup {
   width: min(680px, calc(100vw - 32px));
-  background: linear-gradient(180deg, #fff0c9 0%, #f5d59a 58%, #e8b86f 100%);
+  background: var(--gradient-popup);
   border: 7px solid var(--brown-dark);
   border-radius: 42px;
   padding: 32px 28px;
@@ -493,12 +450,6 @@ onBeforeUnmount(revokeAllImageUrls)
 @media (max-width: 1100px) {
   .center-container {
     padding-top: 8.2rem;
-  }
-
-  .center-container :deep(.hint-creature-wrapper) {
-    left: 50%;
-    top: 0.1rem;
-    transform: translateX(-50%);
   }
 }
 
@@ -511,17 +462,6 @@ onBeforeUnmount(revokeAllImageUrls)
   .center-container {
     gap: 1rem;
     padding-top: 7rem;
-  }
-
-  .center-container :deep(.hint-creature-wrapper) {
-    top: 0.2rem;
-  }
-
-  .center-container :deep(.hint-creature-wrapper),
-  .center-container :deep(.hint-creature-button),
-  .center-container :deep(.hint-creature-button img) {
-    width: 85px;
-    height: 85px;
   }
 
   .navigation-bar {

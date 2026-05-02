@@ -371,21 +371,6 @@ onBeforeUnmount(revokeAllImageUrls)
   overflow: visible !important;
 }
 
-.task-container :deep(.hint-creature-wrapper) {
-  position: absolute;
-  width: 120px;
-  height: 120px;
-  left: calc(50% - 535px);
-  top: 5.6rem;
-  z-index: 10;
-}
-
-.task-container :deep(.hint-creature-button) {
-  position: static;
-  width: 120px;
-  height: 120px;
-}
-
 .task-container :deep(.hint-creature-button img) {
   width: 100%;
   height: 100%;

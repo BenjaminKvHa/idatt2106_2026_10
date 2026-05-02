@@ -12,6 +12,12 @@ import { useAudio } from '@/composables/useAudio'
 
 const PAGE_FLIP_SOUND_RELATIVE_VOLUME = 1.4
 
+const mockChapters: Chapter[] = [
+  { chapterId: 1, name: 'Nyhetskvartalet' },
+  { chapterId: 2, name: 'Fotografen' },
+  { chapterId: 3, name: 'Datasenteret' },
+]
+
 type Chapter = {
   chapterId: number
   name: string
@@ -29,11 +35,10 @@ function getNotebookEndpoint(chapterId: number): string {
 
 const { playSound, stopSound } = useAudio()
 const router = useRouter()
-const chapters = ref<Chapter[]>([])
+const chapters = ref<Chapter[]>(mockChapters)
 const currentChapterIndex = ref(0)
 const notebook = ref<NotebookResponse | null>(null)
 const ownNotesDraft = ref('')
-const loadingChapters = ref(true)
 const loadingNotebook = ref(false)
 const savingNotebook = ref(false)
 const loadError = ref<string | null>(null)
@@ -57,34 +62,7 @@ const hasUnsavedOwnNotes = computed(() => {
   return ownNotesDraft.value !== notebook.value.ownNotes
 })
 
-const mockChapters: Chapter[] = [
-  { chapterId: 1, name: 'Nyhetskvartalet' },
-  { chapterId: 2, name: 'Fotografen' },
-  { chapterId: 3, name: 'Datasenteret' },
-]
-
 let soundRef: HTMLAudioElement | null = null
-
-async function mockFetchChapters(): Promise<Chapter[]> {
-  await new Promise((resolve) => setTimeout(resolve, 250))
-  return [...mockChapters]
-}
-
-async function loadChapters() {
-  loadingChapters.value = true
-  loadError.value = null
-
-  try {
-    const fetchedChapters = await mockFetchChapters()
-    chapters.value = fetchedChapters
-    currentChapterIndex.value = 0
-    await loadNotebookForCurrentChapter()
-  } catch (fetchError) {
-    loadError.value = fetchError instanceof Error ? fetchError.message : 'Failed to load chapters'
-  } finally {
-    loadingChapters.value = false
-  }
-}
 
 async function loadNotebookForCurrentChapter() {
   if (!currentChapter.value) {
@@ -207,7 +185,7 @@ onBeforeRouteLeave((to) => {
 })
 
 onMounted(async () => {
-  await loadChapters()
+  await loadNotebookForCurrentChapter()
 })
 
 onBeforeUnmount(() => {
@@ -230,7 +208,7 @@ onBeforeUnmount(() => {
         <img class="book-image" :src="bookImage" alt="" aria-hidden="true" />
 
         <div class="book-content">
-          <p v-if="loadingChapters || loadingNotebook" class="state-message pupil-state-message">
+          <p v-if="loadingNotebook" class="state-message pupil-state-message">
             Loading...
           </p>
           <p v-else-if="loadError" class="state-message pupil-state-message pupil-error">

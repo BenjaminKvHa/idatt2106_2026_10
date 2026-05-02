@@ -168,7 +168,7 @@ class ChapterControllerTest {
     void validateDatacenterAnswer_whenAuthenticatedPupil_returnsValidationResult() throws Exception {
         JwtUserPrincipal principal = pupilPrincipal();
         ValidationResult result = new ValidationResult(
-                true, "Riktig!", 1, 1, false, true, true);
+                true, "Riktig!", 1, 1, false, true, true, null, false);
         when(chapterService.validateDatacenterAnswer(eq("pupil@example.com"), eq(55L), any()))
                 .thenReturn(result);
 

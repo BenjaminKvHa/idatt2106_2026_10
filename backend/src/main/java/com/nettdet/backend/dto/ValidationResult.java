@@ -17,5 +17,9 @@ public record ValidationResult(
     @Schema(description = "Fotografen-only: whether the submitted category was correct. Null for other chapter types.", example = "true", nullable = true)
     Boolean categoryCorrect,
     @Schema(description = "Fotografen-only: whether the submitted justification was correct. Null for other chapter types.", example = "false", nullable = true)
-    Boolean justificationCorrect
+    Boolean justificationCorrect,
+    @Schema(description = "Unlocked chapter medal when this answer completes a successful chapter run. Null otherwise.", nullable = true)
+    PupilMedalResponse completedChapterMedal,
+    @Schema(description = "Whether the completed chapter medal was awarded for the first time.", example = "true")
+    boolean completedChapterMedalNewlyAwarded
 ) {}

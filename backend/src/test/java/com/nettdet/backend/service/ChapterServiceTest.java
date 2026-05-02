@@ -48,6 +48,7 @@ import com.nettdet.backend.dto.ImageVerificationRequest;
 import com.nettdet.backend.dto.ImageVerificationTask;
 import com.nettdet.backend.dto.NewsVerificationRequest;
 import com.nettdet.backend.dto.NewsVerificationTask;
+import com.nettdet.backend.dto.PupilMedalResponse;
 import com.nettdet.backend.dto.ValidationResult;
 import com.nettdet.backend.repository.ChapterRepository;
 import com.nettdet.backend.repository.PupilChapterBridgeProgressionRepository;
@@ -83,6 +84,9 @@ class ChapterServiceTest {
     @Mock
     private TipService tipService;
 
+    @Mock
+    private MedalService medalService;
+
     private ObjectMapper objectMapper;
     private ChapterService chapterService;
 
@@ -100,7 +104,8 @@ class ChapterServiceTest {
                 objectMapper,
                 validators,
                 notificationService,
-                tipService);
+                tipService,
+                medalService);
     }
 
     @DisplayName("Returns all chapters in repository order as chapter responses")
@@ -293,16 +298,20 @@ class ChapterServiceTest {
                 DatacenterTaskFormat.IMAGE_VERIFICATION,
                 new ImageVerificationRequest(ImageCategory.REAL, "right"),
                 null);
+        when(medalService.getUnlockedChapterMedal(DATACENTER_CHAPTER_ID)).thenReturn(chapter3Medal());
 
         ValidationResult result = chapterService.validateDatacenterAnswer(PUPIL_EMAIL, 55L, request);
 
         assertTrue(result.correct());
         assertTrue(result.runCompleted());
+        assertFalse(result.completedChapterMedalNewlyAwarded());
+        assertEquals("chapter-3", result.completedChapterMedal().medalKey());
         assertEquals(2, progression.getSuccessfulRuns());
         assertEquals(0, progression.getUnsuccessfulStreak());
         assertEquals(0, progression.getCurrentRunAttempts());
         assertEquals(0, progression.getCurrentRunCorrect());
         verify(tipService).addAllConfiguredTipsToNotebook(progression);
+        verify(medalService).getUnlockedChapterMedal(DATACENTER_CHAPTER_ID);
     }
 
     @DisplayName("Datasenteret partially-correct run increments unsuccessful streak when the 5th attempt is wrong")
@@ -323,6 +332,8 @@ class ChapterServiceTest {
 
         assertFalse(result.correct());
         assertTrue(result.runCompleted());
+        assertNull(result.completedChapterMedal());
+        assertFalse(result.completedChapterMedalNewlyAwarded());
         assertEquals(2, progression.getSuccessfulRuns());
         assertEquals(1, progression.getUnsuccessfulStreak());
         verify(tipService, never()).addAllConfiguredTipsToNotebook(any());
@@ -340,12 +351,17 @@ class ChapterServiceTest {
                 DatacenterTaskFormat.IMAGE_VERIFICATION,
                 new ImageVerificationRequest(ImageCategory.REAL, "right"),
                 null);
+        when(medalService.getUnlockedChapterMedal(DATACENTER_CHAPTER_ID)).thenReturn(chapter3Medal());
 
         ValidationResult result = chapterService.validateDatacenterAnswer(PUPIL_EMAIL, 77L, request);
 
         assertTrue(result.runCompleted());
+        assertTrue(result.completedChapterMedalNewlyAwarded());
+        assertEquals("chapter-3", result.completedChapterMedal().medalKey());
+        assertEquals("Datasenteret", result.completedChapterMedal().name());
         assertEquals(1, progression.getSuccessfulRuns());
         verify(tipService).addAllConfiguredTipsToNotebook(progression);
+        verify(medalService).getUnlockedChapterMedal(DATACENTER_CHAPTER_ID);
         verify(notificationService).createNotification(
                 CLASSROOM_CODE,
                 PUPIL_EMAIL,
@@ -364,12 +380,16 @@ class ChapterServiceTest {
                 DatacenterTaskFormat.IMAGE_VERIFICATION,
                 new ImageVerificationRequest(ImageCategory.REAL, "right"),
                 null);
+        when(medalService.getUnlockedChapterMedal(DATACENTER_CHAPTER_ID)).thenReturn(chapter3Medal());
 
         ValidationResult result = chapterService.validateDatacenterAnswer(PUPIL_EMAIL, 78L, request);
 
         assertTrue(result.runCompleted());
+        assertFalse(result.completedChapterMedalNewlyAwarded());
+        assertEquals("chapter-3", result.completedChapterMedal().medalKey());
         assertEquals(2, progression.getSuccessfulRuns());
         verify(tipService).addAllConfiguredTipsToNotebook(progression);
+        verify(medalService).getUnlockedChapterMedal(DATACENTER_CHAPTER_ID);
         verifyNoInteractions(notificationService);
     }
 
@@ -433,6 +453,8 @@ class ChapterServiceTest {
         ValidationResult result = chapterService.validateDatacenterAnswer(PUPIL_EMAIL, 81L, request);
 
         assertFalse(result.runCompleted());
+        assertNull(result.completedChapterMedal());
+        assertFalse(result.completedChapterMedalNewlyAwarded());
         verifyNoInteractions(notificationService);
         verifyNoInteractions(tipService);
     }
@@ -514,6 +536,15 @@ class ChapterServiceTest {
                 imageTask(202L, "i2", ImageCategory.AI_GENERATED),
                 imageTask(203L, "i3", ImageCategory.MANIPULATED),
                 imageTask(204L, "i4", ImageCategory.AI_GENERATED));
+    }
+
+    private PupilMedalResponse chapter3Medal() {
+        return new PupilMedalResponse(
+                "chapter-3",
+                "Datasenteret",
+                "Fullfør Datasenteret for å låse opp denne medaljen.",
+                true,
+                303L);
     }
 
     private Task newsTask(Long id, String tag) throws JsonProcessingException {

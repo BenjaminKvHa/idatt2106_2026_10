@@ -4,7 +4,6 @@ import confetti from 'canvas-confetti'
 import victorySoundFile from '@/assets/sounds/levels/victory-sound.mp3'
 import defeatSoundFile from '@/assets/sounds/levels/evil-laugh.mp3'
 import { useAudio } from '@/composables/useAudio'
-import BaseModal from '@/components/ui/BaseModal.vue'
 
 const props = defineProps<{
   show: boolean
@@ -57,8 +56,22 @@ function fireVictoryConfetti() {
   const defaults = { zIndex: 3000 }
 
   const frame = () => {
-    confetti({ ...defaults, particleCount: 8, angle: 60, spread: 60, origin: { x: 0, y: 0.6 } })
-    confetti({ ...defaults, particleCount: 8, angle: 120, spread: 60, origin: { x: 1, y: 0.6 } })
+    confetti({
+      ...defaults,
+      particleCount: 8,
+      angle: 60,
+      spread: 60,
+      origin: { x: 0, y: 0.6 },
+    })
+
+    confetti({
+      ...defaults,
+      particleCount: 8,
+      angle: 120,
+      spread: 60,
+      origin: { x: 1, y: 0.6 },
+    })
+
     if (Date.now() < end) requestAnimationFrame(frame)
   }
 
@@ -86,15 +99,8 @@ watch(
 </script>
 
 <template>
-  <BaseModal
-    v-if="show"
-    panel-class=""
-    :close-on-backdrop="true"
-    :close-on-escape="true"
-    :show-close-button="false"
-    @close="closePopup"
-  >
-    <div :class="['game-popup-wrapper', { 'game-popup-defeat': !success }]">
+  <div v-if="show" class="game-overlay" @click="closePopup">
+    <div class="game-popup" :class="{ 'game-popup-defeat': !success }" @click.stop>
       <div class="game-top">
         <img :src="image" :alt="imageAlt ?? (success ? 'Seier' : 'Tap')" class="game-image" />
       </div>
@@ -121,11 +127,23 @@ watch(
         </div>
       </div>
     </div>
-  </BaseModal>
+  </div>
 </template>
 
 <style scoped>
-.game-popup-wrapper {
+.game-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 32%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+}
+
+.game-popup {
   width: min(980px, calc(100vw - 32px));
   max-height: calc(100vh - 32px);
   overflow-y: auto;
@@ -139,7 +157,7 @@ watch(
   text-align: center;
 }
 
-.game-popup-wrapper.game-popup-defeat {
+.game-popup-defeat {
   background: linear-gradient(180deg, #ffe1c9 0%, #f0a078 55%, #d96a55 100%);
 }
 
@@ -254,7 +272,7 @@ watch(
 }
 
 @media (max-width: 768px) {
-  .game-popup-wrapper {
+  .game-popup {
     border-width: 5px;
     border-radius: 30px;
   }

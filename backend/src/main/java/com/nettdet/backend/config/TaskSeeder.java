@@ -712,7 +712,7 @@ public class TaskSeeder implements ApplicationRunner {
                         "Maleriet er signert i feil hjørne")),
                 Map.entry("datasenteret_foto_maleri_ki.png", List.of(
                         "Penselstrøk og lerretstekstur ser autentiske ut",
-                        "Detaljene er for jevne og symmetriske til å være malt for hånd",
+                        "Detaljene er for pikselerte og ujevne for ett maleri",
                         "Maleriet er signert i feil hjørne")),
                 Map.entry("datasenteret_foto_bygning_ekte.jpg", List.of(
                         "Linjer, perspektiv og materialer ser realistiske ut",

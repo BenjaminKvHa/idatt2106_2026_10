@@ -238,7 +238,9 @@ public class TaskAdminService {
                 fileId2,
                 correctFileId,
                 request.correctDescription(),
-                request.incorrectDescription()
+                request.incorrectDescription(),
+                request.altText1(),
+                request.altText2()
         );
 
         return TaskAdminResponse.from(createTask(chapter, request.difficulty(), taskData, classroom));
@@ -322,7 +324,9 @@ public class TaskAdminService {
                 fileId2,
                 correctFileId,
                 request.correctDescription(),
-                request.incorrectDescription()
+                request.incorrectDescription(),
+                request.altText1(),
+                request.altText2()
         );
         DatacenterTask wrapped = new DatacenterTask(
                 DatacenterTaskFormat.NEWS_VERIFICATION, null, inner);
@@ -468,7 +472,9 @@ public class TaskAdminService {
                 fileId2,
                 correctFileId,
                 request.correctDescription(),
-                request.incorrectDescription()
+                request.incorrectDescription(),
+                request.altText1(),
+                request.altText2()
         );
 
         task.setDifficulty(request.difficulty());
@@ -519,7 +525,9 @@ public class TaskAdminService {
                 fileId2,
                 correctFileId,
                 request.correctDescription(),
-                request.incorrectDescription()
+                request.incorrectDescription(),
+                request.altText1(),
+                request.altText2()
         );
         DatacenterTask wrapped = new DatacenterTask(DatacenterTaskFormat.NEWS_VERIFICATION, null, updated);
 

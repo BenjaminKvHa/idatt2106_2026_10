@@ -12,8 +12,6 @@ import org.springframework.stereotype.Component;
  * public-facing identifiers.
  * </p>
  * 
- * @author YourName
- * @version 1.0
  */
 @Component
 public class ClassroomCodeGenerator {

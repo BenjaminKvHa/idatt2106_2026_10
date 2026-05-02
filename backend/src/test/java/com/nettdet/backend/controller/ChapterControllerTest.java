@@ -130,7 +130,7 @@ class ChapterControllerTest {
                         101L,
                         DatacenterTaskFormat.NEWS_VERIFICATION,
                         null,
-                        new NewsVerificationResponse(101L, "Velg den falske", List.of(1L, 2L))),
+                        new NewsVerificationResponse(101L, "Velg den falske", List.of(1L, 2L), List.of("alt1", "alt2"))),
                 new DatacenterTaskResponse(
                         102L,
                         DatacenterTaskFormat.IMAGE_VERIFICATION,

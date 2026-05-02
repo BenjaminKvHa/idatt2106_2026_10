@@ -87,6 +87,7 @@ CREATE TABLE weekly_mystery (
     classroom_code VARCHAR(6) NOT NULL REFERENCES classroom(classroom_code) ON DELETE CASCADE,
     account_email VARCHAR(255) NOT NULL REFERENCES pupil_classroom_membership(account_email) ON DELETE CASCADE,
     comment TEXT NOT NULL,
+    alt_text TEXT,
     approved BOOLEAN NOT NULL DEFAULT FALSE,
     approved_at TIMESTAMPTZ NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

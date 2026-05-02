@@ -116,6 +116,7 @@ class WeeklyMysteryServiceTest {
                 " ABCABC ",
                 file,
                 "  Min kommentar  ",
+                "  Min alt-tekst  ",
                 pupilPrincipal());
 
         ArgumentCaptor<WeeklyMystery> mysteryCaptor = ArgumentCaptor.forClass(WeeklyMystery.class);
@@ -125,17 +126,53 @@ class WeeklyMysteryServiceTest {
         assertEquals(membership, captured.getPupilClassroomMembership());
         assertEquals(fileObject, captured.getFileObject());
         assertEquals("Min kommentar", captured.getComment());
+        assertEquals("Min alt-tekst", captured.getAltText());
         assertFalse(captured.isApproved());
         assertNull(captured.getApprovedAt());
         assertEquals(1L, response.id());
         assertEquals(10L, response.fileObjectId());
         assertEquals("Min kommentar", response.comment());
+        assertEquals("Min alt-tekst", response.altText());
         assertFalse(response.approved());
         assertNull(response.approvedAt());
         verify(notificationService).createNotification(
                 CLASSROOM_CODE,
                 PUPIL_EMAIL,
                 "Pupil Name har sendt inn et nytt bidrag til Ukens mysterium.");
+    }
+
+    @DisplayName("Allows null altText for pupil submission")
+    @Test
+    void submitMystery_whenPupilIsConfirmedAndAltTextIsNull_createsPendingMysteryWithNullAltText() {
+        Classroom classroom = classroom();
+        PupilClassroomMembership membership = membership(PUPIL_EMAIL, "Pupil Name", classroom);
+        FileObject fileObject = fileObject(10L, ClassroomAccess.ONLY_TEACHERS_IN_CLASS, classroom);
+        MockMultipartFile file = new MockMultipartFile("file", "mystery.png", "image/png", new byte[] {1});
+        when(membershipRepository.findByAccountEmailAndClassroomClassroomCodeAndMembershipConfirmedByTeacherTrue(
+                PUPIL_EMAIL,
+                CLASSROOM_CODE))
+                .thenReturn(Optional.of(membership));
+        when(fileObjectAccessControlService.uploadWeeklyMysteryFile(file, CLASSROOM_CODE, pupilPrincipal()))
+                .thenReturn(fileObject);
+        when(weeklyMysteryRepository.saveAndFlush(any(WeeklyMystery.class))).thenAnswer(invocation -> {
+            WeeklyMystery mystery = invocation.getArgument(0);
+            mystery.setId(1L);
+            ReflectionTestUtils.setField(mystery, "createdAt", LocalDateTime.of(2026, 4, 23, 10, 15));
+            return mystery;
+        });
+
+        CreateWeeklyMysteryResponse response = weeklyMysteryService.submitMystery(
+                CLASSROOM_CODE,
+                file,
+                "My comment",
+                null,
+                pupilPrincipal());
+
+        ArgumentCaptor<WeeklyMystery> mysteryCaptor = ArgumentCaptor.forClass(WeeklyMystery.class);
+        verify(weeklyMysteryRepository).saveAndFlush(mysteryCaptor.capture());
+        WeeklyMystery captured = mysteryCaptor.getValue();
+        assertNull(captured.getAltText());
+        assertNull(response.altText());
     }
 
     @DisplayName("Rejects weekly mystery submission from unconfirmed pupil")
@@ -151,6 +188,7 @@ class WeeklyMysteryServiceTest {
                 CLASSROOM_CODE,
                 file,
                 "Comment",
+                "Alt text",
                 pupilPrincipal()));
 
         verifyNoInteractions(fileObjectAccessControlService, weeklyMysteryRepository, notificationService);
@@ -299,6 +337,7 @@ class WeeklyMysteryServiceTest {
         PupilWeeklyMysteryResponse response = weeklyMysteryService.acceptMystery(
                 CLASSROOM_CODE,
                 4L,
+                null,
                 teacherPrincipal());
 
         assertTrue(pending.isApproved());
@@ -308,6 +347,37 @@ class WeeklyMysteryServiceTest {
         assertEquals(pending.getApprovedAt(), response.approvedAt());
         verify(fileObjectRepository).save(fileObject);
         verify(weeklyMysteryRepository).save(pending);
+    }
+
+    @DisplayName("Updates alt text when teacher accepts pending mystery with non-null alt text")
+    @Test
+    void acceptMystery_whenTeacherProvidesAltText_updatesAltText() {
+        Classroom classroom = classroom();
+        FileObject fileObject = fileObject(42L, ClassroomAccess.ONLY_TEACHERS_IN_CLASS, classroom);
+        WeeklyMystery pending = weeklyMystery(
+                42L,
+                fileObject,
+                classroom,
+                membership(PUPIL_EMAIL, "Pupil Name", classroom),
+                "Pending mystery",
+                false);
+        pending.setAltText("Old alt text");
+        when(classroomRepository.findById(CLASSROOM_CODE)).thenReturn(Optional.of(classroom));
+        when(teacherBridgeRepository.existsByIdAccountEmailAndIdClassroomCode(TEACHER_EMAIL, CLASSROOM_CODE))
+                .thenReturn(true);
+        when(weeklyMysteryRepository.findByIdAndClassroomClassroomCode(42L, CLASSROOM_CODE))
+                .thenReturn(Optional.of(pending));
+        when(weeklyMysteryRepository.save(pending)).thenReturn(pending);
+
+        PupilWeeklyMysteryResponse response = weeklyMysteryService.acceptMystery(
+                CLASSROOM_CODE,
+                42L,
+                "New teacher alt text",
+                teacherPrincipal());
+
+        assertTrue(pending.isApproved());
+        assertEquals("New teacher alt text", pending.getAltText());
+        assertEquals("New teacher alt text", response.altText());
     }
 
     @DisplayName("Keeps existing approval timestamp when an already approved mystery is accepted again")
@@ -334,6 +404,7 @@ class WeeklyMysteryServiceTest {
         PupilWeeklyMysteryResponse response = weeklyMysteryService.acceptMystery(
                 CLASSROOM_CODE,
                 41L,
+                null,
                 teacherPrincipal());
 
         assertTrue(approved.isApproved());
@@ -378,6 +449,7 @@ class WeeklyMysteryServiceTest {
         assertThrows(EntityNotFoundException.class, () -> weeklyMysteryService.acceptMystery(
                 CLASSROOM_CODE,
                 99L,
+                null,
                 teacherPrincipal()));
     }
 
@@ -437,6 +509,7 @@ class WeeklyMysteryServiceTest {
         mystery.setClassroom(classroom);
         mystery.setPupilClassroomMembership(membership);
         mystery.setComment(comment);
+        mystery.setAltText("Alt for " + comment);
         mystery.setApproved(approved);
         ReflectionTestUtils.setField(mystery, "createdAt", LocalDateTime.of(2026, 4, 23, 10, 15));
         return mystery;

@@ -30,6 +30,8 @@ const taskDescription = ref('')
 const correctFileSlot = ref<CorrectFileSlot>('FILE_1')
 const correctDescription = ref('')
 const incorrectDescription = ref('')
+const altText1 = ref('')
+const altText2 = ref('')
 const selectedFile1 = ref<File | null>(null)
 const selectedFile2 = ref<File | null>(null)
 const selectedFile1Preview = ref('')
@@ -86,6 +88,8 @@ function resetForm() {
   correctFileSlot.value = getCorrectFileSlot(props.parsedTask ?? {}) ?? 'FILE_1'
   correctDescription.value = props.parsedTask?.correctDescription ?? ''
   incorrectDescription.value = props.parsedTask?.incorrectDescription ?? ''
+  altText1.value = props.parsedTask?.altText_1 ?? ''
+  altText2.value = props.parsedTask?.altText_2 ?? ''
 }
 
 function updateSelectedFile(slot: CorrectFileSlot, event: Event) {
@@ -114,6 +118,8 @@ function submitForm() {
   const normalizedTaskDescription = taskDescription.value.trim()
   const normalizedCorrectDescription = correctDescription.value.trim()
   const normalizedIncorrectDescription = incorrectDescription.value.trim()
+  const normalizedAltText1 = altText1.value.trim()
+  const normalizedAltText2 = altText2.value.trim()
 
   if (!normalizedTaskDescription) {
     validationError.value = 'Skriv en oppgavebeskrivelse.'
@@ -122,6 +128,11 @@ function submitForm() {
 
   if (!normalizedCorrectDescription || !normalizedIncorrectDescription) {
     validationError.value = 'Fyll inn tilbakemelding for både riktig og feil svar.'
+    return
+  }
+
+  if (!normalizedAltText1 || !normalizedAltText2) {
+    validationError.value = 'Skriv alternativ tekst (alt-tekst) for begge bildene. Dette er nødvendig for universell utforming.'
     return
   }
 
@@ -136,6 +147,8 @@ function submitForm() {
     correctFileSlot: correctFileSlot.value,
     correctDescription: normalizedCorrectDescription,
     incorrectDescription: normalizedIncorrectDescription,
+    altText1: normalizedAltText1,
+    altText2: normalizedAltText2,
     file1: selectedFile1.value,
     file2: selectedFile2.value,
   })
@@ -186,8 +199,30 @@ function submitForm() {
       </label>
 
       <label class="form-field">
+        <span>Alternativ tekst for fil 1 (universell utforming)</span>
+        <textarea
+          v-model="altText1"
+          placeholder="Beskriv hva som vises på bildet for skjermlesere..."
+          rows="2"
+          maxlength="300"
+          :disabled="submitting"
+        />
+      </label>
+
+      <label class="form-field">
         <span>{{ task ? 'Bytt fil 2 (valgfritt)' : 'Fil 2' }}</span>
         <input ref="file2Input" type="file" accept="image/png,image/jpeg" :disabled="submitting" @change="updateSelectedFile('FILE_2', $event)" />
+      </label>
+
+      <label class="form-field">
+        <span>Alternativ tekst for fil 2 (universell utforming)</span>
+        <textarea
+          v-model="altText2"
+          placeholder="Beskriv hva som vises på bildet for skjermlesere..."
+          rows="2"
+          maxlength="300"
+          :disabled="submitting"
+        />
       </label>
 
       <div class="preview-grid">

@@ -26,7 +26,6 @@ const {
   stepIndex,
   lastResult,
   runCorrect,
-  runAttempts,
   runDone,
   loading,
   submitting,
@@ -47,7 +46,6 @@ const {
 } = useDifficultyProgression()
 
 const showHelpPopup = ref(false)
-const showHintPopup = ref(false)
 
 const currentTask = ref<NewsVerificationResponse | null>(null)
 const imageUrls = ref<string[]>([])
@@ -57,9 +55,6 @@ function closeHelpPopup(): void {
   showHelpPopup.value = false
 }
 
-function closeHintPopup(): void {
-  showHintPopup.value = false
-}
 
 function revokeImageUrls(): void {
   for (const url of imageUrls.value) URL.revokeObjectURL(url)
@@ -191,6 +186,7 @@ onBeforeUnmount(revokeImageUrls)
             :task-description="currentTask.taskDescription"
             :file-ids="currentTask.fileIds"
             :image-urls="imageUrls"
+            :alt-texts="currentTask.altTexts"
             :selected-file-id="selectedFileId"
             :result="lastResult"
             :submitting="submitting"

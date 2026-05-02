@@ -193,7 +193,7 @@ class TaskAdminServiceTest {
 
         CreateNewsVerificationTaskRequest request = new CreateNewsVerificationTaskRequest(
                 NYHETSKVARTALET_ID, CLASSROOM_CODE, TaskDifficulty.HARD, "Velg",
-                CorrectFileSlot.FILE_2, "good", "bad");
+                CorrectFileSlot.FILE_2, "good", "bad", "Avisforside med ekte sak", "Avisforside med falsk sak");
 
         taskAdminService.createNewsVerificationTask(request, mockFile("a"), mockFile("b"), teacher);
 
@@ -204,6 +204,8 @@ class TaskAdminServiceTest {
         assertEquals(101L, json.get("fileId_1").asLong());
         assertEquals(102L, json.get("fileId_2").asLong());
         assertEquals(102L, json.get("correctFileId").asLong());
+        assertEquals("Avisforside med ekte sak", json.get("altText_1").asText());
+        assertEquals("Avisforside med falsk sak", json.get("altText_2").asText());
     }
 
     @DisplayName("News-verification task creation rejects null correctFileSlot")
@@ -215,7 +217,7 @@ class TaskAdminServiceTest {
 
         CreateNewsVerificationTaskRequest request = new CreateNewsVerificationTaskRequest(
                 NYHETSKVARTALET_ID, CLASSROOM_CODE, TaskDifficulty.HARD, "Velg",
-                null, "good", "bad");
+                null, "good", "bad", null, null);
 
         assertThrows(IllegalArgumentException.class,
                 () -> taskAdminService.createNewsVerificationTask(request, mockFile("a"), mockFile("b"), teacher));
@@ -258,7 +260,8 @@ class TaskAdminServiceTest {
         when(taskRepository.save(any(Task.class))).thenAnswer(inv -> inv.getArgument(0));
 
         CreateDatacenterNewsTaskRequest request = new CreateDatacenterNewsTaskRequest(
-                CLASSROOM_CODE, "desc", CorrectFileSlot.FILE_1, "good", "bad");
+                CLASSROOM_CODE, "desc", CorrectFileSlot.FILE_1, "good", "bad",
+                "Datasenteret ekte avisforside", "Datasenteret falsk avisforside");
 
         taskAdminService.createDatacenterNewsTask(request, mockFile("a"), mockFile("b"), teacher);
 
@@ -268,6 +271,8 @@ class TaskAdminServiceTest {
         JsonNode json = objectMapper.readTree(captor.getValue().getTaskJson());
         assertEquals(DatacenterTaskFormat.NEWS_VERIFICATION.name(), json.get("format").asText());
         assertEquals(11L, json.get("newsTask").get("correctFileId").asLong());
+        assertEquals("Datasenteret ekte avisforside", json.get("newsTask").get("altText_1").asText());
+        assertEquals("Datasenteret falsk avisforside", json.get("newsTask").get("altText_2").asText());
     }
 
     // ----- UPDATE -----
@@ -359,7 +364,8 @@ class TaskAdminServiceTest {
         when(taskRepository.save(any(Task.class))).thenAnswer(inv -> inv.getArgument(0));
 
         UpdateNewsVerificationTaskRequest req = new UpdateNewsVerificationTaskRequest(
-                TaskDifficulty.MEDIUM, "x", CorrectFileSlot.FILE_2, "ok", "nope");
+                TaskDifficulty.MEDIUM, "x", CorrectFileSlot.FILE_2, "ok", "nope",
+                "Oppdatert alt-tekst 1", "Oppdatert alt-tekst 2");
 
         taskAdminService.updateNewsVerificationTask(60L, req, null, mockFile("new2"), teacher);
 
@@ -371,6 +377,8 @@ class TaskAdminServiceTest {
         assertEquals(11L, json.get("fileId_1").asLong());
         assertEquals(202L, json.get("fileId_2").asLong());
         assertEquals(202L, json.get("correctFileId").asLong());
+        assertEquals("Oppdatert alt-tekst 1", json.get("altText_1").asText());
+        assertEquals("Oppdatert alt-tekst 2", json.get("altText_2").asText());
     }
 
     // ----- DELETE -----

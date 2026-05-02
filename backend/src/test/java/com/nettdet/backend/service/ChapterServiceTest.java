@@ -549,7 +549,7 @@ class ChapterServiceTest {
 
     private Task newsTask(Long id, String tag) throws JsonProcessingException {
         NewsVerificationTask inner = new NewsVerificationTask(
-                "desc-" + tag, 1L, 2L, 2L, "good", "bad");
+                "desc-" + tag, 1L, 2L, 2L, "good", "bad", null, null);
         DatacenterTask wrapped = new DatacenterTask(
                 DatacenterTaskFormat.NEWS_VERIFICATION, null, inner);
         return buildTask(id, objectMapper.writeValueAsString(wrapped));

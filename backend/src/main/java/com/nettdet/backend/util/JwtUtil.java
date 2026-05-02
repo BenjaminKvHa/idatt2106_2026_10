@@ -22,8 +22,6 @@ import jakarta.annotation.PostConstruct;
  * cryptographic signing.
  * </p>
  * 
- * @author YourName
- * @since 1.0.0
  */
 @Component
 public class JwtUtil {

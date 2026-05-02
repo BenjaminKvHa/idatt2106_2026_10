@@ -34,6 +34,8 @@ export type NewsVerificationTask = {
   correctFileId?: number
   correctDescription?: string
   incorrectDescription?: string
+  altText_1?: string | null
+  altText_2?: string | null
 }
 
 export type DatacenterTask = {
@@ -59,6 +61,8 @@ export type NyhetskvartaletTaskFormValues = {
   correctFileSlot: CorrectFileSlot
   correctDescription: string
   incorrectDescription: string
+  altText1: string
+  altText2: string
   file1: File | null
   file2: File | null
 }

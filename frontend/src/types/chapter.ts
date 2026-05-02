@@ -38,6 +38,7 @@ export type NewsVerificationResponse = {
   taskId: number
   taskDescription: string
   fileIds: number[]
+  altTexts?: (string | null)[]
 }
 
 export type NewsVerificationRequest = {

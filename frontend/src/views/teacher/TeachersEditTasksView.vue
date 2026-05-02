@@ -328,6 +328,8 @@ async function submitNyhetsTask(values: NyhetskvartaletTaskFormValues) {
               correctFileSlot: values.correctFileSlot,
               correctDescription: values.correctDescription,
               incorrectDescription: values.incorrectDescription,
+              altText1: values.altText1,
+              altText2: values.altText2,
             }
           : {
               chapterId: CHAPTER_ID_BY_TASK_KEY.nyhetskvartalet,
@@ -337,6 +339,8 @@ async function submitNyhetsTask(values: NyhetskvartaletTaskFormValues) {
               correctFileSlot: values.correctFileSlot,
               correctDescription: values.correctDescription,
               incorrectDescription: values.incorrectDescription,
+              altText1: values.altText1,
+              altText2: values.altText2,
             },
       ),
     )
@@ -456,6 +460,8 @@ async function submitDatacenterNewsTask(values: NyhetskvartaletTaskFormValues) {
               correctFileSlot: values.correctFileSlot,
               correctDescription: values.correctDescription,
               incorrectDescription: values.incorrectDescription,
+              altText1: values.altText1,
+              altText2: values.altText2,
             }
           : {
               classroomCode: currentClassroomCode,
@@ -463,6 +469,8 @@ async function submitDatacenterNewsTask(values: NyhetskvartaletTaskFormValues) {
               correctFileSlot: values.correctFileSlot,
               correctDescription: values.correctDescription,
               incorrectDescription: values.incorrectDescription,
+              altText1: values.altText1,
+              altText2: values.altText2,
             },
       ),
     )

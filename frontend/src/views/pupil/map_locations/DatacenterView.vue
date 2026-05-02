@@ -313,6 +313,7 @@ onBeforeUnmount(revokeAllImageUrls)
               v-else
               :file-ids="currentLevel.task.newsTask?.fileIds ?? []"
               :image-urls="currentLevel.imageUrls"
+              :alt-texts="currentLevel.task.newsTask?.altTexts"
               :selected-file-id="currentLevel.selectedFileId"
               :result="currentLevel.result"
               :submitting="submitting"

@@ -70,9 +70,10 @@ public class WeeklyMysteryController {
             @PathVariable String classroomCode,
             @RequestParam("file") MultipartFile file,
             @RequestParam("comment") String comment,
+            @RequestParam(value = "altText", required = false) String altText,
             @AuthenticationPrincipal JwtUserPrincipal principal) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(weeklyMysteryService.submitMystery(classroomCode, file, comment, principal));
+                .body(weeklyMysteryService.submitMystery(classroomCode, file, comment, altText, principal));
     }
 
     /**
@@ -151,8 +152,9 @@ public class WeeklyMysteryController {
     public ResponseEntity<PupilWeeklyMysteryResponse> acceptMystery(
             @PathVariable String classroomCode,
             @PathVariable Long mysteryId,
+            @RequestParam(value = "altText", required = false) String altText,
             @AuthenticationPrincipal JwtUserPrincipal principal) {
-        return ResponseEntity.ok(weeklyMysteryService.acceptMystery(classroomCode, mysteryId, principal));
+        return ResponseEntity.ok(weeklyMysteryService.acceptMystery(classroomCode, mysteryId, altText, principal));
     }
 
     /**

@@ -44,18 +44,23 @@ public class WeeklyMysterySeeder implements ApplicationRunner {
     /**
      * Internal record to define the attributes of a sample mystery submission.
      */
-    private record Seed(long fileObjectId, String comment, boolean approved, int daysAgo) {}
+    private record Seed(long fileObjectId, String comment, String altText, boolean approved, int daysAgo) {}
 
     /**
      * Predefined set of sample submissions.
      * Reuses task-asset file_object IDs (1-5) seeded by {@link TaskSeeder}.
      */
     private static final List<Seed> SEEDS = List.of(
-            new Seed(1L, "Bildet ser veldig ekte ut, men jeg er litt usikker på øynene.", true, 1),
-            new Seed(2L, "Folkene i mengden ser nesten identiske ut – ser KI-generert ut.", true, 2),
-            new Seed(3L, "Skarpheten på jorda er for perfekt. Jeg tror dette er KI.", false, 0),
-            new Seed(4L, "Blomstene har for glatte teksturer.", true, 9),
-            new Seed(5L, "Trærne ser duplisert ut og himmelen er rar.", true, 16));
+            new Seed(1L, "Bildet ser veldig ekte ut, men jeg er litt usikker på øynene.",
+                    "Portrettbilde av en person, brukt i en oppgave om ekte og KI-genererte bilder.", true, 1),
+            new Seed(2L, "Folkene i mengden ser nesten identiske ut – ser KI-generert ut.",
+                    "Bilde av en folkemengde der ansiktene ser unaturlig like ut.", true, 2),
+            new Seed(3L, "Skarpheten på jorda er for perfekt. Jeg tror dette er KI.",
+                    "Bilde av jordkloden sett fra verdensrommet med svært skarpe detaljer.", false, 0),
+            new Seed(4L, "Blomstene har for glatte teksturer.",
+                    "Nærbilde av blomster med uvanlig glatte og jevne teksturer.", true, 9),
+            new Seed(5L, "Trærne ser duplisert ut og himmelen er rar.",
+                    "Naturbilde av en skog der flere trær ser identiske ut og himmelen virker kunstig.", true, 16));
 
     private final PupilClassroomMembershipRepository pupilClassroomMembershipRepository;
     private final JdbcTemplate jdbcTemplate;
@@ -138,12 +143,13 @@ public class WeeklyMysterySeeder implements ApplicationRunner {
 
                 jdbcTemplate.update(
                         "INSERT INTO weekly_mystery "
-                                + "(file_object_id, classroom_code, account_email, comment, approved, approved_at, created_at) "
-                                + "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                                + "(file_object_id, classroom_code, account_email, comment, alt_text, approved, approved_at, created_at) "
+                                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                         seed.fileObjectId(),
                         classroomCode,
                         pupilEmail,
                         seed.comment(),
+                        seed.altText(),
                         seed.approved(),
                         approvedAt,
                         createdAt);

@@ -106,7 +106,11 @@ const autoTitle = computed<string>(() => {
         :key="tab.to"
         :to="tab.to"
         class="topbar-tab"
-        :class="isActive(tab.to) ? 'button-variant-1 topbar-tab-button-1' : 'button-variant-2 topbar-tab-button-2'"
+        :class="
+          isActive(tab.to)
+            ? 'button-variant-1 topbar-tab-button-1'
+            : 'button-variant-2 topbar-tab-button-2'
+        "
       >
         {{ tab.label }}
       </router-link>
@@ -152,7 +156,8 @@ const autoTitle = computed<string>(() => {
   transition: opacity var(--animation-time-1) ease-in-out;
 }
 
-.crumb-link:hover, .crumb-link:focus-visible {
+.crumb-link:hover,
+.crumb-link:focus-visible {
   opacity: 1;
   text-decoration: underline;
 }
@@ -189,32 +194,30 @@ const autoTitle = computed<string>(() => {
   border-radius: var(--border-radius-2) var(--border-radius-2) 0 0;
 }
 
-.topbar-tab-button-1{
+.topbar-tab-button-1 {
   margin-bottom: 0;
   background-color: var(--beige-medium-100);
   border-style: none;
 }
 
-.topbar-tab-button-1:hover, .topbar-tab-button-1:focus-visible {
+.topbar-tab-button-1:hover,
+.topbar-tab-button-1:focus-visible {
   background-color: var(--beige-medium-100);
-  color: var(--brown-dark-100):
+  color: var(--brown-dark-100);
 }
 
-.topbar-tab-button-2{
+.topbar-tab-button-2 {
   margin-bottom: 0;
   background-color: var(--background-sec);
   border-style: none;
   color: var(--brown-dark-100);
 }
 
-.topbar-tab-button-2:hover, .topbar-tab-button-2:focus-visible {
-  background-color: var(--beige-medium-100);
-  color: var(--brown-dark-100);
-.topbar-tab-button-2:hover {
+.topbar-tab-button-2:hover,
+.topbar-tab-button-2:focus-visible {
   background-color: var(--beige-medium-100);
   color: var(--brown-dark-100);
 }
-
 
 @media (max-width: 768px) {
   .topbar-tab {

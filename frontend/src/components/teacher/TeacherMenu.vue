@@ -142,10 +142,6 @@ onMounted(async () => {
   startUnreadPolling()
 })
 
-onBeforeUnmount(() => {
-  disposed = true
-  stopUnreadPolling()
-})
 
 const isClassroomsActive = computed(() => {
   return route.path.includes('/classrooms') && !route.path.includes('/classrooms/new')
@@ -390,9 +386,9 @@ function closeClassroomsPicker() {
   min-width: 1.4rem;
   height: 1.4rem;
   padding: 0 0.32rem;
-  border: 2px solid var(--background);
+  border: 2px solid var(--beige-medium-100);
   border-radius: 999px;
-  background: var(--warning);
+  background: var(--red-danger-100);
   color: var(--txt-contrast);
   font-size: 0.72rem;
   font-weight: var(--fw-bold);

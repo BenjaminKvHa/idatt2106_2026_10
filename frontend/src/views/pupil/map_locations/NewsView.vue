@@ -425,30 +425,13 @@ onBeforeUnmount(revokeImageUrls)
 
 .hint-text p {
   margin: 0 0 8px;
-.popup-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgb(0 0 0 / 28%);
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
-.hint-popup {
-  width: min(680px, calc(100vw - 32px));
-  background: var(--gradient-popup);
-  border: 7px solid var(--brown-dark);
-  border-radius: 42px;
-  padding: 32px 28px;
 .hint-text ul {
   margin: 0;
   padding-left: 24px;
 }
 
-@media (max-width: 1100px) {
-  .center-container {
-    padding-top: 8.2rem;
-  }
 .hint-text li {
   margin-bottom: 6px;
 }
@@ -471,6 +454,12 @@ onBeforeUnmount(revokeImageUrls)
   background: var(--orange-medium);
 }
 
+@media (max-width: 1100px) {
+  .center-container {
+    padding-top: 8.2rem;
+  }
+}
+
 @media (max-width: 768px) {
   .page {
     padding: 1rem;
@@ -491,6 +480,7 @@ onBeforeUnmount(revokeImageUrls)
   .nav-button {
     width: 100%;
     min-width: 0;
+  }
 
   .next-level-button {
     border-width: 3px;

@@ -116,7 +116,6 @@ function toggleCharacter(character: string): void {
 
 <style scoped>
 .center-container {
-  min-height: 100vh;
   min-height: 100dvh;
   display: flex;
   align-items: center;

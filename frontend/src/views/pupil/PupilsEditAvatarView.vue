@@ -216,7 +216,7 @@ onMounted(async () => {
 .preview-panel {
   border-radius: 1.5rem;
   border: var(--border-wide) solid var(--brown-dark);
-  background: rgba(255, 250, 241, 0.92);
+  background: var(--beige-light-100);
   box-shadow: 0 1rem 2rem rgba(55, 32, 18, 0.12);
 }
 
@@ -284,7 +284,7 @@ onMounted(async () => {
   align-items: center;
   justify-content: flex-start;
   gap: 0.75rem;
-  background: linear-gradient(180deg, #fef3dc, #f8e0b8);
+  background: var(--gradient-beige);
   padding: 1.5rem 1rem;
   position: sticky;
   top: 1.25rem;
@@ -322,7 +322,7 @@ onMounted(async () => {
 }
 
 .state-message.error {
-  color: #9f1d1d;
+  color: var(--red-danger-100);
 }
 
 @media (max-width: 900px) {

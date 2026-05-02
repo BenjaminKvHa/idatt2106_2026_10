@@ -569,7 +569,7 @@ p {
   padding: 0.9rem 1.8rem;
   border-radius: 24px;
   border: 2px solid var(--brown-dark);
-  background: var(--gradient-beige-btn);
+  background: var(--gradient-beige);
   color: var(--brown-dark);
   font-weight: 850;
   cursor: pointer;
@@ -616,7 +616,7 @@ p {
   font-weight: 850;
   color: var(--brown-dark);
   cursor: pointer;
-  background: var(--gradient-beige-btn);
+  background: var(--gradient-beige);
   box-shadow: 0 5px 14px rgb(0 0 0 / 14%);
   transition:
     transform 0.15s ease,

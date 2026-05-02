@@ -95,7 +95,7 @@ function cardClass(fileId: number): string {
 .task-wrapper {
   width: min(100%, 800px);
   padding: 1.35rem 2rem;
-  background: var(--gradient-beige-btn);
+  background: var(--gradient-beige);
   border: 3px solid var(--brown-dark);
   border-radius: 30px;
   box-sizing: border-box;

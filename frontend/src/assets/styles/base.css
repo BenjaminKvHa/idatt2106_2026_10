@@ -80,7 +80,7 @@
   --blue-dark: #0d47a1;
 
   --gradient-progressbar: linear-gradient(90deg, #9df13c 0%, #78d927 55%, #5cc322 100%);
-  --gradient-beige-btn: linear-gradient(180deg, #fff6dc 0%, #f1d7a5 100%);
+  --gradient-beige: linear-gradient(180deg, #fff6dc 0%, #f1d7a5 100%);
   --gradient-popup: linear-gradient(180deg, #fff0c9 0%, #f5d59a 58%, #e8b86f 100%);
   --gradient-brown: linear-gradient(180deg, #6f5139 0%, #4a301f 100%);
 

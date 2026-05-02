@@ -482,7 +482,7 @@ onBeforeUnmount(revokeAllImageUrls)
   padding: 0.85rem 1.8rem;
   border-radius: 24px;
   border: 2px solid var(--brown-dark);
-  background: var(--gradient-beige-btn);
+  background: var(--gradient-beige);
   color: var(--brown-dark);
   cursor: pointer;
   font-weight: 850;

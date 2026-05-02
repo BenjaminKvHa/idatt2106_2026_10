@@ -111,6 +111,7 @@ async function cancelJoinRequest(): Promise<void> {
 
 <style scoped>
 .page {
+  --page-bg: none;
   position: relative;
   min-height: 100vh;
   display: flex;

@@ -160,7 +160,7 @@ function medalImageUrl(medal: PupilMedal) {
   background-repeat: no-repeat;
   background-position: center;
   background-size: 100% 100%;
-  color: #fff7df;
+  color: var(--beige-light-100);
   font-family: 'Inika', serif;
   font-size: clamp(1.2rem, 2.2vw, 1.75rem);
   font-weight: 900;
@@ -255,7 +255,7 @@ function medalImageUrl(medal: PupilMedal) {
   width: 100%;
   height: 100%;
   border-radius: 1rem;
-  background: rgba(255, 244, 220, 0.65);
+  background: var(--beige-light-60);
   color: var(--brown-dark);
   font-size: 2rem;
   font-weight: 800;
@@ -265,9 +265,9 @@ function medalImageUrl(medal: PupilMedal) {
   width: 100%;
   min-height: 0;
   text-align: center;
-  color: #fff7df;
+  color: var(--beige-light-100);
   text-shadow:
-    0 0.07rem 0 #4b2511,
+    0 0.07rem 0 var(--brown-dark-100),
     0 0.14rem 0.1rem rgba(34, 13, 3, 0.8);
 }
 
@@ -279,7 +279,7 @@ function medalImageUrl(medal: PupilMedal) {
 
 .medal-copy p {
   margin: 0.2rem 0 0;
-  color: #fff7df;
+  color: var(--beige-light-100);
   font-size: clamp(0.58rem, 0.72vw, 0.7rem);
   font-weight: 600;
   line-height: 1.1;
@@ -296,13 +296,13 @@ function medalImageUrl(medal: PupilMedal) {
   border: 0;
   border-radius: 0;
   background: transparent;
-  color: #fff7df;
+  color: var(--beige-light-100);
   font-size: clamp(0.62rem, 0.86vw, 0.76rem);
   font-weight: 900;
   line-height: 1;
   padding: 0;
   text-shadow:
-    0 0.07rem 0 #4b2511,
+    0 0.07rem 0 var(--brown-dark-100),
     0 0.14rem 0.1rem rgba(34, 13, 3, 0.85);
 }
 

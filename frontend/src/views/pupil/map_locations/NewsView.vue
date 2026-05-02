@@ -427,7 +427,7 @@ onBeforeUnmount(revokeAllImageUrls)
   font-weight: 850;
   color: var(--brown-dark);
   cursor: pointer;
-  background: var(--gradient-beige-btn);
+  background: var(--gradient-beige);
   box-shadow: 0 5px 14px rgb(0 0 0 / 14%);
   transition:
     transform 0.15s ease,

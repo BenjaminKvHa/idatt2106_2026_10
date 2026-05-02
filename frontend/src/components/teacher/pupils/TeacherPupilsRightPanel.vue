@@ -82,14 +82,14 @@ const emit = defineEmits<{
 
 .details-card {
   width: min(calc(30*16rem), 100%);
-  border: 7px solid var(--accent);
+  border: 7px solid var(--brown-medium-100);
   border-radius: 38px;
   padding: 28px;
 }
 @media (max-width: 768px) {
   .details-card {
     width: 100%;
-    border: var(--border-thin) solid var(--accent);
+    border: var(--border-thin) solid var(--brown-medium-100);
     border-radius: 1rem;
     padding: .5rem;
   }
@@ -104,7 +104,7 @@ const emit = defineEmits<{
 
 .main-btn,
 .danger-btn {
-  border: 4px solid var(--accent);
+  border: 4px solid var(--brown-medium-100);
   border-radius: 999px;
   padding: 13px 18px;
   font-size: 1.05rem;
@@ -114,21 +114,21 @@ const emit = defineEmits<{
 }
 
 .primary-btn {
-  background: var(--accent);
-  color: var(--background);
+  background: var(--brown-medium-100);
+  color: var(--beige-light-100);
 }
 
 .primary-btn,
 .primary-btn * {
-  color: var(--background);
+  color: var(--beige-light-100);
 }
 
 .secondary-btn {
-  background: var(--background);
+  background: var(--beige-light-100);
 }
 
 .danger-btn {
-  background: var(--warning);
+  background: var(--red-danger-100);
 }
 
 .danger-btn,
@@ -139,7 +139,7 @@ const emit = defineEmits<{
 .main-btn:hover,
 .danger-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 0 var(--accent);
+  box-shadow: 0 4px 0 var(--brown-medium-100);
 }
 
 .pending-actions-inside {
@@ -155,7 +155,7 @@ const emit = defineEmits<{
   margin: 0;
   font-size: 1.05rem;
   font-weight: 700;
-  color: var(--warning);
+  color: var(--red-danger-100);
 }
 
 @media (max-width: 1100px) {

@@ -86,9 +86,9 @@ function openDisplayView() {
 .classroom-code {
   align-self: center;
   padding: 0.3rem 1.2rem;
-  border: var(--border-width) solid var(--accent);
+  border: var(--border-width) solid var(--brown-medium-100);
   border-radius: var(--border-radius-2);
-  background: var(--background-body);
+  background: var(--beige-medium-100);
   font-size: clamp(3rem, 8vw, 5.5rem);
   font-weight: var(--fw-bold);
   line-height: 1;

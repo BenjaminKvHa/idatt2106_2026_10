@@ -117,7 +117,7 @@ const autoTitle = computed<string>(() => {
 
 <style scoped>
 .topbar {
-  background-color: var(--accent);
+  background-color: var(--brown-medium-100);
   padding: var(--thin-padding) var(--medium-padding);
   display: flex;
   flex-direction: column;
@@ -143,7 +143,7 @@ const autoTitle = computed<string>(() => {
 }
 
 .crumb {
-  color: var(--txt-sec);
+  color: var(--beige-medium-100);
   white-space: nowrap;
 }
 
@@ -158,12 +158,12 @@ const autoTitle = computed<string>(() => {
 }
 
 .crumb-sep {
-  color: var(--txt-sec);
+  color: var(--beige-medium-100);
   user-select: none;
 }
 
 .topbar-title {
-  color: var(--txt-sec);
+  color: var(--beige-medium-100);
   font-size: 1.4rem;
   font-weight: 700;
   margin: 0;
@@ -191,25 +191,25 @@ const autoTitle = computed<string>(() => {
 
 .topbar-tab-button-1{
   margin-bottom: 0;
-  background-color: var(--background-body);
+  background-color: var(--beige-medium-100);
   border-style: none;
 }
 
 .topbar-tab-button-1:hover {
-  background-color: var(--background-body);
-  color: var(--txt);
+  background-color: var(--beige-medium-100);
+  color: var(--brown-dark-100);
 }
 
 .topbar-tab-button-2{
   margin-bottom: 0;
   background-color: var(--background-sec);
   border-style: none;
-  color: var(--txt);
+  color: var(--brown-dark-100);
 }
 
 .topbar-tab-button-2:hover {
-  background-color: var(--background-body);
-  color: var(--txt);
+  background-color: var(--beige-medium-100);
+  color: var(--brown-dark-100);
 }
 
 

@@ -44,7 +44,7 @@ button {
 volume stuff
 */
 input[type='range'] {
-  accent-color: var(--accent);
+  accent-color: var(--brown-medium-100);
 }
 
 .volume-row {
@@ -64,7 +64,7 @@ input[type='range'] {
   padding: 2px;
   display: flex;
   align-items: center;
-  color: var(--txt);
+  color: var(--brown-dark-100);
 }
 
 .volume-icon {
@@ -76,5 +76,5 @@ input[type='range'] {
   font-size: 0.8rem;
   min-width: 3.5rem;
   text-align: right;
-  color: var(--txt);
+  color: var(--brown-dark-100);
 }

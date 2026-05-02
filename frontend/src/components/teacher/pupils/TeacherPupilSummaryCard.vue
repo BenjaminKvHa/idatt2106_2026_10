@@ -35,7 +35,7 @@ function updateUsername(event: Event) {
         <p class="username-display inika">Juridisk navn: <b>{{ pupil.legalName }}</b></p>
       </div>
 
-      <div 
+      <div
       class="username-edit"
       v-if="showSaveButton"
       >
@@ -69,13 +69,13 @@ function updateUsername(event: Event) {
 
 <style scoped>
 .profile-summary-card {
-  border: var(--border-thin) solid var(--accent);
+  border: var(--border-thin) solid var(--brown-medium-100);
   border-radius: 1rem;
   padding: 2.5rem;
   display: flex;
   gap: 1rem;
   align-items: center;
-  background: var(--background);
+  background: var(--beige-light-100);
 }
 @media (max-width: 768px) {
   .profile-summary-card {
@@ -107,8 +107,8 @@ function updateUsername(event: Event) {
   place-items: center;
   font-size: 2.6rem;
   font-weight: 700;
-  border: 4px solid var(--accent);
-  box-shadow: inset 0 0 0 4px var(--background);
+  border: 4px solid var(--brown-medium-100);
+  box-shadow: inset 0 0 0 4px var(--beige-light-100);
 }
 
 .avatar-image {
@@ -171,7 +171,7 @@ function updateUsername(event: Event) {
   width: 100%;
   border: 3px solid var(--background-sec);
   border-radius: 12px;
-  background: var(--background);
+  background: var(--beige-light-100);
   padding: 9px 12px;
   font-size: 1rem;
 }
@@ -186,12 +186,12 @@ function updateUsername(event: Event) {
 .save-btn {
   width: 3rem;
   height: 3rem;
-  border: 3px solid var(--accent);
+  border: 3px solid var(--brown-medium-100);
   border-radius: 999px;
   padding: 0;
   cursor: pointer;
   transition: 0.2s ease;
-  background: var(--background);
+  background: var(--beige-light-100);
   color: var(--brown-dark);
   display: flex;
   align-items: center;
@@ -200,7 +200,7 @@ function updateUsername(event: Event) {
 
 .save-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 0 var(--accent);
+  box-shadow: 0 4px 0 var(--brown-medium-100);
 }
 
 .save-btn :deep(svg) {

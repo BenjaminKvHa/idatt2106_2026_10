@@ -41,10 +41,10 @@ function formatTimestamp(value: string): string {
 
 <template>
   <article class="mystery-card">
-    <AuthenticatedImage 
-    :src="`/api/objects/${props.mystery.fileObjectId}`" 
-    alt="Ukens mysterium" 
-    class="mystery-image" 
+    <AuthenticatedImage
+    :src="`/api/objects/${props.mystery.fileObjectId}`"
+    alt="Ukens mysterium"
+    class="mystery-image"
     preview-on-click
     />
 
@@ -105,8 +105,8 @@ function formatTimestamp(value: string): string {
   aspect-ratio: 1;
   object-fit: cover;
   border-radius: 1rem;
-  border: 2px solid var(--accent);
-  background: var(--background);
+  border: 2px solid var(--brown-medium-100);
+  background: var(--beige-light-100);
 }
 
 .mystery-content {
@@ -163,9 +163,9 @@ function formatTimestamp(value: string): string {
 }
 
 .mystery-button {
-  border: 3px solid var(--accent);
+  border: 3px solid var(--brown-medium-100);
   border-radius: 999px;
-  background: var(--background);
+  background: var(--beige-light-100);
   padding: 0.55rem 0.9rem;
   font: inherit;
   font-weight: 700;
@@ -173,8 +173,8 @@ function formatTimestamp(value: string): string {
 }
 
 .approve-button {
-  background: var(--accent);
-  color: var(--background);
+  background: var(--brown-medium-100);
+  color: var(--beige-light-100);
 }
 
 .decline-button {

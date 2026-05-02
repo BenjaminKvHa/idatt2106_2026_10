@@ -31,7 +31,7 @@ defineProps<{
   min-height: 90px;
   border: 3px solid var(--background-sec);
   border-radius: 14px;
-  background: var(--background);
+  background: var(--beige-light-100);
   padding: 14px 16px;
   font-size: 1rem;
 }

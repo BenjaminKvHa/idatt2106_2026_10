@@ -99,7 +99,7 @@ onBeforeUnmount(() => {
 }
 
 .teacher-help-trigger:hover .teacher-help-mark {
-  color: var(--txt-sec);
+  color: var(--beige-medium-100);
 }
 
 .teacher-help-backdrop {

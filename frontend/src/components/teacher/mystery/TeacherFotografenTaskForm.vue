@@ -364,7 +364,7 @@ function submitForm() {
   width: 100%;
   border-radius: 0.9rem;
   border: 2px solid rgba(90, 64, 47, 0.18);
-  background: var(--background);
+  background: var(--beige-light-100);
   padding: 0.85rem 1rem;
   font: inherit;
   color: var(--brown-dark);

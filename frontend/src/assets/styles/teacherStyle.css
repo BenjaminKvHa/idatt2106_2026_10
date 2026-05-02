@@ -2,16 +2,10 @@
     /*
     Colors!
     */
-    --background-body: #eed2ad;
-    --background: #f5e2ca;
     --background-sec: #cfb99c;
-    --accent: #5a402f;
-    --txt: #5a402f;
-    --txt-sec: #eed2ad;
     --txt-contrast: white;
-    --warning: #de3333;
     --warning-sec: #ae1f1f;
-    --obscure: #00000036;
+    --obscure: rgb(0 0 0 / 0.2);
     /*
     sizing
     */
@@ -23,11 +17,11 @@
 
     --mid-margin: 10px;
     --tight-margin: 0px;
-    
+
     --thick-padding: 30px;
     --medium-padding: 20px;
     --thin-padding: 10px;
-    
+
     --thick-gap: 30px;
     --medium-gap: 20px;
     --thin-gap: 10px;
@@ -53,16 +47,16 @@
 }
 
 .teacher-container-box {
-    border: var(--border-width) solid var(--accent);
-    background-color: var(--background);
+    border: var(--border-width) solid var(--brown-medium-100);
+    background-color: var(--beige-light-100);
     padding: var(--medium-padding);
     border-radius: var(--border-radius);
     width: min(40rem, 90%);
 }
 
 .teacher-content {
-    color: var(--accent);
-    background-color: var(--background-body);
+    color: var(--brown-medium-100);
+    background-color: var(--beige-medium-100);
     margin: 0;
     display: flex;
     flex-direction: column;
@@ -71,10 +65,10 @@
 }
 
 .teacher-card {
-    color: var(--accent);
-    background-color: var(--background-body);
+    color: var(--brown-medium-100);
+    background-color: var(--beige-medium-100);
     border-radius: var(--border-radius);
-    border: var(--border-width) solid var(--accent);
+    border: var(--border-width) solid var(--brown-medium-100);
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -84,8 +78,8 @@
 }
 
 .teacher-card-header {
-    background-color: var(--accent);
-    color: var(--txt-sec);
+    background-color: var(--brown-medium-100);
+    color: var(--beige-medium-100);
     padding: var(--card-header-padding);
     display: flex;
     flex-direction: column;
@@ -98,8 +92,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: var(--accent);
-    color: var(--txt-sec);
+    background-color: var(--brown-medium-100);
+    color: var(--beige-medium-100);
     font-weight: var(--fw-bold);
     width: 100%;
     box-sizing: border-box;
@@ -115,7 +109,7 @@
 
 .teacher-card-body {
     padding: var(--card-body-padding);
-    background-color: var(--background);
+    background-color: var(--beige-light-100);
     display: flex;
     flex-direction: column;
     gap: var(--card-body-gap);
@@ -129,7 +123,7 @@
     margin: 0;
     border: none;
     height: 2px;
-    background: var(--accent);
+    background: var(--brown-medium-100);
     opacity: .5;
 }
 
@@ -168,9 +162,9 @@
 }
 
 .teacher-variant-1 {
-    color: var(--accent);
-    background-color: var(--background);
-    
+    color: var(--brown-medium-100);
+    background-color: var(--beige-light-100);
+
     border-radius: var(--border-radius);
     border-width: var(--border-width);
     border-style: solid;
@@ -180,9 +174,9 @@
 }
 
 .teacher-variant-2 {
-    color: var(--accent);
+    color: var(--brown-medium-100);
     background-color: var(--background-sec);
-    
+
     border-radius: var(--border-radius);
     border-width: var(--border-width);
     border-style: solid;
@@ -193,46 +187,46 @@
 }
 
 .button-variant-1 {
-    color: var(--accent);
-    background-color: var(--background);
-    
+    color: var(--brown-medium-100);
+    background-color: var(--beige-light-100);
+
     border-radius: var(--border-radius);
     border-width: var(--border-width);
     border-style: solid;
-    border-color: var(--accent);
+    border-color: var(--brown-medium-100);
     transition: ease-in-out var(--animation-time-1);
     text-decoration: none;
 }
 
 .button-variant-1:hover, .button-variant-1::selection {
-    color: var(--txt-sec);
-    background-color: var(--accent);
+    color: var(--beige-medium-100);
+    background-color: var(--brown-medium-100);
 }
 
 .button-variant-2 {
-    color: var(--txt-sec);
-    background-color: var(--accent);
-    
+    color: var(--beige-medium-100);
+    background-color: var(--brown-medium-100);
+
     border-radius: var(--border-radius);
     border-width: var(--border-width);
     border-style: solid;
-    border-color: var(--accent);
+    border-color: var(--brown-medium-100);
     transition: ease-in-out var(--animation-time-1);
 }
 
 .button-variant-2:hover, .button-variant-2::selection {
-    color: var(--txt);
-    background-color: var(--background);
+    color: var(--brown-dark-100);
+    background-color: var(--beige-light-100);
 }
 
 .button-warning {
     color: var(--txt-contrast);
-    background-color: var(--warning);
-    
+    background-color: var(--red-danger-100);
+
     border-radius: var(--border-radius);
     border-width: var(--border-width);
     border-style: solid;
-    border-color: var(--warning);
+    border-color: var(--red-danger-100);
     transition: ease-in-out var(--animation-time-1);
 }
 
@@ -242,37 +236,37 @@
 
 .teacher-card-body button {
     border: none;
-    background-color: var(--background-body);
-    color: var(--accent);
+    background-color: var(--beige-medium-100);
+    color: var(--brown-medium-100);
 }
 
 .teacher-card-body .teacher-card-item-var-1 {
-    background-color: var(--background-body);
-    color: var(--txt);
+    background-color: var(--beige-medium-100);
+    color: var(--brown-dark-100);
 }
 
 .teacher-card-body .teacher-card-item-var-1:hover {
-    background-color: var(--accent);
-    color: var(--txt-sec);
+    background-color: var(--brown-medium-100);
+    color: var(--beige-medium-100);
 }
 
 .teacher-card-body .teacher-card-item-var-2 {
-    background-color: var(--accent);
-    color: var(--txt-sec);
+    background-color: var(--brown-medium-100);
+    color: var(--beige-medium-100);
 }
 
 .teacher-card-body .teacher-card-item-var-2:hover {
-    background-color: var(--accent);
-    color: var(--txt-sec);
+    background-color: var(--brown-medium-100);
+    color: var(--beige-medium-100);
 }
 
 .icon-btn-circle {
     height: var(--button-diameter);
     aspect-ratio: 1 / 1;
     border-radius: 50%;
-    border: var(--border-width) solid var(--accent);
-    background: var(--background);
-    color: var(--accent);
+    border: var(--border-width) solid var(--brown-medium-100);
+    background: var(--beige-light-100);
+    color: var(--brown-medium-100);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -283,8 +277,8 @@
 }
 
 .icon-btn-circle:hover {
-    background: var(--accent);
-    color: var(--txt-sec);
+    background: var(--brown-medium-100);
+    color: var(--beige-medium-100);
 }
 
 .icon-btn-circle:disabled {
@@ -312,17 +306,17 @@
 }
 
 .form-field label {
-    color: var(--accent);
+    color: var(--brown-medium-100);
     font-weight: var(--fw-semibold);
     font-size: 0.95rem;
 }
 
 .form-field input,
 .form-field textarea {
-    background-color: var(--background-body);
-    color: var(--accent);
+    background-color: var(--beige-medium-100);
+    color: var(--brown-medium-100);
     border: none;
-    border-bottom: 2px solid var(--accent);
+    border-bottom: 2px solid var(--brown-medium-100);
     padding: var(--medium-padding);
     font-family: inherit;
     font-size: 1rem;
@@ -354,14 +348,14 @@
 .form-card {
     width: 100%;
     max-width: 600px;
-    background-color: var(--background);
-    border: var(--border-width) solid var(--accent);
+    background-color: var(--beige-light-100);
+    border: var(--border-width) solid var(--brown-medium-100);
     border-radius: var(--border-radius);
     padding: var(--thick-padding);
 }
 
 .form-title {
-    color: var(--accent);
+    color: var(--brown-medium-100);
     font-size: 1.5rem;
     margin: 0 0 var(--thick-padding) 0;
     text-align: center;
@@ -384,11 +378,11 @@
 .state-message {
     padding: var(--thick-padding);
     text-align: center;
-    color: var(--accent);
+    color: var(--brown-medium-100);
 }
 
 .state-message.error {
-    color: var(--warning);
+    color: var(--red-danger-100);
 }
 
 
@@ -415,7 +409,7 @@
     justify-content: space-between;
     padding: var(--thin-padding) 0;
     border-bottom: 2px solid var(--background-sec);
-    color: var(--accent);
+    color: var(--brown-medium-100);
     font-weight: var(--fw-semibold);
 }
 

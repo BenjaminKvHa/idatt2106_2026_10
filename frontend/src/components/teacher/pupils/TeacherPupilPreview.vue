@@ -58,12 +58,12 @@ function selectPupil() {
 }
 
 .pupil-row.active {
-  background: var(--accent);
+  background: var(--brown-medium-100);
 }
 
 .pupil-row.active,
 .pupil-row.active * {
-  color: var(--txt-sec);
+  color: var(--beige-medium-100);
 }
 
 .pupil-icon {
@@ -77,7 +77,7 @@ function selectPupil() {
   font-size: 0.85rem;
   font-weight: 700;
   overflow: hidden;
-  background: var(--background);
+  background: var(--beige-light-100);
 }
 
 .pupil-icon-image {
@@ -112,11 +112,11 @@ function selectPupil() {
 
 .pending-name,
 .pending-username {
-  color: var(--warning);
+  color: var(--red-danger-100);
 }
 
 .pending-row.active .pending-name,
 .pending-row.active .pending-username {
-  color: var(--txt-sec);
+  color: var(--beige-medium-100);
 }
 </style>

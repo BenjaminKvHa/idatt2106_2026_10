@@ -503,8 +503,8 @@ watch(
   gap: 0.9rem;
   padding: 1rem;
   border-radius: 1rem;
-  background: rgba(255, 248, 235, 0.82);
-  border: 2px solid rgba(90, 64, 47, 0.16);
+  background: var(--beige-medium-80);
+  border: 2px solid var(--brown-dark-20);
 }
 
 .form-field {
@@ -538,7 +538,7 @@ watch(
   align-items: center;
   padding: 0.9rem 1rem;
   border-radius: 1rem;
-  background: rgba(255, 248, 235, 0.82);
+  background: var(--beige-medium-80);
   /* border: 1px solid rgba(85, 50, 27, 0.18); */
   border: var(--border-wide) solid var(--brown-dark);
 }
@@ -634,7 +634,7 @@ watch(
 }
 
 .error-text {
-  color: #9f1d1d;
+  color: var(--warning-sec);
 }
 
 .state-message {
@@ -642,7 +642,7 @@ watch(
 }
 
 .state-message.error {
-  color: #9f1d1d;
+  color: var(--warning-sec);
 }
 
 .teacher-confirm-overlay {

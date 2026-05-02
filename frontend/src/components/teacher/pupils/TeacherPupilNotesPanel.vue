@@ -65,24 +65,24 @@ function selectStop(stopName: StopName) {
 }
 
 .stop-note-btn {
-  border: 4px solid var(--accent);
+  border: 4px solid var(--brown-medium-100);
   border-radius: 999px;
   padding: 13px 18px;
   font-size: 1.05rem;
   font-weight: 700;
   cursor: pointer;
   transition: 0.2s ease;
-  background: var(--background);
+  background: var(--beige-light-100);
 }
 
 .stop-note-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 0 var(--accent);
+  box-shadow: 0 4px 0 var(--brown-medium-100);
 }
 
 .stop-note-btn.active {
-  background: var(--accent);
-  color: var(--txt-sec);
+  background: var(--brown-medium-100);
+  color: var(--beige-medium-100);
 }
 
 .read-only-box {
@@ -90,7 +90,7 @@ function selectStop(stopName: StopName) {
   min-height: 90px;
   border: 3px solid var(--background-sec);
   border-radius: 14px;
-  background: var(--background);
+  background: var(--beige-light-100);
   padding: 14px 16px;
   font-size: 1rem;
 }

@@ -132,7 +132,7 @@ const correctFileSlot = computed(() => {
 }
 
 .task-card.selected {
-  border-color: var(--accent);
+  border-color: var(--brown-medium-100);
   box-shadow: 0 0 0 3px rgba(90, 64, 47, 0.12);
 }
 
@@ -184,7 +184,7 @@ const correctFileSlot = computed(() => {
   width: 100%;
   border-radius: 0.9rem;
   border: 2px solid rgba(90, 64, 47, 0.18);
-  background: var(--background);
+  background: var(--beige-light-100);
   object-fit: cover;
 }
 
@@ -221,8 +221,8 @@ const correctFileSlot = computed(() => {
 .answer-chip {
   padding: 0.25rem 0.65rem;
   border-radius: 999px;
-  background: var(--accent);
-  color: var(--background);
+  background: var(--brown-medium-100);
+  color: var(--beige-light-100);
   font-size: 0.85rem;
   font-weight: 700;
 }
@@ -230,7 +230,7 @@ const correctFileSlot = computed(() => {
 .task-json {
   padding: 0.85rem;
   border-radius: 0.75rem;
-  background: var(--background);
+  background: var(--beige-light-100);
   white-space: pre-wrap;
   word-break: break-word;
 }

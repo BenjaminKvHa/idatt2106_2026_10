@@ -133,9 +133,9 @@ function closeClassroomsPicker() {
         </RouterLink>
 
         <div class="teacher-menu-bottom">
-            <button 
-            type="button" 
-            class="icon-btn-circle" 
+            <button
+            type="button"
+            class="icon-btn-circle"
             aria-label="Varsler"
             @click="notificationsOpen = true"
             >
@@ -235,7 +235,7 @@ function closeClassroomsPicker() {
     border-radius: 0;
     border: none;
     outline-width: var(--border-width);
-    outline-color: var(--accent);
+    outline-color: var(--brown-medium-100);
     outline-style: solid;
     padding: var(--medium-padding);
     justify-content: flex-start;

@@ -243,9 +243,9 @@ onBeforeUnmount(() => {
 }
 
 .close-button {
-  border: 2px solid var(--accent);
+  border: 2px solid var(--brown-medium-100);
   border-radius: 999px;
-  background: var(--background);
+  background: var(--beige-light-100);
   padding: 0.45rem 0.9rem;
   font: inherit;
   font-weight: 700;
@@ -261,15 +261,15 @@ onBeforeUnmount(() => {
 .classroom-picker label {
   font-size: 0.85rem;
   font-weight: 700;
-  color: var(--txt);
+  color: var(--brown-dark-100);
 }
 
 .classroom-picker select {
   padding: 0.7rem 0.9rem;
   border-radius: 12px;
-  border: 2px solid var(--accent);
-  background: var(--background);
-  color: var(--txt);
+  border: 2px solid var(--brown-medium-100);
+  background: var(--beige-light-100);
+  color: var(--brown-dark-100);
   font: inherit;
 }
 
@@ -288,7 +288,7 @@ onBeforeUnmount(() => {
   gap: 0.45rem;
   padding: 0.9rem 1rem;
   border-radius: 1rem;
-  background: var(--background);
+  background: var(--beige-light-100);
   border: 2px solid rgba(85, 50, 27, 0.15);
 }
 
@@ -324,7 +324,7 @@ onBeforeUnmount(() => {
 }
 
 .state-message {
-  color: var(--txt);
+  color: var(--brown-dark-100);
 }
 
 .state-message.error {

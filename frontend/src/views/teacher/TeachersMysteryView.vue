@@ -216,6 +216,6 @@ watch(
 }
 
 .state-message.error {
-  color: #9f1d1d;
+  color: var(--warning-sec);
 }
 </style>

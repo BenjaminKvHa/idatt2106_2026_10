@@ -740,7 +740,7 @@ watch(
 .status-banner {
   padding: 0.9rem 1rem;
   border-radius: 1rem;
-  background: rgba(255, 248, 235, 0.85);
+  background: var(--beige-light-80);
   color: var(--brown-dark);
 }
 
@@ -751,7 +751,7 @@ watch(
 
 .status-banner.error,
 .state-message.error {
-  color: #9f1d1d;
+  color: var(--warning-sec);
 }
 
 .state-message,

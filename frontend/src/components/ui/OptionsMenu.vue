@@ -54,7 +54,7 @@ function close() {
     font-size: 1.3rem;
     font-weight: var(--fw-bold);
     text-align: center;
-    color: var(--txt);
+    color: var(--brown-dark-100);
     margin: 0;
 }
 
@@ -74,15 +74,15 @@ function close() {
 .settings-field label {
     font-size: 0.85rem;
     font-weight: var(--fw-bold);
-    color: var(--txt);
+    color: var(--brown-dark-100);
 }
 
 .settings-field input {
     padding: var(--thin-padding);
     border-radius: var(--card-item-radius);
-    border: 2px solid var(--accent);
-    background: var(--background);
-    color: var(--txt);
+    border: 2px solid var(--brown-medium-100);
+    background: var(--beige-light-100);
+    color: var(--brown-dark-100);
     font-size: 0.9rem;
 }
 

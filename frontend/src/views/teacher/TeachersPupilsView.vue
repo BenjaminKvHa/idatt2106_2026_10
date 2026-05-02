@@ -562,7 +562,7 @@ watch([selectedPupilEmail, selectedStopName, activePanel], async () => {
 .pupils-view,
 .pupils-view * {
   box-sizing: border-box;
-  color: var(--txt);
+  color: var(--brown-dark-100);
 }
 
 .pupils-view {
@@ -604,11 +604,11 @@ watch([selectedPupilEmail, selectedStopName, activePanel], async () => {
 
 .state-message {
   margin: 0 0 1rem;
-  color: var(--txt);
+  color: var(--brown-dark-100);
 }
 
 .state-message.error {
-  color: #9f1d1d;
+  color: var(--warning-sec);
 }
 
 .teacher-confirm-overlay {
@@ -635,12 +635,12 @@ watch([selectedPupilEmail, selectedStopName, activePanel], async () => {
 .teacher-confirm-popup h2 {
   margin: 0 0 0.75rem;
   font-size: 2rem;
-  color: var(--txt);
+  color: var(--brown-dark-100);
 }
 
 .teacher-confirm-popup p {
   margin: 0;
-  color: var(--txt);
+  color: var(--brown-dark-100);
   font-size: 1.15rem;
   font-weight: 700;
   line-height: 1.35;
@@ -659,7 +659,7 @@ watch([selectedPupilEmail, selectedStopName, activePanel], async () => {
   padding: 0.85rem 1.4rem;
   border: var(--border-wide) solid var(--brown-dark);
   border-radius: 18px;
-  color: var(--txt);
+  color: var(--brown-dark-100);
   font-size: 1rem;
   font-weight: 800;
   cursor: pointer;

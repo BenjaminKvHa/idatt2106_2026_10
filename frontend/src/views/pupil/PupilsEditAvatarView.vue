@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import AvatarAssetsContainer from '@/components/pupil/AvatarAssetsContainer.vue'
 import { get, patch, type BackendAccountRole } from '@/utils/apiUtils'
 import { clearMeCache } from '@/utils/authRedirect'
+import classroomBg from '@/assets/backgrounds/hjemskjerm-bg.png'
 
 type AvatarAsset = {
   assetType: string
@@ -141,7 +142,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="page">
+  <main class="page" :style="{ '--page-bg': `url(${classroomBg})` }">
     <section class="layout-card">
       <section class="selectors-panel">
         <div class="copy-panel">
@@ -199,9 +200,37 @@ onMounted(async () => {
 
 <style scoped>
 .page {
+  position: relative;
   min-height: 100vh;
-  background: linear-gradient(180deg, var(--beige-medium), var(--beige-light));
   padding: 2rem 1.25rem 3rem;
+  overflow: hidden;
+}
+
+.page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: var(--page-bg);
+  background-size: cover;
+  background-position: center;
+  filter: blur(12px);
+  transform: scale(1.08);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.page::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(40, 25, 10, 0.18);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.page > * {
+  position: relative;
+  z-index: 2;
 }
 
 .layout-card {

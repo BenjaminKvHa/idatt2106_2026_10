@@ -146,7 +146,7 @@ function startPolling() {
 
   pollingHandle = window.setInterval(async () => {
     await loadNotifications(true)
-  }, 2000)
+  }, 10000)
 }
 
 onMounted(async () => {

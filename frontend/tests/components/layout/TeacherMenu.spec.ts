@@ -1,12 +1,14 @@
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import { ref } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import TeacherMenu from '@/components/teacher/TeacherMenu.vue'
 
+const apiGet = vi.hoisted(() => vi.fn())
 const fetchClassrooms = vi.fn()
 const toggleMute = vi.fn()
 const isMuted = ref(false)
+const mountedWrappers: VueWrapper[] = []
 const classrooms = ref([
   {
     classroomCode: 'ABCABC',
@@ -41,12 +43,16 @@ vi.mock('@/composables/useAudio', () => ({
   }),
 }))
 
+vi.mock('@/utils/apiUtils', () => ({
+  get: apiGet,
+}))
+
 vi.mock('vue-router', () => ({
   useRoute: () => routeState,
 }))
 
 function mountTeacherMenu() {
-  return mount(TeacherMenu, {
+  const wrapper = mount(TeacherMenu, {
     global: {
       stubs: {
         Logo: {
@@ -71,12 +77,17 @@ function mountTeacherMenu() {
       },
     },
   })
+  mountedWrappers.push(wrapper)
+  return wrapper
 }
 
 describe('TeacherMenu', () => {
   beforeEach(() => {
     fetchClassrooms.mockReset()
+    fetchClassrooms.mockResolvedValue(undefined)
     toggleMute.mockReset()
+    apiGet.mockReset()
+    apiGet.mockResolvedValue({ unreadNotificationsCount: 0 })
     isMuted.value = false
     classrooms.value = [
       {
@@ -98,6 +109,8 @@ describe('TeacherMenu', () => {
   })
 
   afterEach(() => {
+    mountedWrappers.splice(0).forEach((wrapper) => wrapper.unmount())
+    vi.useRealTimers()
     vi.restoreAllMocks()
   })
 
@@ -193,5 +206,80 @@ describe('TeacherMenu', () => {
     await wrapper.find('[data-test="options-menu"] button').trigger('click')
 
     expect(wrapper.find('[data-test="options-menu"]').exists()).toBe(false)
+  })
+
+  it('does not render an unread notification badge when all classrooms have zero unread notifications', async () => {
+    const wrapper = mountTeacherMenu()
+
+    await flushPromises()
+
+    expect(wrapper.find('[data-test="notification-badge"]').exists()).toBe(false)
+    expect(wrapper.find('[aria-label="Varsler"]').exists()).toBe(true)
+  })
+
+  it('renders the summed unread notification count across teacher classrooms', async () => {
+    apiGet.mockImplementation(async (endpoint: string) => {
+      if (endpoint.includes('ABCABC')) return { unreadNotificationsCount: 2 }
+      if (endpoint.includes('DEFDEF')) return { unreadNotificationsCount: 3 }
+      return { unreadNotificationsCount: 0 }
+    })
+
+    const wrapper = mountTeacherMenu()
+
+    await flushPromises()
+
+    expect(wrapper.find('[data-test="notification-badge"]').text()).toBe('5')
+    expect(wrapper.find('[aria-label="Varsler, 5 uleste"]').exists()).toBe(true)
+  })
+
+  it('caps the notification badge display at 99+', async () => {
+    apiGet.mockImplementation(async (endpoint: string) => {
+      if (endpoint.includes('ABCABC')) return { unreadNotificationsCount: 70 }
+      if (endpoint.includes('DEFDEF')) return { unreadNotificationsCount: 40 }
+      return { unreadNotificationsCount: 0 }
+    })
+
+    const wrapper = mountTeacherMenu()
+
+    await flushPromises()
+
+    expect(wrapper.find('[data-test="notification-badge"]').text()).toBe('99+')
+    expect(wrapper.find('[aria-label="Varsler, 110 uleste"]').exists()).toBe(true)
+  })
+
+  it('polls unread notifications every 30 seconds and clears polling on unmount', async () => {
+    vi.useFakeTimers()
+    const wrapper = mountTeacherMenu()
+    await flushPromises()
+    apiGet.mockClear()
+
+    await vi.advanceTimersByTimeAsync(30000)
+    await flushPromises()
+
+    expect(apiGet).toHaveBeenCalledTimes(2)
+    expect(apiGet).toHaveBeenCalledWith('/api/teacher/classrooms/ABCABC/notifications/unread')
+    expect(apiGet).toHaveBeenCalledWith('/api/teacher/classrooms/DEFDEF/notifications/unread')
+
+    wrapper.unmount()
+    apiGet.mockClear()
+
+    await vi.advanceTimersByTimeAsync(30000)
+    await flushPromises()
+
+    expect(apiGet).not.toHaveBeenCalled()
+  })
+
+  it('refreshes unread notifications after the notifications menu closes', async () => {
+    const wrapper = mountTeacherMenu()
+    await flushPromises()
+    apiGet.mockClear()
+
+    await wrapper.find('[aria-label="Varsler"]').trigger('click')
+    await wrapper.find('[data-test="notifications-menu"] button').trigger('click')
+    await flushPromises()
+
+    expect(apiGet).toHaveBeenCalledTimes(2)
+    expect(apiGet).toHaveBeenCalledWith('/api/teacher/classrooms/ABCABC/notifications/unread')
+    expect(apiGet).toHaveBeenCalledWith('/api/teacher/classrooms/DEFDEF/notifications/unread')
   })
 })

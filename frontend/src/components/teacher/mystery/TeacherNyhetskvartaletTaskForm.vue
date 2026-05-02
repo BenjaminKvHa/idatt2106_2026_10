@@ -182,12 +182,12 @@ function submitForm() {
 
       <label class="form-field">
         <span>{{ task ? 'Bytt fil 1 (valgfritt)' : 'Fil 1' }}</span>
-        <input ref="file1Input" type="file" accept="image/*" :disabled="submitting" @change="updateSelectedFile('FILE_1', $event)" />
+        <input ref="file1Input" type="file" accept="image/png,image/jpeg" :disabled="submitting" @change="updateSelectedFile('FILE_1', $event)" />
       </label>
 
       <label class="form-field">
         <span>{{ task ? 'Bytt fil 2 (valgfritt)' : 'Fil 2' }}</span>
-        <input ref="file2Input" type="file" accept="image/*" :disabled="submitting" @change="updateSelectedFile('FILE_2', $event)" />
+        <input ref="file2Input" type="file" accept="image/png,image/jpeg" :disabled="submitting" @change="updateSelectedFile('FILE_2', $event)" />
       </label>
 
       <div class="preview-grid">

@@ -2,14 +2,21 @@
 @import 'teacherStyle.css';
 @import 'pupilTaskStyle.css';
 @import 'pupilStyle.css';
+@import 'selectStyle.css';
 
 .transition {
   transition: all 0.1s;
 }
 button {
   cursor: pointer;
-  outline: none;
 }
+
+
+*:focus-visible {
+  outline: 3px solid var(--brown-dark);
+  outline-offset: 3px;
+}
+
 .center-content {
   display: flex;
   gap: 1rem;

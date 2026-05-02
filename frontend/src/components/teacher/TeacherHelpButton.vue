@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { X } from '@lucide/vue'
+import BaseModal from '@/components/ui/BaseModal.vue'
 
 type TeacherHelpSection = {
   heading?: string
@@ -25,28 +26,6 @@ const open = ref(false)
 const titleId = `teacher-help-title-${Math.random().toString(36).slice(2)}`
 
 const buttonClasses = computed(() => ['icon-btn-circle', 'teacher-help-trigger', props.buttonClass])
-
-function close() {
-  open.value = false
-}
-
-function onKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape') {
-    close()
-  }
-}
-
-watch(open, (isOpen) => {
-  if (isOpen) {
-    document.addEventListener('keydown', onKeydown)
-  } else {
-    document.removeEventListener('keydown', onKeydown)
-  }
-})
-
-onBeforeUnmount(() => {
-  document.removeEventListener('keydown', onKeydown)
-})
 </script>
 
 <template>
@@ -54,35 +33,34 @@ onBeforeUnmount(() => {
     <span class="teacher-help-mark" aria-hidden="true">?</span>
   </button>
 
-  <Teleport v-if="open" to="body">
-    <div class="teacher-help-backdrop" @click.self="close">
-      <aside
-        class="teacher-help-panel teacher-variant-1"
-        role="dialog"
-        aria-modal="true"
-        :aria-labelledby="titleId"
-      >
-        <header class="teacher-help-header">
-          <h2 :id="titleId" class="inika">{{ title }}</h2>
-          <button type="button" class="teacher-help-close icon-btn-circle" aria-label="Lukk hjelp" @click="close">
-            <X class="teacher-help-icon" />
-          </button>
-        </header>
+  <BaseModal
+    v-if="open"
+    panel-class="teacher-help-panel teacher-variant-1"
+    backdrop-class="teacher-help-backdrop"
+    :show-close-button="false"
+    :close-on-backdrop="true"
+    :close-on-escape="true"
+    @close="open = false"
+  >
+    <header class="teacher-help-header">
+      <h2 :id="titleId" class="inika">{{ title }}</h2>
+      <button type="button" class="teacher-help-close icon-btn-circle" aria-label="Lukk hjelp" @click="open = false">
+        <X class="teacher-help-icon" />
+      </button>
+    </header>
 
-        <div class="teacher-help-content">
-          <section v-for="(section, sectionIndex) in sections" :key="sectionIndex">
-            <h3 v-if="section.heading">{{ section.heading }}</h3>
-            <p v-for="(paragraph, paragraphIndex) in section.body" :key="paragraphIndex">
-              {{ paragraph }}
-            </p>
-            <ul v-if="section.items?.length">
-              <li v-for="item in section.items" :key="item">{{ item }}</li>
-            </ul>
-          </section>
-        </div>
-      </aside>
+    <div class="teacher-help-content">
+      <section v-for="(section, sectionIndex) in sections" :key="sectionIndex">
+        <h3 v-if="section.heading">{{ section.heading }}</h3>
+        <p v-for="(paragraph, paragraphIndex) in section.body" :key="paragraphIndex">
+          {{ paragraph }}
+        </p>
+        <ul v-if="section.items?.length">
+          <li v-for="item in section.items" :key="item">{{ item }}</li>
+        </ul>
+      </section>
     </div>
-  </Teleport>
+  </BaseModal>
 </template>
 
 <style scoped>
@@ -102,22 +80,20 @@ onBeforeUnmount(() => {
   color: var(--beige-medium-100);
 }
 
-.teacher-help-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 220;
-  display: flex;
-  justify-content: flex-end;
-  background: var(--obscure);
+:global(.teacher-help-backdrop) {
+  justify-content: flex-end !important;
+  align-items: stretch !important;
+  padding: 0 !important;
+  overflow: hidden !important;
 }
 
-.teacher-help-panel {
-  width: min(31rem, calc(100vw - 1.2rem));
-  height: calc(100dvh - 1.2rem);
-  margin: 0.6rem;
-  padding: var(--thick-padding);
-  overflow: auto;
-  box-shadow: -0.5rem 0 1.5rem rgba(0, 0, 0, 0.24);
+:global(.teacher-help-panel) {
+  width: min(31rem, calc(100vw - 1.2rem)) !important;
+  height: calc(100dvh - 1.2rem) !important;
+  margin: 0.6rem !important;
+  padding: var(--thick-padding) !important;
+  overflow: auto !important;
+  box-shadow: -0.5rem 0 1.5rem rgba(0, 0, 0, 0.24) !important;
 }
 
 .teacher-help-header {
@@ -173,15 +149,15 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 640px) {
-  .teacher-help-backdrop {
-    justify-content: center;
+  :global(.teacher-help-backdrop) {
+    justify-content: center !important;
   }
 
-  .teacher-help-panel {
-    width: calc(100vw - 0.8rem);
-    height: calc(100dvh - 0.8rem);
-    margin: 0.4rem;
-    padding: var(--medium-padding);
+  :global(.teacher-help-panel) {
+    width: calc(100vw - 0.8rem) !important;
+    height: calc(100dvh - 0.8rem) !important;
+    margin: 0.4rem !important;
+    padding: var(--medium-padding) !important;
   }
 }
 </style>

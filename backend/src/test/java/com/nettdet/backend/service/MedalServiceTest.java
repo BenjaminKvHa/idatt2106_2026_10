@@ -139,6 +139,25 @@ class MedalServiceTest {
         verifyNoInteractions(progressionRepository, weeklyMysteryRepository, fileObjectRepository);
     }
 
+    @DisplayName("Returns an unlocked chapter medal by chapter id")
+    @Test
+    void getUnlockedChapterMedal_whenChapterMedalExists_returnsUnlockedMedal() {
+        mockMedalAsset("medal-assets/chapter-3.png", 103L);
+
+        PupilMedalResponse medal = medalService.getUnlockedChapterMedal(3L);
+
+        assertMedal(medal, "chapter-3", "Datasenteret", true, 103L);
+    }
+
+    @DisplayName("Returns null when no chapter medal exists for chapter id")
+    @Test
+    void getUnlockedChapterMedal_whenChapterMedalDoesNotExist_returnsNull() {
+        PupilMedalResponse medal = medalService.getUnlockedChapterMedal(999L);
+
+        assertNull(medal);
+        verifyNoInteractions(fileObjectRepository);
+    }
+
     private JwtUserPrincipal pupilPrincipal() {
         return new JwtUserPrincipal("Pupil Name", PUPIL_EMAIL, "PUPIL");
     }

@@ -32,6 +32,14 @@ function mountPopup(props = {}) {
       highlightText: 'Du har fullført datasenteret.',
       ...props,
     },
+    global: {
+      stubs: {
+        AuthenticatedImage: {
+          props: ['src', 'alt'],
+          template: '<img data-test="medal-image" :src="src" :alt="alt" />',
+        },
+      },
+    },
   })
 }
 
@@ -129,5 +137,41 @@ describe('CompleteGamePopup', () => {
     })
 
     expect(wrapper.find('img').attributes('alt')).toBe('Tap')
+  })
+
+  it('shows the medal reward for a successful game completion', () => {
+    const wrapper = mountPopup({
+      completedChapterMedalNewlyAwarded: true,
+      completedChapterMedal: {
+        medalKey: 'chapter-3',
+        name: 'Datasenteret',
+        description: 'Fullfør Datasenteret.',
+        unlocked: true,
+        imageFileObjectId: 103,
+      },
+    })
+
+    expect(wrapper.text()).toContain('Ny medalje låst opp')
+    expect(wrapper.text()).toContain('Datasenteret')
+    expect(wrapper.find('[data-test="medal-image"]').attributes('src')).toBe('/api/objects/103')
+  })
+
+  it('shows the trophy stage for a first-time Datasenteret grand celebration', () => {
+    const wrapper = mountPopup({
+      grandCelebration: true,
+      completedChapterMedalNewlyAwarded: true,
+      completedChapterMedal: {
+        medalKey: 'chapter-3',
+        name: 'Datasenteret',
+        description: 'Fullfør Datasenteret.',
+        unlocked: true,
+        imageFileObjectId: 103,
+      },
+    })
+
+    expect(wrapper.find('[data-test="trophy-stage"]').exists()).toBe(true)
+    expect(wrapper.find('.trophy-image').attributes('src')).toContain('trophy.png')
+    expect(wrapper.find('.trophy-image').attributes('alt')).toBe('Trofé')
+    expect(wrapper.text()).toContain('Du har vunnet trofeet i Datasenteret.')
   })
 })

@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
+import { onBeforeRouteLeave, useRoute } from 'vue-router'
 import TeacherPupilsLeftPanel from '@/components/teacher/pupils/TeacherPupilsLeftPanel.vue'
 import TeacherPupilsRightPanel from '@/components/teacher/pupils/TeacherPupilsRightPanel.vue'
 import type { ActivePanel, Pupil, StopName } from '@/components/teacher/pupils/types'
 import { del, get, patch, put } from '@/utils/apiUtils'
+import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 
 type AcceptedPupilResponse = {
   accountEmail: string
@@ -39,7 +40,6 @@ const CHAPTER_ID_BY_STOP_NAME: Record<StopName, number> = {
 }
 
 const route = useRoute()
-const router = useRouter()
 const selectedPupilEmail = ref('')
 const activePanel = ref<ActivePanel>('NONE')
 const selectedStopName = ref<StopName | ''>('')
@@ -51,14 +51,6 @@ const notebookError = ref('')
 const selectedNotebookNote = ref('')
 const selectedNotebookChapterName = ref('')
 const savingUsername = ref(false)
-const pupilPendingRemoval = ref<Pupil | null>(null)
-const removingPupil = ref(false)
-const pupilPendingRejection = ref<Pupil | null>(null)
-const rejectingPupil = ref(false)
-const unsavedUsernamePopupOpen = ref(false)
-const skipUnsavedUsernamePrompt = ref(false)
-
-let pendingUnsavedUsernameAction: (() => void | Promise<void>) | null = null
 
 const stopNames: StopName[] = ['Nyhetskvartalet', 'Fotografen', 'Datasenteret']
 
@@ -84,6 +76,8 @@ const selectedStopNote = computed(() => {
   return selectedNotebookNote.value
 })
 
+const editUsername = ref('')
+
 const hasUnsavedUsernameChanges = computed(() => {
   return (
     selectedPupil.value?.status === 'APPROVED' &&
@@ -91,7 +85,33 @@ const hasUnsavedUsernameChanges = computed(() => {
   )
 })
 
-const editUsername = ref('')
+const confirmModalShow = ref(false)
+const confirmModalMessage = ref('')
+let confirmModalResolve: ((v: boolean) => void) | null = null
+
+function showConfirmModal(message: string): Promise<boolean> {
+  if (confirmModalShow.value) {
+    return Promise.resolve(false)
+  }
+
+  return new Promise((resolve) => {
+    confirmModalMessage.value = message
+    confirmModalShow.value = true
+    confirmModalResolve = resolve
+  })
+}
+
+function onConfirmModalConfirm() {
+  confirmModalResolve?.(true)
+  confirmModalResolve = null
+  confirmModalShow.value = false
+}
+
+function onConfirmModalCancel() {
+  confirmModalResolve?.(false)
+  confirmModalResolve = null
+  confirmModalShow.value = false
+}
 
 watch(
   selectedPupil,
@@ -110,11 +130,16 @@ function applyPupilSelection(email: string): void {
   selectedNotebookChapterName.value = ''
 }
 
-const selectPupil = (email: string): void => {
-  if (
-    email !== selectedPupilEmail.value &&
-    !requestDiscardUsernameChanges(() => applyPupilSelection(email))
-  ) {
+const confirmDiscardUsernameChanges = async (): Promise<boolean> => {
+  if (!hasUnsavedUsernameChanges.value) {
+    return true
+  }
+
+  return showConfirmModal('Du har endret brukernavnet uten å lagre. Vil du fortsette uten å lagre?')
+}
+
+const selectPupil = async (email: string): Promise<void> => {
+  if (email !== selectedPupilEmail.value && !(await confirmDiscardUsernameChanges())) {
     return
   }
 
@@ -140,27 +165,6 @@ const openNotes = (): void => {
 
 const selectStopNote = (stopName: StopName): void => {
   selectedStopName.value = stopName
-}
-
-function requestDiscardUsernameChanges(onConfirm: () => void | Promise<void>): boolean {
-  if (!hasUnsavedUsernameChanges.value || skipUnsavedUsernamePrompt.value) {
-    return true
-  }
-
-  pendingUnsavedUsernameAction = onConfirm
-  unsavedUsernamePopupOpen.value = true
-  return false
-}
-
-function closeUnsavedUsernamePopup(): void {
-  unsavedUsernamePopupOpen.value = false
-  pendingUnsavedUsernameAction = null
-}
-
-async function confirmDiscardUsernameChanges(): Promise<void> {
-  const action = pendingUnsavedUsernameAction
-  closeUnsavedUsernamePopup()
-  await action?.()
 }
 
 function handleBeforeUnload(event: BeforeUnloadEvent) {
@@ -301,37 +305,23 @@ const saveChanges = async (): Promise<void> => {
   closeDetails()
 }
 
-const removePupil = (): void => {
+const removePupil = async (): Promise<void> => {
   if (!selectedPupil.value) return
 
-  actionError.value = ''
-  pupilPendingRemoval.value = selectedPupil.value
-}
+  const confirmed = await showConfirmModal(
+    `Er du sikker på at du vil fjerne ${selectedPupil.value.legalName} fra klasserommet?`,
+  )
 
-const closeRemovePupilPopup = (): void => {
-  if (removingPupil.value) return
-  pupilPendingRemoval.value = null
-}
-
-const confirmRemovePupil = async (): Promise<void> => {
-  if (!pupilPendingRemoval.value || removingPupil.value) return
-
-  const pupilToRemove = pupilPendingRemoval.value
-  removingPupil.value = true
+  if (!confirmed) return
 
   try {
     actionError.value = ''
-    await del(`/api/classrooms/${classroomCode.value}/pupils/${pupilToRemove.email}`)
+    await del(`/api/classrooms/${classroomCode.value}/pupils/${selectedPupil.value.email}`)
     await loadPupils()
-    if (selectedPupilEmail.value === pupilToRemove.email) {
-      closeDetails()
-    }
-    pupilPendingRemoval.value = null
+    closeDetails()
   } catch (requestError) {
     actionError.value =
       requestError instanceof Error ? requestError.message : 'Failed to remove pupil'
-  } finally {
-    removingPupil.value = false
   }
 }
 
@@ -355,34 +345,20 @@ const approvePendingPupil = async (): Promise<void> => {
 const rejectPendingPupil = async (): Promise<void> => {
   if (!selectedPupil.value) return
 
-  actionError.value = ''
-  pupilPendingRejection.value = selectedPupil.value
-}
+  const confirmed = await showConfirmModal(
+    `Er du sikker på at du vil avslå ${selectedPupil.value.legalName}?`,
+  )
 
-const closeRejectPendingPupilPopup = (): void => {
-  if (rejectingPupil.value) return
-  pupilPendingRejection.value = null
-}
-
-const confirmRejectPendingPupil = async (): Promise<void> => {
-  if (!pupilPendingRejection.value || rejectingPupil.value) return
-
-  const pupilToReject = pupilPendingRejection.value
-  rejectingPupil.value = true
+  if (!confirmed) return
 
   try {
     actionError.value = ''
-    await del(`/api/classrooms/${classroomCode.value}/pupils/${pupilToReject.email}`)
+    await del(`/api/classrooms/${classroomCode.value}/pupils/${selectedPupil.value.email}`)
     await loadPupils()
-    if (selectedPupilEmail.value === pupilToReject.email) {
-      closeDetails()
-    }
-    pupilPendingRejection.value = null
+    closeDetails()
   } catch (requestError) {
     actionError.value =
       requestError instanceof Error ? requestError.message : 'Failed to reject pupil'
-  } finally {
-    rejectingPupil.value = false
   }
 }
 
@@ -395,20 +371,8 @@ onBeforeUnmount(() => {
   window.removeEventListener('beforeunload', handleBeforeUnload)
 })
 
-onBeforeRouteLeave((to) => {
-  if (skipUnsavedUsernamePrompt.value || !hasUnsavedUsernameChanges.value) {
-    return true
-  }
-
-  requestDiscardUsernameChanges(async () => {
-    skipUnsavedUsernamePrompt.value = true
-    try {
-      await router.push(to.fullPath)
-    } finally {
-      skipUnsavedUsernamePrompt.value = false
-    }
-  })
-  return false
+onBeforeRouteLeave(async () => {
+  return confirmDiscardUsernameChanges()
 })
 
 watch(
@@ -459,103 +423,16 @@ watch([selectedPupilEmail, selectedStopName, activePanel], async () => {
         @reject-pending-pupil="rejectPendingPupil"
       />
     </section>
-
-    <div
-      v-if="pupilPendingRemoval"
-      class="teacher-confirm-overlay"
-      @click.self="closeRemovePupilPopup"
-    >
-      <section class="teacher-confirm-popup" role="dialog" aria-modal="true">
-        <h2>Fjern elev?</h2>
-        <p>
-          Er du sikker på at du vil fjerne
-          <strong>{{ pupilPendingRemoval.legalName }}</strong>
-          fra klasserommet?
-        </p>
-
-        <div class="teacher-confirm-actions">
-          <button
-            type="button"
-            class="teacher-confirm-button teacher-confirm-button-secondary cancel-remove-pupil"
-            :disabled="removingPupil"
-            @click="closeRemovePupilPopup"
-          >
-            Avbryt
-          </button>
-          <button
-            type="button"
-            class="teacher-confirm-button teacher-confirm-button-danger confirm-remove-pupil"
-            :disabled="removingPupil"
-            @click="confirmRemovePupil"
-          >
-            {{ removingPupil ? 'Fjerner...' : 'Bekreft' }}
-          </button>
-        </div>
-      </section>
-    </div>
-
-    <div
-      v-if="pupilPendingRejection"
-      class="teacher-confirm-overlay"
-      @click.self="closeRejectPendingPupilPopup"
-    >
-      <section class="teacher-confirm-popup" role="dialog" aria-modal="true">
-        <h2>Avslå elev?</h2>
-        <p>
-          Er du sikker på at du vil avslå
-          <strong>{{ pupilPendingRejection.legalName }}</strong
-          >?
-        </p>
-
-        <div class="teacher-confirm-actions">
-          <button
-            type="button"
-            class="teacher-confirm-button teacher-confirm-button-secondary cancel-reject-pending"
-            :disabled="rejectingPupil"
-            @click="closeRejectPendingPupilPopup"
-          >
-            Avbryt
-          </button>
-          <button
-            type="button"
-            class="teacher-confirm-button teacher-confirm-button-danger confirm-reject-pending"
-            :disabled="rejectingPupil"
-            @click="confirmRejectPendingPupil"
-          >
-            {{ rejectingPupil ? 'Avslår...' : 'Bekreft' }}
-          </button>
-        </div>
-      </section>
-    </div>
-
-    <div
-      v-if="unsavedUsernamePopupOpen"
-      class="teacher-confirm-overlay"
-      @click.self="closeUnsavedUsernamePopup"
-    >
-      <section class="teacher-confirm-popup" role="dialog" aria-modal="true">
-        <h2>Ulagrede endringer</h2>
-        <p>Du har endret brukernavnet uten å lagre. Vil du fortsette uten å lagre?</p>
-
-        <div class="teacher-confirm-actions">
-          <button
-            type="button"
-            class="teacher-confirm-button teacher-confirm-button-secondary cancel-discard-username"
-            @click="closeUnsavedUsernamePopup"
-          >
-            Avbryt
-          </button>
-          <button
-            type="button"
-            class="teacher-confirm-button teacher-confirm-button-danger confirm-discard-username"
-            @click="confirmDiscardUsernameChanges"
-          >
-            Bekreft
-          </button>
-        </div>
-      </section>
-    </div>
   </main>
+
+  <ConfirmModal
+    v-if="confirmModalShow"
+    :message="confirmModalMessage"
+    confirm-label="Bekreft"
+    cancel-label="Avbryt"
+    @confirm="onConfirmModalConfirm"
+    @cancel="onConfirmModalCancel"
+  />
 </template>
 
 <style scoped>
@@ -609,74 +486,6 @@ watch([selectedPupilEmail, selectedStopName, activePanel], async () => {
 
 .state-message.error {
   color: var(--warning-sec);
-}
-
-.teacher-confirm-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  background: rgb(60 42 31 / 45%);
-}
-
-.teacher-confirm-popup {
-  width: min(520px, calc(100vw - 32px));
-  padding: 2rem;
-  border: var(--border-wide) solid var(--brown-dark);
-  border-radius: 24px;
-  background: var(--beige-light);
-  box-shadow: 0 16px 30px var(--brown-dark-20);
-  text-align: center;
-}
-
-.teacher-confirm-popup h2 {
-  margin: 0 0 0.75rem;
-  font-size: 2rem;
-  color: var(--brown-dark-100);
-}
-
-.teacher-confirm-popup p {
-  margin: 0;
-  color: var(--brown-dark-100);
-  font-size: 1.15rem;
-  font-weight: 700;
-  line-height: 1.35;
-}
-
-.teacher-confirm-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 1.75rem;
-}
-
-.teacher-confirm-button {
-  min-width: 140px;
-  padding: 0.85rem 1.4rem;
-  border: var(--border-wide) solid var(--brown-dark);
-  border-radius: 18px;
-  color: var(--brown-dark-100);
-  font-size: 1rem;
-  font-weight: 800;
-  cursor: pointer;
-  box-shadow: 0 6px 12px var(--brown-dark-20);
-}
-
-.teacher-confirm-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
-.teacher-confirm-button-secondary {
-  background: var(--beige-medium);
-}
-
-.teacher-confirm-button-danger {
-  background: var(--red-danger);
 }
 
 .page-title {

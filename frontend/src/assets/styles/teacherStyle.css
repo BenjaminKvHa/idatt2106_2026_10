@@ -198,9 +198,10 @@
     text-decoration: none;
 }
 
-.button-variant-1:hover, .button-variant-1::selection {
+.button-variant-1:hover, .button-variant-1::selection, .button-variant-1:focus-visible {
     color: var(--beige-medium-100);
     background-color: var(--brown-medium-100);
+
 }
 
 .button-variant-2 {
@@ -324,7 +325,6 @@
 
 .form-field input:focus,
 .form-field textarea:focus {
-    outline: none;
     border-bottom-color: var(--background-sec);
 }
 

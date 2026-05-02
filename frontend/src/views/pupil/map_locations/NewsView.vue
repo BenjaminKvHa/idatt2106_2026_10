@@ -5,6 +5,7 @@ import TopBar from '@/components/pupil/TopBar.vue'
 import HintCreature from '@/components/pupil/task/BlobbyQuestion.vue'
 import TaskGuide from '@/components/pupil/TaskGuide.vue'
 import CompleteLevelPopup from '@/components/pupil/CompleteLevelPopup.vue'
+import BaseModal from '@/components/ui/BaseModal.vue'
 import { get, getBlob, post } from '@/utils/apiUtils'
 import type {
   NewsVerificationRequest,
@@ -25,6 +26,7 @@ const {
   stepIndex,
   lastResult,
   runCorrect,
+  runAttempts,
   runDone,
   loading,
   submitting,
@@ -44,52 +46,31 @@ const {
   reset,
 } = useDifficultyProgression()
 
-type NewsStepState = {
-  task: NewsVerificationResponse
-  imageUrls: string[]
-  selectedFileId: number | null
-  result: ValidationResult | null
-}
-
 const showHelpPopup = ref(false)
+const showHintPopup = ref(false)
 
 const currentTask = ref<NewsVerificationResponse | null>(null)
 const imageUrls = ref<string[]>([])
 const selectedFileId = ref<number | null>(null)
-const stepStates = ref<Record<number, NewsStepState>>({})
 
 function closeHelpPopup(): void {
   showHelpPopup.value = false
 }
 
-function revokeAllImageUrls(): void {
-  for (const state of Object.values(stepStates.value)) {
-    for (const url of state.imageUrls) URL.revokeObjectURL(url)
-  }
+function closeHintPopup(): void {
+  showHintPopup.value = false
+}
 
-  stepStates.value = {}
+function revokeImageUrls(): void {
+  for (const url of imageUrls.value) URL.revokeObjectURL(url)
   imageUrls.value = []
 }
 
 async function loadTask(): Promise<void> {
   loading.value = true
   error.value = null
+  revokeImageUrls()
   currentTask.value = null
-  imageUrls.value = []
-
-  const savedState = stepStates.value[stepIndex.value]
-
-  if (savedState) {
-    currentTask.value = savedState.task
-    imageUrls.value = savedState.imageUrls
-    selectedFileId.value = savedState.selectedFileId
-    lastResult.value = savedState.result
-    loading.value = false
-    return
-  }
-
-  selectedFileId.value = null
-  lastResult.value = null
 
   try {
     const task = await get<NewsVerificationResponse>(
@@ -99,16 +80,8 @@ async function loadTask(): Promise<void> {
     currentTask.value = task
 
     const blobs = await Promise.all(task.fileIds.map((id) => getBlob(`/api/objects/${id}`)))
-    const urls = blobs.map((blob) => URL.createObjectURL(blob))
 
-    imageUrls.value = urls
-
-    stepStates.value[stepIndex.value] = {
-      task,
-      imageUrls: urls,
-      selectedFileId: null,
-      result: null,
-    }
+    imageUrls.value = blobs.map((blob) => URL.createObjectURL(blob))
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Kunne ikke laste oppgave'
   } finally {
@@ -133,26 +106,12 @@ async function choose(fileId: number): Promise<void> {
 
     lastResult.value = result
     recordResult(result.correct)
-
-    stepStates.value[stepIndex.value] = {
-      task: currentTask.value,
-      imageUrls: imageUrls.value,
-      selectedFileId: fileId,
-      result,
-    }
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Kunne ikke sende svar'
     selectedFileId.value = null
   } finally {
     submitting.value = false
   }
-}
-
-async function previous(): Promise<void> {
-  if (stepIndex.value === 0) return
-
-  stepIndex.value -= 1
-  await loadTask()
 }
 
 async function next(): Promise<void> {
@@ -164,6 +123,8 @@ async function next(): Promise<void> {
   }
 
   advanceStep()
+  selectedFileId.value = null
+
   await loadTask()
 }
 
@@ -184,7 +145,6 @@ function showFinalResult(): void {
 }
 
 async function retryLevel(): Promise<void> {
-  revokeAllImageUrls()
   reset()
   selectedFileId.value = null
 
@@ -192,7 +152,7 @@ async function retryLevel(): Promise<void> {
 }
 
 function goToMap(): void {
-  revokeAllImageUrls()
+  revokeImageUrls()
   router.push('/pupil/classroom/map')
 }
 
@@ -205,7 +165,7 @@ function closeCompletePopup(): void {
 }
 
 onMounted(loadTask)
-onBeforeUnmount(revokeAllImageUrls)
+onBeforeUnmount(revokeImageUrls)
 </script>
 
 <template>
@@ -246,19 +206,9 @@ onBeforeUnmount(revokeAllImageUrls)
             <span>{{ lastResult.feedback }}</span>
           </div>
 
-          <div v-if="lastResult" class="navigation-bar">
-            <button
-              class="nav-button nav-button-secondary"
-              :disabled="stepIndex === 0"
-              @click="previous"
-            >
-              Forrige
-            </button>
-
-            <button class="nav-button nav-button-primary" @click="next">
-              {{ stepIndex === DIFFICULTIES.length - 1 ? 'Se resultat' : 'Neste' }}
-            </button>
-          </div>
+          <button v-if="lastResult" class="next-level-button" @click="next">
+            {{ stepIndex === DIFFICULTIES.length - 1 ? 'Se resultat' : 'Gå til neste nivå' }}
+          </button>
         </template>
 
         <p v-else-if="loading">Laster oppgave…</p>
@@ -275,8 +225,13 @@ onBeforeUnmount(revokeAllImageUrls)
       </p>
     </TaskGuide>
 
-    <div v-if="showHelpPopup" class="popup-overlay" @click="closeHelpPopup">
-      <div class="hint-popup" @click.stop>
+    <BaseModal
+      v-if="showHelpPopup"
+      :close-on-backdrop="true"
+      :close-on-escape="true"
+      @close="closeHelpPopup"
+    >
+      <div class="news-help-popup-wrapper">
         <h2 class="popup-title">Trenger du hjelp?</h2>
 
         <div class="hint-text">
@@ -294,7 +249,7 @@ onBeforeUnmount(revokeAllImageUrls)
           <button class="popup-btn popup-btn-play" @click="closeHelpPopup">Ok</button>
         </div>
       </div>
-    </div>
+    </BaseModal>
 
     <CompleteLevelPopup
       :show="showCompletePopup"
@@ -304,6 +259,8 @@ onBeforeUnmount(revokeAllImageUrls)
       :success="popupSuccess"
       :success-image="thumbsUpNews"
       :fail-image="thumbsDownNews"
+      :completed-chapter-medal="lastResult?.completedChapterMedal ?? null"
+      :completed-chapter-medal-newly-awarded="lastResult?.completedChapterMedalNewlyAwarded ?? false"
       @close="closeCompletePopup"
       @retry="retryLevel"
       @map="goToMap"
@@ -320,7 +277,6 @@ onBeforeUnmount(revokeAllImageUrls)
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
-  overflow-x: hidden;
 }
 
 .page {
@@ -375,11 +331,8 @@ onBeforeUnmount(revokeAllImageUrls)
 }
 
 .progress-container {
-  width: min(100%, 540px);
-  max-width: 540px;
+  width: min(100%, 500px);
   text-align: center;
-  position: relative;
-  z-index: 3;
 }
 
 .progress-bar {
@@ -398,7 +351,7 @@ onBeforeUnmount(revokeAllImageUrls)
 }
 
 .progress-text {
-  margin-top: 0.5rem;
+  margin-top: 0.4rem;
   margin-bottom: 0;
   font-weight: 800;
   color: black;
@@ -409,28 +362,33 @@ onBeforeUnmount(revokeAllImageUrls)
   border: 4px solid var(--brown-dark);
   border-radius: 24px;
   font-weight: 700;
+  box-shadow: 0 5px 0 var(--brown-dark);
 }
 
-.navigation-bar {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  flex-wrap: wrap;
+.mini-feedback.success {
+  background: var(--green-confirm);
 }
 
-.nav-button {
-  min-width: 200px;
-  min-height: 58px;
-  padding: 0.85rem 1.8rem;
-  border-radius: 24px;
-  border: 2px solid var(--brown-dark);
-  font-weight: 850;
+.mini-feedback.fail {
+  background: #d95b43;
+  color: white;
+}
+
+.next-level-button {
+  width: 100%;
+  max-width: 360px;
+  padding: 1rem 2rem;
+  border-radius: 38px;
+  border: 5px solid var(--brown-dark);
+  background-color: var(--beige-light);
   color: var(--brown-dark);
   cursor: pointer;
+  font-weight: 700;
+  box-shadow: 0 6px 0 var(--brown-dark);
   background: var(--gradient-beige);
-  box-shadow: 0 5px 14px rgb(0 0 0 / 14%);
   transition:
     transform 0.15s ease,
+    filter 0.15s ease,
     box-shadow 0.15s ease,
     background 0.15s ease,
     color 0.15s ease,
@@ -444,18 +402,29 @@ onBeforeUnmount(revokeAllImageUrls)
   box-shadow: 0 7px 18px rgb(0 0 0 / 16%);
 }
 
-.nav-button:active:not(:disabled) {
-  transform: translateY(1px);
-  box-shadow: 0 3px 9px rgb(0 0 0 / 12%);
+.next-level-button:hover {
+  filter: brightness(0.95);
 }
 
-.nav-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.45;
-  transform: none;
-  box-shadow: 0 5px 14px rgb(0 0 0 / 10%);
+.next-level-button:active {
+  background-color: var(--brown-dark);
+  color: var(--beige-light);
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 var(--brown-dark);
 }
 
+.error {
+  color: #c62828;
+  font-weight: 600;
+}
+
+.hint-text {
+  margin-top: 10px;
+  text-align: left;
+}
+
+.hint-text p {
+  margin: 0 0 8px;
 .popup-overlay {
   position: fixed;
   inset: 0;
@@ -471,12 +440,35 @@ onBeforeUnmount(revokeAllImageUrls)
   border: 7px solid var(--brown-dark);
   border-radius: 42px;
   padding: 32px 28px;
+.hint-text ul {
+  margin: 0;
+  padding-left: 24px;
 }
 
 @media (max-width: 1100px) {
   .center-container {
     padding-top: 8.2rem;
   }
+.hint-text li {
+  margin-bottom: 6px;
+}
+
+.news-help-popup-wrapper {
+  width: min(560px, calc(100vw - 32px));
+  background: var(--orange-medium-80);
+  border: 4px solid var(--brown-dark);
+  border-radius: 28px;
+  padding: 28px 24px 20px;
+  text-align: center;
+  backdrop-filter: blur(2px);
+}
+
+.popup-btn-play {
+  background: var(--green-confirm);
+}
+
+.popup-btn-map {
+  background: var(--orange-medium);
 }
 
 @media (max-width: 768px) {
@@ -499,6 +491,10 @@ onBeforeUnmount(revokeAllImageUrls)
   .nav-button {
     width: 100%;
     min-width: 0;
+
+  .next-level-button {
+    border-width: 3px;
+    border-radius: 24px;
   }
 }
 </style>

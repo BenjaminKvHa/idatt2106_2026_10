@@ -42,11 +42,19 @@ function mountPhotographerView() {
           template: '<div data-test="task-guide"><slot /></div>',
         },
         CompleteLevelPopup: {
-          props: ['show', 'title', 'message'],
+          props: [
+            'show',
+            'title',
+            'message',
+            'completedChapterMedal',
+            'completedChapterMedalNewlyAwarded',
+          ],
           template: `
             <div v-if="show" data-test="complete-popup">
               <p>{{ title }}</p>
               <p>{{ message }}</p>
+              <p v-if="completedChapterMedal">{{ completedChapterMedal.name }}</p>
+              <p data-test="medal-new">{{ String(completedChapterMedalNewlyAwarded) }}</p>
               <button data-test="map" @click="$emit('map')">Til kartet</button>
             </div>
           `,
@@ -178,5 +186,41 @@ describe('PhotographerView', () => {
     await wrapper.find('[data-test="map"]').trigger('click')
 
     expect(routerPush).toHaveBeenCalledWith('/pupil/classroom/map')
+  })
+
+  it('passes medal reward to the completion popup when Fotografen is completed', async () => {
+    mockedPost.mockResolvedValue({
+      correct: true,
+      feedback: 'Ferdig!',
+      runCompleted: true,
+      completedChapterMedalNewlyAwarded: true,
+      completedChapterMedal: {
+        medalKey: 'chapter-2',
+        name: 'Fotografen',
+        description: 'Fullfør Fotografen.',
+        unlocked: true,
+        imageFileObjectId: 102,
+      },
+    })
+
+    const wrapper = mountPhotographerView()
+
+    await flushPromises()
+
+    await wrapper.find('[data-test="category"]').trigger('click')
+    await wrapper.find('[data-test="justification"]').trigger('click')
+    await wrapper.find('.bottom-actions button').trigger('click')
+    await flushPromises()
+
+    const nextButton = wrapper
+      .findAll('.bottom-actions button')
+      .find((button) => button.text() === 'Se resultat' || button.text() === 'Neste')
+
+    await nextButton!.trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-test="complete-popup"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Fotografen')
+    expect(wrapper.find('[data-test="medal-new"]').text()).toBe('true')
   })
 })

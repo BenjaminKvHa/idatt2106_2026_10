@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/components/pupil/TopBar.vue'
 import HintCreature from '@/components/pupil/task/BlobbyQuestion.vue'
@@ -10,10 +10,7 @@ import CompleteGamePopup from '@/components/pupil/CompleteGamePopup.vue'
 import VictoryImage from '@/assets/icons/detectives_and_thief/Victory.png'
 import DefeatImage from '@/assets/icons/detectives_and_thief/Defeat.png'
 import DatatyvenImage from '@/assets/icons/detectives_and_thief/Datatyven.png'
-import victorySoundFile from '@/assets/sounds/levels/victory-sound.mp3'
-import defeatSoundFile from '@/assets/sounds/levels/evil-laugh.mp3'
-import confetti from 'canvas-confetti'
-import { useAudio } from '@/composables/useAudio'
+import datacenterBg from '@/assets/backgrounds/datasenteret-bg.png'
 import { get, getBlob, post } from '@/utils/apiUtils'
 import type {
   DatacenterAnswerRequest,
@@ -43,10 +40,6 @@ const CATEGORIES: { value: ImageCategory; label: string }[] = [
   { value: 'AI_GENERATED', label: 'KI-generert' },
   { value: 'MANIPULATED', label: 'Manipulert' } as never,
 ]
-
-const { playSound, stopSound } = useAudio()
-let victorySoundRef: HTMLAudioElement | null = null
-let defeatSoundRef: HTMLAudioElement | null = null
 
 const showGuidePopup = ref(true)
 const showHelpPopup = ref(false)
@@ -102,12 +95,23 @@ const resultSubmessage = computed(() =>
     : 'Men ikke gi opp – prøv igjen og se om du klarer å slå datatyven neste gang!',
 )
 const resultHighlightTitle = computed(() =>
-  resultType.value === 'victory' ? '🏆 Spill fullført' : '💥 Prøv igjen',
+  resultType.value === 'victory' ? 'Spill fullført' : 'Prøv igjen',
 )
 const resultHighlightText = computed(() =>
   resultType.value === 'victory'
     ? 'Du har kommet helt til toppen i Datasenteret.'
     : 'Du kan gå tilbake og prøve oppgavene på nytt for å få en ny sjanse til å fullføre spillet.',
+)
+const resultMedal = computed(() =>
+  resultType.value === 'victory'
+    ? (levels.value.find((level) => level.result?.completedChapterMedal)?.result
+        ?.completedChapterMedal ?? null)
+    : null,
+)
+const resultMedalNewlyAwarded = computed(() =>
+  resultType.value === 'victory'
+    ? levels.value.some((level) => level.result?.completedChapterMedalNewlyAwarded === true)
+    : false,
 )
 
 function revokeAllImageUrls() {
@@ -229,57 +233,6 @@ function finishGame() {
   openResultPopup(allAnswersCorrect.value ? 'victory' : 'defeat')
 }
 
-function stopResultSounds() {
-  stopSound(victorySoundRef)
-  stopSound(defeatSoundRef)
-  victorySoundRef = null
-  defeatSoundRef = null
-}
-
-function fireVictoryConfetti() {
-  const duration = 2000
-  const end = Date.now() + duration
-  const defaults = { zIndex: 3000 }
-
-  const frame = () => {
-    confetti({
-      ...defaults,
-      particleCount: 8,
-      angle: 60,
-      spread: 60,
-      origin: { x: 0, y: 0.6 },
-    })
-
-    confetti({
-      ...defaults,
-      particleCount: 8,
-      angle: 120,
-      spread: 60,
-      origin: { x: 1, y: 0.6 },
-    })
-
-    if (Date.now() < end) requestAnimationFrame(frame)
-  }
-
-  frame()
-}
-
-watch(showResultPopup, (isOpen) => {
-  if (!isOpen) {
-    stopResultSounds()
-    return
-  }
-
-  stopResultSounds()
-
-  if (resultType.value === 'victory') {
-    victorySoundRef = playSound(victorySoundFile, 0.3)
-    fireVictoryConfetti()
-  } else if (resultType.value === 'defeat') {
-    defeatSoundRef = playSound(defeatSoundFile, 0.3)
-  }
-})
-
 function openResultPopup(type: ResultType) {
   resultType.value = type
   showResultPopup.value = true
@@ -302,7 +255,6 @@ async function resetGame() {
 }
 
 onMounted(loadRun)
-onBeforeUnmount(stopResultSounds)
 onBeforeUnmount(revokeAllImageUrls)
 </script>
 
@@ -451,6 +403,9 @@ onBeforeUnmount(revokeAllImageUrls)
           :sub-message="resultSubmessage"
           :highlight-title="resultHighlightTitle"
           :highlight-text="resultHighlightText"
+          :completed-chapter-medal="resultMedal"
+          :completed-chapter-medal-newly-awarded="resultMedalNewlyAwarded"
+          :grand-celebration="resultMedalNewlyAwarded"
           @close="closeResultPopup"
           @retry="resetGame"
           @map="goBackToMap"

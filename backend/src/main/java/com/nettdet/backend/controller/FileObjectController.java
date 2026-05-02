@@ -39,6 +39,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @SecurityRequirement(name = "bearerAuth")
 public class FileObjectController {
 
+    private static final String PNG_CONTENT_TYPE = "image/png";
+    private static final String JPEG_CONTENT_TYPE = "image/jpeg";
+
     private final FileObjectAccessControlService fileObjectAccessControlService;
 
     /**
@@ -76,7 +79,10 @@ public class FileObjectController {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType(contentType));
-        headers.setContentDisposition(ContentDisposition.inline().filename(fileName).build());
+        headers.setContentDisposition(
+                isInlineSafeContentType(contentType)
+                        ? ContentDisposition.inline().filename(fileName).build()
+                        : ContentDisposition.attachment().filename(fileName).build());
 
         return new ResponseEntity<>(storedFile.bytes(), headers, HttpStatus.OK);
     }
@@ -126,5 +132,10 @@ public class FileObjectController {
             @AuthenticationPrincipal JwtUserPrincipal principal) {
         FileObject stored = fileObjectAccessControlService.upload(file, classroomCode, accessLevel, principal);
         return ResponseEntity.status(HttpStatus.CREATED).body(stored.getId());
+    }
+
+    private boolean isInlineSafeContentType(String contentType) {
+        return PNG_CONTENT_TYPE.equalsIgnoreCase(contentType)
+                || JPEG_CONTENT_TYPE.equalsIgnoreCase(contentType);
     }
 }

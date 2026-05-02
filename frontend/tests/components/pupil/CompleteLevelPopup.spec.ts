@@ -36,6 +36,14 @@ function mountPopup(props = {}) {
       failImage: '/fail.png',
       ...props,
     },
+    global: {
+      stubs: {
+        AuthenticatedImage: {
+          props: ['src', 'alt'],
+          template: '<img data-test="medal-image" :src="src" :alt="alt" />',
+        },
+      },
+    },
   })
 }
 
@@ -121,5 +129,40 @@ describe('CompleteLevelPopup', () => {
 
     expect(img.attributes('src')).toBe('/fail.png')
     expect(img.attributes('alt')).toBe('Feil svar')
+  })
+
+  it('renders newly awarded medal details for successful chapter completion', () => {
+    const wrapper = mountPopup({
+      success: true,
+      completedChapterMedalNewlyAwarded: true,
+      completedChapterMedal: {
+        medalKey: 'chapter-1',
+        name: 'Nyhetskvartalet',
+        description: 'Fullfør Nyhetskvartalet.',
+        unlocked: true,
+        imageFileObjectId: 101,
+      },
+    })
+
+    expect(wrapper.text()).toContain('Ny medalje låst opp')
+    expect(wrapper.text()).toContain('Nyhetskvartalet')
+    expect(wrapper.find('[data-test="medal-image"]').attributes('src')).toBe('/api/objects/101')
+  })
+
+  it('renders already unlocked wording for repeated successful completion', () => {
+    const wrapper = mountPopup({
+      success: true,
+      completedChapterMedalNewlyAwarded: false,
+      completedChapterMedal: {
+        medalKey: 'chapter-2',
+        name: 'Fotografen',
+        description: 'Fullfør Fotografen.',
+        unlocked: true,
+        imageFileObjectId: 102,
+      },
+    })
+
+    expect(wrapper.text()).toContain('Medaljen din')
+    expect(wrapper.text()).toContain('Du har allerede låst opp denne medaljen')
   })
 })

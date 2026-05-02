@@ -198,9 +198,6 @@ function submitForm() {
         <h2>{{ title ?? (task ? 'Rediger Fotografen-oppgave' : 'Opprett Fotografen-oppgave') }}</h2>
       </div>
     </div>
-
-    <p v-if="validationError" class="form-message error">{{ validationError }}</p>
-
     <div class="form-layout">
       <label v-if="!hideDifficulty" class="form-field">
         <span>Vanskelighetsgrad</span>
@@ -274,7 +271,7 @@ function submitForm() {
 
       <label class="form-field">
         <span>{{ task ? 'Bytt bilde (valgfritt)' : 'Bilde' }}</span>
-        <input ref="fileInput" type="file" accept="image/*" :disabled="submitting" @change="updateSelectedFile" />
+        <input ref="fileInput" type="file" accept="image/png,image/jpeg" :disabled="submitting" @change="updateSelectedFile" />
       </label>
 
       <div v-if="selectedFilePreview || parsedTask?.fileId" class="preview-panel">
@@ -299,6 +296,7 @@ function submitForm() {
         {{ submitting ? 'Lagrer...' : task ? 'Oppdater oppgave' : 'Opprett oppgave' }}
       </button>
     </div>
+    <p v-if="validationError" class="form-message error">{{ validationError }}</p>
   </section>
 </template>
 

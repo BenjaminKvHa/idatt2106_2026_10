@@ -18,7 +18,7 @@ describe('TaskGuide', () => {
   it('shows default button text', () => {
     const wrapper = mount(TaskGuide)
 
-    expect(wrapper.find('.confirm-button').text()).toBe('Jeg er klar!')
+    expect(wrapper.find('.task-guide-button').text()).toBe('Jeg er klar!')
   })
 
   it('shows custom button text', () => {
@@ -28,13 +28,13 @@ describe('TaskGuide', () => {
       },
     })
 
-    expect(wrapper.find('.confirm-button').text()).toBe('Start')
+    expect(wrapper.find('.task-guide-button').text()).toBe('Start')
   })
 
   it('emits close when confirm button is clicked', async () => {
     const wrapper = mount(TaskGuide)
 
-    await wrapper.find('.confirm-button').trigger('click')
+    await wrapper.find('.task-guide-button').trigger('click')
 
     expect(wrapper.emitted('close')).toBeTruthy()
   })

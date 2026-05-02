@@ -3,6 +3,7 @@ package com.nettdet.backend.service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -102,6 +103,22 @@ public class MedalService {
                         isUnlocked(definition, progressionsByChapterId, hasApprovedWeeklyMystery),
                         lockedImageFileObjectId))
                 .toList();
+    }
+
+    /**
+     * Returns the unlocked medal definition for a completed chapter.
+     *
+     * @param chapterId the completed chapter id
+     * @return the unlocked chapter medal, or null if no medal exists for the chapter
+     */
+    @Transactional(readOnly = true)
+    public PupilMedalResponse getUnlockedChapterMedal(Long chapterId) {
+        return MEDAL_CATALOG.stream()
+                .filter(definition -> definition.type() == MedalType.CHAPTER)
+                .filter(definition -> Objects.equals(definition.chapterId(), chapterId))
+                .findFirst()
+                .map(definition -> toResponse(definition, true, null))
+                .orElse(null);
     }
 
     /**

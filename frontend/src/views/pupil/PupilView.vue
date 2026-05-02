@@ -113,7 +113,7 @@ function handleButtonClick(sound?: string) {
 .overlay-button {
   position: absolute;
   cursor: pointer;
-  width: clamp(10rem, 11vw, 20rem);
+  width: 16%;
   transform: translateX(-50%);
   z-index: 2;
 }
@@ -162,7 +162,7 @@ function handleButtonClick(sound?: string) {
   .overlay-button {
     position: absolute;
     cursor: pointer;
-    width: clamp(10rem, 12vw, 17rem);
+    width: 22%;
     transform: translateX(-50%);
   }
   .pupil-pinboard-image {

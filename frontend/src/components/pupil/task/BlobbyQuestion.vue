@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import hintCreature from '@/assets/creatureSittingQuestion.png'
+import hintCreature from '@/assets/icons/blobby/creatureSittingQuestion.png'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import { get } from '@/utils/apiUtils'
 
@@ -47,20 +47,15 @@ async function openHintPopup() {
 
 <template>
   <div class="hint-creature-wrapper">
-    <button
-      type="button"
-      class="hint-creature-button"
-      :disabled="loading"
-      @click="openHintPopup"
-    >
+    <button type="button" class="hint-creature-button" :disabled="loading" @click="openHintPopup">
       <img :src="hintCreature" alt="Få hint" />
     </button>
   </div>
 
   <slot />
 
-  <BaseModal 
-    v-if="showHintPopup" 
+  <BaseModal
+    v-if="showHintPopup"
     panel-class="no-padding"
     :show-close-button="false"
     :close-on-backdrop="true"
@@ -69,42 +64,38 @@ async function openHintPopup() {
   >
     <div class="hint-popup-wrapper">
       <h2>Tips 💡</h2>
-    <p v-if="loading">Henter tips...</p>
-    <p v-else-if="errorMessage" class="hint-error">{{ errorMessage }}</p>
-    <template v-else>
-      <p>{{ tip }}</p>
-      <p v-if="newlyAdded" class="hint-status">Tipset er lagret i notatboken din.</p>
-      <p v-else-if="allTipsReceived" class="hint-status">
-        Du har allerede samlet alle tipsene for dette kapittelet.
-      </p>
-    </template>
-    <button class="hint-close-button" @click="showHintPopup = false">Ok</button>
+      <p v-if="loading">Henter tips...</p>
+      <p v-else-if="errorMessage" class="hint-error">{{ errorMessage }}</p>
+      <template v-else>
+        <p>{{ tip }}</p>
+        <p v-if="newlyAdded" class="hint-status">Tipset er lagret i notatboken din.</p>
+        <p v-else-if="allTipsReceived" class="hint-status">
+          Du har allerede samlet alle tipsene for dette kapittelet.
+        </p>
+      </template>
+      <button class="hint-close-button" @click="showHintPopup = false">Ok</button>
     </div>
   </BaseModal>
 </template>
 
 <style scoped>
 .hint-creature-wrapper {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 0;
-  height: 0;
+  position: relative;
+  width: 120px;
+  height: 120px;
+  z-index: 999;
+  pointer-events: auto;
 }
 
 .hint-creature-button {
-  position: absolute;
-  top: calc(var(--topbar-height) + 10px);
-  left: 12px;
-  z-index: 999;
-
   width: 120px;
   height: 120px;
   border: none;
   background: transparent;
   padding: 0;
   cursor: pointer;
-  outline: none;
+  pointer-events: auto;
+  display: block;
 }
 
 .hint-creature-button img {
@@ -113,7 +104,9 @@ async function openHintPopup() {
   object-fit: contain;
   pointer-events: none;
   filter: drop-shadow(0 8px 10px rgb(0 0 0 / 25%));
-  transition: transform ease-in-out var(--icon-transition-duration), filter ease-in-out var(--icon-transition-duration);
+  transition:
+    transform ease-in-out var(--icon-transition-duration),
+    filter ease-in-out var(--icon-transition-duration);
 }
 
 .hint-creature-button:hover img,
@@ -168,9 +161,8 @@ async function openHintPopup() {
 }
 
 @media (max-width: 768px) {
+  .hint-creature-wrapper,
   .hint-creature-button {
-    top: calc(var(--topbar-height) + 10px);
-    left: 8px;
     width: 85px;
     height: 85px;
   }

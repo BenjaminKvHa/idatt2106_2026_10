@@ -4,19 +4,25 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.nettdet.backend.domain.Account;
+import com.nettdet.backend.domain.Chapter;
 import com.nettdet.backend.domain.Classroom;
 import com.nettdet.backend.domain.FileObject;
+import com.nettdet.backend.domain.PupilChapterBridgeProgression;
 import com.nettdet.backend.domain.PupilClassroomMembership;
+import com.nettdet.backend.domain.ids.PupilChapterBridgeProgressionId;
 import com.nettdet.backend.dto.PupilClassroomMembershipResponse;
 import com.nettdet.backend.dto.PupilProgressionResponse;
 import com.nettdet.backend.dto.PupilRequest;
 import com.nettdet.backend.dto.PupilResponse;
 import com.nettdet.backend.repository.AccountRepository;
+import com.nettdet.backend.repository.ChapterRepository;
 import com.nettdet.backend.repository.ClassroomRepository;
+import com.nettdet.backend.repository.PupilChapterBridgeProgressionRepository;
 import com.nettdet.backend.repository.PupilClassroomMembershipRepository;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -40,11 +46,15 @@ import jakarta.persistence.EntityNotFoundException;
 public class PupilService {
 
     private static final Logger logger = LoggerFactory.getLogger(PupilService.class);
+    private static final long INTRO_CHAPTER_ID = 1L;
 
     private final PupilClassroomMembershipRepository pupilMembershipRepository;
+    private final PupilChapterBridgeProgressionRepository progressionRepository;
     private final AccountRepository accountRepository;
     private final ClassroomRepository classroomRepository;
+    private final ChapterRepository chapterRepository;
     private final AvatarService avatarService;
+    private final NotebookJsonService notebookJsonService;
 
     /**
      * Constructs a {@code PupilService} with the dependencies required to read, create, and
@@ -56,12 +66,18 @@ public class PupilService {
      * @param avatarService             service used to look up or create the pupil's avatar
      */
     public PupilService(PupilClassroomMembershipRepository pupilMembershipRepository,
+                        PupilChapterBridgeProgressionRepository progressionRepository,
                         AccountRepository accountRepository,
                         ClassroomRepository classroomRepository,
+                        ChapterRepository chapterRepository,
+                        NotebookJsonService notebookJsonService,
                         AvatarService avatarService) {
         this.pupilMembershipRepository = pupilMembershipRepository;
+        this.progressionRepository = progressionRepository;
         this.accountRepository = accountRepository;
         this.classroomRepository = classroomRepository;
+        this.chapterRepository = chapterRepository;
+        this.notebookJsonService = notebookJsonService;
         this.avatarService = avatarService;
     }
 
@@ -118,6 +134,42 @@ public class PupilService {
                .findByAccountEmailAndClassroomClassroomCode(pupilRequest.email(), pupilRequest.classroomCode())
                .map(PupilClassroomMembership::isMembershipConfirmedByTeacher)
                .orElse(false);
+    }
+
+    /**
+     * Completes the first-time intro by ensuring the first chapter progression row exists.
+     * <p>
+     * The operation is idempotent: existing chapter-one progression is left untouched.
+     *
+     * @param email the authenticated pupil's account email
+     * @throws AccessDeniedException if the pupil has no confirmed classroom membership
+     * @throws EntityNotFoundException if chapter 1 is missing
+     */
+    @Transactional
+    public void completeIntroSequence(String email) {
+        PupilClassroomMembership membership = pupilMembershipRepository
+                .findByAccountEmailAndMembershipConfirmedByTeacherTrue(email)
+                .orElseThrow(() -> new AccessDeniedException("Confirmed pupil membership is required"));
+
+        if (progressionRepository.existsByIdEmailAndIdChapterId(email, INTRO_CHAPTER_ID)) {
+            return;
+        }
+
+        Chapter chapter = chapterRepository.findById(INTRO_CHAPTER_ID)
+                .orElseThrow(() -> new EntityNotFoundException("Chapter not found"));
+
+        PupilChapterBridgeProgression progression = new PupilChapterBridgeProgression();
+        progression.setId(new PupilChapterBridgeProgressionId(email, INTRO_CHAPTER_ID));
+        progression.setPupilClassroomMembership(membership);
+        progression.setChapter(chapter);
+        progression.setSuccessfulRuns(0);
+        progression.setHighscore(0);
+        progression.setUnsuccessfulStreak(0);
+        progression.setCurrentRunAttempts(0);
+        progression.setCurrentRunCorrect(0);
+        progression.setNotebookJson(notebookJsonService.defaultNotebookJson());
+
+        progressionRepository.save(progression);
     }
 
     /**

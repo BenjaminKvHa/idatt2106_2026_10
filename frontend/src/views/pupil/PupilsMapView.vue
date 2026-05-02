@@ -138,7 +138,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onActivated, onMounted, ref } from 'vue'
+import { onActivated, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/components/pupil/TopBar.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
@@ -282,16 +282,8 @@ function isUnlocked(stop: Stop): boolean {
   return stop.unlocked
 }
 
-function openHelpPopup(): void {
-  showHelpPopup.value = true
-}
-
 function closeHelpPopup(): void {
   showHelpPopup.value = false
-}
-
-function openHintPopup(): void {
-  showHintPopup.value = true
 }
 
 function closeHintPopup(): void {
@@ -839,42 +831,58 @@ onMounted(() => {
   }
 
   .map-wrapper {
-    padding: 10px 36px 0;
+    padding: 10px 10px 0;
   }
 
   .map-area {
-    min-height: 980px;
-    --road-start-x: 12%;
-    --road-one-third-x: 37.333%;
-    --road-two-thirds-x: 62.667%;
-    --road-end-x: 88%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
   }
 
-  .stop-node .path-point {
-    width: 28px;
-    height: 28px;
-  }
-
-  .stop-node .path-point {
-    top: 328px;
-  }
-
+  .path-point,
+  .connector,
   .path-line {
-    top: 328px;
+    display: none;
   }
 
-  .stop-node.top .connector {
-    top: calc(var(--path-y) - 60px);
-    height: 60px;
+  .stop-node,
+  .homeNode,
+  .endNode,
+  .stop-node.pos-1,
+  .stop-node.pos-2,
+  .stop-node.pos-3 {
+    position: relative;
+    left: auto !important;
+    right: auto !important;
+    width: 100%;
+    max-width: 22rem;
+    transform: none;
   }
 
-  .stop-node.bottom .connector {
-    top: calc(var(--path-y) + 6px);
-    height: 60px;
+  .stop-node .stop-content,
+  .homeNode .stop-content,
+  .endNode .stop-content,
+  .stop-node.pos-1 .stop-content,
+  .stop-node.bottom .stop-content {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 100%;
+    transform: none;
+    padding: 0;
   }
 
   .stop-node.bottom .stop-content {
-    top: 395px;
+    flex-direction: column;
+  }
+
+  .stop-title {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
   }
 
   .star {

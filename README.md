@@ -23,9 +23,13 @@ A gamified web application that teaches children (grades 3–7) to recognize and
 
 ## About the Project
 
-Nettdetektivene is an educational game where pupils navigate a map of "stops" (e.g., Nyhetskvartalet, Fotografen, Postkontoret, Passordbanken), solving progressively harder tasks about source criticism, phishing, password safety, and AI-generated content. Teachers can create classrooms, manage pupils, create custom tasks, and track progression.
+Nettdetektivene is an educational web application developed as part of IDATT2106 - Systemutvikling med smidig prosjekt at NTNU, spring 2026.
 
-Key features:
+Children are increasingly exposed to disinformation, phishing, and other digital threats, yet often lack the skills to recognize and handle them. Nettdetektivene addresses this by teaching pupils in grades 3-7 (ages 8-12) to build digital literacy through a gamified learning experience.
+
+Players take on the role of a detective, navigating a map of "stops" such as Nyhetskvartalet, Fotografen and datasenteret, where they solve progressively harder tasks about source criticism and AI-generated content. Teachers can create classrooms, manage pupils, create custom tasks, and track progression.
+
+**Key features:**
 
 - **Pupils**: Avatar customization, map-based progression, notebook, medals, leaderboard, "Ukens mysterium" submissions
 - **Teachers**: Classroom management, pupil progression overview, task creation, notification center
@@ -34,90 +38,115 @@ Key features:
 
 ## Tech Stack
 
-| Layer     | Technology                        |
-|-----------|-----------------------------------|
-| Backend   | Java, Spring Boot                 |
-| Frontend  | Vue.js (or your chosen SPA framework) |
-| Database  | MySQL (or PostgreSQL — update accordingly) |
-| Build     | Maven / Gradle (backend), npm / yarn (frontend) |
-| CI/CD     | GitHub Actions                    |
-| Testing   | JUnit, Mockito (backend), Vitest / Jest (frontend) |
+| Layer          | Technology                                                                 |
+|----------------|----------------------------------------------------------------------------|
+| Backend        | Java 21, Spring Boot 3.5.13 (Web, Data JPA, Security, Validation, Actuator) |
+| Frontend       | Vue 3.5, TypeScript, Vite 8                                               |
+| Database       | PostgreSQL 16                                                              |
+| Auth           | JJWT 0.12.6 (JWT access tokens + HTTP-only refresh cookies)               |
+| File Storage   | MinIO (S3-compatible), AWS SDK v2                                          |
+| API Docs       | springdoc-openapi 2.8 (Swagger UI)                                        |
+| Build          | Maven (backend), npm (frontend)                                           |
+| Infrastructure | Docker Compose (db, backend, frontend, minio, db-seed)                    |
+| CI/CD          | GitHub Actions                                                            |
+| Testing        | JUnit, Mockito, Embedded Postgres (backend); Vitest, Cypress 15 (frontend) |
+| Security       | OWASP dependency-check, JaCoCo (>=50% coverage gate)                      |
 
-> **Note**: Update this table to reflect your actual stack choices.
 
 ---
 
 ## Prerequisites
 
-- **Java** JDK 21+ (or your version)
-- **Maven** 3.9+ or **Gradle** 8+
-- **Node.js** 20+ and **npm** 10+ (or **yarn**)
-- **MySQL** 8.0+ (or the database you're using)
-- **Git**
+**To run the full stack (recommended):**
+ 
+- **Docker** 24+ (includes Docker Compose)
+
+**For local development outside containers:** 
+- **Java** JDK 21 (Maven wrapper `./mvnw` is included)
+- **Node.js** ^20.19 or >=22.12, with **npm**
+- **PostgreSQL** 16 (only if not using the Docker `db` service)
+- **Git** for cloning the project
 
 ---
 
 ## Installation and Setup
 
+The full stack runs in Docker. Schema ([schema.sql](schema.sql)) and seed data ([seed.sql](seed.sql)) are applied automatically on first boot — no manual database setup needed.
+
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/YOUR_ORG/idatt2106_2026_XX.git
-cd idatt2106_2026_XX
+git clone https://github.com/ntnu-runners/idatt2106_2026_10.git
+cd idatt2106_2026_10
 ```
 
-### 2. Database setup
+### 2. Configure environment variables
 
-Create the database and run the schema:
+Copy the template and fill in your credentials:
 
 ```bash
-mysql -u root -p -e "CREATE DATABASE nettdetektivene;"
-mysql -u root -p nettdetektivene < path/to/schema.sql
+cp .env.template .env
 ```
 
-Optionally, seed with example data:
+Then edit `.env`, at minimum, replace the placeholders marked `change_me*` and generate your own `JWT_SECRET_KEY`:
 
 ```bash
-mysql -u root -p nettdetektivene < path/to/seed.sql
+openssl rand -base64 32
 ```
 
-### 3. Backend setup
+
+### 3. Start the stack
 
 ```bash
-cd backend
-cp .env.example .env   # Fill in your database credentials
-mvn clean install       # or: ./gradlew build
+docker compose up -d --build
 ```
 
-### 4. Frontend setup
+First boot takes ~30–60 seconds while the backend healthcheck passes and `db-seed` runs. Tail logs with `docker compose logs -f backend`.
+
+Once healthy, services are available at:
+
+| Service        | URL                                       |
+|----------------|-------------------------------------------|
+| Frontend       | http://localhost:3000                     |
+| Backend API    | http://localhost:8081                     |
+| Swagger UI     | http://localhost:8081/swagger-ui.html     |
+| MinIO console  | http://localhost:9101                     |
+
+(Ports are configurable via `.env`.)
+
+### Common commands
 
 ```bash
-cd frontend
-cp .env.example .env   # Set API base URL etc.
-npm install            # or: yarn install
+docker compose down                          # stop the stack
+docker compose down -v                       # stop AND wipe db + minio volumes (re-runs schema + seed on next up)
+docker compose up -d --force-recreate frontend   # rebuild a single service
+docker compose logs -f backend               # tail one service's logs
 ```
 
 ---
 
-## Running the Application
+## Local development (outside Docker)
+
+For faster iteration on backend or frontend code, run them directly against the Dockerized `db` and `minio` services. Make sure required env vars (`POSTGRES_*`, `JWT_SECRET_KEY`, `S3_*`) are exported in your shell first.
 
 ### Backend
 
 ```bash
 cd backend
-mvn spring-boot:run    # or: ./gradlew bootRun
+./mvnw spring-boot:run
 ```
 
-The API will be available at `http://localhost:8080` (default).
+The API listens on `http://localhost:8080`.
 
 ### Frontend
 
 ```bash
 cd frontend
-npm run dev            # or: yarn dev
+npm install
+npm run dev
 ```
 
-The client will be available at `http://localhost:5173` (default for Vite).
+The Vite dev server runs at `http://localhost:5173`.
 
 ---
 
@@ -127,20 +156,33 @@ The client will be available at `http://localhost:5173` (default for Vite).
 
 ```bash
 cd backend
-mvn test               # or: ./gradlew test
+./mvnw test            # runs unit tests + JaCoCo report
+./mvnw verify          # additionally enforces the >=50% line-coverage gate
 ```
 
-Coverage report is generated at `target/site/jacoco/index.html` (if using JaCoCo).
+Coverage report is generated at `backend/target/site/jacoco/index.html`.
 
-> Requirement: ≥ 50% server-side test coverage.
+> Requirement: ≥ 50% server-side line coverage (enforced by `./mvnw verify`).
 
 ### Frontend
 
+**Unit tests (Vitest):**
+
 ```bash
 cd frontend
-npm run test           # or: yarn test
-npm run coverage       # to view coverage report
+npm run test:unit -- --run         # one-shot
+npm run test:coverage              # with coverage report
 ```
+
+**End-to-end tests (Cypress):**
+
+```bash
+cd frontend
+npm run build && npm run test:e2e  # headless run against `vite preview` (needs prod build first)
+npm run test:e2e:dev               # interactive Cypress UI against the dev server
+```
+
+> Cypress specs live in [frontend/cypress/e2e/](frontend/cypress/e2e/). The e2e suite assumes the backend is running (start the stack with `docker compose up -d` first).
 
 > Requirement: ≥ 30% client-side test coverage.
 
@@ -153,84 +195,153 @@ idatt2106_2026_XX/
 ├── backend/
 │   ├── src/
 │   │   ├── main/
-│   │   │   ├── java/          # Application source code
-│   │   │   └── resources/     # application.properties, schema.sql
-│   │   └── test/              # Test source code
-│   └── pom.xml                # or build.gradle
+│   │   │   ├── java/com/nettdet/backend/
+│   │   │   │   ├── controller/    # REST endpoints
+│   │   │   │   ├── service/       # Business logic
+│   │   │   │   ├── repository/    # Spring Data JPA repositories
+│   │   │   │   ├── domain/        # JPA entities (+ enums/, ids/ for composite keys)
+│   │   │   │   ├── dto/           # Request/response records
+│   │   │   │   ├── security/      # SecurityConfig, JwtUserPrincipal
+│   │   │   │   ├── util/          # JwtAuthFilter, JWT helpers, code generation
+│   │   │   │   ├── config/        # S3/MinIO wiring, task seeders
+│   │   │   │   ├── validation/    # Custom bean-validation annotations
+│   │   │   │   └── exception/     # GlobalExceptionHandler
+│   │   │   └── resources/         # application.properties, chapter-tips.json
+│   │   └── test/                  # JUnit + Mockito tests
+│   ├── Dockerfile
+│   ├── mvnw / mvnw.cmd            # Maven wrapper
+│   └── pom.xml
 ├── frontend/
 │   ├── src/
-│   │   ├── components/        # Reusable Vue components
-│   │   ├── views/             # Page-level views
-│   │   ├── router/            # Vue Router config
-│   │   ├── stores/            # Pinia / Vuex stores
-│   │   └── assets/            # Images, styles, sounds
+│   │   ├── components/            # Reusable Vue components (pupil/, teacher/, shared/, ui/, misc/)
+│   │   ├── views/                 # Page-level views (pupil/, teacher/, shared/)
+│   │   ├── router/                # Vue Router config
+│   │   ├── composables/           # Reusable composition functions (useAudio, useClassrooms, ...)
+│   │   ├── utils/                 # apiUtils (fetch wrapper + 401/refresh), jwtUtils, authRedirect
+│   │   ├── types/                 # Shared TypeScript types
+│   │   ├── assets/                # Images, styles, sounds
+│   │   ├── App.vue
+│   │   └── main.ts
+│   ├── cypress/                   # E2E tests (e2e/, fixtures/, support/)
+│   ├── tests/                     # Vitest unit tests (components/, views/, router/, utils/)
+│   ├── nginx/                     # nginx config (proxies /api/* to backend:8080)
+│   ├── Dockerfile
+│   ├── vite.config.ts
 │   └── package.json
 ├── docs/                      # Additional documentation
 └── README.md
 ```
 
-> **Note**: Update this tree to match your actual project layout.
-
----
-
 ## API Documentation
 
-REST endpoints are documented via [Swagger / OpenAPI] and available at:
+REST endpoints are documented via **springdoc-openapi** (Swagger UI). With the stack running, the interactive docs and raw OpenAPI spec are available at:
 
-```
-http://localhost:8080/swagger-ui.html
-```
+| Resource           | URL                                                    |
+|--------------------|--------------------------------------------------------|
+| Swagger UI         | http://localhost:8081/swagger-ui.html                  |
+| OpenAPI JSON spec  | http://localhost:8081/v3/api-docs                      |
 
-> If you don't use Swagger, list key endpoint groups here (e.g., `/api/auth`, `/api/classrooms`, `/api/tasks`, `/api/pupils`).
+> When running the backend natively (`./mvnw spring-boot:run`), substitute port `8080` for `8081`.
+
+### Endpoint groups
+
+| Path prefix              | Purpose                                              |
+|--------------------------|------------------------------------------------------|
+| `/api/auth`              | Login, signup, refresh (public)                      |
+| `/api/me`                | Current authenticated user                           |
+| `/api/classrooms`        | Classroom CRUD, teacher/pupil membership             |
+| `/api/pupils`            | Pupil-side actions and profile                       |
+| `/api/chapters`          | Chapters and per-pupil progression                   |
+| `/api/tasks`             | Task content (per chapter)                           |
+| `/api/admin/tasks`       | Teacher task creation and management                 |
+| `/api/progress`          | Run submissions, scoring                             |
+| `/api/leaderboard`       | Classroom and global leaderboards                    |
+| `/api/notebook`          | Pupil notebook entries                               |
+| `/api/notifications`     | Teacher notification center                          |
+| `/api/medals`            | Medal awards and lookups                             |
+| `/api/avatar-assets`     | Avatar customization items                           |
+| `/api/avatar-image`      | Pupil avatar image rendering                         |
+| `/api/files`             | File uploads/downloads (mediated by access control)  |
+| `/api/weekly-mystery`    | "Ukens mysterium" submissions                        |
+| `/api/tips`              | Chapter tips ([chapter-tips.json](backend/src/main/resources/chapter-tips.json)) |
+
+All routes except `/api/auth/login`, `/api/auth/signup`, `/api/auth/refresh`, and the Swagger paths require a Bearer JWT. Role enforcement (`TEACHER` / `PUPIL`) happens via `@PreAuthorize` on individual endpoints.
 
 ---
 
 ## Environment Variables
 
-### Backend (`backend/.env` or `application.properties`)
+All configuration is read from a single `.env` file at the repo root (see [.env.template](.env.template)). Docker Compose loads it automatically and injects the values into the relevant containers.
 
-| Variable              | Description                    | Example                    |
-|-----------------------|--------------------------------|----------------------------|
-| `DB_URL`              | JDBC connection string         | `jdbc:mysql://localhost:3306/nettdetektivene` |
-| `DB_USERNAME`         | Database user                  | `root`                     |
-| `DB_PASSWORD`         | Database password              | `secret`                   |
-| `JWT_SECRET`          | Secret key for JWT signing     | `my-secret-key`            |
-| `JWT_EXPIRATION_MS`   | Access token lifetime (ms)     | `3600000`                  |
+### Host ports
 
-### Frontend (`frontend/.env`)
+| Variable              | Description                          | Default |
+|-----------------------|--------------------------------------|---------|
+| `FRONTEND_PORT`       | Host port for the nginx frontend     | `3000`  |
+| `BACKEND_PORT`        | Host port for the Spring Boot API    | `8081`  |
+| `DB_PORT`             | Host port for Postgres               | `5432`  |
+| `MINIO_API_PORT`      | Host port for the MinIO S3 API       | `9100`  |
+| `MINIO_CONSOLE_PORT`  | Host port for the MinIO web console  | `9101`  |
 
-| Variable           | Description         | Example                    |
-|--------------------|---------------------|----------------------------|
-| `VITE_API_BASE_URL`| Backend API base URL| `http://localhost:8080/api` |
+### Postgres
+
+| Variable              | Description                          | Default     |
+|-----------------------|--------------------------------------|-------------|
+| `POSTGRES_DB`         | Database name                        | `app`       |
+| `POSTGRES_USER`       | Database user                        | `app`       |
+| `POSTGRES_PASSWORD`   | Database password (**change in prod**) | `change_me` |
+
+### Object storage (MinIO)
+
+| Variable               | Description                          | Default                |
+|------------------------|--------------------------------------|------------------------|
+| `MINIO_ROOT_USER`      | MinIO root username                  | `minioadmin`           |
+| `MINIO_ROOT_PASSWORD`  | MinIO root password (**change**)     | `change_me_minio`      |
+| `S3_ACCESS_KEY`        | Access key the backend uses          | `minioadmin`           |
+| `S3_SECRET_KEY`        | Secret key the backend uses          | `change_me_minio`      |
+
+### Auth & uploads
+
+| Variable                                   | Description                                      | Default |
+|--------------------------------------------|--------------------------------------------------|---------|
+| `JWT_SECRET_KEY`                           | Base64 key for signing JWTs (`openssl rand -base64 32`) | — |
+| `SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE`   | Max single upload size                           | `20MB`  |
+| `SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE`| Max total request size                           | `50MB`  |
+
+### Frontend
+
+The frontend has no custom env vars — nginx ([frontend/nginx/default.conf](frontend/nginx/default.conf)) proxies `/api/*` to the backend service inside the Docker network, so no API base URL needs to be configured at build time.
 
 ---
 
-## CI/CD
+## CI
 
-This project uses **GitHub Actions** for Continuous Integration:
+This project uses **GitHub Actions** for Continuous Integration only — there is no automated deployment. All workflows execute on **NTNU Enterprise self-hosted runners** (`runs-on: ntnu-runners`) and trigger on `workflow_dispatch` and on pushes / PRs to `main` and `dev`.
 
-- Runs on every push and pull request to `main`/`dev`
-- Builds backend and frontend
-- Runs all tests and generates coverage reports
-- (Optional) Deploys to staging/production
+| Workflow                                                                  | Scope    | What it does                                                                                                                                                                                                                                |
+|---------------------------------------------------------------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [backend-ci.yml](.github/workflows/backend-ci.yml)                        | Backend  | Sets up JDK 21 (Temurin), caches `~/.m2`, runs `./mvnw clean verify` — builds, runs JUnit/Mockito tests, and enforces the **≥ 50% JaCoCo line-coverage gate**. Uploads the JaCoCo report as an artifact (`jacoco-coverage-report`, 30-day retention). |
+| [frontend-ci.yml](.github/workflows/frontend-ci.yml)                      | Frontend | Sets up Node 20 with npm cache, runs `npm ci`, `npm run build`, and Vitest with coverage — enforces **≥ 30%** on lines / functions / branches / statements.                                                                                  |
+| [owasp-ci.yml](.github/workflows/owasp-ci.yml)                            | Both     | **Backend:** OWASP Dependency-Check via Maven (`-DfailBuildOnCVSS=7`, requires `NVD_API_KEY` secret); uploads the HTML report as `dependency-check-report`. **Frontend:** Retire.js scan (`--severity high`) over installed npm dependencies. |
 
-Pipeline config: `.github/workflows/ci.yml`
+Path filters keep build minutes lean: `backend-ci.yml` only runs on `backend/**` changes, `frontend-ci.yml` only on `frontend/**`. The OWASP workflow runs on every push/PR.
+
+> **Coverage gates are enforced in CI** — a PR that drops backend coverage below 50% or frontend below 30% will fail.
 
 ---
 
 ## Contributors
 
-**Scrum Team XX** — IDATT2106 Spring 2026, NTNU
+**Scrum Team 10** — IDATT2106 Spring 2026, NTNU
 
 | Name             | Role       |
 |------------------|------------|
-| Firstname Lastname | Developer  |
-| Firstname Lastname | Developer  |
-| Firstname Lastname | Scrum Master |
-| ...              | ...        |
+| Ingrid Neverås Opheim | Scrum Master, Developer |
+| Benjamin Kvello-Hansen | Developer  |
+| Theodor Strøm Thrane | Developer |
+| Bjørn Adam Vangen | Developer |
+| Thea Marie Alver Lønvik | Developer |
+| Siri Volan Halting | Developer |
+| Mateja Vasic | Developer |
 
 ---
-
-## License
-
-This project was developed as part of a university course at NTNU and is not licensed for commercial use.

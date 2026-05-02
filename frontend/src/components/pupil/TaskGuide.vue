@@ -27,11 +27,12 @@ function confirm(): void {
     :show-close-button="false"
     @close="confirm"
   >
-    <div class="center-container">
-      <div class="guide-text">
+    <div class="task-guide-card">
+      <div class="task-guide-text">
         <slot />
       </div>
-      <button class="confirm-button" @click="confirm">
+
+      <button class="task-guide-button" @click="confirm">
         {{ buttonText }}
       </button>
     </div>
@@ -39,43 +40,64 @@ function confirm(): void {
 </template>
 
 <style scoped>
-.center-container {
-  gap: 2rem;
-  padding: 1rem 1rem 2rem;
+.task-guide-card {
+  width: min(900px, calc(100vw - 48px));
+  max-height: calc(100vh - 48px);
+  padding: clamp(1.2rem, 2.4vw, 2.2rem);
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: var(--orange-medium);
-  border-radius: 40px;
-  border: 5px solid var(--brown-dark);
-  width: min(80vw, 1000px);
-  box-shadow: -8px 8px 4px var(--brown-dark-60);
+  justify-content: center;
+  gap: clamp(0.8rem, 2vw, 1.3rem);
+  background: linear-gradient(180deg, #fff3d6 0%, #f4d7a2 100%);
+  border: 3px solid var(--brown-dark);
+  border-radius: 34px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
   box-sizing: border-box;
 }
 
-.confirm-button{
-  margin-top: auto;
-  padding: 0.5rem 1rem;
-  background: var(--green-confirm);
-  border: 5px solid var(--brown-dark);
-  border-radius: 40px;
-  font-size: 30px;
-  min-width: 30%;
-}
-
-.guide-text{
+.task-guide-text {
+  width: 100%;
   text-align: center;
-  padding-top: 1.5rem;
-  width: 90%;
-  white-space: pre-wrap;
-  font-size: 30px;
+  font-size: clamp(1rem, 1.8vw, 1.65rem);
+  line-height: 1.35;
 }
 
-.guide-text h2 {
-  margin:0;
+.task-guide-text h2 {
+  margin: 0 0 0.7rem;
+  font-size: clamp(1.6rem, 3vw, 2.8rem);
 }
 
-.guide-text p {
+.task-guide-text p {
   margin: 0;
+  display: block;
+}
+
+.task-guide-text img {
+  display: block;
+  width: auto;
+  max-width: min(300px, 65%);
+  max-height: 24vh;
+  margin: 0.8rem auto 0;
+  object-fit: contain;
+}
+
+.task-guide-button {
+  position: relative;
+  z-index: 2;
+  padding: 0.65rem 2rem;
+  border: 2px solid var(--brown-dark);
+  border-radius: 24px;
+  background: linear-gradient(180deg, #9df13c 0%, #78d927 100%);
+  font-size: clamp(1.1rem, 2vw, 1.6rem);
+  font-weight: 850;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .task-guide-card {
+    padding: 0.5rem 0.5rem 1rem;
+    width: 95%;
+  }
 }
 </style>

@@ -4,6 +4,7 @@ import PinboardLayout from '@/components/pupil/PinboardLayout.vue'
 import StateDisplay from '@/components/ui/StateDisplay.vue'
 import TopBar from '@/components/pupil/TopBar.vue'
 import { get } from '@/utils/apiUtils'
+import Blobby from '@/components/pupil/home/Blobby.vue'
 
 type ClassroomLeaderboardEntry = {
   classroomCode: string
@@ -48,7 +49,9 @@ const visibleRangeLabel = computed(() => {
 
 const currentClassroom = computed(() => {
   if (!currentClassroomCode.value) return null
-  return leaderboard.value.find((entry) => entry.classroomCode === currentClassroomCode.value) ?? null
+  return (
+    leaderboard.value.find((entry) => entry.classroomCode === currentClassroomCode.value) ?? null
+  )
 })
 
 function nextPage() {
@@ -93,6 +96,7 @@ onMounted(loadLeaderboard)
     <TopBar title="Ledertavle" />
 
     <PinboardLayout heading-id="leaderboard-title">
+      <Blobby message="Her kan du se hvilke klasser som leder!" />
       <div class="board-content">
         <h1 id="leaderboard-title" class="leaderboard-title-label">
           <span class="leaderboard-title-text">Ledertavle</span>
@@ -125,7 +129,11 @@ onMounted(loadLeaderboard)
           </ol>
         </div>
 
-        <div v-if="currentClassroom" class="current-classroom-summary" aria-label="Din klasse på ledertavlen">
+        <div
+          v-if="currentClassroom"
+          class="current-classroom-summary"
+          aria-label="Din klasse på ledertavlen"
+        >
           <span class="current-label">Din kl.</span>
           <span class="rank">{{ currentClassroom.rank }}.</span>
           <span class="classroom-name">{{ currentClassroom.classroomName }}</span>
@@ -136,7 +144,8 @@ onMounted(loadLeaderboard)
       <div v-if="!loading && !error && leaderboard.length > itemsPerPage" class="pagination">
         <button :disabled="currentPage === 1" @click="previousPage">Forrige</button>
 
-        <span>Side {{ currentPage }} av {{ totalPages }}</span>
+        <span class="page-large">Side {{ currentPage }} av {{ totalPages }}</span>
+        <span class="page-small">{{ currentPage }}/{{ totalPages }}</span>
 
         <button :disabled="currentPage === totalPages" @click="nextPage">Neste</button>
       </div>
@@ -145,6 +154,12 @@ onMounted(loadLeaderboard)
 </template>
 
 <style scoped>
+.page-small {
+  display: none;
+}
+.page-large {
+  display: block;
+}
 .leaderboard-page-bg {
   min-height: 100vh;
   background-image: url('@/assets/backgrounds/hjemskjerm-bg.png');
@@ -164,7 +179,7 @@ onMounted(loadLeaderboard)
   --leaderboard-current-label-height: clamp(5.1rem, 6.35vw, 6rem);
   --leaderboard-title-to-list-overlap: clamp(-2.1rem, -2.3vw, -1.45rem);
   --leaderboard-entry-overlap: clamp(-2rem, -2.25vw, -1.35rem);
-  --leaderboard-current-overlap: clamp(-1.75rem, -2vw, -1.2rem);
+  --leaderboard-current-overlap: clamp(-0.5rem, -1vw, 0.2rem);
 
   position: absolute;
   inset: 13% 10% 18% 10%;
@@ -249,7 +264,6 @@ li {
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: clamp(0.65rem, 1.2vw, 1rem);
-
   min-height: var(--leaderboard-entry-label-height);
   padding: clamp(1rem, 1.45vw, 1.25rem) clamp(3.6rem, 5.7vw, 5.4rem);
   background-image: url('@/assets/woodenLabel.png');
@@ -266,11 +280,34 @@ li {
 }
 
 .current-page-classroom {
-  filter:
-    drop-shadow(0 0.18rem 0.12rem rgba(43, 24, 12, 0.34))
-    drop-shadow(0 0 0.18rem rgba(255, 247, 176, 0.95))
-    drop-shadow(0 0 0.75rem rgba(255, 216, 55, 0.9))
-    drop-shadow(0 0 1.15rem rgba(255, 178, 20, 0.55));
+  position: relative;
+  isolation: isolate;
+  filter: drop-shadow(0 0.18rem 0.12rem rgba(43, 24, 12, 0.34));
+}
+
+.current-page-classroom::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: rgba(20, 8, 2, 0.55);
+  mask-image: url('@/assets/woodenLabel.png');
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: 100% 100%;
+  -webkit-mask-image: url('@/assets/woodenLabel.png');
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: 100% 100%;
+}
+
+.current-page-classroom > * {
+  position: relative;
+  z-index: 1;
+  color: #fff7df;
+  text-shadow:
+    0 0.08rem 0 #000,
+    0 0.16rem 0.2rem rgba(0, 0, 0, 0.9);
 }
 
 .rank {
@@ -301,7 +338,6 @@ li {
   gap: clamp(0.45rem, 0.8vw, 0.7rem);
   position: relative;
   isolation: isolate;
-  margin-top: var(--leaderboard-current-overlap);
   min-height: var(--leaderboard-current-label-height);
   padding: clamp(1rem, 1.45vw, 1.25rem) clamp(3.6rem, 5.7vw, 5.4rem);
   background-image: url('@/assets/woodenLabel.png');
@@ -313,9 +349,9 @@ li {
   text-shadow:
     0 0.08rem 0 #4b2511,
     0 0.16rem 0.1rem rgba(34, 13, 3, 0.8);
-  filter:
-    drop-shadow(0 0.18rem 0.12rem rgba(43, 24, 12, 0.34))
-    drop-shadow(0 0 0.3rem rgba(255, 243, 190, 0.65));
+  filter: drop-shadow(0 0.18rem 0.12rem rgba(43, 24, 12, 0.34))
+    drop-shadow(0 0 0.15rem rgba(255, 255, 255, 0.45))
+    drop-shadow(0 0 0.35rem rgba(255, 255, 255, 0.35));
 }
 
 .current-classroom-summary::before {
@@ -347,12 +383,10 @@ li {
   bottom: 1.5rem;
   left: 50%;
   transform: translateX(-50%);
-
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 1rem;
-
   z-index: 10;
 }
 
@@ -379,7 +413,7 @@ li {
   border-radius: 999px;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .board-content {
     --leaderboard-title-label-height: 4.7rem;
     --leaderboard-entry-label-height: 4.45rem;
@@ -387,9 +421,15 @@ li {
     --leaderboard-title-to-list-overlap: -1rem;
     --leaderboard-entry-overlap: -0.95rem;
     --leaderboard-current-overlap: -0.75rem;
-
-    inset: 13% 9% 19% 9%;
-    padding: 5% 6% 0;
+    
+    padding: 0% 0% 0;
+    inset: 8% 4% !important;
+  }
+  .page-small {
+    display: block;
+  }
+  .page-large {
+    display: none;
   }
 
   .leaderboard-title-label {
@@ -408,9 +448,9 @@ li {
   }
 
   .current-classroom-summary {
-    grid-template-columns: auto auto minmax(0, 1fr) auto;
     padding: 0.85rem 2.6rem;
     font-size: 0.92rem;
+    margin-top: 2rem;
   }
 
   .pagination {

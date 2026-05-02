@@ -39,6 +39,7 @@ describe('PupilsWaitingPageView', () => {
       role: 'PUPIL',
       classroomCode: 'MAPAAA',
       membershipConfirmed: false,
+      needsIntroSequence: false,
     })
   })
 
@@ -77,6 +78,7 @@ describe('PupilsWaitingPageView', () => {
       role: 'PUPIL',
       classroomCode: 'MAPAAA',
       membershipConfirmed: true,
+      needsIntroSequence: false,
     })
 
     mountView()
@@ -92,6 +94,7 @@ describe('PupilsWaitingPageView', () => {
       role: 'PUPIL',
       classroomCode: null,
       membershipConfirmed: false,
+      needsIntroSequence: false,
     })
 
     mountView()

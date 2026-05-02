@@ -71,6 +71,7 @@ class MeControllerTest {
                         "ABCABC",
                         42L,
                         "white_redditor-black_detective",
+                        true,
                         true));
 
         // Act: Perform GET /me with authentication
@@ -83,7 +84,8 @@ class MeControllerTest {
                 .andExpect(jsonPath("$.username").value("detektiv1"))
                 .andExpect(jsonPath("$.classroomCode").value("ABCABC"))
                 .andExpect(jsonPath("$.avatarFileObjectId").value(42))
-                .andExpect(jsonPath("$.avatarSelection").value("white_redditor-black_detective"));
+                .andExpect(jsonPath("$.avatarSelection").value("white_redditor-black_detective"))
+                .andExpect(jsonPath("$.needsIntroSequence").value(true));
 
         // Assert: Verify service was called with correct email
         verify(accountService).getAuthenticatedProfile(argThat(email -> email.equals("user@example.com")));
@@ -103,6 +105,7 @@ class MeControllerTest {
                         null,
                         null,
                         null,
+                        false,
                         false));
 
         // Act: Perform GET /me with teacher authentication
@@ -115,7 +118,8 @@ class MeControllerTest {
                 .andExpect(jsonPath("$.username").doesNotExist())
                 .andExpect(jsonPath("$.classroomCode").doesNotExist())
                 .andExpect(jsonPath("$.avatarFileObjectId").doesNotExist())
-                .andExpect(jsonPath("$.avatarSelection").doesNotExist());
+                .andExpect(jsonPath("$.avatarSelection").doesNotExist())
+                .andExpect(jsonPath("$.needsIntroSequence").value(false));
 
         // Assert: Verify service was called with correct email
         verify(accountService).getAuthenticatedProfile(argThat(email -> email.equals("teacher@example.com")));
@@ -150,7 +154,8 @@ class MeControllerTest {
                         "ABCABC",
                         42L,
                         "white_redditor-black_detective",
-                        true));
+                        true,
+                        false));
 
         // Act: Perform PUT /me with pupil authentication
         mockMvc.perform(put("/me")
@@ -221,7 +226,8 @@ class MeControllerTest {
                         "ABCABC",
                         42L,
                         "white_redditor-black_detective",
-                        true));
+                        true,
+                        false));
 
         // Act: Perform PUT /me with different email in query param (should be ignored)
         mockMvc.perform(put("/me?email=other@example.com")

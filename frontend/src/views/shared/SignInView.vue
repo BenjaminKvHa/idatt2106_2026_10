@@ -79,9 +79,7 @@ const goToSignup = (): void => {
         <div class="feide-divider"></div>
 
         <button class="option-button primary-option" @click="step = 2">
-          <span class="icon microsoft">
-            <span></span><span></span><span></span><span></span>
-          </span>
+          <span class="icon microsoft"> <span></span><span></span><span></span><span></span> </span>
           <span>Bruk arbeids- eller skolekonto</span>
         </button>
 
@@ -138,9 +136,7 @@ const goToSignup = (): void => {
         <p class="signed-in-as">{{ email || 'eksempel@epost.no' }}</p>
         <h2>Skriv inn passord</h2>
 
-        <p class="description">
-          Skriv inn passordet ditt for å logge inn på den valgte kontoen.
-        </p>
+        <p class="description">Skriv inn passordet ditt for å logge inn på den valgte kontoen.</p>
 
         <form @submit.prevent="login">
           <input
@@ -293,10 +289,18 @@ h2 {
   gap: 2px;
 }
 
-.microsoft span:nth-child(1) { background: #f25022; }
-.microsoft span:nth-child(2) { background: #7fba00; }
-.microsoft span:nth-child(3) { background: #00a4ef; }
-.microsoft span:nth-child(4) { background: #ffb900; }
+.microsoft span:nth-child(1) {
+  background: #f25022;
+}
+.microsoft span:nth-child(2) {
+  background: #7fba00;
+}
+.microsoft span:nth-child(3) {
+  background: #00a4ef;
+}
+.microsoft span:nth-child(4) {
+  background: #ffb900;
+}
 
 .id-porten {
   font-size: 15px;
@@ -393,6 +397,63 @@ h2 {
   margin-top: 16px;
   font-size: 13px;
   color: #1f5d1f;
+}
+
+.feide-page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.feide-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('@/assets/backgrounds/welcomeBackground.png');
+  background-size: cover;
+  background-position: center;
+  filter: blur(12px);
+  transform: scale(1.1);
+  z-index: 0;
+}
+
+.feide-page::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+  z-index: 1;
+}
+
+.feide-page > * {
+  position: relative;
+  z-index: 2;
+}
+
+.feide-card,
+.landing-card {
+  background: #ffffff;
+
+  border: 4px solid #000;
+
+  box-shadow:
+    0 8px 0 #000,
+    0 18px 35px rgba(0, 0, 0, 0.35);
+}
+
+.feide-card,
+.landing-card,
+.card-header,
+.landing-footer,
+.option-button,
+.feide-input,
+.feide-btn-primary,
+.feide-btn-secondary,
+.signup-btn {
+  border-radius: 0 !important;
 }
 
 @media (max-width: 480px) {

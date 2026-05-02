@@ -187,24 +187,24 @@ onBeforeUnmount(revokeImageUrls)
 
           <HintCreature :chapter-id="NYHETSKVARTALET_CHAPTER_ID" />
 
-        <PupilNewsTask
-          :task-description="currentTask.taskDescription"
-          :file-ids="currentTask.fileIds"
-          :image-urls="imageUrls"
-          :selected-file-id="selectedFileId"
-          :result="lastResult"
-          :submitting="submitting"
-          select-button-text="Velg dette bildet"
-          @select-file="choose"
-        />
+          <PupilNewsTask
+            :task-description="currentTask.taskDescription"
+            :file-ids="currentTask.fileIds"
+            :image-urls="imageUrls"
+            :selected-file-id="selectedFileId"
+            :result="lastResult"
+            :submitting="submitting"
+            select-button-text="Velg dette bildet"
+            @select-file="choose"
+          />
 
-        <div
-          v-if="lastResult"
-          class="mini-feedback"
-          :class="{ success: lastResult.correct, fail: !lastResult.correct }"
-        >
-          <span>{{ lastResult.feedback }}</span>
-        </div>
+          <div
+            v-if="lastResult"
+            class="mini-feedback"
+            :class="{ success: lastResult.correct, fail: !lastResult.correct }"
+          >
+            <span>{{ lastResult.feedback }}</span>
+          </div>
 
           <button v-if="lastResult" class="next-level-button" @click="next">
             {{ stepIndex === DIFFICULTIES.length - 1 ? 'Se resultat' : 'Gå til neste nivå' }}
@@ -234,15 +234,15 @@ onBeforeUnmount(revokeImageUrls)
       <div class="news-help-popup-wrapper">
         <h2 class="popup-title">Trenger du hjelp?</h2>
 
-      <div class="hint-text">
-        <p>
-          I Nyhetskvartalet skal du undersøke informasjon og finne ut hva som er ekte og falskt.
-        </p>
-        <ul>
-          <li>Les oppgaven nøye før du svarer</li>
-          <li>Sammenlign bildene og se etter rare detaljer</li>
-          <li>Velg det alternativet du mener er falskt</li>
-        </ul>
+        <div class="hint-text">
+          <p>
+            I Nyhetskvartalet skal du undersøke informasjon og finne ut hva som er ekte og falskt.
+          </p>
+          <ul>
+            <li>Les oppgaven nøye før du svarer</li>
+            <li>Sammenlign bildene og se etter rare detaljer</li>
+            <li>Velg det alternativet du mener er falskt</li>
+          </ul>
         </div>
 
         <div class="popup-actions">
@@ -344,15 +344,11 @@ onBeforeUnmount(revokeImageUrls)
   padding: 1rem 2rem;
   border-radius: 38px;
   border: 5px solid var(--brown-dark);
-
-  background-color: var(--beige-light); /* hvit/beige */
-  color: var(--brown-dark); /* brun tekst */
-
+  background-color: var(--beige-light);
+  color: var(--brown-dark);
   cursor: pointer;
   font-weight: 700;
-
   box-shadow: 0 6px 0 var(--brown-dark);
-
   transition:
     transform 0.15s ease,
     filter 0.15s ease,
@@ -368,7 +364,6 @@ onBeforeUnmount(revokeImageUrls)
 .next-level-button:active {
   background-color: var(--brown-dark);
   color: var(--beige-light);
-
   transform: translateY(3px);
   box-shadow: 0 3px 0 var(--brown-dark);
 }

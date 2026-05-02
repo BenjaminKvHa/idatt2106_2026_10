@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import TeacherHelpButton from '@/components/teacher/TeacherHelpButton.vue'
 import TeacherFotografenTaskForm from '@/components/teacher/mystery/TeacherFotografenTaskForm.vue'
 import TeacherMysteryTaskCard from '@/components/teacher/mystery/TeacherMysteryTaskCard.vue'
 import TeacherNyhetskvartaletTaskForm from '@/components/teacher/mystery/TeacherNyhetskvartaletTaskForm.vue'
@@ -52,6 +53,15 @@ const selectedTaskIdByChapter = ref<Record<ChapterTaskKey, number | null>>({
   fotografen: null,
   datasenteret: null,
 })
+
+const editTasksHelpSections = [
+  {
+    body: [
+      'Her lager og endrer du oppgaver elevene møter i kapitlene. Velg kapittel øverst, fyll ut oppgavefeltet og last opp nødvendige filer.',
+      'Eksisterende oppgaver vises til høyre og kan åpnes for redigering. Datasenteret bruker både nyhetsoppgaver og fotografen-oppgaver, og er låst til vanskelig nivå.',
+    ],
+  },
+]
 
 const classroomCode = computed(() =>
   typeof route.params.classroomCode === 'string' ? route.params.classroomCode : '',
@@ -516,6 +526,7 @@ watch(
         <h1>Rediger oppgaver</h1>
         <p class="header-copy">Opprett, rediger og kvalitetssikre oppgaver for Nyhetskvartalet, Fotografen og Datasenteret.</p>
       </div>
+      <TeacherHelpButton title="Rediger oppgaver" :sections="editTasksHelpSections" />
     </section>
 
     <section class="task-admin-section">

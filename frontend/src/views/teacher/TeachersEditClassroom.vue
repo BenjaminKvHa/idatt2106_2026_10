@@ -3,6 +3,7 @@ import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { del, get, post, put } from '@/utils/apiUtils'
 import ConfirmModal from '@/components/ui/ConfirmModal.vue'
+import TeacherHelpButton from '@/components/teacher/TeacherHelpButton.vue'
 
 type ClassroomDetailsResponse = {
   classroomCode: string
@@ -47,6 +48,15 @@ const editOpen = ref(false)
 const savingClassroom = ref(false)
 const editName = ref('')
 const editDescription = ref('')
+
+const editClassroomHelpSections = [
+  {
+    body: [
+      'Her kan du endre navn og beskrivelse for klasserommet. Du kan også legge til andre lærere med e-postadresse.',
+      'Bruk "Forlat klasserom" hvis du ikke lenger skal være lærer her, og "Slett klasserom" kun når klasserommet ikke skal brukes mer.',
+    ],
+  },
+]
 
 const confirmModalShow = ref(false)
 const confirmModalMessage = ref('')
@@ -96,7 +106,8 @@ async function loadClassroom() {
   teachersError.value = ''
 
   try {
-    const classroomCodeSlug = typeof route.params.classroomCode === "string" ? route.params.classroomCode : "";
+    const classroomCodeSlug =
+      typeof route.params.classroomCode === 'string' ? route.params.classroomCode : ''
     if (!classroomCodeSlug) {
       throw new Error('Could not find classroom slug for this url')
     }
@@ -148,12 +159,16 @@ async function saveClassroomDetails() {
       description: editDescription.value.trim(),
     }
 
-    const updated = await put<ClassroomDetailsResponse>(`/api/classrooms/${classroom.value.classroomCode}`, payload)
+    const updated = await put<ClassroomDetailsResponse>(
+      `/api/classrooms/${classroom.value.classroomCode}`,
+      payload,
+    )
     classroom.value = updated
     syncEditForm()
     editOpen.value = false
   } catch (requestError) {
-    actionError.value = requestError instanceof Error ? requestError.message : 'Failed to update classroom'
+    actionError.value =
+      requestError instanceof Error ? requestError.message : 'Failed to update classroom'
   } finally {
     savingClassroom.value = false
   }
@@ -164,17 +179,21 @@ async function loadTeachers(classroomCode: string) {
   teachersError.value = ''
 
   try {
-    teachers.value = await get<ClassroomTeacherResponse[]>(`/api/classrooms/${classroomCode}/teachers`)
+    teachers.value = await get<ClassroomTeacherResponse[]>(
+      `/api/classrooms/${classroomCode}/teachers`,
+    )
   } catch (fetchError) {
     teachers.value = []
-    teachersError.value = fetchError instanceof Error ? fetchError.message : 'Failed to load teachers'
+    teachersError.value =
+      fetchError instanceof Error ? fetchError.message : 'Failed to load teachers'
   } finally {
     loadingTeachers.value = false
   }
 }
 
 async function inviteTeacher() {
-  if (!classroom.value || invitingTeacher.value || inviteTeacherEmail.value.trim().length === 0) return
+  if (!classroom.value || invitingTeacher.value || inviteTeacherEmail.value.trim().length === 0)
+    return
 
   invitingTeacher.value = true
   actionError.value = ''
@@ -188,7 +207,8 @@ async function inviteTeacher() {
     inviteTeacherEmail.value = ''
     await loadTeachers(classroom.value.classroomCode)
   } catch (requestError) {
-    actionError.value = requestError instanceof Error ? requestError.message : 'Failed to invite teacher'
+    actionError.value =
+      requestError instanceof Error ? requestError.message : 'Failed to invite teacher'
   } finally {
     invitingTeacher.value = false
   }
@@ -197,7 +217,9 @@ async function inviteTeacher() {
 async function deleteClassroom() {
   if (!classroom.value || deleting.value) return
 
-  const confirmed = await showConfirmModal('Er du sikker på at du vil slette klasserommet? Dette kan ikke angres.')
+  const confirmed = await showConfirmModal(
+    'Er du sikker på at du vil slette klasserommet? Dette kan ikke angres.',
+  )
   if (!confirmed) return
 
   deleting.value = true
@@ -207,7 +229,8 @@ async function deleteClassroom() {
     await del(`/api/classrooms/${classroom.value.classroomCode}`)
     await router.push('/teacher/classrooms')
   } catch (requestError) {
-    actionError.value = requestError instanceof Error ? requestError.message : 'Failed to delete classroom'
+    actionError.value =
+      requestError instanceof Error ? requestError.message : 'Failed to delete classroom'
   } finally {
     deleting.value = false
   }
@@ -216,7 +239,9 @@ async function deleteClassroom() {
 async function leaveClassroom() {
   if (!classroom.value || leaving.value) return
 
-  const confirmed = await showConfirmModal('Er du sikker på at du vil forlate klasserommet?')
+  const confirmed = await showConfirmModal(
+    'Er du sikker på at du vil forlate klasserommet?',
+  )
   if (!confirmed) return
 
   leaving.value = true
@@ -226,7 +251,8 @@ async function leaveClassroom() {
     await del(`/api/classrooms/${classroom.value.classroomCode}/teachers/me`)
     await router.push('/teacher/classrooms')
   } catch (requestError) {
-    actionError.value = requestError instanceof Error ? requestError.message : 'Failed to leave classroom'
+    actionError.value =
+      requestError instanceof Error ? requestError.message : 'Failed to leave classroom'
   } finally {
     leaving.value = false
   }
@@ -250,11 +276,21 @@ watch(
     <p v-else-if="error" class="state-message error">{{ error }}</p>
 
     <template v-else-if="classroom">
-      <h1>{{ classroom.classroomName }}</h1>
-      <p v-if="classroom.classroomDescription">{{ classroom.classroomDescription }}</p>
-      <p><b>Romkode:</b> {{ classroom.classroomCode }}</p>
+      <div class="page-header">
+        <div>
+          <h1>{{ classroom.classroomName }}</h1>
+          <p v-if="classroom.classroomDescription">{{ classroom.classroomDescription }}</p>
+          <p><b>Romkode:</b> {{ classroom.classroomCode }}</p>
+        </div>
+        <TeacherHelpButton title="Administrer klasserom" :sections="editClassroomHelpSections" />
+      </div>
 
-      <button v-if="!editOpen" type="button" class="action-button edit-classroom-btn" @click="openEditCard">
+      <button
+        v-if="!editOpen"
+        type="button"
+        class="action-button edit-classroom-btn"
+        @click="openEditCard"
+      >
         Rediger klasserom
       </button>
 
@@ -268,7 +304,12 @@ watch(
 
         <label class="form-field">
           <span>Beskrivelse</span>
-          <textarea v-model="editDescription" rows="3" class="teacher-textarea" :disabled="savingClassroom" />
+          <textarea
+            v-model="editDescription"
+            rows="3"
+            class="teacher-textarea"
+            :disabled="savingClassroom"
+          />
         </label>
 
         <div class="edit-actions">
@@ -281,7 +322,12 @@ watch(
             {{ savingClassroom ? 'Lagrer...' : 'Lagre endringer' }}
           </button>
 
-          <button type="button" class="action-button secondary-button" :disabled="savingClassroom" @click="closeEditCard">
+          <button
+            type="button"
+            class="action-button secondary-button"
+            :disabled="savingClassroom"
+            @click="closeEditCard"
+          >
             Avbryt
           </button>
         </div>
@@ -322,28 +368,42 @@ watch(
         </div>
       </section>
 
-      <p v-if="actionError" class="helper-text error-text">{{ (() => {
-        let out = actionError;
-        switch (actionError){
-          case "Request failed with status 404":
-            out = "Fant ikke lærer";
-            break;
-          case "Request failed with status 400":
-            out = "Epost feil formatert"
-            break;
-        }
-        return out;
-      })() }}</p>
-      
+      <p v-if="actionError" class="helper-text error-text">
+        {{
+          (() => {
+            let out = actionError
+            switch (actionError) {
+              case 'Request failed with status 404':
+                out = 'Fant ikke lærer'
+                break
+              case 'Request failed with status 400':
+                out = 'Epost feil formatert'
+                break
+            }
+            return out
+          })()
+        }}
+      </p>
+
       <div class="action-grid">
-        <button v-if="canLeave" type="button" class="action-button destructive-button" :disabled="leaving" @click="leaveClassroom">
+        <button
+          v-if="canLeave"
+          type="button"
+          class="action-button destructive-button"
+          :disabled="leaving"
+          @click="leaveClassroom"
+        >
           {{ leaving ? 'Forlater...' : 'Forlat klasserom' }}
         </button>
-        <button type="button" class="action-button destructive-button" :disabled="deleting" @click="deleteClassroom">
+        <button
+          type="button"
+          class="action-button destructive-button"
+          :disabled="deleting"
+          @click="deleteClassroom"
+        >
           {{ deleting ? 'Sletter...' : 'Slett klasserom' }}
         </button>
       </div>
-
     </template>
   </div>
 
@@ -362,10 +422,18 @@ watch(
   width: max-content;
   height: max-content;
 }
+
 .edit-classroom-view {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--medium-gap);
+  align-items: flex-start;
 }
 
 .edit-classroom-view h1,
@@ -422,7 +490,6 @@ watch(
   padding: 0.9rem 1rem;
   border-radius: 1rem;
   background: rgba(255, 248, 235, 0.82);
-  /* border: 1px solid rgba(85, 50, 27, 0.18); */
   border: var(--border-wide) solid var(--brown-dark);
 }
 
@@ -492,7 +559,9 @@ watch(
   color: var(--brown-dark);
   cursor: pointer;
 }
-.action-button:focus, .action-button:hover {
+
+.action-button:focus,
+.action-button:hover {
   color: var(--beige-light);
   background-color: var(--brown-dark);
 }

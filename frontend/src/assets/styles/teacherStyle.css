@@ -204,7 +204,7 @@
     text-decoration: none;
 }
 
-.button-variant-1:hover, .button-variant-1::selection {
+.button-variant-1:hover, .button-variant-1::selection, .button-variant-1:focus-visible {
     color: var(--txt-sec);
     background-color: var(--accent);
 }

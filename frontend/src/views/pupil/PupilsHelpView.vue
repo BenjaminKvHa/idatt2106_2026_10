@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import PinboardLayout from '@/components/pupil/PinboardLayout.vue'
 import TopBar from '@/components/pupil/TopBar.vue'
+import Blobby from '@/components/pupil/home/Blobby.vue'
 </script>
 
 <template>
@@ -8,6 +9,7 @@ import TopBar from '@/components/pupil/TopBar.vue'
     <TopBar title="Hjelp" />
 
     <PinboardLayout heading-id="help-title">
+      <Blobby message="Trenger du hjelp? Her forklarer jeg hvordan spillet fungerer!" />
       <div class="text-box">
         <h1 id="help-title">Hva går spillet ut på?</h1>
 
@@ -25,7 +27,7 @@ import TopBar from '@/components/pupil/TopBar.vue'
             <li><strong>Datasenteret:</strong> Løs oppgaver knyttet til digital sikkerhet.</li>
           </ul>
 
-          <p>Underveis samler du poeng (XP) og konkurrerer mot andre klasser på leaderboardet.</p>
+          <p>Underveis samler du poeng (XP) og konkurrerer mot andre klasser på ledertavlen.</p>
 
           <p>Målet er å lære hvordan du kan navigere trygt i en digital verden.</p>
 

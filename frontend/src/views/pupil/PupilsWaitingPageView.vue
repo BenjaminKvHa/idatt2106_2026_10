@@ -2,8 +2,9 @@
 import { useRouter } from 'vue-router'
 import { onMounted, onUnmounted, ref } from 'vue'
 import { clearMeCache, fetchMeCached } from '@/utils/authRedirect'
+import bgImg from '@/assets/backgrounds/hjemskjerm-bg.png'
 import { del } from '@/utils/apiUtils'
-import bgImg from '@/assets/backgrounds/welcomeBackground.png'
+
 
 const router = useRouter()
 const classroomCode = ref<string | null>(null)
@@ -71,7 +72,7 @@ async function cancelJoinRequest(): Promise<void> {
 </script>
 
 <template>
-  <div class="page" :style="{ backgroundImage: `url(${bgImg})` }">
+  <div class="page" :style="{ '--page-bg': `url(${bgImg})` }">
     <div class="center-container">
       <div class="waiting-container">
         <div class="text-container">
@@ -110,15 +111,41 @@ async function cancelJoinRequest(): Promise<void> {
 
 <style scoped>
 .page {
+  position: relative;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: clamp(1rem, 4vw, 3rem);
-  overflow-y: auto;
+  overflow: hidden;
+}
+
+.page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: var(--page-bg);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  filter: blur(12px);
+  transform: scale(1.08);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.page::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(40, 25, 10, 0.18);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.page > * {
+  position: relative;
+  z-index: 2;
 }
 
 .center-container {
@@ -133,7 +160,12 @@ async function cancelJoinRequest(): Promise<void> {
   background: var(--beige-light-100);
   border: var(--border-wide) solid var(--brown-dark);
   border-radius: clamp(28px, 6vw, 40px);
-  box-shadow: -3px 3px 6px var(--brown-dark);
+
+  box-shadow:
+    0 0 0 2px rgba(0, 0, 0, 0.25),
+    0 6px 14px rgba(0, 0, 0, 0.2),
+    0 12px 30px rgba(0, 0, 0, 0.15),
+    inset 0 2px 4px rgba(0, 0, 0, 0.25);
   z-index: 2;
 }
 
@@ -202,7 +234,9 @@ async function cancelJoinRequest(): Promise<void> {
   font-weight: 700;
   cursor: pointer;
   box-shadow: -3px 3px 6px var(--brown-dark);
-  transition: transform 0.1s, box-shadow 0.1s;
+  transition:
+    transform 0.1s,
+    box-shadow 0.1s;
 }
 
 .cancel-button:hover {

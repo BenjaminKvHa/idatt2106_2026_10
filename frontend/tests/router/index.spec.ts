@@ -2,7 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => {
   return {
-    beforeEachGuard: undefined as undefined | ((to: { path: string }) => Promise<unknown> | unknown),
+    beforeEachGuard: undefined as
+      | undefined
+      | ((to: { path: string }) => Promise<unknown> | unknown),
     router: {
       beforeEach: vi.fn((guard) => {
         mocks.beforeEachGuard = guard
@@ -33,41 +35,79 @@ vi.mock('@/utils/authRedirect', () => ({
 vi.mock('@/views/shared/HomeView.vue', () => ({ default: { name: 'HomeView' } }))
 vi.mock('@/views/shared/NotFoundView.vue', () => ({ default: { name: 'NotFoundView' } }))
 vi.mock('@/views/shared/LeaderboardView.vue', () => ({ default: { name: 'LeaderboardView' } }))
-vi.mock('@/views/shared/EnterClassroomCodeView.vue', () => ({ default: { name: 'EnterClassroomCodeView' } }))
+vi.mock('@/views/shared/EnterClassroomCodeView.vue', () => ({
+  default: { name: 'EnterClassroomCodeView' },
+}))
 vi.mock('@/views/shared/SetAvatarView.vue', () => ({ default: { name: 'SetAvatarView' } }))
 vi.mock('@/views/shared/SignInView.vue', () => ({ default: { name: 'SignInView' } }))
 vi.mock('@/views/shared/SignUpView.vue', () => ({ default: { name: 'SignUpView' } }))
 
 vi.mock('@/views/teacher/TeacherView.vue', () => ({ default: { name: 'TeacherView' } }))
-vi.mock('@/views/teacher/TeachersProfileView.vue', () => ({ default: { name: 'TeachersProfileView' } }))
-vi.mock('@/views/teacher/TeachersNotificationsView.vue', () => ({ default: { name: 'TeachersNotificationsView' } }))
-vi.mock('@/views/teacher/TeachersClassroomsView.vue', () => ({ default: { name: 'TeachersClassroomsView' } }))
-vi.mock('@/views/teacher/TeachersCreateClassroomView.vue', () => ({ default: { name: 'TeachersCreateClassroomView' } }))
-vi.mock('@/views/teacher/TeachersClassroomView.vue', () => ({ default: { name: 'TeachersClassroomView' } }))
-vi.mock('@/views/teacher/TeachersPupilsView.vue', () => ({ default: { name: 'TeachersPupilsView' } }))
+vi.mock('@/views/teacher/TeachersProfileView.vue', () => ({
+  default: { name: 'TeachersProfileView' },
+}))
+vi.mock('@/views/teacher/TeachersNotificationsView.vue', () => ({
+  default: { name: 'TeachersNotificationsView' },
+}))
+vi.mock('@/views/teacher/TeachersClassroomsView.vue', () => ({
+  default: { name: 'TeachersClassroomsView' },
+}))
+vi.mock('@/views/teacher/TeachersCreateClassroomView.vue', () => ({
+  default: { name: 'TeachersCreateClassroomView' },
+}))
+vi.mock('@/views/teacher/TeachersClassroomView.vue', () => ({
+  default: { name: 'TeachersClassroomView' },
+}))
+vi.mock('@/views/teacher/TeachersPupilsView.vue', () => ({
+  default: { name: 'TeachersPupilsView' },
+}))
 vi.mock('@/views/teacher/TeachersPupilView.vue', () => ({ default: { name: 'TeachersPupilView' } }))
-vi.mock('@/views/teacher/TeachersNotebookChapterView.vue', () => ({ default: { name: 'TeachersNotebookChapterView' } }))
-vi.mock('@/views/teacher/TeachersLeaderboardView.vue', () => ({ default: { name: 'TeachersLeaderboardView' } }))
-vi.mock('@/views/teacher/TeachersEditTasksView.vue', () => ({ default: { name: 'TeachersEditTasksView' } }))
-vi.mock('@/views/teacher/TeachersMysteryView.vue', () => ({ default: { name: 'TeachersMysteryView' } }))
-vi.mock('@/views/teacher/TeachersEditClassroom.vue', () => ({ default: { name: 'TeachersEditClassroom' } }))
+vi.mock('@/views/teacher/TeachersNotebookChapterView.vue', () => ({
+  default: { name: 'TeachersNotebookChapterView' },
+}))
+vi.mock('@/views/teacher/TeachersLeaderboardView.vue', () => ({
+  default: { name: 'TeachersLeaderboardView' },
+}))
+vi.mock('@/views/teacher/TeachersEditTasksView.vue', () => ({
+  default: { name: 'TeachersEditTasksView' },
+}))
+vi.mock('@/views/teacher/TeachersMysteryView.vue', () => ({
+  default: { name: 'TeachersMysteryView' },
+}))
+vi.mock('@/views/teacher/TeachersEditClassroom.vue', () => ({
+  default: { name: 'TeachersEditClassroom' },
+}))
 
 vi.mock('@/views/pupil/PupilView.vue', () => ({ default: { name: 'PupilView' } }))
-vi.mock('@/views/pupil/PupilsClassroomView.vue', () => ({ default: { name: 'PupilsClassroomView' } }))
+vi.mock('@/views/pupil/PupilsClassroomView.vue', () => ({
+  default: { name: 'PupilsClassroomView' },
+}))
 vi.mock('@/views/pupil/PupilsNotebookView.vue', () => ({ default: { name: 'PupilsNotebookView' } }))
-vi.mock('@/views/pupil/PupilsNotebookChapterView.vue', () => ({ default: { name: 'PupilsNotebookChapterView' } }))
+vi.mock('@/views/pupil/PupilsNotebookChapterView.vue', () => ({
+  default: { name: 'PupilsNotebookChapterView' },
+}))
 vi.mock('@/views/pupil/PupilsMysteryView.vue', () => ({ default: { name: 'PupilsMysteryView' } }))
 vi.mock('@/views/pupil/PupilsMedalsView.vue', () => ({ default: { name: 'PupilsMedalsView' } }))
 vi.mock('@/views/pupil/PupilsHelpView.vue', () => ({ default: { name: 'PupilsHelpView' } }))
 vi.mock('@/views/pupil/PupilsMapView.vue', () => ({ default: { name: 'PupilsMapView' } }))
-vi.mock('@/views/pupil/PupilsWaitingPageView.vue', () => ({ default: { name: 'PupilsWaitingPageView' } }))
-vi.mock('@/views/pupil/PupilsWelcomeGuideView.vue', () => ({ default: { name: 'PupilsWelcomeGuideView' } }))
+vi.mock('@/views/pupil/PupilsWaitingPageView.vue', () => ({
+  default: { name: 'PupilsWaitingPageView' },
+}))
+vi.mock('@/views/pupil/PupilsWelcomeGuideView.vue', () => ({
+  default: { name: 'PupilsWelcomeGuideView' },
+}))
 vi.mock('@/views/pupil/PupilsProfileView.vue', () => ({ default: { name: 'PupilsProfileView' } }))
-vi.mock('@/views/pupil/PupilsEditAvatarView.vue', () => ({ default: { name: 'PupilsEditAvatarView' } }))
+vi.mock('@/views/pupil/PupilsEditAvatarView.vue', () => ({
+  default: { name: 'PupilsEditAvatarView' },
+}))
 
 vi.mock('@/views/pupil/map_locations/NewsView.vue', () => ({ default: { name: 'NewsView' } }))
-vi.mock('@/views/pupil/map_locations/DatacenterView.vue', () => ({ default: { name: 'DatacenterView' } }))
-vi.mock('@/views/pupil/map_locations/PhotographerView.vue', () => ({ default: { name: 'PhotographerView' } }))
+vi.mock('@/views/pupil/map_locations/DatacenterView.vue', () => ({
+  default: { name: 'DatacenterView' },
+}))
+vi.mock('@/views/pupil/map_locations/PhotographerView.vue', () => ({
+  default: { name: 'PhotographerView' },
+}))
 
 describe('router', () => {
   beforeEach(async () => {
@@ -140,8 +180,19 @@ describe('router', () => {
     await expect(runGuard('/pupil')).resolves.toBe(true)
 
     expect(mocks.fetchMeCached).toHaveBeenCalledWith({
-      force: false,
+      force: true,
     })
+  })
+
+  it('redirects pupil routes to sign-in when me profile cannot be loaded', async () => {
+    mocks.getJwtDataWithRefresh.mockResolvedValueOnce({
+      role: 'PUPIL',
+    })
+    mocks.fetchMeCached.mockResolvedValueOnce(null)
+
+    await expect(runGuard('/pupil')).resolves.toBe('/sign-in')
+
+    expect(mocks.getPupilMembershipRoute).not.toHaveBeenCalled()
   })
 
   it('redirects pupil route to membership route when pupil is not ready for /pupil', async () => {
@@ -156,6 +207,30 @@ describe('router', () => {
     await expect(runGuard('/pupil')).resolves.toBe('/join-classroom/waiting-classroom')
   })
 
+  it('redirects pupil route to welcome guide when intro is needed', async () => {
+    mocks.getJwtDataWithRefresh.mockResolvedValueOnce({
+      role: 'PUPIL',
+    })
+    mocks.fetchMeCached.mockResolvedValueOnce({
+      status: 'APPROVED',
+    })
+    mocks.getPupilMembershipRoute.mockReturnValueOnce('/pupil/welcome-guide')
+
+    await expect(runGuard('/pupil')).resolves.toBe('/pupil/welcome-guide')
+  })
+
+  it('allows the welcome guide route when intro is needed', async () => {
+    mocks.getJwtDataWithRefresh.mockResolvedValueOnce({
+      role: 'PUPIL',
+    })
+    mocks.fetchMeCached.mockResolvedValueOnce({
+      status: 'APPROVED',
+    })
+    mocks.getPupilMembershipRoute.mockReturnValueOnce('/pupil/welcome-guide')
+
+    await expect(runGuard('/pupil/welcome-guide')).resolves.toBe(true)
+  })
+
   it('redirects join-classroom route to pupil when pupil already has classroom', async () => {
     mocks.getJwtDataWithRefresh.mockResolvedValueOnce({
       role: 'PUPIL',
@@ -166,6 +241,20 @@ describe('router', () => {
     mocks.getPupilMembershipRoute.mockReturnValueOnce('/pupil')
 
     await expect(runGuard('/join-classroom/enter-classroom-code')).resolves.toBe('/pupil')
+  })
+
+  it('redirects join-classroom route to welcome guide when confirmed pupil still needs intro', async () => {
+    mocks.getJwtDataWithRefresh.mockResolvedValueOnce({
+      role: 'PUPIL',
+    })
+    mocks.fetchMeCached.mockResolvedValueOnce({
+      status: 'APPROVED',
+    })
+    mocks.getPupilMembershipRoute.mockReturnValueOnce('/pupil/welcome-guide')
+
+    await expect(runGuard('/join-classroom/enter-classroom-code')).resolves.toBe(
+      '/pupil/welcome-guide',
+    )
   })
 
   it('redirects set-avatar to enter-classroom-code when pupil has no classroom', async () => {

@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import AvatarAssetsContainer from '@/components/pupil/AvatarAssetsContainer.vue'
 import { put } from '@/utils/apiUtils'
 import { clearMeCache } from '@/utils/authRedirect'
+import classroomBg from '@/assets/backgrounds/hjemskjerm-bg.png'
 
 type AvatarAsset = {
   assetType: string
@@ -31,7 +32,12 @@ const currentSkincolor = ref<AvatarAsset | null>(null)
 const currentHairstyle = ref<AvatarAsset | null>(null)
 const currentCostume = ref<AvatarAsset | null>(null)
 
-const previewLayers = computed(() => [currentSkincolor.value, currentHairstyle.value, currentCostume.value].filter(Boolean) as AvatarAsset[])
+const previewLayers = computed(
+  () =>
+    [currentSkincolor.value, currentHairstyle.value, currentCostume.value].filter(
+      Boolean,
+    ) as AvatarAsset[],
+)
 const classroomCode = computed(() => {
   const value = route.query.classroomCode
   return typeof value === 'string' ? value.trim() : ''
@@ -43,7 +49,14 @@ const avatarSelection = computed(() => {
 
   return `${currentSkincolor.value.name}_${currentHairstyle.value.name}_${currentCostume.value.name}`
 })
-const canSubmit = computed(() => classroomCode.value.length > 0 && username.value.trim().length > 0 && avatarSelection.value.length > 0 && !loading.value && !saving.value)
+const canSubmit = computed(
+  () =>
+    classroomCode.value.length > 0 &&
+    username.value.trim().length > 0 &&
+    avatarSelection.value.length > 0 &&
+    !loading.value &&
+    !saving.value,
+)
 
 function getAssetImagePath(asset: AvatarAsset): string {
   return `/api/avatar-assets/${asset.assetType}/${asset.name}.${asset.filetype}`
@@ -105,7 +118,8 @@ async function saveMembership() {
     clearMeCache()
     await router.push('/join-classroom/waiting-classroom')
   } catch (error) {
-    saveError.value = error instanceof Error ? error.message : 'Kunne ikke lagre avatar og kallenavn'
+    saveError.value =
+      error instanceof Error ? error.message : 'Kunne ikke lagre avatar og kallenavn'
   } finally {
     saving.value = false
   }
@@ -127,28 +141,31 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="page">
+  <main class="page" :style="{ '--page-bg': `url(${classroomBg})` }">
     <section class="layout-card">
       <section class="selectors-panel">
         <div class="copy-panel">
-        <h1>Lag din karakter</h1>
-        <p class="description">
-          Velg hudfarge, hårstil og antrekk for figuren din. Du kan også skrive inn kallenavnet du vil bruke i klasserommet.
-        </p>
+          <h1>Lag din karakter</h1>
+          <p class="description">
+            Velg hudfarge, hårstil og antrekk for figuren din. Du kan også skrive inn kallenavnet du
+            vil bruke i klasserommet.
+          </p>
 
-        <label class="username-field" for="classroom-username">
-          <span>Kallenavn</span>
-          <input
-            id="classroom-username"
-            v-model="username"
-            type="text"
-            maxlength="30"
-            placeholder="Hva skal kallenavnet ditt være i dette klasserommet?"
-          />
-        </label>
+          <label class="username-field" for="classroom-username">
+            <span>Kallenavn</span>
+            <input
+              id="classroom-username"
+              v-model="username"
+              type="text"
+              maxlength="30"
+              placeholder="Hva skal kallenavnet ditt være i dette klasserommet?"
+            />
+          </label>
 
-        <p class="helper-text">Velg hvordan figuren din skal se ut og hvilket kallenavn du vil bruke i klasserommet.</p>
-        <p v-if="saveError" class="state-message error">{{ saveError }}</p>
+          <p class="helper-text">
+            Velg hvordan figuren din skal se ut og hvilket kallenavn du vil bruke i klasserommet.
+          </p>
+          <p v-if="saveError" class="state-message error">{{ saveError }}</p>
         </div>
 
         <p v-if="loading" class="state-message">Laster avatarvalg...</p>
@@ -185,10 +202,15 @@ onMounted(async () => {
             :alt="asset.name"
           />
         </div>
-        <p class="preview-label">{{ username || "Du har ikke lagd et nytt brukernavn enda" }}</p>
+        <p class="preview-label">{{ username || 'Du har ikke lagd et nytt brukernavn enda' }}</p>
         <div class="button-row">
           <button type="button" class="secondary-button" @click="goBack">Tilbake</button>
-          <button type="button" class="primary-button" :disabled="!canSubmit" @click="saveMembership">
+          <button
+            type="button"
+            class="primary-button"
+            :disabled="!canSubmit"
+            @click="saveMembership"
+          >
             {{ saving ? 'Lagrer...' : 'Bekreft' }}
           </button>
         </div>
@@ -199,9 +221,37 @@ onMounted(async () => {
 
 <style scoped>
 .page {
+  position: relative;
   min-height: 100vh;
-  background: linear-gradient(180deg, var(--beige-medium), var(--beige-light));
   padding: 2rem 1.25rem 3rem;
+  overflow: hidden;
+}
+
+.page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: var(--page-bg);
+  background-size: cover;
+  background-position: center;
+  filter: blur(12px);
+  transform: scale(1.08);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.page::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(40, 25, 10, 0.18);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.page > * {
+  position: relative;
+  z-index: 2;
 }
 
 .layout-card {
@@ -217,7 +267,7 @@ onMounted(async () => {
   border-radius: 1.5rem;
   border: var(--border-wide) solid var(--brown-dark);
   background: rgba(255, 250, 241, 0.92);
-  box-shadow: 0 1rem 2rem rgba(55, 32, 18, 0.12);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
 }
 
 .selectors-panel {

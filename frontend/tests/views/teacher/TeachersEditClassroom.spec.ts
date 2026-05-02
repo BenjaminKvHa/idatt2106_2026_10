@@ -112,7 +112,10 @@ describe('TeachersEditClassroom', () => {
     await nameInput.setValue('Ny klasse')
     await descriptionTextarea.setValue('Ny beskrivelse')
 
-    await wrapper.findAll('button').find((button) => button.text() === 'Lagre endringer')?.trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text() === 'Lagre endringer')
+      ?.trigger('click')
     await flushPromises()
 
     expect(put).toHaveBeenCalledWith('/api/classrooms/ABC123', {
@@ -133,7 +136,9 @@ describe('TeachersEditClassroom', () => {
     const nameInput = wrapper.find('input.teacher-input')
     await nameInput.setValue('   ')
 
-    const saveButton = wrapper.findAll('button').find((button) => button.text() === 'Lagre endringer')
+    const saveButton = wrapper
+      .findAll('button')
+      .find((button) => button.text() === 'Lagre endringer')
 
     expect(saveButton?.attributes('disabled')).toBeDefined()
     expect(put).not.toHaveBeenCalled()
@@ -149,7 +154,10 @@ describe('TeachersEditClassroom', () => {
     await wrapper.find('input.teacher-input').setValue('Ny klasse')
     await wrapper.find('textarea.teacher-textarea').setValue('Ny beskrivelse')
 
-    await wrapper.findAll('button').find((button) => button.text() === 'Lagre endringer')?.trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text() === 'Lagre endringer')
+      ?.trigger('click')
     await flushPromises()
 
     expect(wrapper.text()).toContain('Kunne ikke oppdatere klasserom')
@@ -161,7 +169,10 @@ describe('TeachersEditClassroom', () => {
     await wrapper.find('.edit-classroom-btn').trigger('click')
     expect(wrapper.find('.edit-card').exists()).toBe(true)
 
-    await wrapper.findAll('button').find((button) => button.text() === 'Avbryt')?.trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text() === 'Avbryt')
+      ?.trigger('click')
 
     expect(wrapper.find('.edit-card').exists()).toBe(false)
   })
@@ -174,7 +185,10 @@ describe('TeachersEditClassroom', () => {
     const emailInput = wrapper.find('input[type="email"]')
     await emailInput.setValue('new.teacher@example.com')
 
-    await wrapper.findAll('button').find((button) => button.text() === 'Legg til lærer')?.trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text() === 'Legg til lærer')
+      ?.trigger('click')
     await flushPromises()
 
     expect(post).toHaveBeenCalledWith('/api/classrooms/ABC123/teachers', {
@@ -187,7 +201,9 @@ describe('TeachersEditClassroom', () => {
   it('does not invite teacher when email is empty', async () => {
     const wrapper = await mountComponent()
 
-    const inviteButton = wrapper.findAll('button').find((button) => button.text() === 'Legg til lærer')
+    const inviteButton = wrapper
+      .findAll('button')
+      .find((button) => button.text() === 'Legg til lærer')
 
     expect(inviteButton?.attributes('disabled')).toBeDefined()
 
@@ -203,38 +219,56 @@ describe('TeachersEditClassroom', () => {
 
     await wrapper.find('input[type="email"]').setValue('new.teacher@example.com')
 
-    await wrapper.findAll('button').find((button) => button.text() === 'Legg til lærer')?.trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text() === 'Legg til lærer')
+      ?.trigger('click')
     await flushPromises()
 
     expect(wrapper.text()).toContain('Kunne ikke invitere lærer')
   })
 
-  it('successfully deletes classroom after confirmation', async () => {
+  it('opens a custom confirmation popup before deleting classroom', async () => {
     vi.mocked(del).mockResolvedValueOnce(undefined)
 
     const wrapper = await mountComponent()
 
-    await wrapper.findAll('button').find((button) => button.text() === 'Slett klasserom')?.trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text() === 'Slett klasserom')
+      ?.trigger('click')
     await flushPromises()
 
-    expect(window.confirm).toHaveBeenCalledWith(
-      'Er du sikker på at du vil slette klasserommet? Dette kan ikke angres.',
-    )
+    expect(window.confirm).not.toHaveBeenCalled()
+    expect(wrapper.find('.teacher-confirm-popup').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Er du sikker på at du vil slette')
+    expect(wrapper.text()).toContain('Dette kan ikke angres')
+    expect(del).not.toHaveBeenCalled()
+
+    await wrapper.find('.confirm-delete-classroom').trigger('click')
+    await flushPromises()
 
     expect(del).toHaveBeenCalledWith('/api/classrooms/ABC123')
     expect(pushMock).toHaveBeenCalledWith('/teacher/classrooms')
   })
 
-  it('does not delete classroom when confirmation is cancelled', async () => {
-    vi.mocked(window.confirm).mockReturnValueOnce(false)
-
+  it('closes delete classroom popup without deleting when cancelled', async () => {
     const wrapper = await mountComponent()
 
-    await wrapper.findAll('button').find((button) => button.text() === 'Slett klasserom')?.trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text() === 'Slett klasserom')
+      ?.trigger('click')
     await flushPromises()
 
+    expect(wrapper.find('.teacher-confirm-popup').exists()).toBe(true)
+    await wrapper.find('.cancel-delete-classroom').trigger('click')
+    await flushPromises()
+
+    expect(window.confirm).not.toHaveBeenCalled()
     expect(del).not.toHaveBeenCalled()
     expect(pushMock).not.toHaveBeenCalled()
+    expect(wrapper.find('.teacher-confirm-popup').exists()).toBe(false)
   })
 
   it('shows error when deleting classroom fails', async () => {
@@ -242,36 +276,58 @@ describe('TeachersEditClassroom', () => {
 
     const wrapper = await mountComponent()
 
-    await wrapper.findAll('button').find((button) => button.text() === 'Slett klasserom')?.trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text() === 'Slett klasserom')
+      ?.trigger('click')
+    await wrapper.find('.confirm-delete-classroom').trigger('click')
     await flushPromises()
 
     expect(wrapper.text()).toContain('Kunne ikke slette klasserom')
     expect(pushMock).not.toHaveBeenCalled()
   })
 
-  it('successfully leaves classroom after confirmation', async () => {
+  it('opens a custom confirmation popup before leaving classroom', async () => {
     vi.mocked(del).mockResolvedValueOnce(undefined)
 
     const wrapper = await mountComponent()
 
-    await wrapper.findAll('button').find((button) => button.text() === 'Forlat klasserom')?.trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text() === 'Forlat klasserom')
+      ?.trigger('click')
     await flushPromises()
 
-    expect(window.confirm).toHaveBeenCalledWith('Er du sikker på at du vil forlate klasserommet?')
+    expect(window.confirm).not.toHaveBeenCalled()
+    expect(wrapper.find('.teacher-confirm-popup').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Er du sikker på at du vil forlate')
+    expect(wrapper.text()).toContain('Tulleberg 5A')
+    expect(del).not.toHaveBeenCalled()
+
+    await wrapper.find('.confirm-leave-classroom').trigger('click')
+    await flushPromises()
+
     expect(del).toHaveBeenCalledWith('/api/classrooms/ABC123/teachers/me')
     expect(pushMock).toHaveBeenCalledWith('/teacher/classrooms')
   })
 
-  it('does not leave classroom when confirmation is cancelled', async () => {
-    vi.mocked(window.confirm).mockReturnValueOnce(false)
-
+  it('closes leave classroom popup without leaving when cancelled', async () => {
     const wrapper = await mountComponent()
 
-    await wrapper.findAll('button').find((button) => button.text() === 'Forlat klasserom')?.trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text() === 'Forlat klasserom')
+      ?.trigger('click')
     await flushPromises()
 
+    expect(wrapper.find('.teacher-confirm-popup').exists()).toBe(true)
+    await wrapper.find('.cancel-leave-classroom').trigger('click')
+    await flushPromises()
+
+    expect(window.confirm).not.toHaveBeenCalled()
     expect(del).not.toHaveBeenCalled()
     expect(pushMock).not.toHaveBeenCalled()
+    expect(wrapper.find('.teacher-confirm-popup').exists()).toBe(false)
   })
 
   it('shows error when leaving classroom fails', async () => {
@@ -279,7 +335,11 @@ describe('TeachersEditClassroom', () => {
 
     const wrapper = await mountComponent()
 
-    await wrapper.findAll('button').find((button) => button.text() === 'Forlat klasserom')?.trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text() === 'Forlat klasserom')
+      ?.trigger('click')
+    await wrapper.find('.confirm-leave-classroom').trigger('click')
     await flushPromises()
 
     expect(wrapper.text()).toContain('Kunne ikke forlate klasserom')

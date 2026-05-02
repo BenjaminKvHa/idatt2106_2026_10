@@ -289,6 +289,7 @@ function submitForm() {
           :src="`/api/objects/${parsedTask.fileId}`"
           :alt="task ? 'Eksisterende eller nytt oppgavebilde' : 'Valgt oppgavebilde'"
           class="preview-image"
+          preview-image
         />
       </div>
     </div>

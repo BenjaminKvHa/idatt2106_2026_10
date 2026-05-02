@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 
 import blobbyImage from '@/assets/icons/blobby/creaturePeaking.png'
+import blobbyHoverImage from '@/assets/icons/blobby/creaturePeakingDetective.png'
 import { useAudio } from '@/composables/useAudio'
 
 import blobbySound1 from '@/assets/sounds/blobby/blobby-grunt.mp3'
@@ -10,17 +11,27 @@ import blobbySound3 from '@/assets/sounds/blobby/blobby-pop.mp3'
 import blobbySound4 from '@/assets/sounds/blobby/blobby-plingpling.mp3'
 import blobbySound5 from '@/assets/sounds/blobby/blobby-blinking.mp3'
 
+const props = withDefaults(
+  defineProps<{
+    message?: string
+  }>(),
+  {
+    message: 'Hei mitt navn er Blobby. Trykk på meg for å høre hvilke lyder jeg kan lage!',
+  },
+)
+
 const showBlobbyMessage = ref(false)
 const blobbyStep = ref(0)
 const isAnimatingBlobby = ref(false)
+const isHoveringBlobby = ref(false)
 
 const { playSound } = useAudio()
 
-const blobbyMessage = 'Hei mitt navn er Blobby. Trykk på meg for å høre hvilke lyder jeg kan lage!'
-
 const blobbySounds = [blobbySound1, blobbySound2, blobbySound3, blobbySound4, blobbySound5]
 
-function handleBlobbyClick() {
+function handleBlobbyClick(event: MouseEvent) {
+  event.stopPropagation()
+
   if (blobbyStep.value === 0) {
     showBlobbyMessage.value = true
     blobbyStep.value = 1
@@ -29,44 +40,50 @@ function handleBlobbyClick() {
 
   if (blobbyStep.value >= 1 && blobbyStep.value <= blobbySounds.length) {
     showBlobbyMessage.value = false
-
-    const soundIndex = blobbyStep.value - 1
-    const soundFile = blobbySounds[soundIndex]
+    const soundFile = blobbySounds[blobbyStep.value - 1]
     if (soundFile) playSound(soundFile)
-
     blobbyStep.value += 1
     return
   }
 
-  if (blobbyStep.value === blobbySounds.length + 1) {
+  isAnimatingBlobby.value = false
+  requestAnimationFrame(() => {
+    isAnimatingBlobby.value = true
+  })
+  setTimeout(() => {
     isAnimatingBlobby.value = false
-
-    requestAnimationFrame(() => {
-      isAnimatingBlobby.value = true
-    })
-
-    setTimeout(() => {
-      isAnimatingBlobby.value = false
-    }, 800)
-
-    showBlobbyMessage.value = false
-    blobbyStep.value = 0
-  }
+  }, 800)
+  showBlobbyMessage.value = false
+  blobbyStep.value = 0
 }
+
+function closeBlobbyMessage() {
+  showBlobbyMessage.value = false
+}
+
+onMounted(() => {
+  document.addEventListener('click', closeBlobbyMessage)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', closeBlobbyMessage)
+})
 </script>
 
 <template>
-  <div class="blobby-wrapper">
+  <div class="blobby-wrapper" @click.stop>
     <button
       class="blobby-button"
       :class="{ animate: isAnimatingBlobby }"
       type="button"
       aria-label="Blobby"
       data-no-click-sound
+      @mouseenter="isHoveringBlobby = true"
+      @mouseleave="isHoveringBlobby = false"
       @click="handleBlobbyClick"
     >
       <img
-        :src="blobbyImage"
+        :src="isHoveringBlobby ? blobbyHoverImage : blobbyImage"
         alt="Blobby"
         class="blobby-image"
         :class="{ wiggle: isAnimatingBlobby }"
@@ -74,7 +91,7 @@ function handleBlobbyClick() {
     </button>
 
     <div v-if="showBlobbyMessage" class="blobby-message">
-      {{ blobbyMessage }}
+      {{ props.message }}
     </div>
   </div>
 </template>
@@ -104,7 +121,9 @@ function handleBlobbyClick() {
   height: auto;
   display: block;
   filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.2));
-  transition: transform ease-in-out var(--icon-transition-duration), filter ease-in-out var(--icon-transition-duration);
+  transition:
+    transform ease-in-out var(--icon-transition-duration),
+    filter ease-in-out var(--icon-transition-duration);
 }
 
 .blobby-button:hover .blobby-image,
@@ -141,55 +160,21 @@ function handleBlobbyClick() {
 }
 
 @keyframes blobby-bounce {
-  0% {
-    transform: translateY(0);
-  }
-
-  30% {
-    transform: translateY(-20px);
-  }
-
-  60% {
-    transform: translateY(0);
-  }
-
-  80% {
-    transform: translateY(-10px);
-  }
-
-  100% {
-    transform: translateY(0);
-  }
+  0% { transform: translateY(0); }
+  30% { transform: translateY(-20px); }
+  60% { transform: translateY(0); }
+  80% { transform: translateY(-10px); }
+  100% { transform: translateY(0); }
 }
 
 @keyframes blobby-wiggle {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  15% {
-    transform: rotate(-6deg);
-  }
-
-  30% {
-    transform: rotate(6deg);
-  }
-
-  45% {
-    transform: rotate(-5deg);
-  }
-
-  60% {
-    transform: rotate(5deg);
-  }
-
-  75% {
-    transform: rotate(-2deg);
-  }
-
-  100% {
-    transform: rotate(0deg);
-  }
+  0% { transform: rotate(0deg); }
+  15% { transform: rotate(-6deg); }
+  30% { transform: rotate(6deg); }
+  45% { transform: rotate(-5deg); }
+  60% { transform: rotate(5deg); }
+  75% { transform: rotate(-2deg); }
+  100% { transform: rotate(0deg); }
 }
 
 @media (max-width: 768px) {

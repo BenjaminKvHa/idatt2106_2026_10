@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onBeforeUnmount, ref, watch } from 'vue'
+import { h, onBeforeUnmount, ref, render, watch } from 'vue'
+import BaseModal from '@/components/ui/BaseModal.vue'
 import { getBlobUrl } from '@/utils/apiUtils'
 
 defineOptions({
@@ -9,9 +10,11 @@ defineOptions({
 const props = defineProps<{
   src?: string | null
   alt: string
+  previewOnClick?: boolean
 }>()
 
 const objectUrl = ref('')
+let previewContainer: HTMLDivElement | null = null
 
 function revokeObjectUrl() {
   if (!objectUrl.value) {
@@ -22,9 +25,49 @@ function revokeObjectUrl() {
   objectUrl.value = ''
 }
 
+function closePreview() {
+  if (!previewContainer) {
+    return
+  }
+
+  render(null, previewContainer)
+  previewContainer.remove()
+  previewContainer = null
+}
+
+function openPreview() {
+  if (!props.previewOnClick || !objectUrl.value || previewContainer) {
+    return
+  }
+
+  previewContainer = document.createElement('div')
+  document.body.appendChild(previewContainer)
+
+  render(
+    h(
+      BaseModal,
+      {
+        panelClass: 'authenticated-image-modal',
+        onClose: closePreview,
+      },
+      {
+        default: () => [
+          h('img', {
+            src: objectUrl.value,
+            alt: props.alt,
+            class: 'authenticated-image-modal__image',
+          }),
+        ],
+      },
+    ),
+    previewContainer,
+  )
+}
+
 watch(
   () => props.src,
   async (src) => {
+    closePreview()
     revokeObjectUrl()
 
     if (!src) {
@@ -41,10 +84,45 @@ watch(
 )
 
 onBeforeUnmount(() => {
+  closePreview()
   revokeObjectUrl()
 })
 </script>
 
 <template>
-  <img v-if="objectUrl" :src="objectUrl" :alt="alt" v-bind="$attrs" />
+  <img
+    v-if="objectUrl"
+    :src="objectUrl"
+    :alt="alt"
+    :class="{ 'preview-enabled': previewOnClick }"
+    :role="previewOnClick ? 'button' : undefined"
+    :tabindex="previewOnClick ? 0 : undefined"
+    @click="openPreview"
+    @keydown.enter.prevent="openPreview"
+    @keydown.space.prevent="openPreview"
+  />
 </template>
+
+<style>
+.preview-enabled {
+  cursor: zoom-in;
+}
+
+.authenticated-image-modal {
+  width: min(92vw, 960px);
+  padding: 1rem;
+  background: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+}
+
+.authenticated-image-modal__image {
+  display: block;
+  width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: 1rem;
+  background: rgba(0, 0, 0, 0.15);
+}
+</style>

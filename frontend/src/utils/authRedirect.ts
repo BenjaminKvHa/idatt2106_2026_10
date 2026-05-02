@@ -4,6 +4,7 @@ export type MeProfile = {
   role: BackendAccountRole
   classroomCode: string | null
   membershipConfirmed: boolean
+  needsIntroSequence: boolean
 }
 
 const ME_CACHE_KEY = 'me-profile-cache'
@@ -47,6 +48,10 @@ export function getPupilMembershipRoute(profile: MeProfile | null): string {
     return '/join-classroom/waiting-classroom'
   }
 
+  if (profile.needsIntroSequence) {
+    return '/pupil/welcome-guide'
+  }
+
   return '/pupil'
 }
 
@@ -58,7 +63,8 @@ export async function resolvePostAuthRoute(role?: BackendAccountRole): Promise<s
   }
 
   if (role === 'PUPIL') {
-    return getPupilMembershipRoute(await fetchMeCached({ force: true }))
+    const profile = await fetchMeCached({ force: true })
+    return profile ? getPupilMembershipRoute(profile) : '/sign-in'
   }
 
   return '/'

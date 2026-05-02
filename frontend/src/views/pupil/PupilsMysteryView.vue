@@ -33,7 +33,6 @@ type ProfileResponse = {
 const activeTab = ref<'current' | 'previous'>('current')
 const currentIndex = ref(0)
 const showSubmitPopup = ref(false)
-const selectedImage = ref<SubmittedMystery | null>(null)
 
 const uploadedImage = ref<File | null>(null)
 const uploadedImagePreview = ref('')
@@ -149,14 +148,6 @@ const openSubmitPopup = () => {
   showSubmitPopup.value = true
 }
 
-const openImagePreview = (mystery: SubmittedMystery) => {
-  selectedImage.value = mystery
-}
-
-const closeImagePreview = () => {
-  selectedImage.value = null
-}
-
 const closeSubmitPopup = () => {
   showSubmitPopup.value = false
   uploadedImage.value = null
@@ -223,7 +214,6 @@ onBeforeUnmount(() => {
       <section class="mystery-panel">
         <div class="header">
           <div>
-            <p class="eyebrow">Detektivbyrået presenterer</p>
             <h1>UKENS MYSTERIUM</h1>
           </div>
 
@@ -297,14 +287,12 @@ onBeforeUnmount(() => {
                 :key="mystery.id"
                 class="submitted-card"
               >
-                <button
+                <AuthenticatedImage
+                  :src="`/api/objects/${mystery.fileObjectId}`"
+                  alt="Innsendt mysterium"
                   class="image-preview"
-                  type="button"
-                  aria-label="Åpne bilde i stort format"
-                  @click="openImagePreview(mystery)"
-                >
-                  <AuthenticatedImage :src="`/api/objects/${mystery.fileObjectId}`" alt="Innsendt mysterium" />
-                </button>
+                  preview-on-click
+                />
 
                 <div class="comment-box">
                   <span class="case-label">Kommentar</span>
@@ -366,22 +354,6 @@ onBeforeUnmount(() => {
     </div>
   </BaseModal>
 
-    <div
-      v-if="selectedImage"
-      class="image-modal-overlay"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Forstørret mysteriebilde"
-      @click.self="closeImagePreview"
-    >
-      <div class="image-modal">
-        <button class="image-modal-close" type="button" aria-label="Lukk bilde" @click="closeImagePreview">
-          ×
-        </button>
-
-        <AuthenticatedImage :src="`/api/objects/${selectedImage.fileObjectId}`" alt="Forstørret innsendt mysterium" />
-      </div>
-    </div>
   </div>
 </template>
 
@@ -564,8 +536,7 @@ h1 {
   margin-bottom: 0;
 }
 
-.image-preview,
-.image-placeholder {
+.image-preview {
   width: 100%;
   min-height: 320px;
   border: var(--border-thin) solid var(--color-text);
@@ -579,21 +550,11 @@ h1 {
 
 .image-preview {
   padding: 0;
-  cursor: zoom-in;
-}
-
-.image-preview img {
   width: 100%;
   height: auto;
   max-height: 520px;
   object-fit: contain;
   display: block;
-}
-
-.image-placeholder span {
-  color: var(--beige-light);
-  font-family: 'Inika', serif;
-  font-size: 1.6rem;
 }
 
 .comment-box {
@@ -801,53 +762,6 @@ textarea {
   cursor: not-allowed;
 }
 
-.image-modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 200;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: clamp(1rem, 4vw, 3rem);
-  background: rgba(8, 5, 12, 0.82);
-  backdrop-filter: blur(4px);
-}
-
-.image-modal {
-  position: relative;
-  width: min(1200px, 94vw);
-  max-height: 90vh;
-  padding: clamp(0.75rem, 2vw, 1.25rem);
-  background: rgba(245, 232, 206, 0.96);
-  border: var(--border-wide) solid var(--brown-medium);
-  border-radius: 24px;
-  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.55);
-}
-
-.image-modal img {
-  width: 100%;
-  max-height: calc(90vh - 4rem);
-  object-fit: contain;
-  display: block;
-  border-radius: 16px;
-}
-
-.image-modal-close {
-  position: absolute;
-  top: -1.1rem;
-  right: -1.1rem;
-  width: 3rem;
-  height: 3rem;
-  border: var(--border-thin) solid var(--color-text);
-  border-radius: 999px;
-  background: var(--beige-light);
-  color: var(--brown-dark);
-  font-size: 2rem;
-  line-height: 1;
-  cursor: pointer;
-  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.35);
-}
-
 @media (max-width: 680px) {
   .content {
     padding: 1rem;
@@ -878,8 +792,7 @@ textarea {
     max-height: 450px;
   }
 
-  .image-preview,
-  .image-placeholder {
+  .image-preview {
     min-height: 240px;
   }
 

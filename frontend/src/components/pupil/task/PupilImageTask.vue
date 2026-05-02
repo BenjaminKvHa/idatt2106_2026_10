@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AuthenticatedImage from '@/components/ui/AuthenticatedImage.vue';
 import type { ImageCategory, ValidationResult } from '@/types/chapter'
 
 defineProps<{
@@ -58,7 +59,7 @@ function justificationClass(
         wrong: result && result.correct === false,
       }"
     >
-      <img v-if="imageUrl" :src="imageUrl" alt="Oppgavebilde" class="task-image" />
+      <AuthenticatedImage v-if="imageUrl" :src="imageUrl" alt="Oppgavebilde" class="task-image" preview-on-click />
       <div v-else class="image-placeholder">Laster bilde…</div>
     </div>
 
@@ -172,15 +173,18 @@ function justificationClass(
 }
 
 .choices button:hover:not(:disabled) {
-  background: #f4a259;
+  background: #90caf9;
+  border-color: #1976d2;
+  color: #0d2b45;
   transform: scale(1.05);
 }
 
 .choices button.selected {
-  background: #f4a259;
-  border-color: #000;
+  background: #1976d2;
+  border-color: #0d47a1;
+  color: white;
   transform: scale(1.08);
-  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 0 3px rgb(25 118 210 / 25%);
 }
 
 .reason-box {

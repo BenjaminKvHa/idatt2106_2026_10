@@ -77,7 +77,10 @@ const selectedStopNote = computed(() => {
 })
 
 const hasUnsavedUsernameChanges = computed(() => {
-  return selectedPupil.value?.status === 'APPROVED' && editUsername.value !== selectedPupil.value.username
+  return (
+    selectedPupil.value?.status === 'APPROVED' &&
+    editUsername.value !== selectedPupil.value.username
+  )
 })
 
 const confirmModalShow = ref(false)
@@ -223,11 +226,11 @@ async function loadPupils() {
 
 async function loadSelectedNotebook() {
   if (
-    activePanel.value !== 'NOTES'
-    || !selectedPupil.value
-    || selectedPupil.value.status !== 'APPROVED'
-    || !selectedStopName.value
-    || !classroomCode.value
+    activePanel.value !== 'NOTES' ||
+    !selectedPupil.value ||
+    selectedPupil.value.status !== 'APPROVED' ||
+    !selectedStopName.value ||
+    !classroomCode.value
   ) {
     notebookLoading.value = false
     notebookError.value = ''
@@ -253,7 +256,8 @@ async function loadSelectedNotebook() {
       selectedNotebookNote.value = ''
       notebookError.value = ''
     } else {
-      notebookError.value = fetchError instanceof Error ? fetchError.message : 'Failed to load notebook'
+      notebookError.value =
+        fetchError instanceof Error ? fetchError.message : 'Failed to load notebook'
     }
   } finally {
     notebookLoading.value = false
@@ -283,7 +287,8 @@ const saveChanges = async (): Promise<void> => {
     pupil.username = updatedPupil.username
     pupil.totalXp = updatedPupil.totalXp
   } catch (requestError) {
-    actionError.value = requestError instanceof Error ? requestError.message : 'Failed to save pupil changes'
+    actionError.value =
+      requestError instanceof Error ? requestError.message : 'Failed to save pupil changes'
     return
   } finally {
     savingUsername.value = false
@@ -307,7 +312,8 @@ const removePupil = async (): Promise<void> => {
     await loadPupils()
     closeDetails()
   } catch (requestError) {
-    actionError.value = requestError instanceof Error ? requestError.message : 'Failed to remove pupil'
+    actionError.value =
+      requestError instanceof Error ? requestError.message : 'Failed to remove pupil'
   }
 }
 
@@ -316,11 +322,15 @@ const approvePendingPupil = async (): Promise<void> => {
 
   try {
     actionError.value = ''
-    await put(`/api/classrooms/${classroomCode.value}/pupils/${selectedPupil.value.email}/accept`, {})
+    await put(
+      `/api/classrooms/${classroomCode.value}/pupils/${selectedPupil.value.email}/accept`,
+      {},
+    )
     await loadPupils()
     closeDetails()
   } catch (requestError) {
-    actionError.value = requestError instanceof Error ? requestError.message : 'Failed to approve pupil'
+    actionError.value =
+      requestError instanceof Error ? requestError.message : 'Failed to approve pupil'
   }
 }
 
@@ -339,7 +349,8 @@ const rejectPendingPupil = async (): Promise<void> => {
     await loadPupils()
     closeDetails()
   } catch (requestError) {
-    actionError.value = requestError instanceof Error ? requestError.message : 'Failed to reject pupil'
+    actionError.value =
+      requestError instanceof Error ? requestError.message : 'Failed to reject pupil'
   }
 }
 
@@ -364,13 +375,9 @@ watch(
   },
 )
 
-watch(
-  [selectedPupilEmail, selectedStopName, activePanel],
-  async () => {
-    await loadSelectedNotebook()
-  },
-)
-
+watch([selectedPupilEmail, selectedStopName, activePanel], async () => {
+  await loadSelectedNotebook()
+})
 </script>
 
 <template>
@@ -435,7 +442,7 @@ watch(
 
 @media (max-width: 768px) {
   .pupils-view {
-    padding: .5rem;
+    padding: 0.5rem;
   }
 }
 

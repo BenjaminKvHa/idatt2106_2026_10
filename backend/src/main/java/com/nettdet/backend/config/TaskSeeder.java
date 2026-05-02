@@ -178,13 +178,16 @@ public class TaskSeeder implements ApplicationRunner {
             Long falskFileId = getOrUploadFile(falskObjectKey, falskFile);
 
             String ekteName = ekteFile.getFileName().toString();
+            String falskName = falskFile.getFileName().toString();
             NewsVerificationTask taskData = new NewsVerificationTask(
                     "To avisforsider ligger foran deg. Én er ekte og én er falsk. Hvilken er falsk?",
                     ekteFileId,
                     falskFileId,
                     falskFileId, // correct = the fake one
                     getNewsCorrectDescription(ekteName),
-                    getNewsFalseDescription(ekteName)
+                    getNewsFalseDescription(ekteName),
+                    getNewsAltText(ekteName),
+                    getNewsAltText(falskName)
             );
 
             taskAdminService.createTask(loadChapter(CHAPTER_ID_NYHETSKVARTALET), difficulty, taskData);
@@ -331,13 +334,16 @@ public class TaskSeeder implements ApplicationRunner {
             Long falskFileId = getOrUploadFile(falskObjectKey, falskFile);
 
             String ekteName = ekteFile.getFileName().toString();
+            String falskName = falskFile.getFileName().toString();
             NewsVerificationTask inner = new NewsVerificationTask(
                     "To avisforsider ligger foran deg. Én er ekte og én er falsk. Hvilken er falsk?",
                     ekteFileId,
                     falskFileId,
                     falskFileId,
                     getNewsCorrectDescription(ekteName),
-                    getNewsFalseDescription(ekteName)
+                    getNewsFalseDescription(ekteName),
+                    getNewsAltText(ekteName),
+                    getNewsAltText(falskName)
             );
             DatacenterTask wrapped = new DatacenterTask(DatacenterTaskFormat.NEWS_VERIFICATION, null, inner);
 
@@ -626,6 +632,80 @@ public class TaskSeeder implements ApplicationRunner {
     private String getNewsFalseDescription(String ekteFileName) {
         DescriptionPair pair = NEWS_DESCRIPTIONS.get(ekteFileName.toLowerCase());
         return pair != null ? pair.wrong() : "Ikke helt. Den andre forsiden var faktisk den falske.";
+    }
+
+    // Per-image WCAG alt texts. Keys are lowercased filenames.
+    // Each entry describes what is visually present on the page so a screen-reader
+    // user gets the same observable cues a sighted pupil would use to make a judgement.
+    private static final java.util.Map<String, String> NEWS_ALT_TEXTS = java.util.Map.ofEntries(
+            // Nyhetskvartalet (chap1) — easy
+            java.util.Map.entry("nyhetsartikkel_ekte_1.png",
+                    "Avisforside med en nøktern nyhetsartikkel. Overskriften er skrevet i vanlig størrelse, og artikkelen har ett bilde knyttet til saken."),
+            java.util.Map.entry("nyhetsartikkel_falsk_1.png",
+                    "Avisforside der overskriften er skrevet med store bokstaver og flere utropstegn. Det samme bildet er gjentatt flere steder på siden."),
+            java.util.Map.entry("nyhetsartikkel_ekte_3.png",
+                    "Avisforside med en troverdig nyhetssak. Bildet på forsiden passer med overskriften."),
+            java.util.Map.entry("nyhetsartikkel_falsk_3.png",
+                    "Avisforside med utropstegn i overskriften som hevder at romvesener er funnet. Bildet på forsiden passer ikke med overskriften."),
+            java.util.Map.entry("nyhetsartikkel_ekte_6.png",
+                    "Avisforside med en vanlig nyhetssak og et tydelig, lesbart bilde."),
+            java.util.Map.entry("nyhetsartikkel_falsk_6.png",
+                    "Avisforside som viser romvesener, og enkelte bokstaver (blant annet ø) er forvrengt slik KI-genererte bilder ofte gjør."),
+
+            // Nyhetskvartalet (chap1) — medium
+            java.util.Map.entry("nyhetsartikkel_ekte_2.png",
+                    "Avisforside med skarpt bilde og en overskrift som passer med innholdet i bildet."),
+            java.util.Map.entry("nyhetsartikkel_falsk_2.png",
+                    "Avisforside der overskriften ikke helt matcher bildet. Bildet er kornete og av lav kvalitet, og noen bokstaver ser feil ut."),
+            java.util.Map.entry("nyhetsartikkel_ekte_7.png",
+                    "Avisforside med en nyhetssak signert med en navngitt journalist og en troverdig kilde."),
+            java.util.Map.entry("nyhetsartikkel_falsk_7.png",
+                    "Avisforside som melder om et dødsfall. Saken er ikke bekreftet av andre kilder, og personen er fortsatt i live."),
+            java.util.Map.entry("nyhetsartikkel_ekte_8.png",
+                    "Avisforside med en navngitt fagperson som kilde og uten påklistret logo."),
+            java.util.Map.entry("nyhetsartikkel_falsk_8.png",
+                    "Avisforside der eksperten er omtalt som anonym seismolog. En tilfeldig logo er plassert oppå bildet."),
+
+            // Nyhetskvartalet (chap1) — hard
+            java.util.Map.entry("nyhetsartikkel_ekte_4.png",
+                    "Avisforside fra et kjent nettsted. URL-en øverst på siden er skrevet riktig."),
+            java.util.Map.entry("nyhetsartikkel_falsk_4.png",
+                    "Avisforside som ser nesten lik en kjent nyhetsside ut, men URL-en øverst er endret slik at 'msn' er skrevet som 'rnsn'."),
+            java.util.Map.entry("nyhetsartikkel_ekte_5.png",
+                    "Avisforside med byline fra en navngitt journalist som kan verifiseres."),
+            java.util.Map.entry("nyhetsartikkel_falsk_5.png",
+                    "Avisforside med byline fra journalister hvis navn virker oppdiktet og ikke kan verifiseres."),
+            java.util.Map.entry("nyhetsartikkel_ekte_9.png",
+                    "Avisforside med vanlig journalistisk språk og en nøktern saksframstilling."),
+            java.util.Map.entry("nyhetsartikkel_falsk_9.png",
+                    "Avisforside som omtaler UFO-er. Språket er unaturlig og preget av rare formuleringer."),
+
+            // Datasenteret (chap3) news
+            java.util.Map.entry("datasenteret_nyhet_ekte_1.png",
+                    "Nyhetsartikkel der bildet hører til teksten, og bildeteksten både navngir personen og forklarer koblingen til saken."),
+            java.util.Map.entry("datasenteret_nyhet_falsk_1.png",
+                    "Nyhetsartikkel der bildet ikke ser ut til å høre til teksten. Bildeteksten verken navngir personen eller knytter bildet til saken."),
+            java.util.Map.entry("datasenteret_nyhet_ekte_2.png",
+                    "Nyhetsartikkel med bilder som passer saken, og bildetekst med både fotografkreditering og forklaring."),
+            java.util.Map.entry("datasenteret_nyhet_falsk_2.png",
+                    "Nyhetsartikkel med bilder som ikke passer til saken. Bildeteksten mangler fotografnavn og forklaring av hva bildet viser."),
+            java.util.Map.entry("datasenteret_nyhet_ekte_3.png",
+                    "Nyhetsartikkel med nøktern visuell stil og et troverdig pressebilde."),
+            java.util.Map.entry("datasenteret_nyhet_falsk_3.png",
+                    "Nyhetsartikkel med tydelig manipulert bilde og overdreven, fargesterk layout."),
+            java.util.Map.entry("datasenteret_nyhet_ekte_4.png",
+                    "Nyhetsartikkel med journalistens navn og korrekt tittel 'utenriksjournalist' under bylinen."),
+            java.util.Map.entry("datasenteret_nyhet_falsk_4.png",
+                    "Nyhetsartikkel som ved første øyekast ser troverdig ut, men under journalistens navn står tittelen feilstavet som 'utrriksjournalist'.")
+    );
+
+    private String getNewsAltText(String fileName) {
+        String key = fileName.toLowerCase();
+        String alt = NEWS_ALT_TEXTS.get(key);
+        if (alt != null) return alt;
+        return key.contains("_falsk")
+                ? "Avisforside som er en falsk nyhetssak."
+                : "Avisforside med en nyhetssak.";
     }
 
     private List<String> getJustifications(String fileName) {

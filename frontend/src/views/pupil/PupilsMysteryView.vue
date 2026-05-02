@@ -9,6 +9,7 @@ type SubmittedMystery = {
   id: number
   fileObjectId: number
   comment: string
+  altText: string | null
 }
 
 type WeekGroup = {
@@ -21,6 +22,7 @@ type PupilWeeklyMysteryResponse = {
   id: number
   fileObjectId: number
   comment: string
+  altText: string | null
   createdAt: string
   approvedAt: string | null
 }
@@ -85,7 +87,7 @@ async function loadMysteries() {
         buckets.set(wk.key, group)
       }
 
-      group.mysteries.push({ id: item.id, fileObjectId: item.fileObjectId, comment: item.comment })
+      group.mysteries.push({ id: item.id, fileObjectId: item.fileObjectId, comment: item.comment, altText: item.altText })
     }
 
     const sorted = Array.from(buckets.values()).sort((a, b) => (a.weekKey < b.weekKey ? 1 : -1))
@@ -288,7 +290,7 @@ onBeforeUnmount(() => {
               >
                 <AuthenticatedImage
                   :src="`/api/objects/${mystery.fileObjectId}`"
-                  alt="Innsendt mysterium"
+                  :alt="mystery.altText ?? 'Innsendt mysterium'"
                   class="image-preview"
                   preview-on-click
                 />

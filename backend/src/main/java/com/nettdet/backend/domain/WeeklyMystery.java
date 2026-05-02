@@ -45,6 +45,9 @@ public class WeeklyMystery extends CreatedAtEntity {
     @Column(name = "comment", nullable = false, columnDefinition = "TEXT")
     private String comment;
 
+    @Column(name = "alt_text", columnDefinition = "TEXT")
+    private String altText;
+
     @Column(name = "approved", nullable = false)
     private boolean approved;
 
@@ -92,6 +95,14 @@ public class WeeklyMystery extends CreatedAtEntity {
 
     public void setComment(String comment) {
         this.comment = comment;
+    }
+
+    public String getAltText() {
+        return altText;
+    }
+
+    public void setAltText(String altText) {
+        this.altText = altText;
     }
 
     public boolean isApproved() {

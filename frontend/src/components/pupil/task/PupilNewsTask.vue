@@ -6,6 +6,7 @@ const props = defineProps<{
   taskDescription?: string
   fileIds: number[]
   imageUrls: string[]
+  altTexts?: (string | null)[]
   selectedFileId: number | null
   result: ValidationResult | null
   submitting?: boolean
@@ -44,7 +45,7 @@ function cardClass(fileId: number): string {
           <AuthenticatedImage
             v-if="imageUrls[idx]"
             :src="imageUrls[idx]"
-            :alt="`Bilde ${Number(idx) + 1}`"
+            :alt="props.altTexts?.[idx] ?? `Bilde ${Number(idx) + 1}`"
             class="picture"
             preview-on-click
           />

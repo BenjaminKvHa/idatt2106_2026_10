@@ -82,11 +82,12 @@ class WeeklyMysteryRepositoryTest {
         insertBaseData();
         Long fileId = insertFile("default-pending.png", "ABCABC", "ONLY_TEACHERS_IN_CLASS");
         jdbcTemplate.update(
-                "INSERT INTO weekly_mystery (file_object_id, classroom_code, account_email, comment) VALUES (?, ?, ?, ?)",
+                "INSERT INTO weekly_mystery (file_object_id, classroom_code, account_email, comment, alt_text) VALUES (?, ?, ?, ?, ?)",
                 fileId,
                 "ABCABC",
                 "pupil@example.com",
-                "Default pending");
+                "Default pending",
+                "Alt text");
 
         WeeklyMystery mystery = weeklyMysteryRepository
                 .findAllByClassroomClassroomCodeAndApprovedFalseOrderByCreatedAtDesc("ABCABC")
@@ -147,15 +148,7 @@ class WeeklyMysteryRepositoryTest {
                                String comment,
                                boolean approved,
                                LocalDateTime createdAt) {
-        jdbcTemplate.update(
-                "INSERT INTO weekly_mystery (file_object_id, classroom_code, account_email, comment, approved, created_at) "
-                        + "VALUES (?, ?, ?, ?, ?, ?)",
-                fileId,
-                classroomCode,
-                pupilEmail,
-                comment,
-                approved,
-                createdAt);
+        insertMystery(fileId, classroomCode, pupilEmail, comment, approved, createdAt, null);
     }
 
     private void insertMystery(Long fileId,
@@ -166,12 +159,13 @@ class WeeklyMysteryRepositoryTest {
                                LocalDateTime createdAt,
                                LocalDateTime approvedAt) {
         jdbcTemplate.update(
-                "INSERT INTO weekly_mystery (file_object_id, classroom_code, account_email, comment, approved, created_at, approved_at) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO weekly_mystery (file_object_id, classroom_code, account_email, comment, alt_text, approved, created_at, approved_at) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 fileId,
                 classroomCode,
                 pupilEmail,
                 comment,
+                "Alt for " + comment,
                 approved,
                 createdAt,
                 approvedAt);

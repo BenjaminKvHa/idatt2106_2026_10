@@ -67,6 +67,6 @@ class NewsVerificationTaskValidatorTest {
     }
 
     private NewsVerificationTask task(long correctFileId) {
-        return new NewsVerificationTask("desc", 1L, 2L, correctFileId, "good", "bad");
+        return new NewsVerificationTask("desc", 1L, 2L, correctFileId, "good", "bad", null, null);
     }
 }

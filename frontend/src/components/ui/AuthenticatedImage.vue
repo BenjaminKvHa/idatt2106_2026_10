@@ -56,6 +56,7 @@ function openPreview() {
             src: objectUrl.value,
             alt: props.alt,
             class: 'authenticated-image-modal__image',
+            title: "Klikk bilde for å inspisere"
           }),
         ],
       },

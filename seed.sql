@@ -346,6 +346,7 @@ WITH mystery_seed (
     classroom_code,
     account_email,
     comment,
+    alt_text,
     approved,
     approved_at,
     created_at
@@ -353,21 +354,27 @@ WITH mystery_seed (
     VALUES
         ('weekly-mysteries/demo-fake-news-1.png', 'DEMOAA', 'pupil.weekly@example.com',
          'Denne artikkelen bruker veldig dramatisk overskrift, men bildet virker mistenkelig.',
+         'Skjermbilde av en avisforside med en stor, dramatisk overskrift og ett pressebilde under.',
          TRUE, NOW() - INTERVAL '1 day', NOW() - INTERVAL '1 day 2 hours'),
         ('weekly-mysteries/demo-crowd-1.png', 'DEMOAA', 'pupil.alva@example.com',
          'Flere ansikter i folkemengden ser nesten like ut.',
+         'Bilde av en folkemengde der flere ansikter ser unaturlig like ut.',
          TRUE, NOW() - INTERVAL '3 days', NOW() - INTERVAL '3 days 1 hour'),
         ('weekly-mysteries/demo-flowers-1.png', 'DEMOAA', 'pupil.jonas@example.com',
          'Blomstene har rare kanter og bakgrunnen virker kunstig.',
+         'Nærbilde av blomster med uskarpe kanter og en uklar, kunstig bakgrunn.',
          FALSE, NULL, NOW() - INTERVAL '4 hours'),
         ('weekly-mysteries/demo-datacenter-news-1.png', 'DEMOBB', 'pupil.sara@example.com',
          'Denne nyhetssaken ser ut til å blande ekte og falsk informasjon.',
+         'Skjermbilde av en nyhetsartikkel med tekst og pressebilde fra et datasenter.',
          TRUE, NOW() - INTERVAL '2 days', NOW() - INTERVAL '2 days 3 hours'),
         ('weekly-mysteries/demo-earth-1.png', 'DEMOBB', 'pupil.theodor@example.com',
          'Jorda ser altfor glatt ut, og detaljene stemmer ikke helt.',
+         'Bilde av jordkloden sett fra verdensrommet, med uvanlig glatt overflate.',
          FALSE, NULL, NOW() - INTERVAL '7 hours'),
         ('weekly-mysteries/demo-building-1.png', 'MAPAAA', 'pupil.map.partial@example.com',
          'Bygningen ser generert ut fordi vinduene ikke følger samme mønster.',
+         'Bilde av en stor bygningsfasade der vinduene har ujevn plassering.',
          TRUE, NOW() - INTERVAL '8 days', NOW() - INTERVAL '8 days 2 hours')
 )
 INSERT INTO weekly_mystery (
@@ -375,6 +382,7 @@ INSERT INTO weekly_mystery (
     classroom_code,
     account_email,
     comment,
+    alt_text,
     approved,
     approved_at,
     created_at
@@ -384,6 +392,7 @@ SELECT
     mystery_seed.classroom_code,
     mystery_seed.account_email,
     mystery_seed.comment,
+    mystery_seed.alt_text,
     mystery_seed.approved,
     mystery_seed.approved_at,
     mystery_seed.created_at

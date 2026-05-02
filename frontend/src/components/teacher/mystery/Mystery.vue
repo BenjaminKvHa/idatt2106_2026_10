@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import AuthenticatedImage from '@/components/ui/AuthenticatedImage.vue'
 
 defineOptions({
@@ -12,6 +13,7 @@ type MysteryCard = {
   createdAt: string
   pupilLegalName?: string
   pupilEmail?: string
+  altText?: string
 }
 
 const props = defineProps<{
@@ -21,9 +23,11 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  accept: [id: number]
+  accept: [id: number, altText: string]
   remove: [id: number]
 }>()
+
+const localAltText = ref(props.mystery.altText ?? '')
 
 function formatTimestamp(value: string): string {
   const parsedDate = new Date(value)
@@ -41,10 +45,10 @@ function formatTimestamp(value: string): string {
 
 <template>
   <article class="mystery-card">
-    <AuthenticatedImage 
-    :src="`/api/objects/${props.mystery.fileObjectId}`" 
-    alt="Ukens mysterium" 
-    class="mystery-image" 
+    <AuthenticatedImage
+    :src="`/api/objects/${props.mystery.fileObjectId}`"
+    alt="Ukens mysterium"
+    class="mystery-image"
     preview-on-click
     />
 
@@ -66,13 +70,23 @@ function formatTimestamp(value: string): string {
       <p class="mystery-comment">{{ props.mystery.comment }}</p>
       <p class="mystery-time">{{ formatTimestamp(props.mystery.createdAt) }}</p>
 
+      <label v-if="props.pending" class="alt-text-label">
+        Alternativ tekst (for elever med nedsatt syn)
+        <input
+          v-model="localAltText"
+          type="text"
+          placeholder="Beskriv bildet..."
+          :disabled="props.busy"
+        />
+      </label>
+
       <div class="mystery-actions">
         <button
           v-if="props.pending"
           type="button"
           class="mystery-button approve-button"
           :disabled="props.busy"
-          @click="emit('accept', props.mystery.id)"
+          @click="emit('accept', props.mystery.id, localAltText.trim())"
         >
           Godkjenn
         </button>
@@ -153,6 +167,24 @@ function formatTimestamp(value: string): string {
   font-weight: 700;
   color: var(--brown-dark);
   white-space: nowrap;
+}
+
+.alt-text-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--brown-dark);
+  margin: 0.25rem 0 0.5rem;
+}
+
+.alt-text-label input {
+  padding: 0.4rem 0.6rem;
+  border: 2px solid var(--accent);
+  border-radius: 0.5rem;
+  font: inherit;
+  font-size: 0.9rem;
 }
 
 .mystery-actions {

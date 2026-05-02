@@ -21,6 +21,7 @@ type PendingWeeklyMystery = {
   pupilLegalName: string
   comment: string
   createdAt: string
+  altText?: string
 }
 
 const route = useRoute()
@@ -70,14 +71,18 @@ async function loadMysteries() {
   }
 }
 
-async function acceptMystery(mysteryId: number) {
+async function acceptMystery(mysteryId: number, altText: string) {
   if (!classroomCode.value || activeMysteryId.value !== null) return
 
   activeMysteryId.value = mysteryId
   actionError.value = ''
 
   try {
-    await put(`/api/teacher/classrooms/${classroomCode.value}/weekly-mysteries/${mysteryId}/accept`, {})
+    const params = new URLSearchParams()
+    if (altText) params.set('altText', altText)
+    const query = params.toString()
+    const url = `/api/teacher/classrooms/${classroomCode.value}/weekly-mysteries/${mysteryId}/accept${query ? '?' + query : ''}`
+    await put(url, {})
     await loadMysteries()
   } catch (requestError) {
     actionError.value = requestError instanceof Error ? requestError.message : 'Failed to accept mystery'

@@ -102,9 +102,10 @@ public class WeeklyMysteryService {
      */
     @Transactional
     public CreateWeeklyMysteryResponse submitMystery(String classroomCode,
-                                                     MultipartFile file,
-                                                     String comment,
-                                                     JwtUserPrincipal principal) {
+                                                      MultipartFile file,
+                                                      String comment,
+                                                      String altText,
+                                                      JwtUserPrincipal principal) {
         String normalizedClassroomCode = normalizeClassroomCode(classroomCode);
         String normalizedComment = normalizeComment(comment);
         verifyPupilPrincipal(principal);
@@ -120,6 +121,7 @@ public class WeeklyMysteryService {
         mystery.setPupilClassroomMembership(membership);
         mystery.setFileObject(fileObject);
         mystery.setComment(normalizedComment);
+        mystery.setAltText(blankToNull(altText));
         mystery.setApproved(false);
 
         WeeklyMystery savedMystery = weeklyMysteryRepository.saveAndFlush(mystery);
@@ -222,8 +224,9 @@ public class WeeklyMysteryService {
      */
     @Transactional
     public PupilWeeklyMysteryResponse acceptMystery(String classroomCode,
-                                                    Long mysteryId,
-                                                    JwtUserPrincipal principal) {
+                                                     Long mysteryId,
+                                                     String altText,
+                                                     JwtUserPrincipal principal) {
         String normalizedClassroomCode = normalizeClassroomCode(classroomCode);
         verifyTeacherAccess(principal, normalizedClassroomCode);
 
@@ -231,6 +234,9 @@ public class WeeklyMysteryService {
         mystery.setApproved(true);
         if (mystery.getApprovedAt() == null) {
             mystery.setApprovedAt(LocalDateTime.now());
+        }
+        if (altText != null && !altText.isBlank()) {
+            mystery.setAltText(altText.trim());
         }
         mystery.getFileObject().setAccessLevel(ClassroomAccess.ONLY_CLASS);
         fileObjectRepository.save(mystery.getFileObject());
@@ -315,6 +321,7 @@ public class WeeklyMysteryService {
                 mystery.getId(),
                 mystery.getFileObject().getId(),
                 mystery.getComment(),
+                mystery.getAltText(),
                 mystery.getCreatedAt(),
                 mystery.getApprovedAt(),
                 mystery.isApproved());
@@ -325,6 +332,7 @@ public class WeeklyMysteryService {
                 mystery.getId(),
                 mystery.getFileObject().getId(),
                 mystery.getComment(),
+                mystery.getAltText(),
                 mystery.getCreatedAt(),
                 mystery.getApprovedAt());
     }
@@ -336,6 +344,7 @@ public class WeeklyMysteryService {
                 mystery.getPupilClassroomMembership().getAccountEmail(),
                 mystery.getPupilClassroomMembership().getAccount().getLegalName(),
                 mystery.getComment(),
+                mystery.getAltText(),
                 mystery.getCreatedAt(),
                 mystery.getApprovedAt());
     }
@@ -346,6 +355,7 @@ public class WeeklyMysteryService {
                 mystery.getFileObject().getId(),
                 mystery.getPupilClassroomMembership().getAccount().getLegalName(),
                 mystery.getComment(),
+                mystery.getAltText(),
                 mystery.getCreatedAt(),
                 mystery.getApprovedAt());
     }
@@ -364,5 +374,12 @@ public class WeeklyMysteryService {
         }
 
         return comment.trim();
+    }
+
+    private String blankToNull(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
     }
 }

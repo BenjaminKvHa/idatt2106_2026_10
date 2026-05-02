@@ -26,5 +26,11 @@ public record CreateNewsVerificationTaskRequest(
     String correctDescription,
 
     @Schema(description = "Feedback shown when the pupil answers incorrectly.")
-    String incorrectDescription
+    String incorrectDescription,
+
+    @Schema(description = "Alt text for file1 (WCAG 1.1.1). Optional.")
+    String altText1,
+
+    @Schema(description = "Alt text for file2 (WCAG 1.1.1). Optional.")
+    String altText2
 ) {}

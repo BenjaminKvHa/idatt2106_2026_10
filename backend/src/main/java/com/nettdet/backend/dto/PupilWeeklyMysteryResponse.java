@@ -12,6 +12,8 @@ public record PupilWeeklyMysteryResponse(
     Long fileObjectId,
     @Schema(description = "Comment submitted by the pupil.", example = "Jeg fant dette mystiske bildet på nett.")
     String comment,
+    @Schema(description = "Alt text describing the image for assistive technologies (WCAG 1.1.1).", example = "Et bilde av en bygning med rare vinduer.")
+    String altText,
     @Schema(description = "Time the weekly mystery was submitted.", example = "2026-04-23T10:15:30")
     LocalDateTime createdAt,
     @Schema(

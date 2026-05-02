@@ -25,7 +25,6 @@ const {
   stepIndex,
   lastResult,
   runCorrect,
-  runAttempts,
   runDone,
   loading,
   submitting,
@@ -53,7 +52,6 @@ type NewsStepState = {
 }
 
 const showHelpPopup = ref(false)
-const showHintPopup = ref(false)
 
 const currentTask = ref<NewsVerificationResponse | null>(null)
 const imageUrls = ref<string[]>([])
@@ -64,9 +62,6 @@ function closeHelpPopup(): void {
   showHelpPopup.value = false
 }
 
-function closeHintPopup(): void {
-  showHintPopup.value = false
-}
 
 function revokeAllImageUrls(): void {
   for (const state of Object.values(stepStates.value)) {
@@ -237,6 +232,7 @@ onBeforeUnmount(revokeAllImageUrls)
             :task-description="currentTask.taskDescription"
             :file-ids="currentTask.fileIds"
             :image-urls="imageUrls"
+            :alt-texts="currentTask.altTexts"
             :selected-file-id="selectedFileId"
             :result="lastResult"
             :submitting="submitting"

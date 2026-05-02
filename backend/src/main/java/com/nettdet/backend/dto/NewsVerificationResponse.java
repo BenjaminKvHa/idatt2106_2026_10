@@ -11,5 +11,7 @@ public record NewsVerificationResponse(
     @Schema(description = "Task description shown to the pupil.", example = "Velg hvilken av sakene som er troverdig.")
     String taskDescription,
     @Schema(description = "Candidate file object ids shown to the pupil for selection.")
-    List<Long> fileIds
+    List<Long> fileIds,
+    @Schema(description = "Alt texts aligned positionally with fileIds; entries may be null when no alt text was set.")
+    List<String> altTexts
 ) {}

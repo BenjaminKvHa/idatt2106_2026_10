@@ -67,11 +67,13 @@ class WeeklyMysteryControllerTest {
                 argThat("ABCABC"::equals),
                 argThat(argument -> argument.getOriginalFilename().equals("mystery.png")),
                 argThat("Mystery comment"::equals),
+                argThat("Mystery alt text"::equals),
                 argThat(argument -> argument.email().equals("pupil@example.com"))))
                 .thenReturn(new CreateWeeklyMysteryResponse(
                         1L,
                         10L,
                         "Mystery comment",
+                        "Mystery alt text",
                         LocalDateTime.of(2026, 4, 23, 10, 15),
                         null,
                         false));
@@ -79,11 +81,13 @@ class WeeklyMysteryControllerTest {
         mockMvc.perform(multipart("/pupil/classrooms/ABCABC/weekly-mysteries")
                         .file(file)
                         .param("comment", "Mystery comment")
+                        .param("altText", "Mystery alt text")
                         .with(authentication(authenticationFor(principal, "PUPIL"))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.fileObjectId").value(10))
                 .andExpect(jsonPath("$.comment").value("Mystery comment"))
+                .andExpect(jsonPath("$.altText").value("Mystery alt text"))
                 .andExpect(jsonPath("$.approvedAt").value(nullValue()))
                 .andExpect(jsonPath("$.approved").value(false));
     }
@@ -96,6 +100,7 @@ class WeeklyMysteryControllerTest {
         mockMvc.perform(multipart("/pupil/classrooms/ABCABC/weekly-mysteries")
                         .file(file)
                         .param("comment", "Mystery comment")
+                        .param("altText", "Mystery alt text")
                         .with(authentication(authenticationFor(teacherPrincipal(), "TEACHER"))))
                 .andExpect(status().isForbidden());
 
@@ -111,6 +116,7 @@ class WeeklyMysteryControllerTest {
                         2L,
                         20L,
                         "Approved mystery",
+                        "Approved alt text",
                         LocalDateTime.of(2026, 4, 23, 10, 15),
                         LocalDateTime.of(2026, 4, 24, 9, 30))));
 
@@ -136,6 +142,7 @@ class WeeklyMysteryControllerTest {
                         "pupil@example.com",
                         "Pupil Name",
                         "Pending mystery",
+                        "Pending alt text",
                         LocalDateTime.of(2026, 4, 23, 10, 15),
                         null)));
 
@@ -159,6 +166,7 @@ class WeeklyMysteryControllerTest {
                         60L,
                         "Pupil Name",
                         "Approved mystery",
+                        "Approved alt text",
                         LocalDateTime.of(2026, 4, 23, 10, 15),
                         LocalDateTime.of(2026, 4, 24, 9, 30))));
 
@@ -179,11 +187,12 @@ class WeeklyMysteryControllerTest {
     @Test
     void acceptMystery_whenAuthenticatedTeacher_returnsApprovedMystery() throws Exception {
         JwtUserPrincipal principal = teacherPrincipal();
-        when(weeklyMysteryService.acceptMystery("ABCABC", 4L, principal))
+        when(weeklyMysteryService.acceptMystery("ABCABC", 4L, null, principal))
                 .thenReturn(new PupilWeeklyMysteryResponse(
                         4L,
                         40L,
                         "Approved mystery",
+                        "Approved alt text",
                         LocalDateTime.of(2026, 4, 23, 10, 15),
                         LocalDateTime.of(2026, 4, 24, 9, 30)));
 
@@ -195,7 +204,32 @@ class WeeklyMysteryControllerTest {
                 .andExpect(jsonPath("$.comment").value("Approved mystery"))
                 .andExpect(jsonPath("$.approvedAt").value("2026-04-24T09:30:00"));
 
-        verify(weeklyMysteryService).acceptMystery("ABCABC", 4L, principal);
+        verify(weeklyMysteryService).acceptMystery("ABCABC", 4L, null, principal);
+    }
+
+    @DisplayName("Allows authenticated teachers to accept weekly mysteries with alt text")
+    @Test
+    void acceptMystery_whenAuthenticatedTeacherWithAltText_returnsApprovedMystery() throws Exception {
+        JwtUserPrincipal principal = teacherPrincipal();
+        when(weeklyMysteryService.acceptMystery("ABCABC", 4L, "Teacher alt text", principal))
+                .thenReturn(new PupilWeeklyMysteryResponse(
+                        4L,
+                        40L,
+                        "Approved mystery",
+                        "Teacher alt text",
+                        LocalDateTime.of(2026, 4, 23, 10, 15),
+                        LocalDateTime.of(2026, 4, 24, 9, 30)));
+
+        mockMvc.perform(put("/teacher/classrooms/ABCABC/weekly-mysteries/4/accept")
+                        .param("altText", "Teacher alt text")
+                        .with(authentication(authenticationFor(principal, "TEACHER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(4))
+                .andExpect(jsonPath("$.fileObjectId").value(40))
+                .andExpect(jsonPath("$.comment").value("Approved mystery"))
+                .andExpect(jsonPath("$.approvedAt").value("2026-04-24T09:30:00"));
+
+        verify(weeklyMysteryService).acceptMystery("ABCABC", 4L, "Teacher alt text", principal);
     }
 
     @DisplayName("Allows authenticated teachers to decline weekly mysteries")

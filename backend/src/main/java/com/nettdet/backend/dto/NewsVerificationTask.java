@@ -15,5 +15,9 @@ public record NewsVerificationTask(
     @Schema(description = "Feedback shown when the pupil answers correctly.")
     String correctDescription,
     @Schema(description = "Feedback shown when the pupil answers incorrectly.")
-    String incorrectDescription
+    String incorrectDescription,
+    @Schema(description = "Alt text describing the first image for assistive technologies (WCAG 1.1.1). Nullable.")
+    String altText_1,
+    @Schema(description = "Alt text describing the second image for assistive technologies (WCAG 1.1.1). Nullable.")
+    String altText_2
 ) {}

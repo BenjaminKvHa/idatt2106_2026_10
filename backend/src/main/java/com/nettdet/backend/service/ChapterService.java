@@ -165,10 +165,14 @@ public class ChapterService {
         logger.info("Returning news verification task id {}", task.getId());
         List<Long> fileIds = new ArrayList<>(List.of(stored.fileId_1(), stored.fileId_2()));
         Collections.shuffle(fileIds);
+        List<String> altTexts = fileIds.stream()
+            .map(id -> id.equals(stored.fileId_1()) ? stored.altText_1() : stored.altText_2())
+            .toList();
         return new NewsVerificationResponse(
             task.getId(),
             stored.taskDescription(),
-            fileIds
+            fileIds,
+            altTexts
         );
     }
 
@@ -345,6 +349,9 @@ public class ChapterService {
                 NewsVerificationTask inner = stored.newsTask();
                 List<Long> fileIds = new ArrayList<>(List.of(inner.fileId_1(), inner.fileId_2()));
                 Collections.shuffle(fileIds);
+                List<String> altTexts = fileIds.stream()
+                    .map(id -> id.equals(inner.fileId_1()) ? inner.altText_1() : inner.altText_2())
+                    .toList();
                 yield new DatacenterTaskResponse(
                     task.getId(),
                     DatacenterTaskFormat.NEWS_VERIFICATION,
@@ -352,7 +359,8 @@ public class ChapterService {
                     new NewsVerificationResponse(
                         task.getId(),
                         inner.taskDescription(),
-                        fileIds
+                        fileIds,
+                        altTexts
                     )
                 );
             }

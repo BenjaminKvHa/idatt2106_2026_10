@@ -1,5 +1,5 @@
 export interface Asset {
-    assetType: String
-    name: String
-    fileType: String
+    assetType: string
+    name: string
+    fileType: string
 }

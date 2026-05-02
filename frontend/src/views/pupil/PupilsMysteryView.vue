@@ -325,7 +325,7 @@ onBeforeUnmount(() => {
 
         <label>
           Bilde
-          <input type="file" accept="image/*" @change="handleImageUpload" />
+          <input type="file" accept="image/png,image/jpeg" @change="handleImageUpload" />
         </label>
 
         <div v-if="uploadedImagePreview" class="popup-image-preview">

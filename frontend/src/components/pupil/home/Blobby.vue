@@ -126,7 +126,7 @@ onBeforeUnmount(() => {
     filter 0.15s ease;
 }
 
-.blobby-button:hover .blobby-image {
+.blobby-button:hover, .blobby-image, .blobby-button:focus-visible {
   transform: scale(1.04);
 }
 

@@ -176,7 +176,7 @@ const goToSignup = (): void => {
 .landing-card {
   width: 390px;
   overflow: hidden;
-  background: #ffffff;
+  background: white;
   box-shadow: 0 0 0 3px #dfe6ef inset;
 }
 
@@ -290,16 +290,16 @@ h2 {
 }
 
 .microsoft span:nth-child(1) {
-  background: #f25022;
+  background: var(--red-danger-100);
 }
 .microsoft span:nth-child(2) {
-  background: #7fba00;
+  background: var(--green-confirm-100);
 }
 .microsoft span:nth-child(3) {
-  background: #00a4ef;
+  background: var(--blue-medium-100);
 }
 .microsoft span:nth-child(4) {
-  background: #ffb900;
+  background: var(--orange-medium-100);
 }
 
 .id-porten {
@@ -320,7 +320,7 @@ h2 {
 .plus {
   font-size: 34px;
   line-height: 1;
-  color: #28428f;
+  color: var(--blue-dark);
 }
 
 .landing-footer {
@@ -358,7 +358,7 @@ h2 {
   min-height: 42px;
   margin-top: 14px;
   border: 1px solid #8a8f99;
-  background: #ffffff;
+  background: white;
   color: #2c2c2c;
   font-size: 14px;
   cursor: pointer;
@@ -377,7 +377,7 @@ h2 {
   margin: 0 0 8px;
   font-size: 13px;
   font-weight: 700;
-  color: #111;
+  color: black;
 }
 
 .description {
@@ -435,7 +435,7 @@ h2 {
 
 .feide-card,
 .landing-card {
-  background: #ffffff;
+  background: white;
 
   border: 4px solid #000;
 

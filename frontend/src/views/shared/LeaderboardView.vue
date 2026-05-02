@@ -215,7 +215,7 @@ h1 {
   text-align: center;
   font-family: 'Inika', serif;
   font-size: clamp(2.1rem, 4vw, 3.7rem);
-  color: #fff7df;
+  color: var(--beige-light-100);
   line-height: 1;
   text-shadow:
     0 0.12rem 0 #4b2511,
@@ -271,7 +271,7 @@ li {
   background-position: center;
   background-size: 100% 100%;
   border: 0;
-  color: #fff7df;
+  color: var(--beige-light-100);
   font-size: clamp(1.05rem, 1.6vw, 1.45rem);
   text-shadow:
     0 0.08rem 0 #4b2511,
@@ -304,7 +304,7 @@ li {
 .current-page-classroom > * {
   position: relative;
   z-index: 1;
-  color: #fff7df;
+  color: var(--beige-light-100);
   text-shadow:
     0 0.08rem 0 #000,
     0 0.16rem 0.2rem rgba(0, 0, 0, 0.9);
@@ -312,7 +312,7 @@ li {
 
 .rank {
   font-weight: 800;
-  color: #fff7df;
+  color: var(--beige-light-100);
   min-width: 2rem;
 }
 
@@ -344,7 +344,7 @@ li {
   background-repeat: no-repeat;
   background-position: center;
   background-size: 100% 100%;
-  color: #fff7df;
+  color: var(--beige-light-100);
   font-size: clamp(1.05rem, 1.55vw, 1.35rem);
   text-shadow:
     0 0.08rem 0 #4b2511,
@@ -408,7 +408,7 @@ li {
 .pagination span {
   font-weight: 800;
   color: var(--brown-dark);
-  background: rgba(255, 244, 220, 0.85);
+  background: var(--beige-light-80);
   padding: 0.35rem 0.75rem;
   border-radius: 999px;
 }
@@ -421,7 +421,7 @@ li {
     --leaderboard-title-to-list-overlap: -1rem;
     --leaderboard-entry-overlap: -0.95rem;
     --leaderboard-current-overlap: -0.75rem;
-    
+
     padding: 0% 0% 0;
     inset: 8% 4% !important;
   }

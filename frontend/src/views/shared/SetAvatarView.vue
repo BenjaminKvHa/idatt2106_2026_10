@@ -266,7 +266,7 @@ onMounted(async () => {
 .preview-panel {
   border-radius: 1.5rem;
   border: var(--border-wide) solid var(--brown-dark);
-  background: rgba(255, 250, 241, 0.92);
+  background: var(--beige-light-100);
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
 }
 
@@ -361,7 +361,7 @@ onMounted(async () => {
   align-items: center;
   justify-content: flex-start;
   gap: 0.75rem;
-  background: linear-gradient(180deg, #fef3dc, #f8e0b8);
+  background: var(--gradient-popup);
   padding: 1.5rem 1rem;
   position: sticky;
   top: 1.25rem;

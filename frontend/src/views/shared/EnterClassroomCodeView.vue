@@ -165,11 +165,11 @@ async function handleConfirm() {
   margin-top: 4rem;
   padding: 2.5rem 3rem 3rem;
 
-  background: #d2b89c;
+  background: var(--beige-light-100);
 
   border-radius: 1.5rem;
 
-  border: 4px solid #2b1a10;
+  border: 4px solid var(--brown-dark-100);
 
   box-shadow:
     0 8px 0 #2b1a10,
@@ -187,7 +187,7 @@ async function handleConfirm() {
   margin: 0;
   font-size: 3rem;
   font-weight: 800;
-  color: #000;
+  color: black;
   text-shadow: none;
   text-align: center;
 }
@@ -334,13 +334,13 @@ async function handleConfirm() {
   width: 200px;
   padding: 0.8rem;
 
-  background: #ffffff;
+  background: white;
   border: 3px solid #000;
   border-radius: 0.8rem;
 
   font-size: 0.9rem;
   line-height: 1.3;
-  color: #000;
+  color: black;
 
   box-shadow: 0 6px 0 #000;
 

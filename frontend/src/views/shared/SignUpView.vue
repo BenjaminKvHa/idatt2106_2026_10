@@ -319,7 +319,7 @@ h1 {
 
 .feide-card,
 .landing-card {
-  background: #ffffff;
+  background: white;
 
   border: 3px solid #000;
 

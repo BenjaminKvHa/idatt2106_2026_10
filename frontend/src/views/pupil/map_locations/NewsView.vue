@@ -5,6 +5,7 @@ import TopBar from '@/components/pupil/TopBar.vue'
 import HintCreature from '@/components/pupil/task/BlobbyQuestion.vue'
 import TaskGuide from '@/components/pupil/TaskGuide.vue'
 import CompleteLevelPopup from '@/components/pupil/CompleteLevelPopup.vue'
+import BaseModal from '@/components/ui/BaseModal.vue'
 import { get, getBlob, post } from '@/utils/apiUtils'
 import type {
   NewsVerificationRequest,
@@ -45,20 +46,12 @@ const {
   reset,
 } = useDifficultyProgression()
 
-type NewsStepState = {
-  task: NewsVerificationResponse
-  imageUrls: string[]
-  selectedFileId: number | null
-  result: ValidationResult | null
-}
-
 const showHelpPopup = ref(false)
 const showHintPopup = ref(false)
 
 const currentTask = ref<NewsVerificationResponse | null>(null)
 const imageUrls = ref<string[]>([])
 const selectedFileId = ref<number | null>(null)
-const stepStates = ref<Record<number, NewsStepState>>({})
 
 function closeHelpPopup(): void {
   showHelpPopup.value = false
@@ -68,34 +61,16 @@ function closeHintPopup(): void {
   showHintPopup.value = false
 }
 
-function revokeAllImageUrls(): void {
-  for (const state of Object.values(stepStates.value)) {
-    for (const url of state.imageUrls) URL.revokeObjectURL(url)
-  }
-
-  stepStates.value = {}
+function revokeImageUrls(): void {
+  for (const url of imageUrls.value) URL.revokeObjectURL(url)
   imageUrls.value = []
 }
 
 async function loadTask(): Promise<void> {
   loading.value = true
   error.value = null
+  revokeImageUrls()
   currentTask.value = null
-  imageUrls.value = []
-
-  const savedState = stepStates.value[stepIndex.value]
-
-  if (savedState) {
-    currentTask.value = savedState.task
-    imageUrls.value = savedState.imageUrls
-    selectedFileId.value = savedState.selectedFileId
-    lastResult.value = savedState.result
-    loading.value = false
-    return
-  }
-
-  selectedFileId.value = null
-  lastResult.value = null
 
   try {
     const task = await get<NewsVerificationResponse>(
@@ -105,16 +80,8 @@ async function loadTask(): Promise<void> {
     currentTask.value = task
 
     const blobs = await Promise.all(task.fileIds.map((id) => getBlob(`/api/objects/${id}`)))
-    const urls = blobs.map((blob) => URL.createObjectURL(blob))
 
-    imageUrls.value = urls
-
-    stepStates.value[stepIndex.value] = {
-      task,
-      imageUrls: urls,
-      selectedFileId: null,
-      result: null,
-    }
+    imageUrls.value = blobs.map((blob) => URL.createObjectURL(blob))
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Kunne ikke laste oppgave'
   } finally {
@@ -139,26 +106,12 @@ async function choose(fileId: number): Promise<void> {
 
     lastResult.value = result
     recordResult(result.correct)
-
-    stepStates.value[stepIndex.value] = {
-      task: currentTask.value,
-      imageUrls: imageUrls.value,
-      selectedFileId: fileId,
-      result,
-    }
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Kunne ikke sende svar'
     selectedFileId.value = null
   } finally {
     submitting.value = false
   }
-}
-
-async function previous(): Promise<void> {
-  if (stepIndex.value === 0) return
-
-  stepIndex.value -= 1
-  await loadTask()
 }
 
 async function next(): Promise<void> {
@@ -170,6 +123,8 @@ async function next(): Promise<void> {
   }
 
   advanceStep()
+  selectedFileId.value = null
+
   await loadTask()
 }
 
@@ -190,7 +145,6 @@ function showFinalResult(): void {
 }
 
 async function retryLevel(): Promise<void> {
-  revokeAllImageUrls()
   reset()
   selectedFileId.value = null
 
@@ -198,7 +152,7 @@ async function retryLevel(): Promise<void> {
 }
 
 function goToMap(): void {
-  revokeAllImageUrls()
+  revokeImageUrls()
   router.push('/pupil/classroom/map')
 }
 
@@ -211,7 +165,7 @@ function closeCompletePopup(): void {
 }
 
 onMounted(loadTask)
-onBeforeUnmount(revokeAllImageUrls)
+onBeforeUnmount(revokeImageUrls)
 </script>
 
 <template>
@@ -252,19 +206,9 @@ onBeforeUnmount(revokeAllImageUrls)
             <span>{{ lastResult.feedback }}</span>
           </div>
 
-          <div v-if="lastResult" class="navigation-bar">
-            <button
-              class="nav-button nav-button-secondary"
-              :disabled="stepIndex === 0"
-              @click="previous"
-            >
-              Forrige
-            </button>
-
-            <button class="nav-button nav-button-primary" @click="next">
-              {{ stepIndex === DIFFICULTIES.length - 1 ? 'Se resultat' : 'Neste' }}
-            </button>
-          </div>
+          <button v-if="lastResult" class="next-level-button" @click="next">
+            {{ stepIndex === DIFFICULTIES.length - 1 ? 'Se resultat' : 'Gå til neste nivå' }}
+          </button>
         </template>
 
         <p v-else-if="loading">Laster oppgave…</p>
@@ -281,8 +225,13 @@ onBeforeUnmount(revokeAllImageUrls)
       </p>
     </TaskGuide>
 
-    <div v-if="showHelpPopup" class="popup-overlay" @click="closeHelpPopup">
-      <div class="hint-popup" @click.stop>
+    <BaseModal
+      v-if="showHelpPopup"
+      :close-on-backdrop="true"
+      :close-on-escape="true"
+      @close="closeHelpPopup"
+    >
+      <div class="news-help-popup-wrapper">
         <h2 class="popup-title">Trenger du hjelp?</h2>
 
         <div class="hint-text">
@@ -300,7 +249,7 @@ onBeforeUnmount(revokeAllImageUrls)
           <button class="popup-btn popup-btn-play" @click="closeHelpPopup">Ok</button>
         </div>
       </div>
-    </div>
+    </BaseModal>
 
     <CompleteLevelPopup
       :show="showCompletePopup"
@@ -326,7 +275,6 @@ onBeforeUnmount(revokeAllImageUrls)
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
-  overflow-x: hidden;
 }
 
 .page {
@@ -345,66 +293,32 @@ onBeforeUnmount(revokeAllImageUrls)
   width: 100%;
   max-width: 1100px;
   gap: 1.5rem;
-  position: relative;
-}
-
-.center-container :deep(.hint-creature-wrapper) {
-  position: absolute;
-  left: -40px;
-  top: 2.8rem;
-  width: 120px;
-  height: 120px;
-  z-index: 20;
-}
-
-.center-container :deep(.hint-creature-button) {
-  width: 120px;
-  height: 120px;
-  background: transparent;
-  border: none;
-  padding: 0;
-}
-
-.center-container :deep(.hint-creature-button img) {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
 }
 
 .progress-container {
-  width: min(100%, 540px);
-  max-width: 540px;
+  width: min(100%, 500px);
   text-align: center;
-  position: relative;
-  z-index: 3;
 }
 
 .progress-bar {
   width: 100%;
-  height: 14px;
-  background: rgb(255 246 220 / 55%);
-  border: 2px solid rgb(91 62 43 / 70%);
+  height: 18px;
+  background: rgb(0 0 0 / 15%);
+  border: 3px solid var(--brown-dark);
   border-radius: 999px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #9df13c 0%, #78d927 55%, #5cc322 100%);
-  border-radius: 999px;
+  background: var(--green-confirm);
+  transition: width 0.4s ease;
 }
 
 .progress-text {
-  margin-top: 0.5rem;
+  margin-top: 0.4rem;
   margin-bottom: 0;
-  font-weight: 800;
-  color: #1f160f;
-}
-
-:deep(.news-task),
-:deep(.pupil-news-task) {
-  position: relative;
-  z-index: 2;
+  font-weight: 700;
 }
 
 .mini-feedback {
@@ -412,6 +326,7 @@ onBeforeUnmount(revokeAllImageUrls)
   border: 4px solid var(--brown-dark);
   border-radius: 24px;
   font-weight: 700;
+  box-shadow: 0 5px 0 var(--brown-dark);
 }
 
 .mini-feedback.success {
@@ -423,49 +338,34 @@ onBeforeUnmount(revokeAllImageUrls)
   color: white;
 }
 
-.navigation-bar {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.nav-button {
-  min-width: 200px;
-  min-height: 58px;
-  padding: 0.85rem 1.8rem;
-  border-radius: 24px;
-  border: 2px solid var(--brown-dark);
-  font-weight: 850;
+.next-level-button {
+  width: 100%;
+  max-width: 360px;
+  padding: 1rem 2rem;
+  border-radius: 38px;
+  border: 5px solid var(--brown-dark);
+  background-color: var(--beige-light);
   color: var(--brown-dark);
   cursor: pointer;
-  background: linear-gradient(180deg, #fff6dc 0%, #f1d7a5 100%);
-  box-shadow: 0 5px 14px rgb(0 0 0 / 14%);
+  font-weight: 700;
+  box-shadow: 0 6px 0 var(--brown-dark);
   transition:
     transform 0.15s ease,
+    filter 0.15s ease,
     box-shadow 0.15s ease,
-    background 0.15s ease,
-    color 0.15s ease,
-    opacity 0.15s ease;
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
-.nav-button:hover:not(:disabled) {
-  background: var(--brown-dark);
-  color: #fff6dc;
-  transform: translateY(-1px);
-  box-shadow: 0 7px 18px rgb(0 0 0 / 16%);
+.next-level-button:hover {
+  filter: brightness(0.95);
 }
 
-.nav-button:active:not(:disabled) {
-  transform: translateY(1px);
-  box-shadow: 0 3px 9px rgb(0 0 0 / 12%);
-}
-
-.nav-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.45;
-  transform: none;
-  box-shadow: 0 5px 14px rgb(0 0 0 / 10%);
+.next-level-button:active {
+  background-color: var(--brown-dark);
+  color: var(--beige-light);
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 var(--brown-dark);
 }
 
 .error {
@@ -473,33 +373,40 @@ onBeforeUnmount(revokeAllImageUrls)
   font-weight: 600;
 }
 
-.popup-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgb(0 0 0 / 28%);
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.hint-text {
+  margin-top: 10px;
+  text-align: left;
 }
 
-.hint-popup {
-  width: min(680px, calc(100vw - 32px));
-  background: linear-gradient(180deg, #fff0c9 0%, #f5d59a 58%, #e8b86f 100%);
-  border: 7px solid var(--brown-dark);
-  border-radius: 42px;
-  padding: 32px 28px;
+.hint-text p {
+  margin: 0 0 8px;
 }
 
-@media (max-width: 1100px) {
-  .center-container {
-    padding-top: 8.2rem;
-  }
+.hint-text ul {
+  margin: 0;
+  padding-left: 24px;
+}
 
-  .center-container :deep(.hint-creature-wrapper) {
-    left: 50%;
-    top: 0.1rem;
-    transform: translateX(-50%);
-  }
+.hint-text li {
+  margin-bottom: 6px;
+}
+
+.news-help-popup-wrapper {
+  width: min(560px, calc(100vw - 32px));
+  background: var(--orange-medium-80);
+  border: 4px solid var(--brown-dark);
+  border-radius: 28px;
+  padding: 28px 24px 20px;
+  text-align: center;
+  backdrop-filter: blur(2px);
+}
+
+.popup-btn-play {
+  background: var(--green-confirm);
+}
+
+.popup-btn-map {
+  background: var(--orange-medium);
 }
 
 @media (max-width: 768px) {
@@ -508,31 +415,9 @@ onBeforeUnmount(revokeAllImageUrls)
     background-attachment: scroll;
   }
 
-  .center-container {
-    gap: 1rem;
-    padding-top: 7rem;
-  }
-
-  .center-container :deep(.hint-creature-wrapper) {
-    top: 0.2rem;
-  }
-
-  .center-container :deep(.hint-creature-wrapper),
-  .center-container :deep(.hint-creature-button),
-  .center-container :deep(.hint-creature-button img) {
-    width: 85px;
-    height: 85px;
-  }
-
-  .navigation-bar {
-    flex-direction: column;
-    align-items: stretch;
-    width: 100%;
-  }
-
-  .nav-button {
-    width: 100%;
-    min-width: 0;
+  .next-level-button {
+    border-width: 3px;
+    border-radius: 24px;
   }
 }
 </style>

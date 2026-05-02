@@ -12,6 +12,7 @@ import {
 } from '@/utils/apiUtils'
 import { clearMeCache } from '@/utils/authRedirect'
 import VolumeControl from '@/components/ui/VolumeControl.vue'
+import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 
 type ProfileResponse = {
   email: string
@@ -41,9 +42,33 @@ const error = ref<string | null>(null)
 const classroomError = ref<string | null>(null)
 const actionError = ref<string | null>(null)
 const leavingClassroom = ref(false)
+
+const confirmModalShow = ref(false)
+const confirmModalMessage = ref('')
+let confirmModalResolve: ((v: boolean) => void) | null = null
+
+function showConfirmModal(message: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    confirmModalMessage.value = message
+    confirmModalShow.value = true
+    confirmModalResolve = resolve
+  })
+}
+
+function onConfirmModalConfirm() {
+  confirmModalResolve?.(true)
+  confirmModalResolve = null
+  confirmModalShow.value = false
+}
+
+function onConfirmModalCancel() {
+  confirmModalResolve?.(false)
+  confirmModalResolve = null
+  confirmModalShow.value = false
+}
+
 const signingOut = ref(false)
 const editingNickname = ref(false)
-const showLeaveClassroomPopup = ref(false)
 
 const nicknameDraft = ref('')
 const savingNickname = ref(false)
@@ -105,25 +130,17 @@ onMounted(async () => {
   await loadProfile()
 })
 
-function openLeaveClassroomPopup() {
-  if (!profile.value?.classroomCode || leavingClassroom.value) return
-  actionError.value = null
-  showLeaveClassroomPopup.value = true
-}
-
-function closeLeaveClassroomPopup() {
-  if (leavingClassroom.value) return
-  showLeaveClassroomPopup.value = false
-}
-
 async function leaveClassroom() {
   if (!profile.value?.classroomCode || leavingClassroom.value) return
+
+  const confirmed = await showConfirmModal('Er du sikker på at du vil forlate klasserommet?')
+  if (!confirmed) return
+
   leavingClassroom.value = true
   actionError.value = null
 
   try {
     await del(`/api/classrooms/${profile.value.classroomCode}/pupils/me`)
-    showLeaveClassroomPopup.value = false
     clearMeCache()
     await router.push('/pupil')
   } catch (requestError) {
@@ -290,7 +307,7 @@ async function saveNickname() {
                 class="pupil-button pupil-button-danger"
                 type="button"
                 :disabled="leavingClassroom"
-                @click="openLeaveClassroomPopup"
+                @click="leaveClassroom"
               >
                 {{ leavingClassroom ? 'Forlater...' : 'Forlat klasserom' }}
               </button>
@@ -304,42 +321,20 @@ async function saveNickname() {
                 {{ signingOut ? 'Logger ut...' : 'Logg ut' }}
               </button>
             </div>
-        </section>
-      </div>
-    </section>
-  </main>
-
-    <div
-      v-if="showLeaveClassroomPopup"
-      class="pupil-popup-overlay pupil-popup-fixed-center"
-      @click.self="closeLeaveClassroomPopup"
-    >
-      <section class="pupil-hint-popup leave-classroom-popup" role="dialog" aria-modal="true">
-        <h2 class="pupil-popup-title">Forlat klasserom?</h2>
-        <p class="pupil-popup-text">Er du sikker på at du vil forlate klasserommet?</p>
-
-        <div class="pupil-popup-actions">
-          <button
-            type="button"
-            class="pupil-popup-btn cancel-leave-button"
-            :disabled="leavingClassroom"
-            @click="closeLeaveClassroomPopup"
-          >
-            Avbryt
-          </button>
-
-          <button
-            type="button"
-            class="pupil-popup-btn confirm-leave-button"
-            :disabled="leavingClassroom"
-            @click="leaveClassroom"
-          >
-            {{ leavingClassroom ? 'Forlater...' : 'Forlat klasserom' }}
-          </button>
+          </section>
         </div>
       </section>
-    </div>
+    </main>
   </div>
+
+  <ConfirmModal
+    v-if="confirmModalShow"
+    :message="confirmModalMessage"
+    confirm-label="Forlat"
+    cancel-label="Avbryt"
+    @confirm="onConfirmModalConfirm"
+    @cancel="onConfirmModalCancel"
+  />
 </template>
 
 <style scoped>
@@ -451,18 +446,6 @@ async function saveNickname() {
 
 .action-error {
   margin: 0;
-}
-
-.leave-classroom-popup {
-  background: var(--beige-light);
-}
-
-.cancel-leave-button {
-  background: var(--beige-medium);
-}
-
-.confirm-leave-button {
-  background: var(--red-danger);
 }
 
 @media (max-width: 768px) {

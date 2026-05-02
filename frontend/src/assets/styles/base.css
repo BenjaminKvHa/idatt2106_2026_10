@@ -70,6 +70,10 @@
 
   --border-wide: 4px;
   --border-thin: 3px;
+
+  --icon-hover-scale: 1.05;
+  --icon-hover-rotate: 4deg;
+  --icon-transition-duration: 0.2s;
 }
 
 *,

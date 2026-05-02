@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
 import { ChevronLeftIcon, ChevronRightIcon } from '@lucide/vue'
+import { onBeforeRouteLeave, useRouter } from 'vue-router'
 import bookImage from '@/assets/book.png'
 import woodBackground from '@/assets/backgrounds/woodBackground.png'
 import TopBar from '@/components/pupil/TopBar.vue'
@@ -27,6 +28,7 @@ function getNotebookEndpoint(chapterId: number): string {
 }
 
 const { playSound, stopSound } = useAudio()
+const router = useRouter()
 const chapters = ref<Chapter[]>([])
 const currentChapterIndex = ref(0)
 const notebook = ref<NotebookResponse | null>(null)
@@ -37,6 +39,11 @@ const savingNotebook = ref(false)
 const loadError = ref<string | null>(null)
 const saveError = ref<string | null>(null)
 const saveStatus = ref<string | null>(null)
+const skipUnsavedNotesPrompt = ref(false)
+
+const confirmModalShow = ref(false)
+const confirmModalMessage = ref('')
+let confirmModalResolve: ((v: boolean) => void) | null = null
 
 const currentChapter = computed(() => chapters.value[currentChapterIndex.value] ?? null)
 const hasPreviousChapter = computed(() => currentChapterIndex.value > 0)
@@ -102,10 +109,6 @@ async function loadNotebookForCurrentChapter() {
     loadingNotebook.value = false
   }
 }
-
-const confirmModalShow = ref(false)
-const confirmModalMessage = ref('')
-let confirmModalResolve: ((v: boolean) => void) | null = null
 
 function showConfirmModal(message: string): Promise<boolean> {
   return new Promise((resolve) => {
@@ -183,6 +186,25 @@ async function goToNextChapter() {
   currentChapterIndex.value += 1
   await loadNotebookForCurrentChapter()
 }
+
+onBeforeRouteLeave((to) => {
+  if (skipUnsavedNotesPrompt.value || !hasUnsavedOwnNotes.value) {
+    return true
+  }
+
+  showConfirmModal('Du har ulagrede notater. Hvis du fortsetter, mister du endringene.').then(
+    async (proceed) => {
+      if (!proceed) return
+      skipUnsavedNotesPrompt.value = true
+      try {
+        await router.push(to.fullPath)
+      } finally {
+        skipUnsavedNotesPrompt.value = false
+      }
+    },
+  )
+  return false
+})
 
 onMounted(async () => {
   await loadChapters()
@@ -335,7 +357,7 @@ onBeforeUnmount(() => {
 
 .book-content {
   position: absolute;
-  inset: 14% 14.5% 12% 14.5%;
+  inset: 4% 6% 4% 9%;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   column-gap: 9%;
@@ -532,7 +554,6 @@ onBeforeUnmount(() => {
   }
 
   .book-content {
-    inset: 14.5% 14.5% 12.5% 14.5%;
     column-gap: 8.5%;
   }
 
@@ -548,12 +569,11 @@ onBeforeUnmount(() => {
   }
 
   .book-stage {
-    width: min(64rem, 195vw);
+    width: 100%;
     flex: 0 0 auto;
   }
 
   .book-content {
-    inset: 15.5% 14.5% 13% 14.5%;
     column-gap: 8%;
   }
 

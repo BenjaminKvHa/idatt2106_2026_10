@@ -13,7 +13,7 @@ import helpIcon from '@/assets/icons/homescreen/icon_help.png'
 import { useAudio } from '@/composables/useAudio'
 import openFileSound from '@/assets/sounds/shared/open-file-sound.mp3'
 
-const MAP_OPEN_SOUND_RELATIVE_VOLUME = 1.5
+const MAP_OPEN_SOUND_RELATIVE_VOLUME = 2
 
 const buttons = [
   { to: '/pupil/classroom/notebook', class: 'notes', icon: notesIcon },

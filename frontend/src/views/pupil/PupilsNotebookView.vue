@@ -9,7 +9,7 @@ import { get, put } from '@/utils/apiUtils'
 import pageFlipSound from '@/assets/sounds/shared/page-flip-sound.mp3'
 import { useAudio } from '@/composables/useAudio'
 
-const PAGE_FLIP_SOUND_RELATIVE_VOLUME = 1.25
+const PAGE_FLIP_SOUND_RELATIVE_VOLUME = 1.4
 
 type Chapter = {
   chapterId: number

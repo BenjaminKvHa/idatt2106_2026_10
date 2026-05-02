@@ -118,7 +118,6 @@ onBeforeUnmount(() => {
   padding: 1rem;
   background: transparent;
   border: none;
-  outline: none;
   box-shadow: none;
 }
 

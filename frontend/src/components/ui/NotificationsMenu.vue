@@ -222,9 +222,9 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .notifications-modal-box {
-  min-width: 320px;
-  max-width: 680px;
-  width: 90vw;
+  min-width: 320px !important; 
+  max-width: 680px !important;
+  width: 90vw !important;
   gap: var(--medium-gap);
 }
 

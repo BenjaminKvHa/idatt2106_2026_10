@@ -76,6 +76,8 @@ const selectedStopNote = computed(() => {
   return selectedNotebookNote.value
 })
 
+const editUsername = ref('')
+
 const hasUnsavedUsernameChanges = computed(() => {
   return (
     selectedPupil.value?.status === 'APPROVED' &&
@@ -88,6 +90,10 @@ const confirmModalMessage = ref('')
 let confirmModalResolve: ((v: boolean) => void) | null = null
 
 function showConfirmModal(message: string): Promise<boolean> {
+  if (confirmModalShow.value) {
+    return Promise.resolve(false)
+  }
+
   return new Promise((resolve) => {
     confirmModalMessage.value = message
     confirmModalShow.value = true
@@ -107,8 +113,6 @@ function onConfirmModalCancel() {
   confirmModalShow.value = false
 }
 
-const editUsername = ref('')
-
 watch(
   selectedPupil,
   (pupil) => {
@@ -117,17 +121,29 @@ watch(
   { immediate: true },
 )
 
-const selectPupil = async (email: string): Promise<void> => {
-  if (email !== selectedPupilEmail.value && !(await confirmDiscardUsernameChanges())) {
-    return
-  }
-
+function applyPupilSelection(email: string): void {
   selectedPupilEmail.value = email
   activePanel.value = 'NONE'
   selectedStopName.value = ''
   notebookError.value = ''
   selectedNotebookNote.value = ''
   selectedNotebookChapterName.value = ''
+}
+
+const confirmDiscardUsernameChanges = async (): Promise<boolean> => {
+  if (!hasUnsavedUsernameChanges.value) {
+    return true
+  }
+
+  return showConfirmModal('Du har endret brukernavnet uten å lagre. Vil du fortsette uten å lagre?')
+}
+
+const selectPupil = async (email: string): Promise<void> => {
+  if (email !== selectedPupilEmail.value && !(await confirmDiscardUsernameChanges())) {
+    return
+  }
+
+  applyPupilSelection(email)
 }
 
 const closeDetails = (): void => {
@@ -149,14 +165,6 @@ const openNotes = (): void => {
 
 const selectStopNote = (stopName: StopName): void => {
   selectedStopName.value = stopName
-}
-
-function confirmDiscardUsernameChanges(): Promise<boolean> {
-  if (!hasUnsavedUsernameChanges.value) {
-    return Promise.resolve(true)
-  }
-
-  return showConfirmModal('Er du sikker på at du vil forlate uten å lagre endringene dine')
 }
 
 function handleBeforeUnload(event: BeforeUnloadEvent) {

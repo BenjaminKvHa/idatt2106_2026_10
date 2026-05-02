@@ -7,6 +7,7 @@ const props = withDefaults(
     closeOnBackdrop?: boolean
     closeOnEscape?: boolean
     panelClass?: string
+    backdropClass?: string
     showCloseButton?: boolean
     noPadding?: boolean
   }>(),
@@ -14,6 +15,7 @@ const props = withDefaults(
     closeOnBackdrop: true,
     closeOnEscape: true,
     panelClass: '',
+    backdropClass: '',
     showCloseButton: true,
     noPadding: false,
   }
@@ -56,7 +58,7 @@ onBeforeUnmount(() => {
 
 <template>
   <Teleport to="body">
-    <div class="modal-backdrop" @click.self="onBackdropClick">
+    <div class="modal-backdrop" :class="backdropClass" @click.self="onBackdropClick">
       <div
         ref="modalWindow"
         class="modal-window"

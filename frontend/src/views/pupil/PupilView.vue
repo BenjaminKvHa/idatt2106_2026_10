@@ -16,12 +16,12 @@ import openFileSound from '@/assets/sounds/shared/open-file-sound.mp3'
 const MAP_OPEN_SOUND_RELATIVE_VOLUME = 1.5
 
 const buttons = [
-  { to: '/pupil/classroom/notebook', class: 'notes', icon: notesIcon },
-  { to: '/pupil/classroom/mystery', class: 'mystery', icon: mysteryIcon },
   { to: '/pupil/classroom/medals', class: 'medals', icon: medalsIcon },
   { to: '/pupil/classroom/map', class: 'map', icon: mapIcon, sound: openFileSound },
   { to: '/pupil/classroom/leaderboard', class: 'leaderboard', icon: leaderboardIcon },
+  { to: '/pupil/classroom/mystery', class: 'mystery', icon: mysteryIcon },
   { to: '/pupil/classroom/help', class: 'help', icon: helpIcon },
+  { to: '/pupil/classroom/notebook', class: 'notes', icon: notesIcon },
 ]
 
 const { playSound } = useAudio()

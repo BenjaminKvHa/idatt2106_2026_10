@@ -32,28 +32,26 @@ const blobbySounds = [blobbySound1, blobbySound2, blobbySound3, blobbySound4, bl
 function handleBlobbyClick(event: MouseEvent) {
   event.stopPropagation()
 
-  if (blobbyStep.value === 0) {
-    showBlobbyMessage.value = true
-    blobbyStep.value = 1
-    return
-  }
+  showBlobbyMessage.value = true
 
-  if (blobbyStep.value >= 1 && blobbyStep.value <= blobbySounds.length) {
-    showBlobbyMessage.value = false
-    const soundFile = blobbySounds[blobbyStep.value - 1]
-    if (soundFile) playSound(soundFile)
+  const soundFile = blobbySounds[blobbyStep.value]
+
+  if (soundFile) {
+    playSound(soundFile)
     blobbyStep.value += 1
     return
   }
 
   isAnimatingBlobby.value = false
+
   requestAnimationFrame(() => {
     isAnimatingBlobby.value = true
   })
+
   setTimeout(() => {
     isAnimatingBlobby.value = false
   }, 800)
-  showBlobbyMessage.value = false
+
   blobbyStep.value = 0
 }
 
@@ -100,8 +98,8 @@ onBeforeUnmount(() => {
 .blobby-wrapper {
   position: absolute;
   top: 8.5%;
-  right: 6%;
-  width: clamp(90px, 30%, 420px);
+  right: 10%;
+  width: clamp(60px, 16%, 180px);
   z-index: 10;
   transform: translateY(-50%);
 }
@@ -113,7 +111,6 @@ onBeforeUnmount(() => {
   cursor: pointer;
   width: 100%;
   transform-origin: bottom center;
-  outline: none;
 }
 
 .blobby-image {
@@ -122,18 +119,12 @@ onBeforeUnmount(() => {
   display: block;
   filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.2));
   transition:
-    transform ease-in-out var(--icon-transition-duration),
-    filter ease-in-out var(--icon-transition-duration);
+    transform 0.15s ease,
+    filter 0.15s ease;
 }
 
-.blobby-button:hover .blobby-image,
-.blobby-button:focus-visible .blobby-image {
-  transform: scale(var(--icon-hover-scale)) rotate(var(--icon-hover-rotate));
-  filter:
-    drop-shadow(0 -2px 0 var(--beige-light-100))
-    drop-shadow(2px 0 0 var(--beige-light-100))
-    drop-shadow(0 2px 0 var(--beige-light-100))
-    drop-shadow(-2px 0 0 var(--beige-light-100));
+.blobby-button:hover .blobby-image {
+  transform: scale(1.04);
 }
 
 .blobby-button.animate {
@@ -147,9 +138,8 @@ onBeforeUnmount(() => {
 .blobby-message {
   position: absolute;
   top: 35%;
-  right: 75%;
+  right: 100%;
   width: 100%;
-  max-width: none;
   background: #fff8e8;
   border: 2px solid #5c4033;
   border-radius: 16px;
@@ -157,31 +147,71 @@ onBeforeUnmount(() => {
   font-size: clamp(12px, 1.1vw, 18px);
   text-align: center;
   box-shadow: 0 4px 0 rgba(0, 0, 0, 0.12);
+  min-width: 500px;
 }
 
 @keyframes blobby-bounce {
-  0% { transform: translateY(0); }
-  30% { transform: translateY(-20px); }
-  60% { transform: translateY(0); }
-  80% { transform: translateY(-10px); }
-  100% { transform: translateY(0); }
+  0% {
+    transform: translateY(0);
+  }
+
+  30% {
+    transform: translateY(-20px);
+  }
+
+  60% {
+    transform: translateY(0);
+  }
+
+  80% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
 }
 
 @keyframes blobby-wiggle {
-  0% { transform: rotate(0deg); }
-  15% { transform: rotate(-6deg); }
-  30% { transform: rotate(6deg); }
-  45% { transform: rotate(-5deg); }
-  60% { transform: rotate(5deg); }
-  75% { transform: rotate(-2deg); }
-  100% { transform: rotate(0deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  15% {
+    transform: rotate(-6deg);
+  }
+
+  30% {
+    transform: rotate(6deg);
+  }
+
+  45% {
+    transform: rotate(-5deg);
+  }
+
+  60% {
+    transform: rotate(5deg);
+  }
+
+  75% {
+    transform: rotate(-2deg);
+  }
+
+  100% {
+    transform: rotate(0deg);
+  }
 }
 
 @media (max-width: 768px) {
   .blobby-message {
     right: 75%;
-    max-width: 220px;
     font-size: 13px;
+    max-width: 400px;
+    min-width: 300px;
+  }
+  .blobby-wrapper {
+    top: 3.3%;
+    right: 5%;
   }
 }
 

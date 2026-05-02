@@ -69,7 +69,7 @@ function updateUsername(event: Event) {
 
 <style scoped>
 .profile-summary-card {
-  border: var(--border-thin) solid var(--brown-medium-100);
+  border: var(--border-thin) solid var(--brown-dark-100);
   border-radius: 1rem;
   padding: 2.5rem;
   display: flex;
@@ -107,7 +107,7 @@ function updateUsername(event: Event) {
   place-items: center;
   font-size: 2.6rem;
   font-weight: 700;
-  border: 4px solid var(--brown-medium-100);
+  border: 4px solid var(--brown-dark-100);
   box-shadow: inset 0 0 0 4px var(--beige-light-100);
 }
 
@@ -186,7 +186,7 @@ function updateUsername(event: Event) {
 .save-btn {
   width: 3rem;
   height: 3rem;
-  border: 3px solid var(--brown-medium-100);
+  border: 3px solid var(--brown-dark-100);
   border-radius: 999px;
   padding: 0;
   cursor: pointer;
@@ -200,7 +200,7 @@ function updateUsername(event: Event) {
 
 .save-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 0 var(--brown-medium-100);
+  box-shadow: 0 4px 0 var(--brown-dark-100);
 }
 
 .save-btn :deep(svg) {

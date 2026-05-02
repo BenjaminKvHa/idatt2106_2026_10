@@ -47,7 +47,7 @@
 }
 
 .teacher-container-box {
-    border: var(--border-width) solid var(--brown-medium-100);
+    border: var(--border-width) solid var(--brown-dark-100);
     background-color: var(--beige-light-100);
     padding: var(--medium-padding);
     border-radius: var(--border-radius);
@@ -55,7 +55,7 @@
 }
 
 .teacher-content {
-    color: var(--brown-medium-100);
+    color: var(--brown-dark-100);
     background-color: var(--beige-medium-100);
     margin: 0;
     display: flex;
@@ -65,10 +65,10 @@
 }
 
 .teacher-card {
-    color: var(--brown-medium-100);
+    color: var(--brown-dark-100);
     background-color: var(--beige-medium-100);
     border-radius: var(--border-radius);
-    border: var(--border-width) solid var(--brown-medium-100);
+    border: var(--border-width) solid var(--brown-dark-100);
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -78,7 +78,7 @@
 }
 
 .teacher-card-header {
-    background-color: var(--brown-medium-100);
+    background-color: var(--brown-dark-100);
     color: var(--beige-medium-100);
     padding: var(--card-header-padding);
     display: flex;
@@ -92,7 +92,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: var(--brown-medium-100);
+    background-color: var(--brown-dark-100);
     color: var(--beige-medium-100);
     font-weight: var(--fw-bold);
     width: 100%;
@@ -123,7 +123,7 @@
     margin: 0;
     border: none;
     height: 2px;
-    background: var(--brown-medium-100);
+    background: var(--brown-dark-100);
     opacity: .5;
 }
 
@@ -162,7 +162,7 @@
 }
 
 .teacher-variant-1 {
-    color: var(--brown-medium-100);
+    color: var(--brown-dark-100);
     background-color: var(--beige-light-100);
 
     border-radius: var(--border-radius);
@@ -174,7 +174,7 @@
 }
 
 .teacher-variant-2 {
-    color: var(--brown-medium-100);
+    color: var(--brown-dark-100);
     background-color: var(--background-sec);
 
     border-radius: var(--border-radius);
@@ -187,31 +187,31 @@
 }
 
 .button-variant-1 {
-    color: var(--brown-medium-100);
+    color: var(--brown-dark-100);
     background-color: var(--beige-light-100);
 
     border-radius: var(--border-radius);
     border-width: var(--border-width);
     border-style: solid;
-    border-color: var(--brown-medium-100);
+    border-color: var(--brown-dark-100);
     transition: ease-in-out var(--animation-time-1);
     text-decoration: none;
 }
 
 .button-variant-1:hover, .button-variant-1::selection, .button-variant-1:focus-visible {
     color: var(--beige-medium-100);
-    background-color: var(--brown-medium-100);
+    background-color: var(--brown-dark-100);
 
 }
 
 .button-variant-2 {
     color: var(--beige-medium-100);
-    background-color: var(--brown-medium-100);
+    background-color: var(--brown-dark-100);
 
     border-radius: var(--border-radius);
     border-width: var(--border-width);
     border-style: solid;
-    border-color: var(--brown-medium-100);
+    border-color: var(--brown-dark-100);
     transition: ease-in-out var(--animation-time-1);
 }
 
@@ -238,7 +238,7 @@
 .teacher-card-body button {
     border: none;
     background-color: var(--beige-medium-100);
-    color: var(--brown-medium-100);
+    color: var(--brown-dark-100);
 }
 
 .teacher-card-body .teacher-card-item-var-1 {
@@ -247,17 +247,17 @@
 }
 
 .teacher-card-body .teacher-card-item-var-1:hover {
-    background-color: var(--brown-medium-100);
+    background-color: var(--brown-dark-100);
     color: var(--beige-medium-100);
 }
 
 .teacher-card-body .teacher-card-item-var-2 {
-    background-color: var(--brown-medium-100);
+    background-color: var(--brown-dark-100);
     color: var(--beige-medium-100);
 }
 
 .teacher-card-body .teacher-card-item-var-2:hover {
-    background-color: var(--brown-medium-100);
+    background-color: var(--brown-dark-100);
     color: var(--beige-medium-100);
 }
 
@@ -265,9 +265,9 @@
     height: var(--button-diameter);
     aspect-ratio: 1 / 1;
     border-radius: 50%;
-    border: var(--border-width) solid var(--brown-medium-100);
+    border: var(--border-width) solid var(--brown-dark-100);
     background: var(--beige-light-100);
-    color: var(--brown-medium-100);
+    color: var(--brown-dark-100);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -278,7 +278,7 @@
 }
 
 .icon-btn-circle:hover {
-    background: var(--brown-medium-100);
+    background: var(--brown-dark-100);
     color: var(--beige-medium-100);
 }
 
@@ -307,7 +307,7 @@
 }
 
 .form-field label {
-    color: var(--brown-medium-100);
+    color: var(--brown-dark-100);
     font-weight: var(--fw-semibold);
     font-size: 0.95rem;
 }
@@ -315,9 +315,9 @@
 .form-field input,
 .form-field textarea {
     background-color: var(--beige-medium-100);
-    color: var(--brown-medium-100);
+    color: var(--brown-dark-100);
     border: none;
-    border-bottom: 2px solid var(--brown-medium-100);
+    border-bottom: 2px solid var(--brown-dark-100);
     padding: var(--medium-padding);
     font-family: inherit;
     font-size: 1rem;
@@ -349,13 +349,13 @@
     width: 100%;
     max-width: 600px;
     background-color: var(--beige-light-100);
-    border: var(--border-width) solid var(--brown-medium-100);
+    border: var(--border-width) solid var(--brown-dark-100);
     border-radius: var(--border-radius);
     padding: var(--thick-padding);
 }
 
 .form-title {
-    color: var(--brown-medium-100);
+    color: var(--brown-dark-100);
     font-size: 1.5rem;
     margin: 0 0 var(--thick-padding) 0;
     text-align: center;
@@ -378,7 +378,7 @@
 .state-message {
     padding: var(--thick-padding);
     text-align: center;
-    color: var(--brown-medium-100);
+    color: var(--brown-dark-100);
 }
 
 .state-message.error {
@@ -409,7 +409,7 @@
     justify-content: space-between;
     padding: var(--thin-padding) 0;
     border-bottom: 2px solid var(--background-sec);
-    color: var(--brown-medium-100);
+    color: var(--brown-dark-100);
     font-weight: var(--fw-semibold);
 }
 

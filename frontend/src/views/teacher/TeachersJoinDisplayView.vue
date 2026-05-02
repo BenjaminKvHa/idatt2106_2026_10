@@ -39,7 +39,7 @@ const classroomCode = computed(() => {
   justify-content: center;
   gap: clamp(1.2rem, 3vw, 2.4rem);
   padding: clamp(1rem, 3vw, 2rem);
-  color: var(--brown-medium-100);
+  color: var(--brown-dark-100);
   background: var(--beige-medium-100);
   text-align: center;
   box-sizing: border-box;
@@ -52,7 +52,7 @@ const classroomCode = computed(() => {
   align-items: center;
   gap: clamp(0.9rem, 2vw, 1.5rem);
   padding: clamp(1.4rem, 4vw, 3rem);
-  border: clamp(5px, 0.6vw, 9px) solid var(--brown-medium-100);
+  border: clamp(5px, 0.6vw, 9px) solid var(--brown-dark-100);
   border-radius: var(--border-radius);
   background: var(--beige-light-100);
 }
@@ -75,7 +75,7 @@ const classroomCode = computed(() => {
 
 .join-display-code {
   padding: clamp(0.4rem, 1vw, 0.8rem) clamp(1rem, 3vw, 2rem);
-  border: clamp(5px, 0.6vw, 9px) solid var(--brown-medium-100);
+  border: clamp(5px, 0.6vw, 9px) solid var(--brown-dark-100);
   border-radius: var(--border-radius-2);
   background: var(--beige-medium-100);
   font-size: clamp(4rem, 15vw, 12rem);

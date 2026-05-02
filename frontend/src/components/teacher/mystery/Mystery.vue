@@ -105,7 +105,7 @@ function formatTimestamp(value: string): string {
   aspect-ratio: 1;
   object-fit: cover;
   border-radius: 1rem;
-  border: 2px solid var(--brown-medium-100);
+  border: 2px solid var(--brown-dark-100);
   background: var(--beige-light-100);
 }
 
@@ -163,7 +163,7 @@ function formatTimestamp(value: string): string {
 }
 
 .mystery-button {
-  border: 3px solid var(--brown-medium-100);
+  border: 3px solid var(--brown-dark-100);
   border-radius: 999px;
   background: var(--beige-light-100);
   padding: 0.55rem 0.9rem;
@@ -173,7 +173,7 @@ function formatTimestamp(value: string): string {
 }
 
 .approve-button {
-  background: var(--brown-medium-100);
+  background: var(--brown-dark-100);
   color: var(--beige-light-100);
 }
 

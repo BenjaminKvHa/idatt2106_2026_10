@@ -132,7 +132,7 @@ const correctFileSlot = computed(() => {
 }
 
 .task-card.selected {
-  border-color: var(--brown-medium-100);
+  border-color: var(--brown-dark-100);
   box-shadow: 0 0 0 3px rgba(90, 64, 47, 0.12);
 }
 
@@ -221,7 +221,7 @@ const correctFileSlot = computed(() => {
 .answer-chip {
   padding: 0.25rem 0.65rem;
   border-radius: 999px;
-  background: var(--brown-medium-100);
+  background: var(--brown-dark-100);
   color: var(--beige-light-100);
   font-size: 0.85rem;
   font-weight: 700;

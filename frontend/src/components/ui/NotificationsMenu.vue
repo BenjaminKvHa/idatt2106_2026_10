@@ -244,7 +244,7 @@ onBeforeUnmount(() => {
 }
 
 .close-button {
-  border: 2px solid var(--brown-medium-100);
+  border: 2px solid var(--brown-dark-100);
   border-radius: 999px;
   background: var(--beige-light-100);
   padding: 0.45rem 0.9rem;
@@ -268,7 +268,7 @@ onBeforeUnmount(() => {
 .classroom-picker select {
   padding: 0.7rem 0.9rem;
   border-radius: 12px;
-  border: 2px solid var(--brown-medium-100);
+  border: 2px solid var(--brown-dark-100);
   background: var(--beige-light-100);
   color: var(--brown-dark-100);
   font: inherit;

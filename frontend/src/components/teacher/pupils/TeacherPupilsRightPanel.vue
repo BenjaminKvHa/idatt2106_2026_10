@@ -82,14 +82,14 @@ const emit = defineEmits<{
 
 .details-card {
   width: min(calc(30*16rem), 100%);
-  border: 7px solid var(--brown-medium-100);
+  border: 7px solid var(--brown-dark-100);
   border-radius: 38px;
   padding: 28px;
 }
 @media (max-width: 768px) {
   .details-card {
     width: 100%;
-    border: var(--border-thin) solid var(--brown-medium-100);
+    border: var(--border-thin) solid var(--brown-dark-100);
     border-radius: 1rem;
     padding: .5rem;
   }
@@ -104,7 +104,7 @@ const emit = defineEmits<{
 
 .main-btn,
 .danger-btn {
-  border: 4px solid var(--brown-medium-100);
+  border: 4px solid var(--brown-dark-100);
   border-radius: 999px;
   padding: 13px 18px;
   font-size: 1.05rem;
@@ -114,7 +114,7 @@ const emit = defineEmits<{
 }
 
 .primary-btn {
-  background: var(--brown-medium-100);
+  background: var(--brown-dark-100);
   color: var(--beige-light-100);
 }
 
@@ -139,7 +139,7 @@ const emit = defineEmits<{
 .main-btn:hover,
 .danger-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 0 var(--brown-medium-100);
+  box-shadow: 0 4px 0 var(--brown-dark-100);
 }
 
 .pending-actions-inside {

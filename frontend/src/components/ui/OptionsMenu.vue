@@ -83,7 +83,7 @@ function close() {
 .settings-field input {
     padding: var(--thin-padding);
     border-radius: var(--card-item-radius);
-    border: 2px solid var(--brown-medium-100);
+    border: 2px solid var(--brown-dark-100);
     background: var(--beige-light-100);
     color: var(--brown-dark-100);
     font-size: 0.9rem;

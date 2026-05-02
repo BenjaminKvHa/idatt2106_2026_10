@@ -121,7 +121,7 @@ const autoTitle = computed<string>(() => {
 
 <style scoped>
 .topbar {
-  background-color: var(--brown-medium-100);
+  background-color: var(--brown-dark-100);
   padding: var(--thin-padding) var(--medium-padding);
   display: flex;
   flex-direction: column;

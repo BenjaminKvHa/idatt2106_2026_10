@@ -65,7 +65,7 @@ function selectStop(stopName: StopName) {
 }
 
 .stop-note-btn {
-  border: 4px solid var(--brown-medium-100);
+  border: 4px solid var(--brown-dark-100);
   border-radius: 999px;
   padding: 13px 18px;
   font-size: 1.05rem;
@@ -77,11 +77,11 @@ function selectStop(stopName: StopName) {
 
 .stop-note-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 0 var(--brown-medium-100);
+  box-shadow: 0 4px 0 var(--brown-dark-100);
 }
 
 .stop-note-btn.active {
-  background: var(--brown-medium-100);
+  background: var(--brown-dark-100);
   color: var(--beige-medium-100);
 }
 

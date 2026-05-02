@@ -334,7 +334,7 @@ function closeClassroomsPicker() {
     border-radius: 0;
     border: none;
     outline-width: var(--border-width);
-    outline-color: var(--brown-medium-100);
+    outline-color: var(--brown-dark-100);
     outline-style: solid;
     padding: var(--medium-padding);
     justify-content: flex-start;

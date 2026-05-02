@@ -126,6 +126,6 @@ const handleSubmit = async () => {
 
 .create-classroom:focus {
     color: var(--beige-medium-100);
-    background-color: var(--brown-medium-100);
+    background-color: var(--brown-dark-100);
 }
 </style>

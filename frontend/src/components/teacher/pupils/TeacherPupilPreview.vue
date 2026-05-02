@@ -58,7 +58,7 @@ function selectPupil() {
 }
 
 .pupil-row.active {
-  background: var(--brown-medium-100);
+  background: var(--brown-dark-100);
 }
 
 .pupil-row.active,

@@ -152,7 +152,7 @@ const autoTitle = computed<string>(() => {
   transition: opacity var(--animation-time-1) ease-in-out;
 }
 
-.crumb-link:hover {
+.crumb-link:hover, .crumb-link:focus-visible {
   opacity: 1;
   text-decoration: underline;
 }
@@ -195,7 +195,7 @@ const autoTitle = computed<string>(() => {
   border-style: none;
 }
 
-.topbar-tab-button-1:hover {
+.topbar-tab-button-1:hover, .topbar-tab-button-1:focus-visible {
   background-color: var(--background-body);
   color: var(--txt);
 }
@@ -207,7 +207,7 @@ const autoTitle = computed<string>(() => {
   color: var(--txt);
 }
 
-.topbar-tab-button-2:hover {
+.topbar-tab-button-2:hover, .topbar-tab-button-2:focus-visible {
   background-color: var(--background-body);
   color: var(--txt);
 }

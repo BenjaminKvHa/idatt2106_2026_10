@@ -292,6 +292,12 @@ const isOnHome = computed(
   border: 2px solid #1a1a1a;
 }
 
+
+.nav-icon-parent:focus-visible,
+.avatar-button:focus-visible {
+  outline-color: rgba(255, 255, 255, 0.92);
+}
+
 @media (max-width: 800px) {
   .topbar {
     height: 3rem;

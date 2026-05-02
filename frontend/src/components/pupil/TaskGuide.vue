@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import BaseModal from '@/components/ui/BaseModal.vue'
+
 withDefaults(
   defineProps<{
     buttonText?: string
@@ -18,35 +20,26 @@ function confirm(): void {
 </script>
 
 <template>
-  <div class="task-guide-overlay overlay">
-    <div class="task-guide-card center-container">
-      <div class="task-guide-text guide-text">
+  <BaseModal
+    panel-class=""
+    :close-on-backdrop="false"
+    :close-on-escape="false"
+    :show-close-button="false"
+    @close="confirm"
+  >
+    <div class="task-guide-card">
+      <div class="task-guide-text">
         <slot />
       </div>
 
-      <button class="task-guide-button confirm-button" @click="confirm">
+      <button class="task-guide-button" @click="confirm">
         {{ buttonText }}
       </button>
     </div>
-  </div>
+  </BaseModal>
 </template>
 
 <style scoped>
-.task-guide-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background: rgb(0 0 0 / 30%);
-  backdrop-filter: blur(3px);
-}
-.center-container {
-  gap: 2rem;
-  padding: 1rem 1rem 2rem;
-}
-
 .task-guide-card {
   width: min(900px, calc(100vw - 48px));
   max-height: calc(100vh - 48px);
@@ -60,6 +53,7 @@ function confirm(): void {
   border: 3px solid var(--brown-dark);
   border-radius: 34px;
   box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+  box-sizing: border-box;
 }
 
 .task-guide-text {
@@ -101,8 +95,8 @@ function confirm(): void {
 }
 
 @media (max-width: 768px) {
-  .center-container {
-    padding: .5rem .5rem 1rem;
+  .task-guide-card {
+    padding: 0.5rem 0.5rem 1rem;
     width: 95%;
   }
 }

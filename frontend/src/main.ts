@@ -1,8 +1,9 @@
 import './assets/styles/main.css'
 
-import { createApp, watch } from 'vue'
+import { createApp, watch, nextTick } from 'vue'
 import App from './App.vue'
 import router from './router'
+import { VueKeyboardTrapDirectivePlugin } from '@pdanpdan/vue-keyboard-trap'
 import clickSoundFile from '@/assets/sounds/shared/click-sound.mp3'
 import backgroundMusicFile from '@/assets/sounds/shared/backgroundMusic.mp3'
 import { useAudio } from '@/composables/useAudio'
@@ -63,5 +64,14 @@ document.addEventListener(
   true,
 )
 
+router.afterEach(() => {
+  nextTick(() => {
+    document.querySelectorAll('a:not([tabindex])').forEach((el) => {
+      el.setAttribute('tabindex', '0')
+    })
+  })
+})
+
 app.use(router)
+app.use(VueKeyboardTrapDirectivePlugin, {})
 app.mount('#app')

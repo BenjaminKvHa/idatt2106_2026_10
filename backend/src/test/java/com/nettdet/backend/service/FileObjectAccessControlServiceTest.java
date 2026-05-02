@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
+import java.util.Base64;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -189,11 +190,12 @@ class FileObjectAccessControlServiceTest {
     @DisplayName("Allows confirmed pupils to upload weekly mystery files as teacher-only classroom files")
     @Test
     void uploadWeeklyMysteryFile_whenPupilIsConfirmedInClass_uploadsTeacherOnlyFile() {
+        byte[] png = validPngBytes();
         MockMultipartFile file = new MockMultipartFile(
                 "file",
                 "mystery.png",
                 "image/png",
-                new byte[] {5});
+                png);
         Account actor = account("pupil@example.com");
         Classroom classroom = classroom();
         PupilClassroomMembership membership = membership("pupil@example.com", classroom);
@@ -206,7 +208,7 @@ class FileObjectAccessControlServiceTest {
                 .thenReturn(Optional.of(membership));
         when(fileObjectService.upload(
                 any(String.class),
-                eq(new byte[] {5}),
+                eq(png),
                 eq("image/png"),
                 eq(actor),
                 eq(classroom),
@@ -250,17 +252,18 @@ class FileObjectAccessControlServiceTest {
     @DisplayName("Uploads public files with default public access when access level is omitted")
     @Test
     void upload_whenAccessLevelIsNull_uploadsAsPublicFile() {
+        byte[] png = validPngBytes();
         MockMultipartFile file = new MockMultipartFile(
                 "file",
                 "avatar.png",
                 "image/png",
-                new byte[] {3});
+                png);
         Account actor = account("teacher@example.com");
         FileObject stored = fileObject(10L, ClassroomAccess.PUBLIC, null, actor);
         when(accountRepository.findById("teacher@example.com")).thenReturn(Optional.of(actor));
         when(fileObjectService.upload(
                 any(String.class),
-                eq(new byte[] {3}),
+                eq(png),
                 eq("image/png"),
                 eq(actor),
                 eq(null),
@@ -398,6 +401,10 @@ class FileObjectAccessControlServiceTest {
 
     private JwtUserPrincipal principal(String legalName, String email) {
         return new JwtUserPrincipal(legalName, email, "TEACHER");
+    }
+
+    private byte[] validPngBytes() {
+        return Base64.getDecoder().decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aF9sAAAAASUVORK5CYII=");
     }
 
     private Account account(String email) {

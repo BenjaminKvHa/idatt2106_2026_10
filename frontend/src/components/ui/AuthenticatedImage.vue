@@ -108,13 +108,17 @@ onBeforeUnmount(() => {
 .preview-enabled {
   cursor: zoom-in;
 }
+.preview-enabled:focus-visible {
+  outline: 3px solid var(--brown-dark) !important;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
 
 .authenticated-image-modal {
   width: min(92vw, 960px);
   padding: 1rem;
   background: transparent;
   border: none;
-  outline: none;
   box-shadow: none;
 }
 

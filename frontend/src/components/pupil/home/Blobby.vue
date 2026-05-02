@@ -102,6 +102,7 @@ onBeforeUnmount(() => {
   width: clamp(60px, 16%, 180px);
   z-index: 10;
   transform: translateY(-50%);
+  outline: none;
 }
 
 .blobby-button {
@@ -111,9 +112,11 @@ onBeforeUnmount(() => {
   cursor: pointer;
   width: 100%;
   transform-origin: bottom center;
+  outline: none;
 }
 
 .blobby-image {
+  outline: none;
   width: 100%;
   height: auto;
   display: block;
@@ -123,7 +126,7 @@ onBeforeUnmount(() => {
     filter 0.15s ease;
 }
 
-.blobby-button:hover .blobby-image {
+.blobby-button:hover, .blobby-image, .blobby-button:focus-visible {
   transform: scale(1.04);
 }
 

@@ -5,6 +5,7 @@ import confetti from 'canvas-confetti'
 import completedSoundFile from '@/assets/sounds/levels/completedSound.mp3'
 import tryAgainSoundFile from '@/assets/sounds/levels/tryAgainSound.mp3'
 import { useAudio } from '@/composables/useAudio'
+import BaseModal from '@/components/ui/BaseModal.vue'
 
 const router = useRouter()
 const { playSound, stopSound } = useAudio()
@@ -75,31 +76,12 @@ watch(
 
       const duration = 2000
       const end = Date.now() + duration
-
-      const defaults = {
-        zIndex: 2000,
-      }
+      const defaults = { zIndex: 2000 }
 
       const frame = () => {
-        confetti({
-          ...defaults,
-          particleCount: 8,
-          angle: 60,
-          spread: 60,
-          origin: { x: 0, y: 0.6 },
-        })
-
-        confetti({
-          ...defaults,
-          particleCount: 8,
-          angle: 120,
-          spread: 60,
-          origin: { x: 1, y: 0.6 },
-        })
-
-        if (Date.now() < end) {
-          requestAnimationFrame(frame)
-        }
+        confetti({ ...defaults, particleCount: 8, angle: 60, spread: 60, origin: { x: 0, y: 0.6 } })
+        confetti({ ...defaults, particleCount: 8, angle: 120, spread: 60, origin: { x: 1, y: 0.6 } })
+        if (Date.now() < end) requestAnimationFrame(frame)
       }
 
       frame()
@@ -111,8 +93,15 @@ watch(
 </script>
 
 <template>
-  <div v-if="show" class="popup-overlay" @click="closePopup">
-    <div class="complete-popup" :class="{ 'complete-popup-fail': success === false }" @click.stop>
+  <BaseModal
+    v-if="show"
+    panel-class=""
+    :close-on-backdrop="true"
+    :close-on-escape="true"
+    :show-close-button="false"
+    @close="closePopup"
+  >
+    <div :class="['complete-popup-wrapper', { 'complete-popup-fail': success === false }]">
       <div v-if="currentImage" class="popup-image-wrapper">
         <img :src="currentImage" :alt="success ? 'Riktig svar' : 'Feil svar'" class="popup-image" />
       </div>
@@ -147,27 +136,15 @@ watch(
 
         <template v-else>
           <button class="popup-btn popup-btn-play" @click="retry">Prøv på nytt</button>
-
           <button class="popup-btn popup-btn-map" @click="goToMap">Tilbake til kartet</button>
         </template>
       </div>
     </div>
-  </div>
+  </BaseModal>
 </template>
 
 <style scoped>
-.popup-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgb(0 0 0 / 28%);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  backdrop-filter: blur(3px);
-}
-
-.complete-popup {
+.complete-popup-wrapper {
   width: min(820px, calc(100vw - 32px));
   background: linear-gradient(180deg, #fff0c9 0%, #f5d59a 55%, #e8b86f 100%);
   border: 7px solid var(--brown-dark);
@@ -178,10 +155,9 @@ watch(
     inset 0 4px 0 rgb(255 255 255 / 45%);
   padding: 34px 28px 40px;
   text-align: center;
-  backdrop-filter: blur(2px);
 }
 
-.complete-popup-fail {
+.complete-popup-wrapper.complete-popup-fail {
   background: linear-gradient(180deg, #ffe1c9 0%, #f0a078 55%, #d96a55 100%);
 }
 
@@ -261,7 +237,7 @@ watch(
 }
 
 @media (max-width: 768px) {
-  .complete-popup {
+  .complete-popup-wrapper {
     padding: 24px 18px;
     border-width: 5px;
     border-radius: 30px;

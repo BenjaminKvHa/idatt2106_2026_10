@@ -6,6 +6,7 @@ import bookImage from '@/assets/book.png'
 import woodBackground from '@/assets/backgrounds/woodBackground.png'
 import TopBar from '@/components/pupil/TopBar.vue'
 import { get, put } from '@/utils/apiUtils'
+import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 import pageFlipSound from '@/assets/sounds/shared/page-flip-sound.mp3'
 import { useAudio } from '@/composables/useAudio'
 
@@ -38,10 +39,11 @@ const savingNotebook = ref(false)
 const loadError = ref<string | null>(null)
 const saveError = ref<string | null>(null)
 const saveStatus = ref<string | null>(null)
-const unsavedNotesPopupOpen = ref(false)
 const skipUnsavedNotesPrompt = ref(false)
 
-let pendingUnsavedNotesAction: (() => void | Promise<void>) | null = null
+const confirmModalShow = ref(false)
+const confirmModalMessage = ref('')
+let confirmModalResolve: ((v: boolean) => void) | null = null
 
 const currentChapter = computed(() => chapters.value[currentChapterIndex.value] ?? null)
 const hasPreviousChapter = computed(() => currentChapterIndex.value > 0)
@@ -108,25 +110,35 @@ async function loadNotebookForCurrentChapter() {
   }
 }
 
-function requestDiscardUnsavedNotes(onConfirm: () => void | Promise<void>): boolean {
-  if (!hasUnsavedOwnNotes.value || skipUnsavedNotesPrompt.value) {
-    return true
+function showConfirmModal(message: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    confirmModalMessage.value = message
+    confirmModalShow.value = true
+    confirmModalResolve = resolve
+  })
+}
+
+function onConfirmModalConfirm() {
+  confirmModalResolve?.(true)
+  confirmModalResolve = null
+  confirmModalShow.value = false
+}
+
+function onConfirmModalCancel() {
+  confirmModalResolve?.(false)
+  confirmModalResolve = null
+  confirmModalShow.value = false
+}
+
+async function shouldStayOnCurrentChapter(): Promise<boolean> {
+  if (!hasUnsavedOwnNotes.value) {
+    return false
   }
 
-  pendingUnsavedNotesAction = onConfirm
-  unsavedNotesPopupOpen.value = true
-  return false
-}
-
-function closeUnsavedNotesPopup(): void {
-  unsavedNotesPopupOpen.value = false
-  pendingUnsavedNotesAction = null
-}
-
-async function confirmDiscardUnsavedNotes(): Promise<void> {
-  const action = pendingUnsavedNotesAction
-  closeUnsavedNotesPopup()
-  await action?.()
+  const proceed = await showConfirmModal(
+    'Du har ulagrede notater. Vil du fortsette uten å lagre?',
+  )
+  return !proceed
 }
 
 async function saveOwnNotes() {
@@ -157,18 +169,8 @@ async function saveOwnNotes() {
 
 async function goToPreviousChapter() {
   if (!hasPreviousChapter.value) return
-  if (
-    !requestDiscardUnsavedNotes(async () => {
-      await moveToPreviousChapter()
-    })
-  ) {
-    return
-  }
+  if (await shouldStayOnCurrentChapter()) return
 
-  await moveToPreviousChapter()
-}
-
-async function moveToPreviousChapter() {
   soundRef = playSound(pageFlipSound, PAGE_FLIP_SOUND_RELATIVE_VOLUME, 0.15)
 
   currentChapterIndex.value -= 1
@@ -177,18 +179,8 @@ async function moveToPreviousChapter() {
 
 async function goToNextChapter() {
   if (!hasNextChapter.value) return
-  if (
-    !requestDiscardUnsavedNotes(async () => {
-      await moveToNextChapter()
-    })
-  ) {
-    return
-  }
+  if (await shouldStayOnCurrentChapter()) return
 
-  await moveToNextChapter()
-}
-
-async function moveToNextChapter() {
   soundRef = playSound(pageFlipSound, PAGE_FLIP_SOUND_RELATIVE_VOLUME, 0.15)
 
   currentChapterIndex.value += 1
@@ -200,14 +192,17 @@ onBeforeRouteLeave((to) => {
     return true
   }
 
-  requestDiscardUnsavedNotes(async () => {
-    skipUnsavedNotesPrompt.value = true
-    try {
-      await router.push(to.fullPath)
-    } finally {
-      skipUnsavedNotesPrompt.value = false
-    }
-  })
+  showConfirmModal('Du har ulagrede notater. Hvis du fortsetter, mister du endringene.').then(
+    async (proceed) => {
+      if (!proceed) return
+      skipUnsavedNotesPrompt.value = true
+      try {
+        await router.push(to.fullPath)
+      } finally {
+        skipUnsavedNotesPrompt.value = false
+      }
+    },
+  )
   return false
 })
 
@@ -318,37 +313,16 @@ onBeforeUnmount(() => {
         </div>
       </section>
     </main>
-
-    <div
-      v-if="unsavedNotesPopupOpen"
-      class="pupil-popup-overlay pupil-popup-fixed-center"
-      @click.self="closeUnsavedNotesPopup"
-    >
-      <section class="pupil-hint-popup unsaved-notes-popup" role="dialog" aria-modal="true">
-        <h2 class="pupil-popup-title">Ulagrede notater</h2>
-        <p class="pupil-popup-text">
-          Du har ulagrede notater. Hvis du fortsetter, mister du endringene.
-        </p>
-
-        <div class="pupil-popup-actions">
-          <button
-            type="button"
-            class="pupil-popup-btn cancel-discard-notes"
-            @click="closeUnsavedNotesPopup"
-          >
-            Avbryt
-          </button>
-          <button
-            type="button"
-            class="pupil-popup-btn confirm-discard-notes"
-            @click="confirmDiscardUnsavedNotes"
-          >
-            Bekreft
-          </button>
-        </div>
-      </section>
-    </div>
   </div>
+
+  <ConfirmModal
+    v-if="confirmModalShow"
+    :message="confirmModalMessage"
+    confirm-label="Fortsett uten å lagre"
+    cancel-label="Avbryt"
+    @confirm="onConfirmModalConfirm"
+    @cancel="onConfirmModalCancel"
+  />
 </template>
 
 <style scoped>
@@ -560,18 +534,6 @@ onBeforeUnmount(() => {
   font-size: 0.95rem;
   color: var(--red-danger);
   font-weight: 700;
-}
-
-.unsaved-notes-popup {
-  background: var(--beige-light);
-}
-
-.cancel-discard-notes {
-  background: var(--beige-medium);
-}
-
-.confirm-discard-notes {
-  background: var(--red-danger);
 }
 
 .sr-only {

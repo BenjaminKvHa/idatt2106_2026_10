@@ -13,6 +13,7 @@ A gamified web application that teaches children (grades 3–7) to recognize and
 - [Running the Application](#running-the-application)
 - [Running Tests](#running-tests)
 - [Project Structure](#project-structure)
+- [Demo Accounts](#demo-accounts)
 - [API Documentation](#api-documentation)
 - [Environment Variables](#environment-variables)
 - [CI/CD](#cicd)
@@ -231,6 +232,44 @@ idatt2106_2026_XX/
 ├── docs/                      # Additional documentation
 └── README.md
 ```
+
+## Demo Accounts
+
+The `db-seed` service loads [`seed.sql`](seed.sql) on stack startup, populating Postgres with classrooms, accounts, file objects, progressions and weekly mysteries. This lets you log in and explore every flow without clicking through signup or grading dozens of tasks first.
+
+> **Login URL:** http://localhost:5173 (or whatever `FRONTEND_PORT` you set)
+> **Password for every demo account below:** `Test1234`
+
+### Teachers
+
+| Email                          | Owns                  | What it demonstrates                                                            |
+|--------------------------------|-----------------------|---------------------------------------------------------------------------------|
+| `teacher.anna@example.com`     | `DEMOAA`, `DEMOBB`, `MAPAAA` | Rich classroom data: pupil progressions, pending join requests, notifications, weekly mystery submissions to approve. **Best starting point.** |
+| `teacher.marius@example.com`   | shares `DEMOAA`       | Co-teacher view — verify shared-classroom flows.                                |
+| `teacher.empty@example.com`    | `EMPTYA`              | Empty-state UI: no pupils, no progress, no submissions.                         |
+
+### Pupils
+
+| Email                              | Classroom            | State                                                              |
+|------------------------------------|----------------------|--------------------------------------------------------------------|
+| `pupil.start@example.com`          | `DEMOAA` (confirmed) | **Nothing unlocked** — fresh account, only chapter 1 available.    |
+| `pupil.pending@example.com`        | `DEMOAA` (pending)   | Waiting-room flow — sees "venter på godkjenning"-skjerm.           |
+| `pupil.map.partial@example.com`    | `MAPAAA` (confirmed) | **Partial unlock** — chapter 1+2 complete, chapter 3 available.    |
+| `pupil.complete@example.com`       | `DEMOAA` (confirmed) | **Everything unlocked** — all chapters complete, full medal set.   |
+| `pupil.stuck@example.com`          | `DEMOAA` (confirmed) | Stuck/struggling scenario — triggers teacher progress notification. |
+| `pupil.weekly@example.com`         | `DEMOAA` (confirmed) | Has an approved weekly mystery + medal — for "Ukens mysterium"-flyt. |
+
+### Recommended walkthrough
+
+1. **Teacher view:** log in as `teacher.anna@example.com`, open `DEMOAA` → see pupil list, progressions, the pending join request from `pupil.pending@example.com`, and a pending weekly-mystery submission you can approve.
+2. **Empty pupil:** log in as `pupil.start@example.com` to see the map with only chapter 1 unlocked.
+3. **Mid-progress pupil:** log in as `pupil.map.partial@example.com` to see partially unlocked map progression.
+4. **Completed pupil:** log in as `pupil.complete@example.com` to see the leaderboard, full medal collection, and end-game state.
+5. **Submitting a mystery:** log in as `pupil.start@example.com`, submit an image under "Ukens mysterium", then switch back to `teacher.anna@example.com` to approve it.
+
+> **Resetting state:** `docker compose down -v && docker compose up -d --build` wipes Postgres + MinIO and re-runs `seed.sql` from scratch.
+
+The full account inventory (including secondary pupils used for leaderboards, multi-teacher classrooms, and pending-request fixtures) is documented at the top of [`seed.sql`](seed.sql).
 
 ## API Documentation
 

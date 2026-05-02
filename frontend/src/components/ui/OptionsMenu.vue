@@ -42,13 +42,16 @@ function close() {
   </BaseModal>
 </template>
 
-<style scoped>
+<style>
 .settings-modal-box {
     min-width: 320px;
     max-width: 500px;
     width: 90vw;
     gap: var(--medium-gap);
 }
+</style>
+
+<style scoped>
 
 .settings-modal-title {
     font-size: 1.3rem;

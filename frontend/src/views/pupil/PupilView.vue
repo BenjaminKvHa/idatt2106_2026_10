@@ -16,12 +16,12 @@ import openFileSound from '@/assets/sounds/shared/open-file-sound.mp3'
 const MAP_OPEN_SOUND_RELATIVE_VOLUME = 2
 
 const buttons = [
-  { to: '/pupil/classroom/notebook', class: 'notes', icon: notesIcon },
-  { to: '/pupil/classroom/mystery', class: 'mystery', icon: mysteryIcon },
   { to: '/pupil/classroom/medals', class: 'medals', icon: medalsIcon },
   { to: '/pupil/classroom/map', class: 'map', icon: mapIcon, sound: openFileSound },
   { to: '/pupil/classroom/leaderboard', class: 'leaderboard', icon: leaderboardIcon },
+  { to: '/pupil/classroom/mystery', class: 'mystery', icon: mysteryIcon },
   { to: '/pupil/classroom/help', class: 'help', icon: helpIcon },
+  { to: '/pupil/classroom/notebook', class: 'notes', icon: notesIcon },
 ]
 
 const { playSound } = useAudio()
@@ -66,66 +66,31 @@ function handleButtonClick(sound?: string) {
   background-attachment: fixed;
 }
 
-.screen::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  z-index: 0;
-  pointer-events: none;
-}
-
-.screen > * {
-  position: relative;
-  z-index: 1;
-}
-
-.page {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  background: transparent;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: clamp(0.5rem, 2vw, 2rem);
-}
-
-.center-container {
-  width: 100%;
-  min-height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-  z-index: 1;
-}
-
-/* pin-board */
-.image-wrapper {
-  position: relative;
-  width: min(96vw, 1400px);
-  aspect-ratio: 1400 / 900;
-}
-
-/* icons */
 .overlay-button {
   position: absolute;
   cursor: pointer;
   width: clamp(10rem, 11vw, 20rem);
   transform: translateX(-50%);
   z-index: 2;
+  outline: none;
 }
 
 .overlay-button img {
   display: block;
   width: 100%;
+  transition:
+    filter ease-in-out var(--icon-transition-duration),
+    transform ease-in-out var(--icon-transition-duration);
 }
 
-.overlay-button:hover img {
-  transform: scale(1.05);
-  transition: transform 0.15s ease;
+.overlay-button:hover img,
+.overlay-button:focus-visible img {
+  transform: scale(var(--icon-hover-scale)) rotate(var(--icon-hover-rotate));
+  filter:
+    drop-shadow(0 -2px 0 var(--beige-light-100))
+    drop-shadow(2px 0 0 var(--beige-light-100))
+    drop-shadow(0 2px 0 var(--beige-light-100))
+    drop-shadow(-2px 0 0 var(--beige-light-100));
 }
 
 .medals {
@@ -160,55 +125,43 @@ function handleButtonClick(sound?: string) {
 
 @media (max-width: 768px) {
   .overlay-button {
-    position: absolute;
-    cursor: pointer;
     width: clamp(10rem, 12vw, 17rem);
-    transform: translateX(-50%);
   }
-  .pupil-pinboard-image {
-    display: none;
-  }
-  .pupil-pinboard-image-large {
-    display: block;
-  }
+
   .map {
     top: 15%;
     left: 70%;
   }
+
   .notes {
     top: 65%;
     left: 70%;
   }
-  .page {
-    align-items: center;
-    padding: 0.5rem;
-  }
-  .image-wrapper {
-    width: 96vw;
-  }
+
   .medals {
     top: 15%;
     left: 30%;
   }
+
   .leaderboard {
     top: 40%;
     left: 30%;
   }
+
   .mystery {
     top: 40%;
     left: 70%;
   }
+
   .help {
     top: 65%;
     left: 30%;
   }
 }
+
 @media (max-width: 600px) {
   .overlay-button {
-    position: absolute;
-    cursor: pointer;
     width: clamp(7rem, 12vw, 17rem);
-    transform: translateX(-50%);
   }
 }
 </style>

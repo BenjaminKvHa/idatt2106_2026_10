@@ -204,7 +204,7 @@
     text-decoration: none;
 }
 
-.button-variant-1:hover, .button-variant-1::selection {
+.button-variant-1:hover, .button-variant-1::selection, .button-variant-1:focus-visible {
     color: var(--txt-sec);
     background-color: var(--accent);
 }
@@ -220,7 +220,7 @@
     transition: ease-in-out var(--animation-time-1);
 }
 
-.button-variant-2:hover, .button-variant-2::selection {
+.button-variant-2:hover, .button-variant-2::selection, .button-variant-2:focus-visible {
     color: var(--txt);
     background-color: var(--background);
 }
@@ -330,7 +330,6 @@
 
 .form-field input:focus,
 .form-field textarea:focus {
-    outline: none;
     border-bottom-color: var(--background-sec);
 }
 

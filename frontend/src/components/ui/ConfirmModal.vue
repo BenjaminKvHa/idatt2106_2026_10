@@ -14,7 +14,13 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <BaseModal :close-on-backdrop="true" :close-on-escape="true" @close="emit('cancel')">
+  <BaseModal
+    panel-class="confirm-modal-panel"
+    :close-on-backdrop="true"
+    :close-on-escape="true"
+    :show-close-button="false"
+    @close="emit('cancel')"
+  >
     <p class="confirm-modal-message">{{ message }}</p>
     <div class="confirm-modal-actions">
       <button type="button" class="button-warning" @click="emit('confirm')">
@@ -28,6 +34,14 @@ const emit = defineEmits<{
 </template>
 
 <style scoped>
+
+:global(.confirm-modal-panel) {
+  background: var(--beige-light);
+  border-radius: 1rem;
+  border: 3px solid var(--brown-dark);
+  min-width: min(360px, calc(100vw - 4rem));
+}
+
 .confirm-modal-message {
   margin: 0 0 var(--medium-gap);
   font-size: 1rem;

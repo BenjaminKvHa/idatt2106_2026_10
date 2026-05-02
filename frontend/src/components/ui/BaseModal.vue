@@ -81,7 +81,7 @@ onBeforeUnmount(() => {
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    z-index: 1000;
+    z-index: 3000;
     overflow-y: auto;
     padding: 2rem 0;
 }
@@ -93,7 +93,7 @@ onBeforeUnmount(() => {
     flex-direction: column;
     padding: var(--thick-padding);
     box-sizing: border-box;
-    overflow: hidden;
+    overflow: hidden;     
 }
 
 .modal-window--no-padding {

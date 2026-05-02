@@ -96,6 +96,7 @@ async function openHintPopup() {
   cursor: pointer;
   pointer-events: auto;
   display: block;
+  outline: none;
 }
 
 .hint-creature-button img {

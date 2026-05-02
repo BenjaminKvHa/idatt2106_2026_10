@@ -306,6 +306,12 @@ function medalImageUrl(medal: PupilMedal) {
     0 0.14rem 0.1rem rgba(34, 13, 3, 0.85);
 }
 
+@media (max-width: 768px) {
+  .board-content {
+    padding: 0% 0% 0;
+    inset: 6% 4% 6% !important;
+  }
+}
 @media (max-width: 900px) {
   .medals-header {
     min-height: clamp(4.75rem, 13vw, 6.75rem);

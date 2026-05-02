@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import TeacherHelpButton from '@/components/teacher/TeacherHelpButton.vue'
 import Mystery from '@/components/teacher/mystery/Mystery.vue'
 import { del, get, put } from '@/utils/apiUtils'
 
@@ -30,6 +31,15 @@ const loading = ref(true)
 const error = ref('')
 const actionError = ref('')
 const activeMysteryId = ref<number | null>(null)
+
+const weeklyMysteryHelpSections = [
+  {
+    body: [
+      'Her godkjenner eller fjerner du elevforslag til ukens mysterium. Forslag som venter på godkjenning er ikke synlige som godkjente bidrag ennå.',
+      'Godkjenn bare bidrag som passer for klassen, og fjern bidrag som ikke skal brukes.',
+    ],
+  },
+]
 
 const classroomCode = computed(() =>
   typeof route.params.classroomCode === 'string' ? route.params.classroomCode : '',
@@ -112,6 +122,7 @@ watch(
           <h1>Ukens mysterium</h1>
           <p>Godkjenn eller fjern elevforslag for dette klasserommet.</p>
         </div>
+        <TeacherHelpButton title="Ukens mysterium" :sections="weeklyMysteryHelpSections" />
       </div>
     </section>
 
@@ -168,6 +179,13 @@ watch(
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--medium-gap);
+  align-items: flex-start;
 }
 
 .section-header h1,

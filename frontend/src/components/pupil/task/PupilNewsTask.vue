@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AuthenticatedImage from '@/components/ui/AuthenticatedImage.vue';
 import type { ValidationResult } from '@/types/chapter'
 
 const props = defineProps<{
@@ -40,11 +41,12 @@ function cardClass(fileId: number): string {
         :class="cardClass(fileId)"
       >
         <div class="picture-placeholder">
-          <img
+          <AuthenticatedImage
             v-if="imageUrls[idx]"
             :src="imageUrls[idx]"
             :alt="`Bilde ${Number(idx) + 1}`"
             class="picture"
+            preview-on-click
           />
           <span v-else>Laster…</span>
         </div>
@@ -58,9 +60,10 @@ function cardClass(fileId: number): string {
         </p>
 
         <button
+          v-if="!result"
           type="button"
           class="fake-button"
-          :disabled="!!result || submitting"
+          :disabled="submitting"
           @click="emit('selectFile', fileId)"
         >
           {{ selectButtonText ?? 'Velg dette bildet' }}

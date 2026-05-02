@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import TeacherHelpButton from '@/components/teacher/TeacherHelpButton.vue'
 import { del, get, post, put } from '@/utils/apiUtils'
 
 type ClassroomDetailsResponse = {
@@ -48,6 +49,15 @@ const editName = ref('')
 const editDescription = ref('')
 const leaveClassroomPopupOpen = ref(false)
 const deleteClassroomPopupOpen = ref(false)
+
+const editClassroomHelpSections = [
+  {
+    body: [
+      'Her kan du endre navn og beskrivelse for klasserommet. Du kan også legge til andre lærere med e-postadresse.',
+      'Bruk "Forlat klasserom" hvis du ikke lenger skal være lærer her, og "Slett klasserom" kun når klasserommet ikke skal brukes mer.',
+    ],
+  },
+]
 
 function syncEditForm() {
   editName.value = classroom.value?.classroomName ?? ''
@@ -257,9 +267,14 @@ watch(
     <p v-else-if="error" class="state-message error">{{ error }}</p>
 
     <template v-else-if="classroom">
-      <h1>{{ classroom.classroomName }}</h1>
-      <p v-if="classroom.classroomDescription">{{ classroom.classroomDescription }}</p>
-      <p><b>Romkode:</b> {{ classroom.classroomCode }}</p>
+      <div class="page-header">
+        <div>
+          <h1>{{ classroom.classroomName }}</h1>
+          <p v-if="classroom.classroomDescription">{{ classroom.classroomDescription }}</p>
+          <p><b>Romkode:</b> {{ classroom.classroomCode }}</p>
+        </div>
+        <TeacherHelpButton title="Administrer klasserom" :sections="editClassroomHelpSections" />
+      </div>
 
       <button
         v-if="!editOpen"
@@ -461,6 +476,13 @@ watch(
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--medium-gap);
+  align-items: flex-start;
 }
 
 .edit-classroom-view h1,

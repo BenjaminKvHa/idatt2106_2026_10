@@ -66,10 +66,54 @@ function handleButtonClick(sound?: string) {
   background-attachment: fixed;
 }
 
+.screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.screen > * {
+  position: relative;
+  z-index: 1;
+}
+
+.page {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: transparent;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: clamp(0.5rem, 2vw, 2rem);
+}
+
+.center-container {
+  width: 100%;
+  min-height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+/* pin-board */
+.image-wrapper {
+  position: relative;
+  width: min(96vw, 1400px);
+  aspect-ratio: 1400 / 900;
+}
+
+/* icons */
 .overlay-button {
   position: absolute;
   cursor: pointer;
-  width: clamp(195px, 22vw, 360px);
+  width: clamp(10rem, 11vw, 20rem);
   transform: translateX(-50%);
   z-index: 2;
 }
@@ -116,33 +160,55 @@ function handleButtonClick(sound?: string) {
 
 @media (max-width: 768px) {
   .overlay-button {
-    width: clamp(110px, 20vw, 180px);
+    position: absolute;
+    cursor: pointer;
+    width: clamp(10rem, 12vw, 17rem);
+    transform: translateX(-50%);
   }
-
+  .pupil-pinboard-image {
+    display: none;
+  }
+  .pupil-pinboard-image-large {
+    display: block;
+  }
   .map {
-    width: clamp(100px, 22vw, 170px);
+    top: 15%;
+    left: 70%;
+  }
+  .notes {
+    top: 65%;
+    left: 70%;
+  }
+  .page {
+    align-items: center;
+    padding: 0.5rem;
+  }
+  .image-wrapper {
+    width: 96vw;
+  }
+  .medals {
+    top: 15%;
+    left: 30%;
+  }
+  .leaderboard {
+    top: 40%;
+    left: 30%;
+  }
+  .mystery {
+    top: 40%;
+    left: 70%;
+  }
+  .help {
+    top: 65%;
+    left: 30%;
   }
 }
-
-@media (max-width: 540px) {
+@media (max-width: 600px) {
   .overlay-button {
-    width: clamp(70px, 18vw, 110px);
-  }
-
-  .map {
-    width: clamp(65px, 20vw, 100px);
-  }
-
-  .medals,
-  .map,
-  .leaderboard {
-    top: 26%;
-  }
-
-  .mystery,
-  .help,
-  .notes {
-    top: 56%;
+    position: absolute;
+    cursor: pointer;
+    width: clamp(7rem, 12vw, 17rem);
+    transform: translateX(-50%);
   }
 }
 </style>

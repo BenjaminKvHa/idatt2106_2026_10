@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AuthenticatedImage from '@/components/ui/AuthenticatedImage.vue';
 import type { ImageCategory, ValidationResult } from '@/types/chapter'
 
 defineProps<{
@@ -58,7 +59,7 @@ function justificationClass(
         wrong: result && result.correct === false,
       }"
     >
-      <img v-if="imageUrl" :src="imageUrl" alt="Oppgavebilde" class="task-image" />
+      <AuthenticatedImage v-if="imageUrl" :src="imageUrl" alt="Oppgavebilde" class="task-image" preview-on-click />
       <div v-else class="image-placeholder">Laster bilde…</div>
     </div>
 

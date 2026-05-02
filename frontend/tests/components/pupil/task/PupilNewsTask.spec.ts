@@ -1,140 +1,97 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 
-import PupilImageTask from '@/components/pupil/task/PupilImageTask.vue'
-
-const categories = [
-  { value: 'REAL', label: 'Ekte' },
-  { value: 'AI_GENERATED', label: 'KI-generert' },
-  { value: 'MANIPULATED', label: 'Manipulert' },
-] as const
-
-const justifications = ['Ser naturlig ut', 'Rare detaljer']
+import PupilNewsTask from '@/components/pupil/task/PupilNewsTask.vue'
 
 function mountTask(props = {}) {
-  return mount(PupilImageTask, {
+  return mount(PupilNewsTask, {
     props: {
-      taskDescription: 'Er bildet ekte?',
-      imageUrl: '/test-image.png',
-      categories: [...categories],
-      justifications,
-      selectedCategory: null,
-      selectedJustification: null,
+      taskDescription: 'Velg riktig bilde',
+      fileIds: [101, 102],
+      imageUrls: ['/test-image-1.png', '/test-image-2.png'],
+      selectedFileId: null,
       result: null,
       ...props,
+    },
+    global: {
+      stubs: {
+        AuthenticatedImage: {
+          props: ['src', 'alt'],
+          template: '<img :src="src" :alt="alt" />',
+        },
+      },
     },
   })
 }
 
-describe('PupilImageTask', () => {
-  it('renders task description and image', () => {
+describe('PupilNewsTask', () => {
+  it('renders task description and images', () => {
     const wrapper = mountTask()
 
-    expect(wrapper.text()).toContain('Er bildet ekte?')
+    expect(wrapper.text()).toContain('Velg riktig bilde')
 
-    const image = wrapper.find('img')
-    expect(image.attributes('src')).toBe('/test-image.png')
-    expect(image.attributes('alt')).toBe('Oppgavebilde')
+    const images = wrapper.findAll('img')
+    expect(images).toHaveLength(2)
+    expect(images[0]?.attributes('src')).toBe('/test-image-1.png')
+    expect(images[0]?.attributes('alt')).toBe('Bilde 1')
+    expect(images[1]?.attributes('src')).toBe('/test-image-2.png')
+    expect(images[1]?.attributes('alt')).toBe('Bilde 2')
   })
 
-  it('shows placeholder when image url is missing', () => {
+  it('shows placeholder text when an image url is missing', () => {
     const wrapper = mountTask({
-      imageUrl: '',
+      imageUrls: ['', '/test-image-2.png'],
     })
 
-    expect(wrapper.text()).toContain('Laster bilde')
+    expect(wrapper.text()).toContain('Laster…')
   })
 
-  it('renders all category buttons', () => {
+  it('emits selected file when a picture button is clicked', async () => {
     const wrapper = mountTask()
 
-    expect(wrapper.text()).toContain('Ekte')
-    expect(wrapper.text()).toContain('KI-generert')
-    expect(wrapper.text()).toContain('Manipulert')
+    await wrapper.findAll('.fake-button')[1]!.trigger('click')
+
+    expect(wrapper.emitted('selectFile')).toEqual([[102]])
   })
 
-  it('emits selected category when category is clicked', async () => {
-    const wrapper = mountTask()
-
-    await wrapper.findAll('.choices button')[0]!.trigger('click')
-
-    expect(wrapper.emitted('selectCategory')).toEqual([['REAL']])
-  })
-
-  it('shows justifications when category is selected', () => {
+  it('marks the selected card as selected', () => {
     const wrapper = mountTask({
-      selectedCategory: 'REAL',
+      selectedFileId: 101,
     })
 
-    expect(wrapper.text()).toContain('Hvorfor?')
-    expect(wrapper.text()).toContain('Ser naturlig ut')
-    expect(wrapper.text()).toContain('Rare detaljer')
+    expect(wrapper.findAll('.picture-card')[0]?.classes()).toContain('selected')
   })
 
-  it('emits selected justification when justification is clicked', async () => {
+  it('shows answer label when selected file has a result', () => {
     const wrapper = mountTask({
-      selectedCategory: 'REAL',
-    })
-
-    await wrapper.findAll('.reason-box button')[0]!.trigger('click')
-
-    expect(wrapper.emitted('selectJustification')).toEqual([['Ser naturlig ut']])
-  })
-
-  it('marks selected category as selected', () => {
-    const wrapper = mountTask({
-      selectedCategory: 'REAL',
-    })
-
-    const firstButton = wrapper.findAll('.choices button')[0]!
-
-    expect(firstButton.classes()).toContain('selected')
-  })
-
-  it('marks selected justification as selected', () => {
-    const wrapper = mountTask({
-      selectedCategory: 'REAL',
-      selectedJustification: 'Ser naturlig ut',
-    })
-
-    const firstButton = wrapper.findAll('.reason-box button')[0]!
-
-    expect(firstButton.classes()).toContain('selected')
-  })
-
-  it('disables answer buttons when result exists', () => {
-    const wrapper = mountTask({
-      selectedCategory: 'REAL',
-      selectedJustification: 'Ser naturlig ut',
+      selectedFileId: 101,
       result: {
         correct: true,
         feedback: 'Riktig!',
       },
     })
 
-    const buttons = wrapper.findAll('button')
-
-    buttons.forEach((button) => {
-      expect(button.attributes('disabled')).toBeDefined()
-    })
+    expect(wrapper.text()).toContain('Riktig svar')
   })
 
-  it('shows submit button when showSubmitButton is true', () => {
+  it('shows confirm button when enabled and a file is selected', () => {
     const wrapper = mountTask({
-      showSubmitButton: true,
-      submitText: 'Send svar',
+      selectedFileId: 101,
+      showConfirmButton: true,
+      confirmButtonText: 'Bekreft valg',
     })
 
-    expect(wrapper.find('.submit-button').exists()).toBe(true)
-    expect(wrapper.find('.submit-button').text()).toBe('Send svar')
+    expect(wrapper.find('.confirm-button').exists()).toBe(true)
+    expect(wrapper.find('.confirm-button').text()).toBe('Bekreft valg')
   })
 
-  it('emits submit when submit button is clicked', async () => {
+  it('emits submit when confirm button is clicked', async () => {
     const wrapper = mountTask({
-      showSubmitButton: true,
+      selectedFileId: 101,
+      showConfirmButton: true,
     })
 
-    await wrapper.find('.submit-button').trigger('click')
+    await wrapper.find('.confirm-button').trigger('click')
 
     expect(wrapper.emitted('submit')).toBeTruthy()
   })

@@ -568,7 +568,9 @@ p {
 }
 
 .submit-button:hover:not(:disabled) {
-  filter: brightness(1.03);
+  background: var(--brown-dark);
+  color: #fff6dc;
+  filter: none;
   transform: translateY(-1px);
   box-shadow: 0 7px 18px rgb(0 0 0 / 16%);
 }

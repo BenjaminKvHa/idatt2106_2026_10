@@ -42,6 +42,10 @@ function confirm(): void {
   background: rgb(0 0 0 / 30%);
   backdrop-filter: blur(3px);
 }
+.center-container {
+  gap: 2rem;
+  padding: 1rem 1rem 2rem;
+}
 
 .task-guide-card {
   width: min(900px, calc(100vw - 48px));
@@ -94,5 +98,12 @@ function confirm(): void {
   font-size: clamp(1.1rem, 2vw, 1.6rem);
   font-weight: 850;
   cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .center-container {
+    padding: .5rem .5rem 1rem;
+    width: 95%;
+  }
 }
 </style>

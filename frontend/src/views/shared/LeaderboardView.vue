@@ -144,7 +144,8 @@ onMounted(loadLeaderboard)
       <div v-if="!loading && !error && leaderboard.length > itemsPerPage" class="pagination">
         <button :disabled="currentPage === 1" @click="previousPage">Forrige</button>
 
-        <span>Side {{ currentPage }} av {{ totalPages }}</span>
+        <span class="page-large">Side {{ currentPage }} av {{ totalPages }}</span>
+        <span class="page-small">{{ currentPage }}/{{ totalPages }}</span>
 
         <button :disabled="currentPage === totalPages" @click="nextPage">Neste</button>
       </div>
@@ -153,6 +154,12 @@ onMounted(loadLeaderboard)
 </template>
 
 <style scoped>
+.page-small {
+  display: none;
+}
+.page-large {
+  display: block;
+}
 .leaderboard-page-bg {
   min-height: 100vh;
   background-image: url('@/assets/backgrounds/hjemskjerm-bg.png');
@@ -331,7 +338,6 @@ li {
   gap: clamp(0.45rem, 0.8vw, 0.7rem);
   position: relative;
   isolation: isolate;
-  margin-top: 2.5rem;
   min-height: var(--leaderboard-current-label-height);
   padding: clamp(1rem, 1.45vw, 1.25rem) clamp(3.6rem, 5.7vw, 5.4rem);
   background-image: url('@/assets/woodenLabel.png');
@@ -407,16 +413,23 @@ li {
   border-radius: 999px;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .board-content {
     --leaderboard-title-label-height: 4.7rem;
     --leaderboard-entry-label-height: 4.45rem;
     --leaderboard-current-label-height: 4.45rem;
     --leaderboard-title-to-list-overlap: -1rem;
     --leaderboard-entry-overlap: -0.95rem;
-    --leaderboard-current-overlap: -0.3rem;
-    inset: 13% 9% 19% 9%;
-    padding: 5% 6% 0;
+    --leaderboard-current-overlap: -0.75rem;
+    
+    padding: 0% 0% 0;
+    inset: 8% 4% !important;
+  }
+  .page-small {
+    display: block;
+  }
+  .page-large {
+    display: none;
   }
 
   .leaderboard-title-label {

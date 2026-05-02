@@ -371,7 +371,7 @@ onBeforeUnmount(revokeAllImageUrls)
 
             <button
               v-if="currentLevel.task.format === 'IMAGE_VERIFICATION'"
-              class="submit-button pupil-orange-button"
+              class="submit-button btn-orange"
               :disabled="!canSubmit"
               @click="submit"
             >
@@ -384,7 +384,7 @@ onBeforeUnmount(revokeAllImageUrls)
                 currentLevel.selectedFileId !== null &&
                 !currentLevel.result
               "
-              class="submit-button pupil-orange-button"
+              class="submit-button btn-orange"
               :disabled="!canSubmit"
               @click="submit"
             >

@@ -67,7 +67,7 @@ img {
 
 .ready-button {
   padding: 0.85rem 2.8rem;
-  background: linear-gradient(180deg, #a7ff3f 0%, #74d91f 100%);
+  background: linear-gradient(180deg, var(--green-confirm-80) 0%, var(--green-confirm-40) 100%);
   border: 3px solid var(--brown-dark);
   border-radius: 28px;
   font-family: 'Inika', serif;

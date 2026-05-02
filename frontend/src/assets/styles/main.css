@@ -26,8 +26,21 @@ button {
   box-shadow: 0px .25rem .75rem rgba(0, 0, 0, 0.25);
 }
 
+.btn-orange {
+  padding: 10px 18px;
+  border-radius: 20px;
+  border: 2px solid var(--color-text);
+  background: var(--orange-medium);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
 
-/* 
+.btn-orange:hover:not(:disabled) {
+  background: var(--brown-medium);
+}
+
+/*
 volume stuff
 */
 input[type='range'] {

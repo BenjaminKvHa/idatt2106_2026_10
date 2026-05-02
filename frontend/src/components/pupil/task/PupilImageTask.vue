@@ -31,7 +31,7 @@ function categoryClass(
   if (!result) return 'selected'
 
   const ok = result.categoryCorrect ?? result.correct
-  return ok ? 'selected correct' : 'selected wrong'
+  return ok ? 'selected pupil-correct' : 'selected pupil-wrong'
 }
 
 function justificationClass(
@@ -44,7 +44,7 @@ function justificationClass(
   if (!result) return 'selected'
 
   const ok = result.justificationCorrect ?? result.correct
-  return ok ? 'selected correct' : 'selected wrong'
+  return ok ? 'selected pupil-correct' : 'selected pupil-wrong'
 }
 </script>
 
@@ -55,8 +55,8 @@ function justificationClass(
     <div
       class="image-card"
       :class="{
-        correct: result && result.correct,
-        wrong: result && result.correct === false,
+        'pupil-correct': result && result.correct,
+        'pupil-wrong': result && result.correct === false,
       }"
     >
       <AuthenticatedImage v-if="imageUrl" :src="imageUrl" alt="Oppgavebilde" class="task-image" preview-on-click />
@@ -94,7 +94,7 @@ function justificationClass(
     <button
       v-if="showSubmitButton"
       type="button"
-      class="submit-button pupil-orange-button"
+      class="submit-button btn-orange"
       :disabled="submitting"
       @click="emit('submit')"
     >
@@ -116,28 +116,28 @@ function justificationClass(
   text-align: center;
   margin: 0;
   font-size: 20px;
+  color: var(--brown-dark)
 }
 
 .image-card {
   display: flex;
   justify-content: center;
   width: 100%;
-  padding: 0;
-  border-radius: 18px;
+  border-radius: 24px;
   border: 3px solid transparent;
   transition: all 0.2s ease;
 }
+
+.image-card.correct { border-color: var(--green-confirm)}
+.image-card.wrong { border-color: var(--red-danger)}
 
 .task-image {
   width: 100%;
   max-width: 620px;
   height: auto;
-  max-height: 520px;
-  object-fit: contain;
-  display: block;
-  background: #f2f2f2;
+  background: var(--beige-light-100);
   border-radius: 14px;
-  border: 2px solid #999;
+  border: 2px solid var(--beige-light-60);
   margin: 0 auto;
 }
 
@@ -145,12 +145,12 @@ function justificationClass(
   width: 460px;
   max-width: 100%;
   height: 280px;
-  background: #ddd;
+  background: whitesmoke;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 14px;
-  border: 2px solid #999;
+  border: 2px solid var(--beige-light-60);
   font-size: 20px;
   font-weight: 600;
 }
@@ -165,7 +165,7 @@ function justificationClass(
 .choices button {
   padding: 10px 16px;
   border-radius: 20px;
-  border: 2px solid #333;
+  border: 2px solid var(--brown-dark);
   background: white;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -173,18 +173,18 @@ function justificationClass(
 }
 
 .choices button:hover:not(:disabled) {
-  background: #90caf9;
-  border-color: #1976d2;
-  color: #0d2b45;
+  background: var(--blue-medium-40);
+  border-color: var(--blue-medium-100);
+  color: var(--brown-dark);
   transform: scale(1.05);
 }
 
 .choices button.selected {
-  background: #1976d2;
-  border-color: #0d47a1;
+  background: var(--blue-medium-60);
+  border-color: var(--blue-medium-100);
   color: white;
   transform: scale(1.08);
-  box-shadow: 0 0 0 3px rgb(25 118 210 / 25%);
+  box-shadow: 0 0 0 3px var(--blue-medium-100);
 }
 
 .reason-box {
@@ -200,33 +200,24 @@ function justificationClass(
   margin: 5px;
   padding: 8px 14px;
   border-radius: 16px;
-  border: 2px solid #555;
-  background: #eee;
+  border: 2px solid var(--beige-light-60);
+  background: white;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .reason-box button:hover:not(:disabled) {
-  background: #ddd;
+  background: white;
 }
 
 .reason-box button.selected {
-  background: #90caf9;
-  border-color: #1976d2;
+  background: var(--blue-light);
+  border-color: var(--blue-dark);
   transform: scale(1.05);
+  color: var(--brown-dark);
 }
 
 .submit-button {
   width: 100%;
-}
-
-.correct {
-  background: #a5d6a7 !important;
-  border-color: #2e7d32 !important;
-}
-
-.wrong {
-  background: #ef9a9a !important;
-  border-color: #c62828 !important;
 }
 </style>

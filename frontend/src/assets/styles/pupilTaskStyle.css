@@ -40,34 +40,6 @@
   font-weight: 600;
 }
 
-.pupil-orange-button {
-  padding: 10px 18px;
-  border-radius: 20px;
-  border: 2px solid var(--color-text);
-  background: var(--orange-medium);
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.pupil-orange-button:hover:not(:disabled) {
-  background: var(--brown-medium);
-}
-
-.pupil-green-button {
-  padding: 10px 18px;
-  border-radius: 20px;
-  border: 2px solid var(--color-text);
-  background: var(--green-confirm);
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.pupil-green-button:hover:not(:disabled) {
-  filter: brightness(1.08);
-}
-
 .pupil-correct {
   background: var(--green-confirm-40) !important;
   border-color: var(--green-confirm) !important;

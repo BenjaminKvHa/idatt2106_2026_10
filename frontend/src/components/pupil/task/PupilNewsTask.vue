@@ -74,7 +74,7 @@ function cardClass(fileId: number): string {
     <button
       v-if="showConfirmButton && selectedFileId !== null && !result"
       type="button"
-      class="confirm-button pupil-orange-button"
+      class="confirm-button btn-orange"
       :disabled="submitting"
       @click="emit('submit')"
     >

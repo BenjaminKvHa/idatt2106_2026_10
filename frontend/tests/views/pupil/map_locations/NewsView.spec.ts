@@ -42,11 +42,20 @@ function mountNewsView() {
           template: '<div data-test="task-guide"><slot /></div>',
         },
         CompleteLevelPopup: {
-          props: ['show', 'title', 'message', 'success'],
+          props: [
+            'show',
+            'title',
+            'message',
+            'success',
+            'completedChapterMedal',
+            'completedChapterMedalNewlyAwarded',
+          ],
           template: `
             <div v-if="show" data-test="complete-popup">
               <p>{{ title }}</p>
               <p>{{ message }}</p>
+              <p v-if="completedChapterMedal">{{ completedChapterMedal.name }}</p>
+              <p data-test="medal-new">{{ String(completedChapterMedalNewlyAwarded) }}</p>
               <button data-test="retry" @click="$emit('retry')">Prøv på nytt</button>
               <button data-test="map" @click="$emit('map')">Tilbake til kartet</button>
               <button data-test="close" @click="$emit('close')">Lukk</button>
@@ -147,5 +156,36 @@ describe('NewsView', () => {
 
     expect(wrapper.find('.nav-button-primary').exists()).toBe(true)
     expect(wrapper.find('.nav-button-primary').text()).toBe('Neste')
+  })
+
+  it('passes newly awarded medal reward to the completion popup', async () => {
+    mockedPost.mockResolvedValue({
+      correct: true,
+      feedback: 'Riktig!',
+      runCompleted: true,
+      completedChapterMedalNewlyAwarded: true,
+      completedChapterMedal: {
+        medalKey: 'chapter-1',
+        name: 'Nyhetskvartalet',
+        description: 'Fullfør Nyhetskvartalet.',
+        unlocked: true,
+        imageFileObjectId: 101,
+      },
+    })
+
+    const wrapper = mountNewsView()
+
+    await flushPromises()
+
+    for (let i = 0; i < 3; i += 1) {
+      await wrapper.find('[data-test="select-file"]').trigger('click')
+      await flushPromises()
+      await wrapper.find('.nav-button-primary').trigger('click')
+      await flushPromises()
+    }
+
+    expect(wrapper.find('[data-test="complete-popup"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Nyhetskvartalet')
+    expect(wrapper.find('[data-test="medal-new"]').text()).toBe('true')
   })
 })

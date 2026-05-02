@@ -310,6 +310,8 @@ onBeforeUnmount(revokeAllImageUrls)
       :success="popupSuccess"
       :success-image="thumbsUpNews"
       :fail-image="thumbsDownNews"
+      :completed-chapter-medal="lastResult?.completedChapterMedal ?? null"
+      :completed-chapter-medal-newly-awarded="lastResult?.completedChapterMedalNewlyAwarded ?? false"
       @close="closeCompletePopup"
       @retry="retryLevel"
       @map="goToMap"

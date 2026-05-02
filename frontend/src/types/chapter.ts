@@ -8,6 +8,16 @@ export type ValidationResult = {
   runCompleted: boolean
   categoryCorrect: boolean | null
   justificationCorrect: boolean | null
+  completedChapterMedal?: PupilMedal | null
+  completedChapterMedalNewlyAwarded?: boolean
+}
+
+export type PupilMedal = {
+  medalKey: string
+  name: string
+  description: string
+  unlocked: boolean
+  imageFileObjectId: number | null
 }
 
 export type ImageVerificationResponse = {

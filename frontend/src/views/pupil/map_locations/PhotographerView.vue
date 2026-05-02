@@ -87,6 +87,8 @@
         :success="popupSuccess"
         :success-image="thumbsUpPhoto"
         :fail-image="thumbsDownPhoto"
+        :completed-chapter-medal="lastResult?.completedChapterMedal ?? null"
+        :completed-chapter-medal-newly-awarded="lastResult?.completedChapterMedalNewlyAwarded ?? false"
         @close="closeCompletePopup"
         @retry="retryLevel"
         @map="goToMap"

@@ -95,11 +95,21 @@ function mountDatacenterView() {
           `,
         },
         CompleteGamePopup: {
-          props: ['show', 'title', 'message', 'success'],
+          props: [
+            'show',
+            'title',
+            'message',
+            'success',
+            'completedChapterMedal',
+            'completedChapterMedalNewlyAwarded',
+            'grandCelebration',
+          ],
           template: `
-            <div v-if="show" data-test="game-popup">
+            <div v-if="show" data-test="game-popup" :data-grand="String(grandCelebration)">
               <p>{{ title }}</p>
               <p>{{ message }}</p>
+              <p v-if="completedChapterMedal">{{ completedChapterMedal.name }}</p>
+              <p data-test="medal-new">{{ String(completedChapterMedalNewlyAwarded) }}</p>
               <button data-test="map" @click="$emit('map')">Til kartet</button>
               <button data-test="retry" @click="$emit('retry')">Prøv igjen</button>
             </div>
@@ -272,6 +282,48 @@ describe('DatacenterView', () => {
     await wrapper.find('[data-test="map"]').trigger('click')
 
     expect(routerPush).toHaveBeenCalledWith('/pupil/classroom/map')
+  })
+
+  it('passes first-time medal reward and grand celebration to victory popup', async () => {
+    mockedPost
+    .mockResolvedValueOnce({
+      correct: true,
+      feedback: 'Riktig!',
+    })
+    .mockResolvedValueOnce({
+      correct: true,
+      feedback: 'Riktig!',
+      completedChapterMedalNewlyAwarded: true,
+      completedChapterMedal: {
+        medalKey: 'chapter-3',
+        name: 'Datasenteret',
+        description: 'Fullfør Datasenteret.',
+        unlocked: true,
+        imageFileObjectId: 103,
+      },
+    })
+
+    const wrapper = mountDatacenterView()
+
+    await flushPromises()
+
+    await wrapper.find('[data-test="category"]').trigger('click')
+    await wrapper.find('[data-test="justification"]').trigger('click')
+    await wrapper.find('.submit-button').trigger('click')
+    await flushPromises()
+
+    await wrapper.find('.nav-button-primary').trigger('click')
+
+    await wrapper.find('[data-test="select-file"]').trigger('click')
+    await wrapper.find('.submit-button').trigger('click')
+    await flushPromises()
+
+    await wrapper.find('.nav-button-primary').trigger('click')
+
+    expect(wrapper.find('[data-test="game-popup"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Datasenteret')
+    expect(wrapper.find('[data-test="medal-new"]').text()).toBe('true')
+    expect(wrapper.find('[data-test="game-popup"]').attributes('data-grand')).toBe('true')
   })
 
   it('shows error if loading run fails', async () => {

@@ -35,6 +35,7 @@ import com.nettdet.backend.dto.ImageVerificationTask;
 import com.nettdet.backend.dto.NewsVerificationRequest;
 import com.nettdet.backend.dto.NewsVerificationResponse;
 import com.nettdet.backend.dto.NewsVerificationTask;
+import com.nettdet.backend.dto.PupilMedalResponse;
 import com.nettdet.backend.dto.ValidationResult;
 import com.nettdet.backend.repository.ChapterRepository;
 import com.nettdet.backend.repository.PupilChapterBridgeProgressionRepository;
@@ -83,6 +84,7 @@ public class ChapterService {
     private final Map<String, TaskValidator<?, ?>> validators;
     private final NotificationService notificationService;
     private final TipService tipService;
+    private final MedalService medalService;
 
     public ChapterService(TaskRepository taskRepository,
                           PupilClassroomMembershipRepository membershipRepository,
@@ -91,7 +93,8 @@ public class ChapterService {
                           ObjectMapper objectMapper,
                           List<TaskValidator<?, ?>> validatorList,
                           NotificationService notificationService,
-                          TipService tipService) {
+                          TipService tipService,
+                          MedalService medalService) {
         this.taskRepository = taskRepository;
         this.membershipRepository = membershipRepository;
         this.progressionRepository = progressionRepository;
@@ -101,6 +104,7 @@ public class ChapterService {
             .collect(Collectors.toMap(TaskValidator::getChapterType, v -> v));
         this.notificationService = notificationService;
         this.tipService = tipService;
+        this.medalService = medalService;
     }
 
     // -------------------------------------------
@@ -320,7 +324,9 @@ public class ChapterService {
             runState.currentRunCorrect(),
             runState.runCompleted(),
             categoryCorrect,
-            justificationCorrect
+            justificationCorrect,
+            runState.completedChapterMedal(),
+            runState.completedChapterMedalNewlyAwarded()
         );
     }
 
@@ -443,11 +449,18 @@ public class ChapterService {
             runState.currentRunCorrect(),
             runState.runCompleted(),
             categoryCorrect,
-            justificationCorrect
+            justificationCorrect,
+            runState.completedChapterMedal(),
+            runState.completedChapterMedalNewlyAwarded()
         );
     }
 
-    private record RunStateAfterAttempt(int currentRunAttempts, int currentRunCorrect, boolean runCompleted) {}
+    private record RunStateAfterAttempt(
+        int currentRunAttempts,
+        int currentRunCorrect,
+        boolean runCompleted,
+        PupilMedalResponse completedChapterMedal,
+        boolean completedChapterMedalNewlyAwarded) {}
 
     // --------------------------------------------------
     // CHAPTER LISTING
@@ -531,12 +544,16 @@ public class ChapterService {
         int attempts = progression.getCurrentRunAttempts() + 1;
         int correctCount = progression.getCurrentRunCorrect() + (correct ? 1 : 0);
         boolean runCompleted = attempts >= tasksPerRun;
+        PupilMedalResponse completedChapterMedal = null;
+        boolean completedChapterMedalNewlyAwarded = false;
 
         if (runCompleted) {
             if (correctCount == tasksPerRun) {
                 progression.setSuccessfulRuns(progression.getSuccessfulRuns() + 1);
                 progression.setUnsuccessfulStreak(0);
                 tipService.addAllConfiguredTipsToNotebook(progression);
+                completedChapterMedal = medalService.getUnlockedChapterMedal(chapterId);
+                completedChapterMedalNewlyAwarded = previousSuccessfulRuns == 0;
                 if (previousSuccessfulRuns == 0) {
                     notifyFirstChapterCompletion(progression);
                 }
@@ -565,7 +582,9 @@ public class ChapterService {
         return new RunStateAfterAttempt(
             progression.getCurrentRunAttempts(),
             progression.getCurrentRunCorrect(),
-            runCompleted
+            runCompleted,
+            completedChapterMedal,
+            completedChapterMedalNewlyAwarded
         );
     }
 

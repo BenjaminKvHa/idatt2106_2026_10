@@ -5,6 +5,8 @@ import confetti from 'canvas-confetti'
 import completedSoundFile from '@/assets/sounds/levels/completedSound.mp3'
 import tryAgainSoundFile from '@/assets/sounds/levels/tryAgainSound.mp3'
 import { useAudio } from '@/composables/useAudio'
+import AuthenticatedImage from '@/components/ui/AuthenticatedImage.vue'
+import type { PupilMedal } from '@/types/chapter'
 
 const router = useRouter()
 const { playSound, stopSound } = useAudio()
@@ -17,6 +19,8 @@ const props = defineProps<{
   success?: boolean
   successImage?: string
   failImage?: string
+  completedChapterMedal?: PupilMedal | null
+  completedChapterMedalNewlyAwarded?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -29,6 +33,10 @@ let completedSoundRef: HTMLAudioElement | null = null
 let tryAgainSoundRef: HTMLAudioElement | null = null
 
 const currentImage = computed(() => (props.success ? props.successImage : props.failImage))
+const medalImageUrl = computed(() => {
+  const fileObjectId = props.completedChapterMedal?.imageFileObjectId
+  return fileObjectId === null || fileObjectId === undefined ? null : `/api/objects/${fileObjectId}`
+})
 
 function stopAllSounds() {
   stopSound(completedSoundRef)
@@ -140,6 +148,39 @@ watch(
         </p>
       </div>
 
+      <div
+        v-if="success && completedChapterMedal"
+        class="medal-reward"
+        :class="{ 'medal-reward-new': completedChapterMedalNewlyAwarded }"
+      >
+        <p class="medal-kicker">
+          {{ completedChapterMedalNewlyAwarded ? 'Ny medalje låst opp' : 'Medaljen din' }}
+        </p>
+
+        <div class="medal-content">
+          <div class="medal-frame">
+            <AuthenticatedImage
+              v-if="medalImageUrl"
+              :src="medalImageUrl"
+              :alt="completedChapterMedal.name"
+              class="medal-image"
+            />
+            <span v-else class="medal-placeholder">?</span>
+          </div>
+
+          <div class="medal-copy">
+            <h3>{{ completedChapterMedal.name }}</h3>
+            <p>
+              {{
+                completedChapterMedalNewlyAwarded
+                  ? 'Du fikk denne medaljen for å fullføre kapittelet for første gang.'
+                  : 'Du har allerede låst opp denne medaljen, og den er fortsatt din.'
+              }}
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div class="popup-actions">
         <template v-if="success">
           <button class="popup-btn popup-btn-success" @click="goToMap">Tilbake til kartet</button>
@@ -217,6 +258,77 @@ watch(
   margin: 0 0 0.75rem;
 }
 
+.medal-reward {
+  width: min(100%, 600px);
+  margin: 1.6rem auto 0;
+  padding: 1rem 1.1rem;
+  border: 4px solid var(--brown-dark);
+  border-radius: 28px;
+  background: rgb(255 246 220 / 86%);
+  box-shadow:
+    0 7px 0 #5b371f,
+    inset 0 3px 0 rgb(255 255 255 / 48%);
+}
+
+.medal-reward-new {
+  background: linear-gradient(180deg, #fff8df 0%, #ffe4a7 100%);
+}
+
+.medal-kicker {
+  margin: 0 0 0.65rem;
+  color: var(--brown-dark);
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.medal-content {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1rem;
+  align-items: center;
+  text-align: left;
+}
+
+.medal-frame {
+  width: clamp(5.6rem, 15vw, 7.6rem);
+  height: clamp(5.6rem, 15vw, 7.6rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid rgb(91 55 31 / 60%);
+  border-radius: 24px;
+  background: rgb(255 255 255 / 45%);
+  box-shadow: inset 0 2px 0 rgb(255 255 255 / 55%);
+}
+
+.medal-image {
+  width: 88%;
+  height: 88%;
+  object-fit: contain;
+  filter: drop-shadow(0 5px 5px rgb(0 0 0 / 18%));
+}
+
+.medal-placeholder {
+  color: var(--brown-dark);
+  font-size: 2rem;
+  font-weight: 900;
+}
+
+.medal-copy h3 {
+  margin: 0;
+  color: var(--brown-dark);
+  font-size: clamp(1.2rem, 2.2vw, 1.6rem);
+}
+
+.medal-copy p {
+  margin: 0.3rem 0 0;
+  color: #2b1a10;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
 .popup-actions {
   margin-top: 28px;
   display: flex;
@@ -283,6 +395,12 @@ watch(
     width: 100%;
     min-width: unset;
     font-size: 1.1rem;
+  }
+
+  .medal-content {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
   }
 }
 </style>

@@ -486,11 +486,11 @@ public class TaskSeeder implements ApplicationRunner {
                     "Riktig! Bildet er KI-generert. At absolutt alle ser like glade ut er tegnet, KI gir ofte folkemengder uniforme uttrykk i stedet for variert mimikk. Antall mennesker betyr ingenting i seg selv.",
                     "Ikke helt, bildet er KI-generert. Legg merke til hvor likt alle smiler, KI lager folkemengder med uniforme uttrykk i stedet for variert mimikk. Antall personer er ikke en god indikator.")),
             java.util.Map.entry("fotografen_jorda_ekte.jpg", new DescriptionPair(
-                    "Riktig! Bildet er ekte. Bakgrunnen ser realistisk ut, ekte satellittbilder viser ikke ekstra stjerner eller solsystem rundt jorda. At jorda 'er flat' er bare tull, jorda er rund.",
-                    "Ikke helt, bildet er ekte. Det er bakgrunnen som teller: ingen unaturlige stjerner eller himmelobjekter, slik ekte satellittbilder ser ut. 'Flat jord' er ikke et reelt argument.")),
+                    "Riktig! Bildet er ekte. Bakgrunnen ser realistisk ut: ekte satellittbilder viser bare svart verdensrom rundt jorda, uten ekstra stjerner eller himmelobjekter klistret på.",
+                    "Ikke helt, bildet er ekte. Det er bakgrunnen som teller: ingen unaturlige stjerner eller himmelobjekter, slik ekte satellittbilder ser ut.")),
             java.util.Map.entry("fotografen_jorda_falsk.png", new DescriptionPair(
-                    "Riktig! Bildet er KI-generert. KI har lagt til urealistiske stjerner og himmelobjekter, ekte satellittbilder viser bare svart rom rundt jorda. 'Flat jord' er bare en avsporing.",
-                    "Ikke helt, bildet er KI-generert. Bakgrunnen avslører det: ekstra stjerner og solsystem som ikke hører hjemme i et ekte satellittbilde. 'Flat jord' har ingenting med saken å gjøre.")),
+                    "Riktig! Bildet er KI-generert. KI har lagt til urealistiske stjerner og himmelobjekter rundt jorda, mens ekte satellittbilder bare viser svart verdensrom.",
+                    "Ikke helt, bildet er KI-generert. Bakgrunnen avslører det: ekstra stjerner og himmelobjekter som ikke hører hjemme i et ekte satellittbilde.")),
 
             // Fotografen — medium
             java.util.Map.entry("fotografen_asiatisk_dame_ekte.jpg", new DescriptionPair(
@@ -760,7 +760,7 @@ public class TaskSeeder implements ApplicationRunner {
                         "Lyset kommer fra feil retning")),
                 Map.entry("fotografen_naturen_falsk.png", List.of(
                         "Landskapet ser naturlig og variert ut",
-                        "Objekter er duplisert og himmelen virker kunstig",
+                        "Teksturen er pikselert og atmosfæren virker unaturlig",
                         "Bildet er tatt fra en drone")),
 
                 // Hard tasks

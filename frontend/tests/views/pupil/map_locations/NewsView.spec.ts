@@ -180,7 +180,7 @@ describe('NewsView', () => {
     for (let i = 0; i < 3; i += 1) {
       await wrapper.find('[data-test="select-file"]').trigger('click')
       await flushPromises()
-      await wrapper.find('.nav-button-primary').trigger('click')
+      await wrapper.find('.next-level-button').trigger('click')
       await flushPromises()
     }
 

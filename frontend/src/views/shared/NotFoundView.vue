@@ -75,7 +75,9 @@ h1 {
 .ready-button {
   width: 100%;
   padding: 1rem;
+
   background: linear-gradient(180deg, var(--green-confirm-80) 0%, var(--green-confirm-40) 100%);
+
   border: 3px solid var(--brown-dark);
   border-radius: 28px;
   font-family: 'Inika', serif;
@@ -83,6 +85,7 @@ h1 {
   font-weight: 700;
   box-shadow: 0 4px 0 var(--brown-dark);
   cursor: pointer;
+
   box-shadow:
     0 5px 0 var(--brown-dark),
     0 12px 20px rgb(0 0 0 / 20%);
@@ -98,5 +101,6 @@ h1 {
   box-shadow:
     0 8px 0 var(--brown-dark),
     0 18px 26px rgb(0 0 0 / 24%);
+
 }
 </style>

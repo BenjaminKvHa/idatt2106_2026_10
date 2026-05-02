@@ -10,7 +10,6 @@ import CompleteGamePopup from '@/components/pupil/CompleteGamePopup.vue'
 import VictoryImage from '@/assets/icons/detectives_and_thief/Victory.png'
 import DefeatImage from '@/assets/icons/detectives_and_thief/Defeat.png'
 import DatatyvenImage from '@/assets/icons/detectives_and_thief/Datatyven.png'
-import datacenterBg from '@/assets/backgrounds/datasenteret-bg.png'
 import victorySoundFile from '@/assets/sounds/levels/victory-sound.mp3'
 import defeatSoundFile from '@/assets/sounds/levels/evil-laugh.mp3'
 import confetti from 'canvas-confetti'
@@ -83,13 +82,6 @@ const canSubmit = computed(() => {
 
   return level.selectedFileId !== null
 })
-
-const pageStyle = computed(() => ({
-  backgroundImage: `
-    linear-gradient(rgb(255 255 255 / 45%), rgb(255 255 255 / 45%)),
-    url(${datacenterBg})
-  `,
-}))
 
 const resultImage = computed(() => (resultType.value === 'victory' ? VictoryImage : DefeatImage))
 const resultAltText = computed(() => (resultType.value === 'victory' ? 'Seier' : 'Tap'))
@@ -315,7 +307,7 @@ onBeforeUnmount(revokeAllImageUrls)
 </script>
 
 <template>
-  <div class="datacenter-page-bg" :style="pageStyle">
+  <div class="datacenter-page-bg">
     <TopBar title="Datasenteret" />
 
     <div class="pupil-task-page">
@@ -394,9 +386,7 @@ onBeforeUnmount(revokeAllImageUrls)
             <div
               v-if="currentLevel.result"
               class="pupil-feedback-box"
-              :class="
-                currentLevel.result.correct ? 'pupil-feedback-correct' : 'pupil-feedback-wrong'
-              "
+              :class="currentLevel.result.correct ? 'pupil-correct' : 'pupil-wrong'"
             >
               <p class="pupil-feedback-title">
                 {{ currentLevel.result.correct ? 'Riktig!' : 'Feil!' }}
@@ -497,10 +487,33 @@ p {
   height: 120px;
 }
 
-.datacenter-container :deep(.hint-creature-button img) {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+/* Important for Blobby Positioning */
+@media (max-width: 1150px) {
+  .datacenter-container :deep(.hint-creature-wrapper) {
+    left: -3.5rem;
+    top: 5.2rem;
+  }
+}
+
+@media (max-width: 1000px) {
+  .datacenter-container :deep(.hint-creature-wrapper) {
+    left: 50%;
+    top: -0.5rem;
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 768px) {
+  .datacenter-container :deep(.hint-creature-wrapper) {
+    width: 85px;
+    height: 85px;
+    top: -0.8rem;
+  }
+
+  .datacenter-container :deep(.hint-creature-button) {
+    width: 85px;
+    height: 85px;
+  }
 }
 
 .progress-container {
@@ -515,8 +528,8 @@ p {
 .progress-bar {
   width: 100%;
   height: 14px;
-  background: rgb(255 246 220 / 55%);
-  border: 2px solid rgb(91 62 43 / 70%);
+  background: var(--beige-light-40);
+  border: 2px solid var(--brown-dark-80);
   border-radius: 999px;
   overflow: hidden;
   box-shadow:
@@ -526,7 +539,7 @@ p {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #9df13c 0%, #78d927 55%, #5cc322 100%);
+  background: var(--gradient-progressbar);
   border-radius: 999px;
   transition: width 0.4s ease;
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 45%);
@@ -535,7 +548,7 @@ p {
 .progress-text {
   margin-top: 0.5rem;
   font-weight: 800;
-  color: #1f160f;
+  color: var(--brown-dark);
   text-shadow: 0 1px 0 rgb(255 255 255 / 45%);
 }
 
@@ -556,7 +569,7 @@ p {
   padding: 0.9rem 1.8rem;
   border-radius: 24px;
   border: 2px solid var(--brown-dark);
-  background: linear-gradient(180deg, #fff6dc 0%, #f1d7a5 100%);
+  background: var(--gradient-beige-btn);
   color: var(--brown-dark);
   font-weight: 850;
   cursor: pointer;
@@ -569,7 +582,7 @@ p {
 
 .submit-button:hover:not(:disabled) {
   background: var(--brown-dark);
-  color: #fff6dc;
+  color: var(--beige-light-100);
   filter: none;
   transform: translateY(-1px);
   box-shadow: 0 7px 18px rgb(0 0 0 / 16%);
@@ -599,12 +612,11 @@ p {
   min-width: 200px;
   min-height: 58px;
   padding: 0.85rem 1.8rem;
-  border-radius: 24px;
   border: 2px solid var(--brown-dark);
   font-weight: 850;
   color: var(--brown-dark);
   cursor: pointer;
-  background: linear-gradient(180deg, #fff6dc 0%, #f1d7a5 100%);
+  background: var(--gradient-beige-btn);
   box-shadow: 0 5px 14px rgb(0 0 0 / 14%);
   transition:
     transform 0.15s ease,
@@ -641,25 +653,16 @@ p {
 
 .datacenter-page-bg {
   min-height: 100vh;
+  background:
+    linear-gradient(rgb(255 255 255 / 45%), rgb(255 255 255 / 45%)),
+    url('@/assets/backgrounds/datasenteret-bg.png');
   background-size: cover;
   background-position: center;
-  background-repeat: no-repeat;
   background-attachment: fixed;
 }
 
 .pupil-task-page {
   min-height: calc(100vh - 3.4rem);
-}
-
-:deep(.complete-game-popup),
-:deep(.complete-level-popup),
-:deep(.popup-card),
-:deep(.result-popup),
-:deep(.complete-popup) {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  overflow: hidden;
 }
 
 :deep(.complete-game-popup img),
@@ -684,54 +687,14 @@ p {
   max-width: 100%;
 }
 
-:deep(.pupil-feedback-box) {
-  background: #f6d8c9 !important;
-  opacity: 1 !important;
-}
-
-:deep(.pupil-feedback-correct) {
-  background: #dff6c9 !important;
-  opacity: 1 !important;
-}
-
-:deep(.pupil-feedback-wrong) {
-  background: #f6c9c0 !important;
-  opacity: 1 !important;
-}
-
-@media (max-width: 1150px) {
-  .datacenter-container :deep(.hint-creature-wrapper) {
-    left: -3.5rem;
-    top: 5.2rem;
-  }
-}
-
 @media (max-width: 1000px) {
   .datacenter-container {
     padding-top: 7rem;
-  }
-
-  .datacenter-container :deep(.hint-creature-wrapper) {
-    left: 50%;
-    top: -0.5rem;
-    transform: translateX(-50%);
-  }
-}
+  }  }
 
 @media (max-width: 768px) {
   .datacenter-container {
     padding-top: 5.5rem;
-  }
-
-  .datacenter-container :deep(.hint-creature-wrapper) {
-    width: 85px;
-    height: 85px;
-    top: -0.8rem;
-  }
-
-  .datacenter-container :deep(.hint-creature-button) {
-    width: 85px;
-    height: 85px;
   }
 
   .progress-container {
@@ -752,20 +715,5 @@ p {
     width: 100%;
     min-width: 0;
   }
-}
-
-:deep(.pupil-feedback-box) {
-  background: #f6d8c9 !important;
-  opacity: 1 !important;
-  margin-top: 1rem;
-  padding: 1rem;
-}
-
-:deep(.pupil-feedback-correct) {
-  background: #dff6c9 !important;
-}
-
-:deep(.pupil-feedback-wrong) {
-  background: #f6c9c0 !important;
 }
 </style>

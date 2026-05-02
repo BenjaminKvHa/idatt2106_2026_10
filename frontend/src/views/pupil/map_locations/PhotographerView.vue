@@ -67,7 +67,7 @@
       </div>
 
       <div v-else-if="error" class="task-container">
-        <p class="error">{{ error }}</p>
+        <p class="pupil-error">{{ error }}</p>
       </div>
 
       <TaskGuide v-if="showGuidePopup" @close="showGuidePopup = false">
@@ -367,14 +367,42 @@ onBeforeUnmount(revokeAllImageUrls)
   flex-direction: column;
   align-items: center;
   width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
   position: relative;
   overflow: visible !important;
 }
 
-.task-container :deep(.hint-creature-button img) {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+/* IMPORTANT for Blobby positioning */
+.task-container :deep(.hint-creature-wrapper) {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  left: -7.5rem;
+  top: 5rem;
+  z-index: 10;
+}
+
+.task-container :deep(.hint-creature-button) {
+  position: static;
+  width: 120px;
+  height: 120px;
+}
+
+@media (max-width: 1000px) {
+  .task-container :deep(.hint-creature-wrapper) {
+    left: 50%;
+    top: -0.5rem;
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 768px) {
+  .task-container :deep(.hint-creature-wrapper) {
+    width: 85px;
+    height: 85px;
+    top: -0.8rem;
+  }
 }
 
 .progress-container {
@@ -389,8 +417,8 @@ onBeforeUnmount(revokeAllImageUrls)
 .progress-bar {
   width: 100%;
   height: 14px;
-  background: rgb(255 246 220 / 55%);
-  border: 2px solid rgb(91 62 43 / 70%);
+  background: var(--beige-light-40);
+  border: 2px solid var(--brown-dark-80);
   border-radius: 999px;
   overflow: hidden;
   box-shadow:
@@ -400,7 +428,7 @@ onBeforeUnmount(revokeAllImageUrls)
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #9df13c 0%, #78d927 55%, #5cc322 100%);
+  background: var(--gradient-progressbar);
   border-radius: 999px;
   transition: width 0.4s ease;
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 45%);
@@ -409,7 +437,7 @@ onBeforeUnmount(revokeAllImageUrls)
 .level {
   text-align: center;
   margin: 0.5rem 0 0;
-  color: #1f160f;
+  color: var(--brown-dark);
   font-size: clamp(1.5rem, 3vw, 2.4rem);
   text-shadow: 0 1px 0 rgb(255 255 255 / 45%);
 }
@@ -417,13 +445,11 @@ onBeforeUnmount(revokeAllImageUrls)
 .task-box {
   width: 100%;
   max-width: 760px;
-  background: rgb(255 243 214 / 78%);
+  background: var(--beige-light-80);
   border: 3px solid var(--brown-dark);
   border-radius: 28px;
   padding: 24px;
-  box-shadow:
-    0 6px 18px rgb(0 0 0 / 13%),
-    inset 0 2px 0 rgb(255 255 255 / 45%);
+  box-shadow: 0 6px 18px var(--brown-dark-20);
   position: relative;
   overflow: visible !important;
   box-sizing: border-box;
@@ -434,7 +460,7 @@ onBeforeUnmount(revokeAllImageUrls)
   margin-top: 20px;
   padding: 16px;
   border-radius: 18px;
-  background: rgb(255 255 255 / 82%);
+  background: var(--beige-light-60);
   border: 2px solid var(--brown-dark);
   width: 100%;
   max-width: 500px;
@@ -456,7 +482,7 @@ onBeforeUnmount(revokeAllImageUrls)
   padding: 0.85rem 1.8rem;
   border-radius: 24px;
   border: 2px solid var(--brown-dark);
-  background: linear-gradient(180deg, #fff6dc 0%, #f1d7a5 100%);
+  background: var(--gradient-beige-btn);
   color: var(--brown-dark);
   cursor: pointer;
   font-weight: 850;
@@ -493,24 +519,6 @@ onBeforeUnmount(revokeAllImageUrls)
   padding: 10px 24px;
 }
 
-.error {
-  color: #c62828;
-  font-weight: 600;
-}
-
-.hint-wrapper {
-  width: 100%;
-  max-width: 760px;
-  margin: 0 auto;
-}
-
-@media (max-width: 1150px) {
-  .task-container :deep(.hint-creature-wrapper) {
-    left: calc(50% - 455px);
-    top: 5.4rem;
-  }
-}
-
 @media (max-width: 1000px) {
   .task-container {
     padding-top: 7rem;
@@ -518,12 +526,6 @@ onBeforeUnmount(revokeAllImageUrls)
 
   .content {
     padding-top: calc(var(--topbar-height));
-  }
-
-  .task-container :deep(.hint-creature-wrapper) {
-    left: 50%;
-    top: -2.2rem;
-    transform: translateX(-50%);
   }
 }
 
@@ -535,17 +537,6 @@ onBeforeUnmount(revokeAllImageUrls)
 
   .task-container {
     padding-top: 5.5rem;
-  }
-
-  .task-container :deep(.hint-creature-wrapper) {
-    width: 85px;
-    height: 85px;
-    top: -1.8rem;
-  }
-
-  .task-container :deep(.hint-creature-button) {
-    width: 85px;
-    height: 85px;
   }
 
   .progress-container {

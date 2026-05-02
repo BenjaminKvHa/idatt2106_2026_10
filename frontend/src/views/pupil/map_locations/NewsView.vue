@@ -342,10 +342,36 @@ onBeforeUnmount(revokeAllImageUrls)
   position: relative;
 }
 
-.center-container :deep(.hint-creature-button img) {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+/* IMPORTANT for Blobby positioning */
+.center-container :deep(.hint-creature-wrapper) {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  left: -6.5rem;
+  top: 5rem;
+  z-index: 10;
+}
+
+.center-container :deep(.hint-creature-button) {
+  position: static;
+  width: 120px;
+  height: 120px;
+}
+
+@media (max-width: 1100px) {
+  .center-container :deep(.hint-creature-wrapper) {
+    left: 50%;
+    top: -0.5rem;
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 768px) {
+  .center-container :deep(.hint-creature-wrapper) {
+    width: 85px;
+    height: 85px;
+    top: -0.8rem;
+  }
 }
 
 .progress-container {

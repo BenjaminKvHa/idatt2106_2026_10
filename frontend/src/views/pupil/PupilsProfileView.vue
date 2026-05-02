@@ -66,9 +66,9 @@ function onConfirmModalCancel() {
   confirmModalResolve = null
   confirmModalShow.value = false
 }
+
 const signingOut = ref(false)
 const editingNickname = ref(false)
-const showLeaveClassroomPopup = ref(false)
 
 const nicknameDraft = ref('')
 const savingNickname = ref(false)
@@ -130,17 +130,6 @@ onMounted(async () => {
   await loadProfile()
 })
 
-function openLeaveClassroomPopup() {
-  if (!profile.value?.classroomCode || leavingClassroom.value) return
-  actionError.value = null
-  showLeaveClassroomPopup.value = true
-}
-
-function closeLeaveClassroomPopup() {
-  if (leavingClassroom.value) return
-  showLeaveClassroomPopup.value = false
-}
-
 async function leaveClassroom() {
   if (!profile.value?.classroomCode || leavingClassroom.value) return
 
@@ -152,7 +141,6 @@ async function leaveClassroom() {
 
   try {
     await del(`/api/classrooms/${profile.value.classroomCode}/pupils/me`)
-    showLeaveClassroomPopup.value = false
     clearMeCache()
     await router.push('/pupil')
   } catch (requestError) {
@@ -319,7 +307,7 @@ async function saveNickname() {
                 class="pupil-button pupil-button-danger"
                 type="button"
                 :disabled="leavingClassroom"
-                @click="openLeaveClassroomPopup"
+                @click="leaveClassroom"
               >
                 {{ leavingClassroom ? 'Forlater...' : 'Forlat klasserom' }}
               </button>
@@ -333,41 +321,10 @@ async function saveNickname() {
                 {{ signingOut ? 'Logger ut...' : 'Logg ut' }}
               </button>
             </div>
-        </section>
-      </div>
-    </section>
-  </main>
-
-    <div
-      v-if="showLeaveClassroomPopup"
-      class="pupil-popup-overlay pupil-popup-fixed-center"
-      @click.self="closeLeaveClassroomPopup"
-    >
-      <section class="pupil-hint-popup leave-classroom-popup" role="dialog" aria-modal="true">
-        <h2 class="pupil-popup-title">Forlat klasserom?</h2>
-        <p class="pupil-popup-text">Er du sikker på at du vil forlate klasserommet?</p>
-
-        <div class="pupil-popup-actions">
-          <button
-            type="button"
-            class="pupil-popup-btn cancel-leave-button"
-            :disabled="leavingClassroom"
-            @click="closeLeaveClassroomPopup"
-          >
-            Avbryt
-          </button>
-
-          <button
-            type="button"
-            class="pupil-popup-btn confirm-leave-button"
-            :disabled="leavingClassroom"
-            @click="leaveClassroom"
-          >
-            {{ leavingClassroom ? 'Forlater...' : 'Forlat klasserom' }}
-          </button>
+          </section>
         </div>
       </section>
-    </div>
+    </main>
   </div>
 
   <ConfirmModal
@@ -489,18 +446,6 @@ async function saveNickname() {
 
 .action-error {
   margin: 0;
-}
-
-.leave-classroom-popup {
-  background: var(--beige-light);
-}
-
-.cancel-leave-button {
-  background: var(--beige-medium);
-}
-
-.confirm-leave-button {
-  background: var(--red-danger);
 }
 
 @media (max-width: 768px) {

@@ -221,12 +221,13 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.notifications-modal-box {
-  min-width: 320px !important; 
-  max-width: 680px !important;
-  width: 90vw !important;
-  gap: var(--medium-gap);
+:global(.modal-window.notifications-modal-box) {
+  width: 90vw;
+  max-width: 680px;
+  min-width: 320px;
+  flex: 0 0 auto;
 }
+
 
 .modal-header {
   display: flex;

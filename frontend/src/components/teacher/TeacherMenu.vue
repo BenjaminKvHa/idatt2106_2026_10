@@ -1,0 +1,482 @@
+<script setup lang="ts">
+import { ref, computed, onBeforeUnmount, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import Logo from '@/components/misc/Logo.vue'
+import BaseModal from '@/components/ui/BaseModal.vue'
+import OptionsMenu from '@/components/ui/OptionsMenu.vue'
+import NotificationsMenu from '@/components/ui/NotificationsMenu.vue'
+import TeacherHelpButton from '@/components/teacher/TeacherHelpButton.vue'
+import { BellIcon, Settings, Volume2, VolumeX } from '@lucide/vue'
+import { useClassrooms } from '@/composables/useClassrooms.ts'
+import { useAudio } from '@/composables/useAudio'
+import { get } from '@/utils/apiUtils'
+
+type UnreadNotificationsResponse = {
+  classroomCode: string
+  unreadNotificationsCount: number
+}
+
+const UNREAD_NOTIFICATIONS_REFRESH_MS = 30_000
+
+const settingsOpen = ref(false)
+const notificationsOpen = ref(false)
+const classroomsPickerOpen = ref(false)
+const route = useRoute()
+const { classrooms, fetchClassrooms } = useClassrooms()
+const { isMuted, toggleMute } = useAudio()
+const unreadCountsByClassroom = ref<Record<string, number>>({})
+let unreadPollingHandle: number | null = null
+let disposed = false
+
+const teacherOverviewHelpSections = [
+  {
+    heading: 'Dette er lærervisningen',
+    body: [
+      'Til venstre ser du klasserommene du er lærer for, og knappen for å lage et nytt klasserom. Midten og høyre side viser innholdet for valgt klasserom.',
+    ],
+  },
+  {
+    heading: 'Faner i et klasserom',
+    items: [
+      'Ledertavle: se poeng og rangering for elevene.',
+      'Elever: godkjenn nye elever og se elevenes arbeid.',
+      'Rediger klasserom: endre navn, beskrivelse og lærertilgang.',
+      'Rediger oppgaver: lag og juster oppgaver for klassen.',
+      'Ukens mysterium: se og håndter bidrag fra elevene.',
+    ],
+  },
+  {
+    heading: 'Teste elevflyten',
+    body: [
+      'For å teste et klasserom kan du logge ut av lærerbrukeren, lage en ny elevbruker og be om å bli med i klasserommet med romkoden du ser på lærersiden. Logg deretter inn som lærer igjen, godkjenn testeleven under Elever, og prøv elevens notatbok, kart og oppgaver.',
+    ],
+  },
+  {
+    heading: 'Knappene nede til venstre',
+    body: [
+      'Bjellen viser varsler, lydknappen demper eller skrur på lyden, tannhjulet åpner innstillinger, og spørsmålstegnet åpner denne hjelpen.',
+    ],
+  },
+]
+
+const unreadNotificationsCount = computed(() =>
+  Object.values(unreadCountsByClassroom.value).reduce((total, count) => total + count, 0),
+)
+
+const unreadNotificationsBadgeLabel = computed(() =>
+  unreadNotificationsCount.value > 99 ? '99+' : String(unreadNotificationsCount.value),
+)
+
+const notificationsAriaLabel = computed(() =>
+  unreadNotificationsCount.value > 0
+    ? `Varsler, ${unreadNotificationsCount.value} uleste`
+    : 'Varsler',
+)
+
+async function refreshUnreadNotificationCount() {
+  const classroomCodes = classrooms.value.map((classroom) => classroom.classroomCode)
+
+  if (classroomCodes.length === 0) {
+    unreadCountsByClassroom.value = {}
+    return
+  }
+
+  const nextCounts: Record<string, number> = {}
+  for (const classroomCode of classroomCodes) {
+    nextCounts[classroomCode] = unreadCountsByClassroom.value[classroomCode] ?? 0
+  }
+
+  const responses = await Promise.allSettled(
+    classroomCodes.map(async (classroomCode) => {
+      const response = await get<UnreadNotificationsResponse>(
+        `/api/teacher/classrooms/${classroomCode}/notifications/unread`,
+      )
+      return { classroomCode, count: response.unreadNotificationsCount }
+    }),
+  )
+
+  for (const response of responses) {
+    if (response.status === 'fulfilled') {
+      nextCounts[response.value.classroomCode] = response.value.count
+    }
+  }
+
+  if (disposed) {
+    return
+  }
+
+  unreadCountsByClassroom.value = nextCounts
+}
+
+function stopUnreadPolling() {
+  if (unreadPollingHandle !== null) {
+    window.clearInterval(unreadPollingHandle)
+    unreadPollingHandle = null
+  }
+}
+
+function startUnreadPolling() {
+  stopUnreadPolling()
+  unreadPollingHandle = window.setInterval(() => {
+    void refreshUnreadNotificationCount()
+  }, UNREAD_NOTIFICATIONS_REFRESH_MS)
+}
+
+function closeNotificationsMenu() {
+  notificationsOpen.value = false
+  void refreshUnreadNotificationCount()
+}
+
+onMounted(async () => {
+  disposed = false
+  await fetchClassrooms()
+  if (disposed) {
+    return
+  }
+
+  await refreshUnreadNotificationCount()
+  if (disposed) {
+    return
+  }
+
+  startUnreadPolling()
+})
+
+onBeforeUnmount(() => {
+  disposed = true
+  stopUnreadPolling()
+})
+
+const isClassroomsActive = computed(() => {
+  return route.path.includes('/classrooms') && !route.path.includes('/classrooms/new')
+})
+
+const isNewClassroomActive = computed(() => {
+  return route.path.endsWith('/classrooms/new')
+})
+
+const isClassroomActive = (classroomCode: string) => {
+  return route.path.includes(`/classrooms/${classroomCode}`)
+}
+
+const activeClassroomCode = computed(() => {
+  const classroomCodeSlug = typeof route.params.classroomCode === 'string' ? route.params.classroomCode : ''
+  if (!classroomCodeSlug) {
+    return null
+  }
+
+  return classroomCodeSlug
+})
+
+const activeClassroomName = computed(() => {
+  const classroomCode = activeClassroomCode.value
+  if (!classroomCode) {
+    return 'Velg klasserom'
+  }
+
+  return classrooms.value.find((classroom) => classroom.classroomCode === classroomCode)?.classroomName ?? classroomCode
+})
+
+function closeClassroomsPicker() {
+  classroomsPickerOpen.value = false
+}
+</script>
+
+<template>
+    <div class="teacher-menu teacher-variant-2">
+        <Logo />
+
+        <section class="teacher-card teacher-card-menu desktop-classroom-list">
+            <RouterLink
+                type="button"
+                :class="['teacher-card-title', isClassroomsActive ? 'button-variant-2' : 'button-variant-1']"
+                :to="`/teacher/classrooms`"
+            >
+                Klasserom
+            </RouterLink>
+            <div class="teacher-card-body teacher-card-menu-body">
+                <RouterLink
+                    v-for="classroom in classrooms"
+                    :key="classroom.classroomCode"
+                    type="button"
+                    :to="`/teacher/classrooms/${classroom.classroomCode}/leaderboard`"
+                    :class="['button-variant-1 inika teacher-card-item-var-1', isClassroomActive(classroom.classroomCode) && 'button-variant-2 teacher-card-item-var-2']"
+                >
+                    {{ classroom.classroomName }}
+                </RouterLink>
+                <div v-if="classrooms.length === 0" class="empty-message">
+                    Ingen klasserom
+                </div>
+            </div>
+        </section>
+
+        <button
+            type="button"
+            :class="['button-variant-1', 'teacher-menu-button', 'teacher-classroom-picker-button', isClassroomsActive && 'button-variant-2']"
+            @click="classroomsPickerOpen = true"
+        >
+            <span class="picker-title inika">Klasserom</span>
+            <span class="picker-current">{{ activeClassroomName }}</span>
+        </button>
+
+        <RouterLink
+            type="button"
+            :class="['button-variant-1', 'teacher-menu-button', 'inika', isNewClassroomActive && 'button-variant-2']"
+            :to="`/teacher/classrooms/new`"
+        >
+            Nytt klasserom
+        </RouterLink>
+
+        <div class="teacher-menu-bottom">
+            <button 
+            type="button" 
+            class="icon-btn-circle notification-button"
+            :aria-label="notificationsAriaLabel"
+            @click="notificationsOpen = true"
+            >
+                <BellIcon class="teacher-menu-icon" />
+                <span
+                  v-if="unreadNotificationsCount > 0"
+                  class="notification-badge"
+                  data-test="notification-badge"
+                  aria-hidden="true"
+                >
+                  {{ unreadNotificationsBadgeLabel }}
+                </span>
+            </button>
+            <button
+                type="button"
+                class="icon-btn-circle"
+                :aria-label="isMuted ? 'Skru på lyd' : 'Demp lyd'"
+                @click="toggleMute"
+            >
+                <VolumeX v-if="isMuted" class="teacher-menu-icon" />
+                <Volume2 v-else class="teacher-menu-icon" />
+            </button>
+            <button
+                type="button"
+                class="icon-btn-circle"
+                aria-label="Innstillinger"
+                @click="settingsOpen = true"
+            >
+                <Settings class="teacher-menu-icon" />
+            </button>
+            <TeacherHelpButton title="Hjelp for lærer" :sections="teacherOverviewHelpSections" />
+        </div>
+    </div>
+
+    <OptionsMenu v-if="settingsOpen" @close="settingsOpen = false" />
+    <NotificationsMenu v-if="notificationsOpen" :classroom-code="activeClassroomCode" @close="closeNotificationsMenu" />
+    <BaseModal v-if="classroomsPickerOpen" panel-class="teacher-variant-1 classroom-picker-modal" @close="closeClassroomsPicker">
+        <h2 class="classroom-picker-title inika">Velg klasserom</h2>
+
+        <RouterLink
+            class="button-variant-1 classroom-picker-link inika"
+            to="/teacher/classrooms"
+            @click="closeClassroomsPicker"
+        >
+            Alle klasserom
+        </RouterLink>
+
+        <div v-if="classrooms.length > 0" class="classroom-picker-list">
+            <RouterLink
+                v-for="classroom in classrooms"
+                :key="classroom.classroomCode"
+                :to="`/teacher/classrooms/${classroom.classroomCode}/leaderboard`"
+                :class="['classroom-picker-link', 'inika', isClassroomActive(classroom.classroomCode) ? 'button-variant-2' : 'button-variant-1']"
+                @click="closeClassroomsPicker"
+            >
+                {{ classroom.classroomName }}
+            </RouterLink>
+        </div>
+
+        <p v-else class="classroom-picker-empty">Ingen klasserom</p>
+    </BaseModal>
+</template>
+
+<style scoped>
+.teacher-card-menu {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 100%;
+}
+
+.teacher-classroom-picker-button {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+}
+
+.picker-title,
+.picker-current {
+  display: block;
+}
+
+.picker-current {
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.teacher-card-menu-body {
+  min-height: 0;
+  overflow: auto;
+}
+
+.empty-message {
+    text-align: center;
+    color: var(--background-sec);
+    font-size: 0.85rem;
+    padding: var(--thin-padding);
+}
+
+
+.teacher-menu {
+    display: flex;
+    flex-direction: column;
+    border-radius: 0;
+    border: none;
+    outline-width: var(--border-width);
+    outline-color: var(--accent);
+    outline-style: solid;
+    padding: var(--medium-padding);
+    justify-content: flex-start;
+    margin: 0;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.teacher-menu-button {
+    width: 100%;
+    min-height: 3.5rem;
+    padding: 0.85rem 1rem;
+    text-align: center;
+    font-weight: 600;
+    line-height: 1.15;
+    white-space: normal;
+    text-wrap: balance;
+}
+
+.teacher-menu-bottom {
+    margin-top: auto;
+    display: flex;
+    justify-content: center;
+    padding-top: var(--medium-padding);
+    gap: var(--thin-gap);
+    flex-wrap: wrap;
+
+    > .icon-btn-circle:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.25);
+    }
+}
+
+.teacher-menu-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.notification-button {
+  position: relative;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -0.5rem;
+  left: -0.45rem;
+  min-width: 1.4rem;
+  height: 1.4rem;
+  padding: 0 0.32rem;
+  border: 2px solid var(--background);
+  border-radius: 999px;
+  background: var(--warning);
+  color: var(--txt-contrast);
+  font-size: 0.72rem;
+  font-weight: var(--fw-bold);
+  line-height: 1.4rem;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.classroom-picker-modal {
+  width: min(92vw, 24rem);
+  gap: 0.9rem;
+}
+
+.classroom-picker-title,
+.classroom-picker-empty {
+  margin: 0;
+  text-align: center;
+}
+
+.classroom-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.classroom-picker-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.25rem;
+  padding: 0.75rem 1rem;
+  text-align: center;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+@media (max-width: 1024px) {
+  .teacher-menu {
+    padding: 0.85rem;
+  }
+
+  .teacher-menu-button {
+    min-height: 3.25rem;
+    padding: 0.7rem 0.8rem;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .teacher-menu {
+    padding: 0.6rem;
+    gap: 0.6rem;
+  }
+
+  .desktop-classroom-list {
+    display: none;
+  }
+
+  .teacher-classroom-picker-button {
+    display: flex;
+  }
+
+  .teacher-menu-button {
+    min-height: 3rem;
+    padding: 0.6rem;
+    font-size: 0.88rem;
+  }
+
+  .teacher-menu-bottom {
+    padding-top: 0.6rem;
+    gap: 0.45rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .teacher-menu-button {
+    border-width: 4px;
+    border-radius: 1.2rem;
+    font-size: 0.82rem;
+  }
+
+  .classroom-picker-link {
+    min-height: 3rem;
+    font-size: 0.9rem;
+  }
+}
+</style>

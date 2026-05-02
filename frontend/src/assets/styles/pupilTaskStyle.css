@@ -1,0 +1,120 @@
+.pupil-task-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+.pupil-center-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  text-align: center;
+  gap: 1.25rem;
+}
+
+.pupil-panel {
+  background: var(--beige-light-60);
+  border: var(--border-thin) solid var(--brown-dark);
+  border-radius: 24px;
+  box-shadow: 0 6px 0 var(--brown-dark-20);
+  box-sizing: border-box;
+}
+
+.pupil-task-text-box {
+  width: min(100%, 760px);
+  padding: 1.2rem 2rem;
+}
+
+.pupil-task-card {
+  width: min(100%, 900px);
+  padding: 28px 28px 36px;
+}
+
+.pupil-error {
+  color: var(--red-danger);
+  font-weight: 600;
+}
+
+.pupil-orange-button {
+  padding: 10px 18px;
+  border-radius: 20px;
+  border: 2px solid var(--color-text);
+  background: var(--orange-medium);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pupil-orange-button:hover:not(:disabled) {
+  background: var(--brown-medium);
+}
+
+.pupil-green-button {
+  padding: 10px 18px;
+  border-radius: 20px;
+  border: 2px solid var(--color-text);
+  background: var(--green-confirm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pupil-green-button:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.pupil-correct {
+  background: var(--green-confirm-40) !important;
+  border-color: var(--green-confirm) !important;
+}
+
+.pupil-wrong {
+  background: var(--red-danger-40) !important;
+  border-color: var(--red-danger) !important;
+}
+
+.pupil-feedback-box {
+  padding: 1rem;
+  border-radius: 16px;
+  border: 2px solid var(--brown-dark);
+}
+
+.pupil-feedback-correct {
+  background: var(--green-confirm-20);
+}
+
+.pupil-feedback-wrong {
+  background: var(--red-danger-20);
+}
+
+.pupil-feedback-title {
+  margin-bottom: 0.35rem;
+  font-weight: 800;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .pupil-task-page {
+    padding: 1rem;
+    background-attachment: scroll;
+  }
+
+  .pupil-panel {
+    border-width: var(--border-thin);
+    border-radius: 24px;
+  }
+
+  .pupil-task-text-box,
+  .pupil-task-card {
+    padding: 1rem;
+  }
+}

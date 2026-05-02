@@ -7,14 +7,42 @@ on:
     branches: [main, dev]
     paths:
       - "frontend/**"
+<<<<<<< HEAD
+jobs:
+  build-and-test:
+    runs-on: ntnu-runners
+=======
 
 jobs:
   build-and-test:
     runs-on: [self-hosted, ntnu-runners]
+>>>>>>> 6e71c18092a4e47387b67fed34e5ec04a50cd58f
     name: Compile, build, install dependencies and test frontend
     defaults:
       run:
         working-directory: frontend
+<<<<<<< HEAD
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Run unit/component tests with coverage
+        run: npm run test:unit -- --coverage --coverage.thresholds.lines=30 --coverage.thresholds.functions=30 --coverage.thresholds.branches=30 --coverage.thresholds.statements=30
+=======
         
     steps:
       - name: checkout repository that triggered workflow
@@ -40,3 +68,4 @@ jobs:
       - name: Run tests
         run: npm run test:unit  # Runs tests, passes if no tests are found
     
+>>>>>>> 6e71c18092a4e47387b67fed34e5ec04a50cd58f

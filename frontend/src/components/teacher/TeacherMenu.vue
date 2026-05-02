@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import Logo from '@/components/misc/Logo.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
@@ -140,6 +140,11 @@ onMounted(async () => {
   }
 
   startUnreadPolling()
+})
+
+onBeforeUnmount(() => {
+  disposed = true
+  stopUnreadPolling()
 })
 
 

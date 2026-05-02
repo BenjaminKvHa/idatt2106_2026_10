@@ -10,11 +10,7 @@ on:
 
 jobs:
   build-and-test:
-<<<<<<< HEAD
     runs-on: ntnu-runners
-=======
-    runs-on: [self-hosted, ntnu-runners]
->>>>>>> 6e71c18092a4e47387b67fed34e5ec04a50cd58f
     name: Compile, build, install dependencies and test project
     steps:
       - name: Checkout code from repo that triggered workflow
